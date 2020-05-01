@@ -42,5 +42,33 @@ namespace CastIt.Common.Utils
 
             return null;
         }
+
+        public static FrameworkElement GetDescendantFromName(DependencyObject parent, string name)
+        {
+            var count = VisualTreeHelper.GetChildrenCount(parent);
+
+            if (count < 1)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < count; i++)
+            {
+                if (VisualTreeHelper.GetChild(parent, i) is FrameworkElement frameworkElement)
+                {
+                    if (frameworkElement.Name == name)
+                    {
+                        return frameworkElement;
+                    }
+
+                    frameworkElement = GetDescendantFromName(frameworkElement, name);
+                    if (frameworkElement != null)
+                    {
+                        return frameworkElement;
+                    }
+                }
+            }
+            return null;
+        }
     }
 }

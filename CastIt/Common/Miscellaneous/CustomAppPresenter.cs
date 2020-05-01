@@ -1,4 +1,5 @@
-﻿using MvvmCross.Platforms.Wpf.Presenters;
+﻿using CastIt.Common.Utils;
+using MvvmCross.Platforms.Wpf.Presenters;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Presenters;
 using MvvmCross.ViewModels;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace CastIt.Common.Miscellaneous
 {
@@ -30,17 +30,22 @@ namespace CastIt.Common.Miscellaneous
             });
         }
 
-        protected override Task<bool> ShowContentView(FrameworkElement element, MvxContentPresentationAttribute attribute, MvxViewModelRequest request)
+        protected override Task<bool> ShowContentView(
+            FrameworkElement element,
+            MvxContentPresentationAttribute attribute,
+            MvxViewModelRequest request)
         {
             if (!(attribute is CustomMvxContentPresentationAttribute customMvxViewForAttribute))
                 return base.ShowContentView(element, attribute, request);
 
-            var contentControl = FrameworkElementsDictionary.Keys.FirstOrDefault(w => (w as MainWindow)?.Identifier == attribute.WindowIdentifier) ?? FrameworkElementsDictionary.Keys.Last();
+            var contentControl = FrameworkElementsDictionary.Keys
+                .FirstOrDefault(w => (w as MainWindow)?.Identifier == attribute.WindowIdentifier)
+                ?? FrameworkElementsDictionary.Keys.Last();
 
             if (!attribute.StackNavigation && FrameworkElementsDictionary[contentControl].Any())
                 FrameworkElementsDictionary[contentControl].Pop(); // Close previous view
 
-            if (GetDescendantFromName(contentControl, customMvxViewForAttribute.ContentFrame) is Frame frame)
+            if (WindowsUtils.GetDescendantFromName(contentControl, customMvxViewForAttribute.ContentFrame) is Frame frame)
             {
                 frame.Content = element;
             }
@@ -48,34 +53,6 @@ namespace CastIt.Common.Miscellaneous
             //FrameworkElementsDictionary[contentControl].Push(element);
             //contentControl.Content = element;
             return Task.FromResult(true);
-        }
-
-        private static FrameworkElement GetDescendantFromName(DependencyObject parent, string name)
-        {
-            var count = VisualTreeHelper.GetChildrenCount(parent);
-
-            if (count < 1)
-            {
-                return null;
-            }
-
-            for (var i = 0; i < count; i++)
-            {
-                if (VisualTreeHelper.GetChild(parent, i) is FrameworkElement frameworkElement)
-                {
-                    if (frameworkElement.Name == name)
-                    {
-                        return frameworkElement;
-                    }
-
-                    frameworkElement = GetDescendantFromName(frameworkElement, name);
-                    if (frameworkElement != null)
-                    {
-                        return frameworkElement;
-                    }
-                }
-            }
-            return null;
         }
     }
 }
