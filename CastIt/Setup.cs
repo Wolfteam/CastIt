@@ -1,4 +1,5 @@
 ﻿using CastIt.Common.Miscellaneous;
+using CastIt.ViewModels;
 using MvvmCross.Logging;
 using MvvmCross.Platforms.Wpf.Core;
 using MvvmCross.Platforms.Wpf.Presenters;
@@ -16,7 +17,7 @@ namespace CastIt
         protected override IMvxWpfViewPresenter CreateViewPresenter(ContentControl root)
             => new CustomAppPresenter(root);
 
-        public override MvxLogProviderType GetDefaultLogProviderType() 
+        public override MvxLogProviderType GetDefaultLogProviderType()
             => MvxLogProviderType.Serilog;
 
         protected override IMvxLogProvider CreateLogProvider()
@@ -24,14 +25,14 @@ namespace CastIt
             const string fileOutputTemplate =
                 "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{Level}] {Message:lj}{NewLine}{Exception}";
             var externalFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var basePath = Path.Combine(externalFolder, "Logs");
+            var basePath = Path.Combine(externalFolder, "CastIt", "Logs");
             CreateDirectory(externalFolder, basePath);
             var loggerConfig = new LoggerConfiguration().MinimumLevel
                 .Verbose();
 
             var logs = new Dictionary<string, string>
             {
-
+                {$"{typeof(MainViewModel).FullName}",  "vm_main_.txt"},
             };
 
             foreach (var kvp in logs)

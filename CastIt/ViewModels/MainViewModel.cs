@@ -1,140 +1,317 @@
-﻿using MvvmCross.Commands;
+﻿using CastIt.Interfaces;
+using CastIt.Models.Messages;
+using CastIt.ViewModels.Items;
+using MvvmCross.Commands;
+using MvvmCross.Logging;
+using MvvmCross.Navigation;
+using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    public class MainViewModel : MvxViewModel
+    public class MainViewModel : BaseViewModel
     {
-        private bool _isPlaylistVisible;
-        public bool IsPlaylistVisible
+        #region Members
+        private readonly ICastService _castService;
+        private readonly IPlayListsService _playListsService;
+        private readonly IAppSettingsService _settingsService;
+        private FileItemViewModel _currentlyPlayedFile;
+        private bool _isPaused;
+        private bool _isCurrentlyPlaying;
+        private string _currentlyPlayingFilename;
+        private bool _isExpanded = true;
+        private int _selectedPlayListIndex;
+        private MvxNotifyTask _durationTaskNotifier;
+        private double _playedPercentage;
+        private bool _showSettingsPopUp;
+
+        private readonly MvxInteraction _closeApp = new MvxInteraction();
+        private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
+        #endregion
+
+        #region Properties
+        public bool IsExpanded
         {
-            get => _isPlaylistVisible;
-            set => SetProperty(ref _isPlaylistVisible, value);
+            get => _isExpanded;
+            set => SetProperty(ref _isExpanded, value);
         }
 
-        public MvxObservableCollection<FileItemViewModel> Files { get; set; }
-            = new MvxObservableCollection<FileItemViewModel>();
-
-        public IMvxCommand TogglePlaylistVisibilityCommand { get; private set; }
-
-        public MainViewModel()
+        public bool IsPaused
         {
-            TogglePlaylistVisibilityCommand = new MvxCommand(() =>
+            get => _isPaused;
+            set => SetProperty(ref _isPaused, value);
+        }
+
+        public bool IsCurrentlyPlaying
+        {
+            get => _isCurrentlyPlaying;
+            set => SetProperty(ref _isCurrentlyPlaying, value);
+        }
+
+        public string CurrentlyPlayingFilename
+        {
+            get => _currentlyPlayingFilename;
+            set => SetProperty(ref _currentlyPlayingFilename, value);
+        }
+
+        public int SelectedPlayListIndex
+        {
+            get => _selectedPlayListIndex;
+            set => SetProperty(ref _selectedPlayListIndex, value);
+        }
+
+        public double PlayedPercentage
+        {
+            get => _playedPercentage;
+            set => SetProperty(ref _playedPercentage, value);
+        }
+
+        public bool ShowSettingsPopUp
+        {
+            get => _showSettingsPopUp;
+            set => SetProperty(ref _showSettingsPopUp, value);
+        }
+
+        public MvxObservableCollection<PlayListItemViewModel> PlayLists { get; set; }
+            = new MvxObservableCollection<PlayListItemViewModel>();
+
+        public MvxNotifyTask DurationTaskNotifier
+        {
+            get => _durationTaskNotifier;
+            private set => SetProperty(ref _durationTaskNotifier, value);
+        }
+        #endregion
+
+        #region Commands
+        public IMvxCommand TogglePlaylistVisibilityCommand { get; private set; }
+        public IMvxCommand CloseAppCommand { get; private set; }
+        public IMvxCommand PreviousCommand { get; private set; }
+        public IMvxCommand NextCommand { get; private set; }
+        public IMvxCommand TogglePlayBackCommand { get; private set; }
+        public IMvxCommand StopPlayBackCommand { get; private set; }
+        public IMvxCommand<int> SkipCommand { get; private set; }
+        public IMvxCommand SwitchPlayListsCommand { get; private set; }
+        public IMvxCommand AddNewPlayListCommand { get; private set; }
+        public IMvxCommand<PlayListItemViewModel> DeletePlayListCommand { get; private set; }
+        public IMvxCommand<PlayListItemViewModel> DeleteAllPlayListsExceptCommand { get; private set; }
+        public IMvxCommand OpenSettingsCommand { get; private set; }
+        #endregion
+
+        #region Interactors
+        public IMvxCommand WindowLoadedCommand  { get; private set; }
+        public IMvxInteraction CloseApp
+            => _closeApp;
+
+        public IMvxInteraction<(double, double)> SetWindowWidthAndHeight
+            => _setWindowWidthAndHeight;
+        #endregion
+
+        public MainViewModel(
+            ITextProvider textProvider,
+            IMvxMessenger messenger,
+            IMvxLogProvider logger,
+            IMvxNavigationService navigationService,
+            ICastService castService,
+            IPlayListsService playListsService,
+            IAppSettingsService settingsService)
+            : base(textProvider, messenger, logger.GetLogFor<MainViewModel>(), navigationService)
+        {
+            _castService = castService;
+            _playListsService = playListsService;
+            _settingsService = settingsService;
+        }
+
+        #region Methods
+        public override async Task Initialize()
+        {
+            IsExpanded = _settingsService.IsPlayListExpanded;
+            _castService.Init();
+
+            var playLists = await _playListsService.GetAllPlayLists();
+            PlayLists.AddRange(playLists);
+
+            DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
+
+            _castService.OnPositionChanged += OnFilePositionChanged;
+            _castService.OnEndReached += OnFileEndReached;
+            await base.Initialize();
+        }
+
+        public override void SetCommands()
+        {
+            base.SetCommands();
+            WindowLoadedCommand = new MvxCommand(() =>
             {
-                IsPlaylistVisible = !IsPlaylistVisible;
+                var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
+                _setWindowWidthAndHeight.Raise(tuple);
             });
 
-            Files = new MvxObservableCollection<FileItemViewModel>
+            TogglePlaylistVisibilityCommand = new MvxCommand(() =>
             {
-                new FileItemViewModel
-                {
-                    Index = 1,
-                    Filename = "B Gata H Kei  Nonononon.mp3",
-                    Duration = 24,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\B Gata H Kei  Nonononon.mp3",
-                    Size = "3.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 2,
-                    Filename = "Nanahira  課金厨のうた -More Charin Ver.-.mp3",
-                    Duration = 3,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  課金厨のうた -More Charin Ver.-.mp3",
-                    Size = "8.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 3,
-                    Filename = "Minami-Ke  Girl Jundo UP.mp3",
-                    Duration = 4,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Minami-Ke  Girl Jundo UP.mp3",
-                    Size = "4.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 4,
-                    Filename = "Hatsune Miku  Ai Kotoba.mp3",
-                    Duration = 24,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Hatsune Miku  Ai Kotoba.mp3",
-                    Size = "3.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 5,
-                    Filename = "Hatsune Miku  Konbini.mp3",
-                    Duration = 3,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Hatsune Miku  Konbini.mp3",
-                    Size = "8.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 6,
-                    Filename = "K-ON!  Fuwa Fuwa Time.mp3",
-                    Duration = 4,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\K-ON!  Fuwa Fuwa Time.mp3",
-                    Size = "4.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 7,
-                    Filename = "K-ON!  Watashi no Koi wa Hotch Kiss.mp3",
-                    Duration = 24,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\K-ON!  Watashi no Koi wa Hotch Kiss.mp3",
-                    Size = "3.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 8,
-                    Filename = "Nanahira  Hito to Usagi to Labyrinth.mp3",
-                    Duration = 3,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  Hito to Usagi to Labyrinth.mp3",
-                    Size = "8.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 9,
-                    Filename = "S3RL  MTC.mp3",
-                    Duration = 4,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\S3RL  MTC.mp3",
-                    Size = "4.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 10,
-                    Filename = "S3RL  R4V3 B0Y.mp3",
-                    Duration = 24,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\S3RL  R4V3 B0Y.mp3",
-                    Size = "3.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 11,
-                    Filename = "S3RL  Waifu.mp3",
-                    Duration = 3,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\S3RL  Waifu.mp3",
-                    Size = "8.5 mb"
-                },
-                new FileItemViewModel
-                {
-                    Index = 12,
-                    Filename = "S3RL  Happy Hardcore Tonight.mp3",
-                    Duration = 4,
-                    Extension = ".mp3",
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\S3RL  Happy Hardcore Tonight.mp3",
-                    Size = "4.5 mb"
-                },
-            };
+                IsExpanded = !IsExpanded;
+            });
+
+            CloseAppCommand = new MvxCommand(HandleCloseApp);
+
+            PreviousCommand = new MvxCommand(() => GoTo(false));
+
+            NextCommand = new MvxCommand(() => GoTo(true));
+
+            TogglePlayBackCommand = new MvxCommand(() =>
+            {
+                _castService.TogglePlayback();
+                IsPaused = !IsPaused;
+            });
+
+            StopPlayBackCommand = new MvxCommand(StopPlayBack);
+
+            SkipCommand = new MvxCommand<int>((seconds) =>
+            {
+                _castService.AddSeconds(seconds);
+            });
+
+            SwitchPlayListsCommand = new MvxCommand(SwitchPlayLists);
+
+            AddNewPlayListCommand = new MvxCommand(() =>
+            {
+                System.Diagnostics.Debug.WriteLine("Adding playlist");
+            });
+
+            DeletePlayListCommand = new MvxCommand<PlayListItemViewModel>((item) =>
+            {
+                if (PlayLists.Count > 1)
+                    PlayLists.Remove(item);
+            });
+
+            DeleteAllPlayListsExceptCommand = new MvxCommand<PlayListItemViewModel>((except) =>
+            {
+                if (PlayLists.Count <= 1)
+                    return;
+                var exceptIndex = PlayLists.IndexOf(except);
+                PlayLists.Move(exceptIndex, 0);
+                PlayLists.RemoveRange(1, PlayLists.Count - 1);
+            });
+
+            OpenSettingsCommand = new MvxCommand(() =>
+            {
+                ShowSettingsPopUp = !ShowSettingsPopUp;
+            });
         }
+
+        public override void RegisterMessages()
+        {
+            base.RegisterMessages();
+            SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
+            {
+                Messenger.Subscribe<PlayFileMsg>((msg) => PlayFile(msg.File))
+            });
+        }
+
+        public void SaveWindowWidthAndHeight(double width, double height)
+        {
+            _settingsService.WindowWidth = width;
+            _settingsService.WindowHeight = height;
+            _settingsService.IsPlayListExpanded = IsExpanded;
+            _settingsService.SaveSettings();
+        }
+
+        private async Task SetFileDurations()
+        {
+            foreach (var playlist in PlayLists)
+            {
+                foreach (var item in playlist.Items)
+                {
+                    await item.SetDuration();
+                }
+            }
+        }
+
+        private void HandleCloseApp()
+        {
+            _castService.OnPositionChanged -= OnFilePositionChanged;
+            _castService.OnEndReached -= OnFileEndReached;
+            _castService.StopPlayback();
+            _castService.CleanThemAll();
+            _currentlyPlayedFile?.CleanUp();
+            _closeApp.Raise();
+        }
+
+        private void SwitchPlayLists()
+        {
+            int tentativeIndex = SelectedPlayListIndex + 1;
+            if (PlayLists.ElementAtOrDefault(tentativeIndex) != null)
+            {
+                SelectedPlayListIndex = tentativeIndex;
+            }
+            else
+            {
+                SelectedPlayListIndex = 0;
+            }
+        }
+
+        private void GoTo(bool nextTrack)
+        {
+            if (_currentlyPlayedFile == null)
+                return;
+
+            var playlist = PlayLists.First(p => p.Id == _currentlyPlayedFile.PlayListId);
+            var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
+            if (fileIndex < 0)
+                return;
+
+            if (nextTrack)
+                fileIndex++;
+            else
+                fileIndex--;
+            var file = playlist.Items.ElementAtOrDefault(fileIndex);
+
+            if (file is null)
+            {
+                return;
+            }
+
+            StopPlayBack();
+            file.PlayCommand.Execute();
+        }
+
+        private void PlayFile(FileItemViewModel file)
+        {
+            _currentlyPlayedFile?.CleanUp();
+            _currentlyPlayedFile = file;
+            _currentlyPlayedFile.ListenEvents();
+            SetCurrentlyPlayingInfo(file.Filename, true);
+            _castService.StartPlay(file.Path, true);
+            if (file.PlayedPercentage != 0)
+            {
+                _castService.GoToPosition((float)file.PlayedPercentage);
+            }
+        }
+
+        private void StopPlayBack()
+        {
+            _castService.StopPlayback();
+            SetCurrentlyPlayingInfo(null, false);
+            IsPaused = false;
+        }
+
+        private void SetCurrentlyPlayingInfo(string filename, bool isPlaying, float playedPercentage = 0)
+        {
+            OnFilePositionChanged(playedPercentage);
+            CurrentlyPlayingFilename = filename;
+            IsCurrentlyPlaying = isPlaying;
+        }
+
+        private void OnFilePositionChanged(float playedPercentage)
+            => PlayedPercentage = playedPercentage;
+
+        private void OnFileEndReached()
+        {
+            SetCurrentlyPlayingInfo(null, false);
+            GoTo(true);
+        } 
+        #endregion
     }
 }
