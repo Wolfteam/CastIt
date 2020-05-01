@@ -2,6 +2,7 @@
     x:Class="CastIt.Views.UserControls.WindowButtons"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:common="clr-namespace:CastIt.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -15,6 +16,8 @@
             x:Key="WindowButtonStyle"
             BasedOn="{StaticResource MainButtonStyle}"
             TargetType="Button">
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Focusable" Value="False" />
             <Setter Property="Height" Value="25" />
             <Setter Property="Width" Value="25" />
             <Setter Property="Margin" Value="5,8" />
@@ -38,7 +41,7 @@
                 Margin="10,5"
                 VerticalAlignment="Center"
                 Foreground="White"
-                Text="App Name goes here"
+                Text="{x:Static common:AppConstants.AppName}"
                 TextTrimming="CharacterEllipsis" />
             <StackPanel
                 Grid.Column="1"
@@ -54,7 +57,7 @@
                         Height="18"
                         Kind="WindowMinimize" />
                 </Button>
-                <Button
+                <!--<Button
                     Click="Maximize_Clicked"
                     Style="{StaticResource WindowButtonStyle}"
                     ToolTip="Maximize">
@@ -62,8 +65,8 @@
                         Width="18"
                         Height="18"
                         Kind="WindowMaximize" />
-                </Button>
-                <Button Click="Exit_Clicked" ToolTip="Close">
+                </Button>-->
+                <Button Command="{Binding CloseAppCommand}" ToolTip="Close">
                     <Button.Style>
                         <Style BasedOn="{StaticResource WindowButtonStyle}" TargetType="Button">
                             <Setter Property="Margin" Value="5,8,12,5" />

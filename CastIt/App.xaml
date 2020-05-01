@@ -53,6 +53,8 @@
                 x:Key="MainButtonStyle"
                 BasedOn="{StaticResource MaterialDesignIconButton}"
                 TargetType="Button">
+                <Setter Property="IsTabStop" Value="False" />
+                <Setter Property="Focusable" Value="False" />
                 <Setter Property="Margin" Value="4" />
                 <Setter Property="Foreground" Value="White" />
             </Style>
@@ -61,15 +63,15 @@
             <Style BasedOn="{StaticResource MaterialDesignTabablzControlStyle}" TargetType="{x:Type dragablz:TabablzControl}" />
 
             <Style x:Key="FileItemSeparatorStyle" TargetType="{x:Type Separator}">
-                <Setter Property="Margin" Value="20,0,20,10"/>
-                <Setter Property="Background" Value="White"/>
+                <Setter Property="Margin" Value="20,0,20,10" />
+                <Setter Property="Background" Value="White" />
                 <Setter Property="RenderTransform">
                     <Setter.Value>
                         <ScaleTransform ScaleY="3" />
                     </Setter.Value>
                 </Setter>
             </Style>
-            
+
             <!--  ScrollThumbs  -->
             <Style x:Key="ScrollThumbs" TargetType="{x:Type Thumb}">
                 <Setter Property="Template">

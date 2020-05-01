@@ -1,12 +1,9 @@
-﻿using System;
+﻿using CastIt.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace CastIt.Views.UserControls
 {
-    /// <summary>
-    /// Interaction logic for WindowButtons.xaml
-    /// </summary>
     public partial class WindowButtons : UserControl
     {
         public WindowButtons()
@@ -17,7 +14,7 @@ namespace CastIt.Views.UserControls
         private void Minimize_Clicked(object sender, RoutedEventArgs e)
         {
             var window = System.Windows.Application.Current.MainWindow;
-            if (window.WindowState == WindowState.Normal || 
+            if (window.WindowState == WindowState.Normal ||
                 window.WindowState == WindowState.Maximized)
             {
                 window.WindowState = WindowState.Minimized;
@@ -30,7 +27,7 @@ namespace CastIt.Views.UserControls
 
         private void Maximize_Clicked(object sender, RoutedEventArgs e)
         {
-            var window =  System.Windows.Application.Current.MainWindow;
+            var window = System.Windows.Application.Current.MainWindow;
             if (window.WindowState == WindowState.Normal)
             {
                 window.WindowState = WindowState.Maximized;
@@ -41,8 +38,11 @@ namespace CastIt.Views.UserControls
             }
         }
 
-        private void Exit_Clicked(object sender, RoutedEventArgs e)
+        public void CloseApp()
         {
+            var window = System.Windows.Application.Current.MainWindow as MainWindow;
+            var vm = DataContext as MainViewModel;
+            vm.SaveWindowWidthAndHeight(window.CurrentWidth, window.CurrentHeight);
             System.Windows.Application.Current.Shutdown();
         }
     }
