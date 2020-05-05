@@ -2,11 +2,10 @@
     x:Class="CastIt.Views.UserControls.PlayListItem"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviours="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:cb="clr-namespace:CastIt.Common.Behaviours"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
-    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
@@ -23,6 +22,7 @@
             x:Key="PlayListLvStyle"
             BasedOn="{StaticResource MaterialDesignListView}"
             TargetType="ListView">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="AllowDrop" Value="True" />
             <Setter Property="Background" Value="Transparent" />
@@ -44,59 +44,150 @@
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
-    <!--
-        Setting ScrollViewer.CanContentScroll="False" disables virtualization
-        but makes a smooth scroll while dragging
-    -->
-    <ListView
-        x:Name="PlaylistLv"
-        cb:DragDropExtension.ScrollOnDragDrop="True"
-        materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
-        DragEnter="PlaylistLv_DragEnter"
-        DragLeave="PlaylistLv_DragLeave"
-        Drop="PlaylistLv_Drop"
-        ItemsSource="{Binding Items}"
-        KeyboardNavigation.TabNavigation="Cycle"
-        MouseMove="PlaylistLv_MouseMove"
-        PreviewMouseLeftButtonDown="PlaylistLv_PreviewMouseLeftButtonDown"
-        ScrollViewer.CanContentScroll="False"
-        Style="{StaticResource PlayListLvStyle}">
-        <ListView.ContextMenu>
-            <ContextMenu>
-                <MenuItem Command="{Binding AddFolderCommand}" Header="{Binding [AddFolder]}">
-                    <MenuItem.Icon>
-                        <materialDesign:PackIcon Kind="Folder" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Command="{Binding AddFilesCommand}" Header="{Binding [AddFiles]}">
-                    <MenuItem.Icon>
-                        <materialDesign:PackIcon Kind="Add" />
-                    </MenuItem.Icon>
-                </MenuItem>
-            </ContextMenu>
-        </ListView.ContextMenu>
-        <ListView.InputBindings>
-            <KeyBinding
-                Command="{Binding PlayFileCommand}"
-                CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
-                Gesture="Enter" />
-            <KeyBinding
-                Command="{Binding RemoveFileCommand}"
-                CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
-                Gesture="Delete" />
-            <KeyBinding Key="Space" Command="{Binding DataContext.TogglePlayBackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
-        </ListView.InputBindings>
-        <ListView.ItemTemplate>
-            <DataTemplate DataType="{x:Type vmis:FileItemViewModel}">
-                <Border x:Name="Border">
-                    <uc:FileItem DataContext="{Binding}" Tag="{Binding Source={x:Reference Name=PlaylistLv}, Path=DataContext}" />
-                </Border>
-                <DataTemplate.Triggers>
-                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                        <Setter TargetName="Border" Property="Background" Value="{DynamicResource MaterialDesignSelection}" />
-                    </DataTrigger>
-                </DataTemplate.Triggers>
-            </DataTemplate>
-        </ListView.ItemTemplate>
-    </ListView>
+
+    <Grid HorizontalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <materialDesign:ColorZone
+            Grid.Row="1"
+            Padding="0,0,5,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Mode="Inverted"
+            Visibility="{Binding Items.Count, Converter={StaticResource NotZeroToVisibilityConverter}}">
+
+            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox
+                    x:Name="PlayListFilter"
+                    Grid.Column="0"
+                    Width="150"
+                    Height="40"
+                    Padding="5,0"
+                    HorizontalAlignment="Right"
+                    VerticalContentAlignment="Center"
+                    materialDesign:HintAssist.Hint="{Binding [QuickSearch]}"
+                    materialDesign:TextFieldAssist.HasClearButton="True"
+                    materialDesign:TextFieldAssist.UnderlineBrush="Red"
+                    Foreground="White"
+                    TextChanged="PlayListFilter_TextChanged" />
+                <materialDesign:PackIcon
+                    Grid.Column="1"
+                    Width="20"
+                    Height="20"
+                    VerticalAlignment="Center"
+                    Kind="Search" />
+            </Grid>
+        </materialDesign:ColorZone>
+
+        <!--
+            Setting ScrollViewer.CanContentScroll="False" disables virtualization
+            but makes a smooth scroll while dragging
+            Setting ScrollViewer.HorizontalScrollBarVisibility="Disabled" fixes the width problem on resizes
+            https://stackoverflow.com/questions/40013780/wpf-textblock-texttrimming-not-working-inside-a-grid-with-gridsplitter
+            Btw ScrollViewer.HorizontalScrollBarVisibility="Disabled" + ScrollViewer.CanContentScroll="True" lags while resizing...
+        -->
+        <ListView
+            x:Name="PlaylistLv"
+            Grid.Row="0"
+            cb:DragDropExtension.ScrollOnDragDrop="True"
+            materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
+            DragEnter="PlaylistLv_DragEnter"
+            DragLeave="PlaylistLv_DragLeave"
+            Drop="PlaylistLv_Drop"
+            ItemsSource="{Binding Items}"
+            KeyboardNavigation.TabNavigation="Cycle"
+            MouseMove="PlaylistLv_MouseMove"
+            PreviewMouseLeftButtonDown="PlaylistLv_PreviewMouseLeftButtonDown"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            Style="{StaticResource PlayListLvStyle}">
+            <behaviours:Interaction.Behaviors>
+                <cb:MultiSelectionBehavior SelectedItems="{Binding SelectedItems}" />
+            </behaviours:Interaction.Behaviors>
+            <ListView.ContextMenu>
+                <ContextMenu x:Name="PlayListContextMenu">
+                    <MenuItem Command="{Binding AddFolderCommand}" Header="{Binding [AddFolder]}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon Kind="Folder" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding AddFilesCommand}" Header="{Binding [AddFiles]}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon Kind="Add" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ShowAddUrlPopUpCommand}" Header="{Binding [AddUrl]}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon Kind="LinkAdd" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </ListView.ContextMenu>
+            <ListView.InputBindings>
+                <KeyBinding
+                    Key="F"
+                    Command="{Binding AddFolderCommand}"
+                    Modifiers="Ctrl" />
+                <KeyBinding
+                    Key="S"
+                    Command="{Binding AddFilesCommand}"
+                    Modifiers="Ctrl" />
+                <KeyBinding
+                    Command="{Binding PlayFileCommand}"
+                    CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
+                    Gesture="Enter" />
+                <KeyBinding
+                    Command="{Binding RemoveFileCommand}"
+                    CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
+                    Gesture="Delete" />
+                <KeyBinding Key="Space" Command="{Binding DataContext.TogglePlayBackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
+            </ListView.InputBindings>
+            <ListView.ItemContainerStyle>
+                <Style BasedOn="{StaticResource MaterialDesignListBoxItem}" TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="5,0,5,0" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="true">
+                            <Setter Property="Background" Value="{StaticResource SelectedItemBackground}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type vmis:FileItemViewModel}">
+                    <Border x:Name="Border" HorizontalAlignment="Stretch">
+                        <uc:FileItem DataContext="{Binding}" Tag="{Binding Source={x:Reference Name=PlaylistLv}, Path=DataContext}" />
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{StaticResource SelectedItemBackground}" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <Popup
+            IsOpen="{Binding ShowAddUrlPopUp, Mode=TwoWay}"
+            Placement="Center"
+            PlacementTarget="{Binding ElementName=PlaylistLv}"
+            StaysOpen="False">
+            <behaviours:Interaction.Triggers>
+                <behaviours:EventTrigger EventName="Closed">
+                    <behaviours:ChangePropertyAction
+                        PropertyName="Text"
+                        TargetObject="{Binding ElementName=AddFromUrlUserControl, Path=UrlText}"
+                        Value="" />
+                </behaviours:EventTrigger>
+            </behaviours:Interaction.Triggers>
+            <uc:AddFromUrl x:Name="AddFromUrlUserControl" />
+        </Popup>
+    </Grid>
 </views:MvxWpfView>

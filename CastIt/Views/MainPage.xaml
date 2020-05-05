@@ -25,10 +25,6 @@
         </behaviours:EventTrigger>
     </behaviours:Interaction.Triggers>
 
-    <views:MvxWpfView.Resources>
-        <converters:CenterPopUpConverter x:Key="CenterPopUpConverter" />
-    </views:MvxWpfView.Resources>
-
     <views:MvxWpfView.InputBindings>
         <KeyBinding Key="F1" Command="{Binding PreviousCommand}" />
         <KeyBinding Key="F2" Command="{Binding NextCommand}" />
@@ -44,6 +40,10 @@
         <KeyBinding
             Key="Tab"
             Command="{Binding SwitchPlayListsCommand}"
+            Modifiers="Ctrl" />
+        <KeyBinding
+            Key="N"
+            Command="{Binding AddNewPlayListCommand}"
             Modifiers="Ctrl" />
     </views:MvxWpfView.InputBindings>
 
@@ -69,177 +69,24 @@
         <Image
             Grid.Row="1"
             Grid.Column="0"
-            Width="200"
             Height="150"
-            HorizontalAlignment="Left"
+            HorizontalAlignment="Stretch"
             Focusable="False"
-            Source="/Resources/Clannad.jpg" />
+            Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}" />
 
-        <Grid
+        <uc:ButtonsBar
             Grid.Row="1"
             Grid.Column="1"
-            HorizontalAlignment="Stretch">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            Margin="0,0,0,10" />
 
-            <materialDesign:ColorZone
-                Grid.Row="0"
-                Grid.ColumnSpan="2"
-                Padding="16,0,16,16"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                Mode="Inverted">
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Margin="0,0,0,5" TextTrimming="CharacterEllipsis">
-                        <TextBlock.Style>
-                            <Style BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}" TargetType="TextBlock">
-                                <Setter Property="Text" Value="" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsCurrentlyPlaying}" Value="True">
-                                        <Setter Property="Text" Value="{Binding [NowPlaying]}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <TextBlock
-                        Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
-                        Text="{Binding CurrentlyPlayingFilename}"
-                        TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-            </materialDesign:ColorZone>
-
-            <StackPanel
-                Grid.Row="1"
-                Grid.Column="0"
-                Margin="0,0,0,10"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Orientation="Horizontal">
-                <Button
-                    Command="{Binding PreviousCommand}"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [Previous]}">
-                    <materialDesign:PackIcon Kind="SkipPrevious" />
-                </Button>
-                <Button
-                    Command="{Binding SkipCommand}"
-                    CommandParameter="-30"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [GoBack30Sec]}">
-                    <materialDesign:PackIcon Kind="TitleBackward" />
-                </Button>
-                <Button Command="{Binding TogglePlayBackCommand}">
-                    <Button.Style>
-                        <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="Button">
-                            <Setter Property="ToolTip" Value="{Binding [Play]}" />
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <materialDesign:PackIcon Kind="Play" />
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsPaused}" Value="True">
-                                    <Setter Property="Content">
-                                        <Setter.Value>
-                                            <materialDesign:PackIcon Kind="Pause" />
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter Property="ToolTip" Value="{Binding [Pause]}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button
-                    Command="{Binding StopPlayBackCommand}"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [Stop]}">
-                    <materialDesign:PackIcon Kind="Stop" />
-                </Button>
-                <Button
-                    Command="{Binding SkipCommand}"
-                    CommandParameter="30"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [GoForward30Sec]}">
-                    <materialDesign:PackIcon Kind="TitleForward" />
-                </Button>
-                <Button
-                    Command="{Binding NextCommand}"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [Next]}">
-                    <materialDesign:PackIcon Kind="SkipNext" />
-                </Button>
-            </StackPanel>
-
-            <StackPanel
-                Grid.Row="1"
-                Grid.Column="1"
-                Margin="0,0,0,10"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Orientation="Horizontal">
-                <Popup
-                    IsOpen="{Binding ShowSettingsPopUp, Mode=TwoWay}"
-                    Placement="Bottom"
-                    PlacementTarget="{Binding ElementName=SettingsButton}"
-                    StaysOpen="False">
-                    <Popup.HorizontalOffset>
-                        <MultiBinding Converter="{StaticResource CenterPopUpConverter}" ConverterParameter="False">
-                            <Binding ElementName="SettingsUserControl" Path="Width " />
-                            <Binding ElementName="SettingsButton" Path="ActualWidth" />
-                        </MultiBinding>
-                    </Popup.HorizontalOffset>
-                    <uc:Settings x:Name="SettingsUserControl" />
-                </Popup>
-                <Button Click="Button_Click">
-                    <Button.Style>
-                        <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="Button">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <materialDesign:PackIcon Kind="ChevronUp" />
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="ToolTip" Value="{Binding [Collapse]}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsExpanded}" Value="False">
-                                    <Setter Property="Content">
-                                        <Setter.Value>
-                                            <materialDesign:PackIcon Kind="ChevronDown" />
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter Property="ToolTip" Value="{Binding [Expand]}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button
-                    x:Name="SettingsButton"
-                    Command="{Binding OpenSettingsCommand}"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [Settings]}">
-                    <materialDesign:PackIcon Kind="Cog" />
-                </Button>
-                <Button Style="{StaticResource MainButtonStyle}" ToolTip="{Binding [Devices]}">
-                    <materialDesign:PackIcon Kind="Tv" />
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <ProgressBar
+        <Slider
             Grid.Row="2"
             Grid.ColumnSpan="2"
-            Height="6"
+            Margin="0,5,0,5"
+            Foreground="Red"
             Maximum="100"
             Minimum="0"
-            Style="{StaticResource AppProgressBarStyle}"
+            Style="{StaticResource MaterialDesignDiscreteSlider}"
             Value="{Binding PlayedPercentage}" />
 
         <dragablz:TabablzControl
@@ -264,44 +111,12 @@
             </dragablz:TabablzControl.ContextMenu>
             <dragablz:TabablzControl.HeaderItemTemplate>
                 <DataTemplate DataType="{x:Type vmis:PlayListItemViewModel}">
-                    <Grid>
-                        <Grid.ContextMenu>
-                            <ContextMenu StaysOpen="False">
-                                <MenuItem Command="{Binding RenameCommand}" Header="{Binding [Rename]}">
-                                    <MenuItem.Icon>
-                                        <materialDesign:PackIcon Kind="RenameBox" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem
-                                    Command="{Binding Source={x:Reference Name=PlayListTabControl}, Path=DataContext.DeletePlayListCommand}"
-                                    CommandParameter="{Binding}"
-                                    Header="{Binding [Delete]}">
-                                    <MenuItem.Icon>
-                                        <materialDesign:PackIcon Kind="DeleteForever" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem
-                                    Command="{Binding Source={x:Reference Name=PlayListTabControl}, Path=DataContext.DeleteAllPlayListsExceptCommand}"
-                                    CommandParameter="{Binding}"
-                                    Header="{Binding [DeleteAllExceptThis]}">
-                                    <MenuItem.Icon>
-                                        <materialDesign:PackIcon Kind="DeleteEmpty" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <!--  we'll be in a popup, so give dragablz a hint as to what tab header content needs closing  -->
-                                <!--<MenuItem Command="{x:Static dragablz:TabablzControl.CloseItemCommand}"/>-->
-                            </ContextMenu>
-                        </Grid.ContextMenu>
-                        <TextBlock Foreground="White" Text="{Binding Name}" />
-                    </Grid>
+                    <uc:PlayListItemHeader DataContext="{Binding}" Tag="{Binding ElementName=PlayListTabControl, Path=DataContext}" />
                 </DataTemplate>
             </dragablz:TabablzControl.HeaderItemTemplate>
             <dragablz:TabablzControl.ContentTemplate>
                 <DataTemplate DataType="{x:Type vmis:PlayListItemViewModel}">
-                    <uc:PlayListItem
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Stretch"
-                        DataContext="{Binding}" />
+                    <uc:PlayListItem DataContext="{Binding}" />
                 </DataTemplate>
             </dragablz:TabablzControl.ContentTemplate>
         </dragablz:TabablzControl>

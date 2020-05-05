@@ -1,4 +1,5 @@
-﻿using MvvmCross.Platforms.Wpf.Views;
+﻿using CastIt.Common;
+using MvvmCross.Platforms.Wpf.Views;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -29,8 +30,7 @@ namespace CastIt
             }
             else
             {
-                //200 is the minimu height
-                (_showWin.Children.First() as DoubleAnimation).To = tabHeight + 200;
+                (_showWin.Children.First() as DoubleAnimation).To = tabHeight + AppConstants.MinWindowHeight;
                 _showWin.Begin();
             }
             _isCollapsed = !_isCollapsed;

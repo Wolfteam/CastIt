@@ -1,4 +1,5 @@
-﻿using CastIt.ViewModels;
+﻿using CastIt.Common;
+using CastIt.ViewModels;
 using MvvmCross.Binding.BindingContext;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
@@ -9,7 +10,6 @@ namespace CastIt.Views
     [MvxViewFor(typeof(MainViewModel))]
     public partial class MainPage : MvxWpfView<MainViewModel>
     {
-        private double _currentTabHeight;
         //TODO: IF YOU DRAG OUT OF THE WINDOW, THE SEPARATORS ARE SHOWN
 
         private IMvxInteraction _closeAppRequest;
@@ -59,17 +59,6 @@ namespace CastIt.Views
             var window = System.Windows.Application.Current.MainWindow;
             window.Width = width;
             window.Height = height;
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            //TODO: IMPROVE THIS PIECE OF CODE
-            var window = System.Windows.Application.Current.MainWindow as MainWindow;
-            var currentTab = PlayListTabControl;
-            ViewModel.IsExpanded = !ViewModel.IsExpanded;
-            if (_currentTabHeight < currentTab.ActualHeight)
-                _currentTabHeight = currentTab.ActualHeight;
-            window.ToggleWindowHeight(_currentTabHeight);
         }
     }
 }

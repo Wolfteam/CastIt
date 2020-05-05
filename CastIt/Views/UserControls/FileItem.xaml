@@ -14,7 +14,7 @@
     <!--  This tag binding contains the playlist vm  -->
     <Grid
         HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
+        VerticalAlignment="Stretch"
         Tag="{Binding Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
         <Grid.ContextMenu>
             <ContextMenu StaysOpen="False">
@@ -78,15 +78,18 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Separator
             Grid.Row="0"
             Grid.ColumnSpan="3"
+            VerticalAlignment="Center"
             Style="{StaticResource FileItemSeparatorStyle}"
             Visibility="{Binding IsSeparatorTopLineVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
         <ToggleButton
-            Grid.Row="1"
+            Grid.RowSpan="5"
             Grid.Column="0"
+            Margin="0,0,5,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
             Content="{Binding Position}"
@@ -96,49 +99,55 @@
             Style="{StaticResource MaterialDesignActionLightToggleButton}"
             ToolTip="Select" />
 
-        <StackPanel
-            x:Name="FileItemStackPanel"
-            Grid.Row="1"
-            Grid.Column="1"
-            Margin="10,0,0,0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Center"
-            Orientation="Vertical">
-            <TextBlock
-                Foreground="White"
-                Text="{Binding Filename}"
-                TextTrimming="CharacterEllipsis" />
-            <TextBlock
-                Style="{StaticResource FileItemSubTextStyle}"
-                Text="{Binding SubTitle}"
-                TextTrimming="CharacterEllipsis" />
-            <TextBlock
-                Style="{StaticResource FileItemSubTextStyle}"
-                Text="{Binding Path}"
-                TextTrimming="CharacterEllipsis" />
-        </StackPanel>
-
         <TextBlock
             Grid.Row="1"
+            Grid.Column="1"
+            VerticalAlignment="Center"
+            Foreground="White"
+            Text="{Binding Filename}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="Wrap" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="1"
+            VerticalAlignment="Center"
+            Style="{StaticResource FileItemSubTextStyle}"
+            Text="{Binding SubTitle}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="Wrap" />
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="0,0,10,0"
+            VerticalAlignment="Center"
+            Style="{StaticResource FileItemSubTextStyle}"
+            Text="{Binding Path}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Grid.RowSpan="5"
             Grid.Column="2"
-            HorizontalAlignment="Right"
             VerticalAlignment="Center"
             Foreground="White"
             Text="{Binding Duration}"
+            TextAlignment="Right"
             TextTrimming="CharacterEllipsis" />
 
         <ProgressBar
-            Grid.Row="2"
+            Grid.Row="4"
             Grid.ColumnSpan="3"
-            Margin="0,5,0,0"
+            Margin="0,5"
+            VerticalAlignment="Center"
             Maximum="100"
             Minimum="0"
             Style="{StaticResource AppProgressBarStyle}"
             Value="{Binding PlayedPercentage}" />
 
         <Separator
-            Grid.Row="3"
+            Grid.Row="5"
             Grid.ColumnSpan="3"
+            VerticalAlignment="Center"
             Style="{StaticResource FileItemSeparatorStyle}"
             Visibility="{Binding IsSeparatorBottomLineVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
     </Grid>

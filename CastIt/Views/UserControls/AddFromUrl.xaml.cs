@@ -2,9 +2,12 @@
 
 namespace CastIt.Views.UserControls
 {
-    public partial class FileItem : UserControl
+    public partial class AddFromUrl : UserControl
     {
-        public FileItem()
+        public TextBox UrlText
+            => UrlTextBox;
+
+        public AddFromUrl()
         {
             InitializeComponent();
         }

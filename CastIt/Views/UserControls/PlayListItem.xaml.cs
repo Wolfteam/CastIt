@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -21,6 +22,8 @@ namespace CastIt.Views.UserControls
         private const string PlaylistItemMoveFormat = "PlaylistItemMoveFormat";
 
         private IMvxInteraction _openFileDialogRequest;
+        private IMvxInteraction _openFolderDialogRequest;
+
         public IMvxInteraction OpenFileDialogRequest
         {
             get => _openFileDialogRequest;
@@ -35,7 +38,6 @@ namespace CastIt.Views.UserControls
             }
         }
 
-        private IMvxInteraction _openFolderDialogRequest;
         public IMvxInteraction OpenFolderDialogRequest
         {
             get => _openFolderDialogRequest;
@@ -66,6 +68,9 @@ namespace CastIt.Views.UserControls
         {
             Loaded -= (sender, args) => SetViewModel();
             ViewModel = DataContext as PlayListItemViewModel;
+
+            var view = CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource);
+            view.Filter = FilterFiles;
         }
 
         private void OpenFileDialog()
@@ -256,6 +261,20 @@ namespace CastIt.Views.UserControls
             {
                 file.HideItemSeparators();
             }
+        }
+
+        private bool FilterFiles(object item)
+        {
+            if (string.IsNullOrEmpty(PlayListFilter.Text))
+                return true;
+
+            var vm = item as FileItemViewModel;
+            return vm.Filename.Contains(PlayListFilter.Text, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void PlayListFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource)?.Refresh();
         }
     }
 }

@@ -2,9 +2,9 @@
 
 namespace CastIt.Views.UserControls
 {
-    public partial class FileItem : UserControl
+    public partial class PlayListItemHeader : UserControl
     {
-        public FileItem()
+        public PlayListItemHeader()
         {
             InitializeComponent();
         }

@@ -16,10 +16,10 @@
     d:DesignWidth="350"
     x:TypeArguments="vms:SettingsViewModel"
     mc:Ignorable="d">
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Grid.Background>
-            <SolidColorBrush Opacity=".8" Color="White" />
-        </Grid.Background>
+    <Grid
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Background="{StaticResource MaterialDesignDarkBackground}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -30,7 +30,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Mode="Accent">
-            <TextBlock Foreground="White" Text="Settings" />
+            <TextBlock Foreground="White" Text="{Binding [Settings]}" />
         </materialDesign:ColorZone>
         <ScrollViewer
             Grid.Row="1"

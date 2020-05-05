@@ -57,7 +57,7 @@
                         Height="18"
                         Kind="WindowMinimize" />
                 </Button>
-                <!--<Button
+                <Button
                     Click="Maximize_Clicked"
                     Style="{StaticResource WindowButtonStyle}"
                     ToolTip="Maximize">
@@ -65,7 +65,7 @@
                         Width="18"
                         Height="18"
                         Kind="WindowMaximize" />
-                </Button>-->
+                </Button>
                 <Button Command="{Binding CloseAppCommand}" ToolTip="Close">
                     <Button.Style>
                         <Style BasedOn="{StaticResource WindowButtonStyle}" TargetType="Button">
