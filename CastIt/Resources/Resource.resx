@@ -195,4 +195,25 @@
   <data name="AddFolder" xml:space="preserve">
     <value>Add folder</value>
   </data>
+  <data name="PlayList" xml:space="preserve">
+    <value>PlayList</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="AddUrl" xml:space="preserve">
+    <value>Add URL</value>
+  </data>
+  <data name="QuickSearch" xml:space="preserve">
+    <value>Quick Search</value>
+  </data>
 </root>

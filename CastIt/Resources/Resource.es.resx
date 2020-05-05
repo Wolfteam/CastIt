@@ -195,4 +195,25 @@
   <data name="AddFolder" xml:space="preserve">
     <value>Agregar carpeta</value>
   </data>
+  <data name="PlayList" xml:space="preserve">
+    <value>Lista de Reproducción</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Conectar</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Desconectar</value>
+  </data>
+  <data name="AddUrl" xml:space="preserve">
+    <value>Agregar URL</value>
+  </data>
+  <data name="QuickSearch" xml:space="preserve">
+    <value>Búsqueda Rápida</value>
+  </data>
 </root>

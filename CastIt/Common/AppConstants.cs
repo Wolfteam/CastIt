@@ -22,17 +22,26 @@ namespace CastIt.Common
         public const string AccentColorViolet = "#8600ff";
         public const string AccentColorLightGrey = "#a8a9aa";
 
-        public static IReadOnlyList<string> AllowedFormats => new List<string>
+        public const string FullElapsedTimeFormat = @"hh\:mm\:ss";
+        public const string ShortElapsedTimeFormat = @"mm\:ss";
+
+        public static IReadOnlyList<string> AllowedFormats 
+            => AllowedVideoFormats.Concat(AllowedMusicFormats).ToList();
+        public static IReadOnlyList<string> AllowedVideoFormats => new List<string>
+        {
+            ".mp4",
+            ".avi",
+            ".mkv",
+            ".m4v"
+        };
+
+        public static IReadOnlyList<string> AllowedMusicFormats => new List<string>
         {
             ".mp3",
             ".ogg",
             ".wav",
             ".aac",
             ".flac",
-            ".mp4",
-            ".avi",
-            ".mkv",
-            ".m4v"
         };
 
         public static string AllowedFormatsString 
@@ -52,5 +61,8 @@ namespace CastIt.Common
             AccentColorDarkGray, AccentColorOrange, AccentColorYellow,
             AccentColorDarkBlue, AccentColorViolet, AccentColorLightGrey
         };
+
+        public static double MinWindowWidth = 700;
+        public static double MinWindowHeight = 200;
     }
 }

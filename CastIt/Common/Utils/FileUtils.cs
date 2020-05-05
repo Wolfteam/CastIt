@@ -30,7 +30,18 @@ namespace CastIt.Common.Utils
         public static string GetLogsPath()
         {
             string basePath = GetBaseAppFolder();
-            return Path.Combine(basePath, "Logs", AppConstants.AppName);
+            return CreateDirectory(basePath, "Logs");
+        }
+
+        public static string GetPreviewsPath()
+        {
+            string basePath = GetBaseAppFolder();
+            return CreateDirectory(basePath, "Previews");
+        }
+
+        public static string GetThumbnailFilePath(string filename, int second)
+        {
+            return Path.Combine(GetPreviewsPath(), $"{filename}_{second}.jpg");
         }
 
         public static string CreateDirectory(string baseFolder, string folder)
