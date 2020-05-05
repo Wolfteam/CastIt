@@ -19,7 +19,7 @@ namespace CastIt.ViewModels
         public ITextProvider TextProvider { get; }
         public IMvxMessenger Messenger { get; }
         public IMvxLog Logger { get; }
-        public IMvxNavigationService NavigationService { get; }
+        //public IMvxNavigationService NavigationService { get; }
         //public IAppSettingsService AppSettings { get; }
         //public ITelemetryService TelemetryService { get; }
 
@@ -37,13 +37,12 @@ namespace CastIt.ViewModels
         public BaseViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger,
-            IMvxNavigationService navigationService)
+            IMvxLog logger)
         {
             TextProvider = textProvider;
             Messenger = messenger;
             Logger = logger;
-            NavigationService = navigationService;
+            //NavigationService = navigationService;
             //AppSettings = appSettings;
             //TelemetryService = telemetryService;
 

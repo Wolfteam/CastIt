@@ -1,8 +1,8 @@
-﻿using CastIt.Interfaces;
+﻿using CastIt.Common;
+using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
-using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using System;
 using System.Diagnostics;
@@ -26,6 +26,7 @@ namespace CastIt.ViewModels.Items
         #region Properties
         public long Id { get; set; }
         public long PlayListId { get; set; }
+        public long TotalSeconds { get; private set; }
 
         public int Position
         {
@@ -42,13 +43,18 @@ namespace CastIt.ViewModels.Items
         public double PlayedPercentage
         {
             get => _playedPercentage;
-            set => SetProperty(ref _playedPercentage, value);
+            set
+            {
+                if (value == _playedPercentage)
+                    return;
+                SetProperty(ref _playedPercentage, value);
+            }
         }
 
         public string Duration
         {
             get => _duration;
-            set => SetProperty(ref _duration, value);
+            private set => SetProperty(ref _duration, value);
         }
 
         public bool IsSelected
@@ -69,14 +75,18 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isSeparatorBottomLineVisible, value);
         }
 
+        public bool IsLocalFile 
+            => _castService.IsLocalFile(Path);
+        public bool IsUrlFile
+            => _castService.IsUrlFile(Path);
         public bool Exists
-            => System.IO.File.Exists(Path);
+            => IsLocalFile || IsUrlFile;
         public string Filename
-            => System.IO.Path.GetFileName(Path);
+            => _castService.GetFileName(Path);
         public string Size
-            => GetFileSize();
+            => _castService.GetFileSizeString(Path);
         public string Extension
-            => System.IO.Path.GetExtension(Path).ToUpper().Replace(".", "");
+            => _castService.GetExtension(Path);
         public string SubTitle
             => $"{Extension}, {Size}";
         #endregion
@@ -91,9 +101,8 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IMvxNavigationService navigationService,
             ICastService castService)
-            : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>(), navigationService)
+            : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
         {
             _castService = castService;
         }
@@ -132,19 +141,6 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        private string GetFileSize()
-        {
-            var fileInfo = new System.IO.FileInfo(Path);
-            if (!fileInfo.Exists)
-            {
-                return "N/A";
-            }
-
-            var sizeInBytes = fileInfo.Length;
-            float sizeInMb = sizeInBytes / 1024F / 1024F;
-            return Math.Round(sizeInMb, 2) + " MB";
-        }
-
         public async Task SetDuration()
         {
             if (!Exists)
@@ -152,7 +148,9 @@ namespace CastIt.ViewModels.Items
                 Duration = GetText("Missing");
                 return;
             }
-            var seconds = await _castService.GetDuration(Path, true);
+            //TODO: IF THE USER OPENS THE APP, AND HAS A LOT OF ITEMS, AND THEN, IT CLOSES THE APP, A CRASH MAY BE THROWN
+            var seconds = await _castService.GetDuration(Path);
+            TotalSeconds = seconds;
             if (seconds <= 0)
             {
                 Duration = "N/A";
@@ -163,9 +161,9 @@ namespace CastIt.ViewModels.Items
             //here backslash is must to tell that colon is
             //not the part of format, it just a character that we want in output
             if (time.Hours > 0)
-                Duration = time.ToString(@"hh\:mm\:ss");
+                Duration = time.ToString(AppConstants.FullElapsedTimeFormat);
             else
-                Duration = time.ToString(@"mm\:ss");
+                Duration = time.ToString(AppConstants.ShortElapsedTimeFormat);
         }
 
         public void ListenEvents()

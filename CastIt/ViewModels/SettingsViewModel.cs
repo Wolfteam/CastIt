@@ -79,9 +79,8 @@ namespace CastIt.ViewModels
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IMvxNavigationService navigationService,
             IAppSettingsService settingsService)
-            : base(textProvider, messenger, logger.GetLogFor<SettingsViewModel>(), navigationService)
+            : base(textProvider, messenger, logger.GetLogFor<SettingsViewModel>())
         {
             _settingsService = settingsService;
             var themes = Enum.GetValues(typeof(AppThemeType)).Cast<AppThemeType>().Select(theme => new Item
@@ -99,16 +98,6 @@ namespace CastIt.ViewModels
             });
 
             Languages = new MvxObservableCollection<Item>(languages);
-        }
-
-        public override Task Initialize()
-        {
-            return base.Initialize();
-        }
-
-        public override void Prepare()
-        {
-            base.Prepare();
         }
 
         public override void SetCommands()

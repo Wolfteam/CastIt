@@ -8,9 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\AppIcon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\AppIcon.png" />
     <Resource Include="Resources\favicon.ico" />
     <Resource Include="Resources\NoImg.jpg" />
-    <Resource Include="Resources\Clannad.jpg" />
   </ItemGroup>
 
   <ItemGroup>

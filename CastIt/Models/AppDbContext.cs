@@ -33,34 +33,34 @@ namespace CastIt.Models
             var playList = new PlayList
             {
                 Id = 1,
-                Name = "Music",
+                Name = "Default",
             };
             modelBuilder.Entity<PlayList>().HasData(playList);
-            modelBuilder.Entity<FileItem>().HasData(
-                new FileItem
-                {
-                    Id = 1,
-                    PlayListId = 1,
-                    Position = 1,
-                    CreatedAt = DateTime.Now,
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\B Gata H Kei  Nonononon.mp3",
-                },
-                new FileItem
-                {
-                    Id = 2,
-                    PlayListId = 1,
-                    Position = 2,
-                    CreatedAt = DateTime.Now,
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  課金厨のうた -More Charin Ver.-.mp3",
-                },
-                new FileItem
-                {
-                    Id = 3,
-                    PlayListId = 1,
-                    Position = 3,
-                    CreatedAt = DateTime.Now,
-                    Path = "C:\\Users\\Efrain Bastidas\\Music\\Minami-Ke  Girl Jundo UP.mp3",
-                });
+            //modelBuilder.Entity<FileItem>().HasData(
+            //    new FileItem
+            //    {
+            //        Id = 1,
+            //        PlayListId = 1,
+            //        Position = 1,
+            //        CreatedAt = DateTime.Now,
+            //        Path = "C:\\Users\\Efrain Bastidas\\Music\\B Gata H Kei  Nonononon.mp3",
+            //    },
+            //    new FileItem
+            //    {
+            //        Id = 2,
+            //        PlayListId = 1,
+            //        Position = 2,
+            //        CreatedAt = DateTime.Now,
+            //        Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  課金厨のうた -More Charin Ver.-.mp3",
+            //    },
+            //    new FileItem
+            //    {
+            //        Id = 3,
+            //        PlayListId = 1,
+            //        Position = 3,
+            //        CreatedAt = DateTime.Now,
+            //        Path = "C:\\Users\\Efrain Bastidas\\Music\\Minami-Ke  Girl Jundo UP.mp3",
+            //    });
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -94,12 +94,11 @@ namespace CastIt.Models
             logger.Info($"Checking if the lastest migration = {CurrentAppMigration} is applied");
             try
             {
-                //if (appSettings.CurrentAppMigration == CurrentAppMigration)
-                //{
-                //    logger.Info("Lastest migration is applied...");
-                //    return;
-                //}
-                //TODO: CHANGE THIS
+                if (appSettings.CurrentAppMigration == CurrentAppMigration)
+                {
+                    logger.Info("Lastest migration is applied...");
+                    return;
+                }
                 logger.Info("Migration is not applied... Aplying it...");
                 using (var context = new AppDbContext())
                 {

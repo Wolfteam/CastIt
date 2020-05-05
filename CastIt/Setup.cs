@@ -1,4 +1,5 @@
 ﻿using CastIt.Common.Miscellaneous;
+using CastIt.Common.Utils;
 using CastIt.ViewModels;
 using MvvmCross.Logging;
 using MvvmCross.Platforms.Wpf.Core;
@@ -24,9 +25,7 @@ namespace CastIt
         {
             const string fileOutputTemplate =
                 "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{Level}] {Message:lj}{NewLine}{Exception}";
-            var externalFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var basePath = Path.Combine(externalFolder, "CastIt", "Logs");
-            CreateDirectory(externalFolder, basePath);
+            var basePath = FileUtils.GetLogsPath();
             var loggerConfig = new LoggerConfiguration().MinimumLevel
                 .Verbose();
 
@@ -49,17 +48,6 @@ namespace CastIt
             }
             Log.Logger = loggerConfig.CreateLogger();
             return base.CreateLogProvider();
-        }
-
-        private static string CreateDirectory(string baseFolder, string folder)
-        {
-            var fullPath = Path.Combine(baseFolder, folder);
-            if (!Directory.Exists(fullPath))
-            {
-                Directory.CreateDirectory(fullPath);
-            }
-
-            return fullPath;
         }
     }
 }

@@ -18,9 +18,18 @@ namespace CastIt.Interfaces
         bool DiscoverChromecasts();
         void GoToPosition(float position);
         void Init();
-        void StartPlay(string mrl, bool isLocal);
+        Task StartPlay(string mrl);
+        string GetFirstThumbnail();
+        string GetFirstThumbnail(string filePath);
+        string GetThumbnail(int second);
+        string GetThumbnail(string filePath, int second);
         void StopPlayback();
         void TogglePlayback();
-        Task<long> GetDuration(string mrl, bool isLocal);
+        Task<long> GetDuration(string mrl);
+        bool IsLocalFile(string mrl);
+        bool IsUrlFile(string mrl);
+        string GetFileName(string mrl);
+        string GetExtension(string mrl);
+        string GetFileSizeString(string mrl);
     }
 }

@@ -99,8 +99,8 @@ namespace CastIt.Services
                 CurrentAppMigration = AppDbContext.CurrentAppMigration,
                 Language = AppLanguageType.English,
                 IsPlayListExpanded = true,
-                WindowHeight = 200,
-                WindowWidth = 800
+                WindowHeight = AppConstants.MinWindowHeight,
+                WindowWidth = AppConstants.MinWindowWidth
             });
         }
 

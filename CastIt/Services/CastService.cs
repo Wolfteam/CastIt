@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models;
 using LibVLCSharp.Shared;
@@ -15,6 +16,8 @@ namespace CastIt.Services
 {
     public class CastService : ICastService
     {
+        private const string FfmpegPath = "C:/ffmpeg/ffmpeg.exe";
+
         private readonly IMvxLog _logger;
         private readonly HashSet<RendererItem> _rendererItems = new HashSet<RendererItem>();
         private LibVLC _libVLC;
@@ -22,6 +25,7 @@ namespace CastIt.Services
         private RendererDiscoverer _rendererDiscoverer;
         private Media _currentMedia;
         private bool _renderWasSet;
+        private string _currentFilePath;
 
         public List<CastableDevice> AvailableDevices => _rendererItems.Select(r => new CastableDevice
         {
@@ -45,8 +49,8 @@ namespace CastIt.Services
             // load native libvlc libraries
             Core.Initialize();
             // create core libvlc object
-            _libVLC = new LibVLC();
-            _libVLC.Log += Log;
+            _libVLC = new LibVLC("--verbose=3");
+            //_libVLC.Log += Log;
 
             DiscoverChromecasts();
 
@@ -65,11 +69,13 @@ namespace CastIt.Services
             Debug.WriteLine(args.Message);
         }
 
-        public void StartPlay(string mrl, bool isLocal)
+        public async Task StartPlay(string mrl)
         {
-            if (isLocal && !File.Exists(mrl))
+            bool isLocal = IsLocalFile(mrl);
+            bool isUrlFile = IsUrlFile(mrl);
+            if (!isLocal && !isUrlFile)
             {
-                Debug.WriteLine($"Path = {mrl} doesnt exists");
+                Debug.WriteLine($"Invalid = {mrl}");
                 return;
             }
             //TODO: SHOULD I CHECK IF _libVLC.RendererList IS EMPTY ?
@@ -87,14 +93,92 @@ namespace CastIt.Services
             }
 
             // create new media
+            _currentFilePath = mrl;
             _currentMedia?.Dispose();
             _currentMedia = new Media(
                 _libVLC,
                 mrl,
                 isLocal ? FromType.FromPath : FromType.FromLocation);
 
+            await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
+
             // start the playback
-            ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Play(_currentMedia));
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                if (IsLocalFile(mrl))
+                    _mediaPlayer.Play(_currentMedia);
+                else
+                    _mediaPlayer.Play(_currentMedia.SubItems.First());
+            });
+        }
+
+        public string GetFirstThumbnail()
+            => GetThumbnail(3);
+
+        public string GetFirstThumbnail(string filePath)
+            => GetThumbnail(filePath, 3);
+
+        public string GetThumbnail(int second)
+        {
+            return GetThumbnail(_currentFilePath, second);
+        }
+
+        public string GetThumbnail(string filePath, int second)
+        {
+            if (!IsLocalFile(filePath))
+            {
+                return null;
+            }
+
+            var filename = Path.GetFileName(filePath);
+            var ext = Path.GetExtension(filePath);
+            var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, second);
+            if (File.Exists(thumbnailPath))
+            {
+                return thumbnailPath;
+            }
+
+            //-i filename(the source video's file path)
+            //- deinterlace(converts interlaced video to non - interlaced form)
+            //- an(audio recording is disabled; we don't need it for thumbnails)
+            //- ss position(input video is decoded and dumped until the timestamp reaches position, our thumbnail's position in seconds)
+            //- t duration(the output file stops writing after duration seconds)
+            //-y(overwrites the output file if it already exists)
+            //-s widthxheight(size of the frame in pixels)
+            string cmd;
+
+            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower()))
+            {
+                cmd = $"{FfmpegPath} -y -i " +
+                    '"' + filePath + '"'
+                    + $" -an -filter:v scale=200:150 "
+                    + '"' + thumbnailPath + '"';
+            }
+            else
+            {
+                cmd = $"{FfmpegPath} -y -i " +
+                    '"' + filePath + '"'
+                    + $" -an -ss {second} -vframes 1 -s 200x150 "
+                    + '"' + thumbnailPath + '"';
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                FileName = "cmd.exe",
+                Arguments = "/C " + cmd
+            };
+
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            process.Start();
+            process.WaitForExit();
+
+            return thumbnailPath;
         }
 
         public void TogglePlayback()
@@ -119,16 +203,11 @@ namespace CastIt.Services
             Clean();
         }
 
-        /// <summary>
-        /// Goes to a specific position
-        /// </summary>
-        /// <param name="position">A value between 0 and 100</param>
         public void GoToPosition(float position)
         {
             try
             {
                 position /= 100;
-                System.Diagnostics.Debug.WriteLine($"Postion will be set to = {position}");
                 if (position >= 0 && position <= 1)
                 {
                     ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Position = position);
@@ -146,12 +225,12 @@ namespace CastIt.Services
                 //Time is expresed in ms
                 var current = _mediaPlayer.Time / 1000;
                 current += seconds;
-                System.Diagnostics.Debug.WriteLine($"Adding = {seconds}. New value will be set to = {current}");
-
-                if (current >= 0)
+                if (current < 0)
                 {
-                    ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Time = current * 1000);
+                    current = 0;
                 }
+
+                ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Time = current * 1000);
             }
             catch (Exception ex)
             {
@@ -178,20 +257,39 @@ namespace CastIt.Services
             return started;
         }
 
-        public async Task<long> GetDuration(string mrl, bool isLocal)
+        public async Task<long> GetDuration(string mrl)
         {
+            bool isLocal = IsLocalFile(mrl);
+            bool isUrl = IsUrlFile(mrl);
+            if (!isLocal && !isUrl)
+            {
+                Debug.WriteLine($"Invalid mrl = {mrl}");
+                return -1;
+            }
+
             using var media = new Media(_libVLC, mrl, isLocal ? FromType.FromPath : FromType.FromLocation);
             try
             {
                 var status = await media.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
                 if (status == MediaParsedStatus.Done)
-                    return media.Duration / 1024;
+                    return media.Duration / 1000;
                 return 0;
             }
             catch (Exception)
             {
                 return -1;
             }
+        }
+
+        public bool IsLocalFile(string mrl)
+        {
+            return File.Exists(mrl);
+        }
+
+        public bool IsUrlFile(string mrl)
+        {
+            return Uri.TryCreate(mrl, UriKind.Absolute, out Uri uriResult) &&
+                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
         }
 
         private void Playing(object sender, EventArgs e)
@@ -246,6 +344,30 @@ namespace CastIt.Services
                 Name = e.RendererItem.Name,
                 Type = e.RendererItem.Type
             });
+        }
+
+        public string GetFileName(string mrl)
+        {
+            if (IsLocalFile(mrl))
+                return Path.GetFileName(mrl);
+            return mrl;
+        }
+
+        public string GetExtension(string mrl)
+        {
+            if (IsLocalFile(mrl))
+                return Path.GetExtension(mrl).ToUpper().Replace(".", "");
+            return "WEB";
+        }
+
+        public string GetFileSizeString(string mrl)
+        {
+            if (!IsLocalFile(mrl))
+                return "N/A";
+            var fileInfo = new FileInfo(mrl);
+            var sizeInBytes = fileInfo.Length;
+            float sizeInMb = sizeInBytes / 1024F / 1024F;
+            return Math.Round(sizeInMb, 2) + " MB";
         }
     }
 }
