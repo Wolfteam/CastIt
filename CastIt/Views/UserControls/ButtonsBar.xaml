@@ -71,6 +71,7 @@
         <StackPanel
             Grid.Row="1"
             Grid.Column="0"
+            Margin="0,0,0,8"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
             Orientation="Horizontal">
@@ -133,6 +134,7 @@
         <StackPanel
             Grid.Row="1"
             Grid.Column="1"
+            Margin="0,0,0,8"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Orientation="Horizontal">

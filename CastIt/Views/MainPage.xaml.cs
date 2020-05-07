@@ -1,9 +1,7 @@
-﻿using CastIt.Common;
-using CastIt.ViewModels;
+﻿using CastIt.ViewModels;
 using MvvmCross.Binding.BindingContext;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
-using System.Windows;
 
 namespace CastIt.Views
 {

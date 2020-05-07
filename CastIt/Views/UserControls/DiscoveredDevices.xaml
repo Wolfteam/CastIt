@@ -72,6 +72,25 @@
                 </Button>
             </Grid>
         </DataTemplate>
+
+        <Style x:Key="DeviceStyle" TargetType="{x:Type ItemsControl}">
+            <Style.Triggers>
+                <Trigger Property="HasItems" Value="False">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="24"
+                                    Foreground="White"
+                                    Text="{Binding [NoDevicesWereFound]}" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </views:MvxWpfView.Resources>
 
     <Grid
@@ -95,7 +114,10 @@
             Padding="16"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
             ScrollViewer.VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemTemplate="{StaticResource DeviceItemTemplate}" ItemsSource="{Binding Devices}" />
+            <ItemsControl
+                ItemTemplate="{StaticResource DeviceItemTemplate}"
+                ItemsSource="{Binding Devices}"
+                Style="{StaticResource DeviceStyle}" />
         </ScrollViewer>
     </Grid>
 </views:MvxWpfView>
