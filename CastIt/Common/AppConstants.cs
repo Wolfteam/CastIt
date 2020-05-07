@@ -62,7 +62,9 @@ namespace CastIt.Common
             AccentColorDarkBlue, AccentColorViolet, AccentColorLightGrey
         };
 
-        public static double MinWindowWidth = 700;
-        public static double MinWindowHeight = 200;
+        public static double MinWindowWidth = 650;
+        public static double MinWindowHeight = 208;
+
+        public const int ThumbnailsEachSeconds = 5;
     }
 }

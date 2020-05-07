@@ -82,11 +82,11 @@ namespace CastIt.Services
             if (!_rendererItems.Any())
             {
                 Debug.WriteLine($"No renders were found");
-                return;
+                //return;
             }
             //TODO: MOVE THIS SET TO A METHOD
             //TODO: YOU WILL PROBABLY NEED TO CALL THIS METHOD FROM ANOTHER THREAD
-            if (!_renderWasSet)
+            if (!_renderWasSet && _rendererItems.Any())
             {
                 _mediaPlayer.SetRenderer(_rendererItems.First());
                 _renderWasSet = true;
@@ -181,6 +181,45 @@ namespace CastIt.Services
             return thumbnailPath;
         }
 
+        public void GenerateThumbmnails()
+            => GenerateThumbmnails(_currentFilePath);
+
+        public void GenerateThumbmnails(string filePath)
+        {
+            if (!IsLocalFile(filePath))
+            {
+                return;
+            }
+            var filename = Path.GetFileName(filePath);
+            var ext = Path.GetExtension(filePath);
+
+            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower()))
+            {
+                return;
+            }
+            var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
+            var cmd = $"{FfmpegPath} -y -i " +
+                    '"' + filePath + '"'
+                    + $" -an -vf fps=1/5 -s 200x150 "
+                    + '"' + thumbnailPath + '"';
+
+            var startInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                FileName = "cmd.exe",
+                Arguments = "/C " + cmd
+            };
+
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            process.Start();
+            process.WaitForExit();
+        }
+
         public void TogglePlayback()
         {
             if (_mediaPlayer.IsPlaying)
@@ -212,6 +251,17 @@ namespace CastIt.Services
                 {
                     ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Position = position);
                 }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        public void GoToSeconds(long seconds)
+        {
+            try
+            {
+                ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Time = seconds * 1000);
             }
             catch (Exception ex)
             {
@@ -356,8 +406,10 @@ namespace CastIt.Services
         public string GetExtension(string mrl)
         {
             if (IsLocalFile(mrl))
-                return Path.GetExtension(mrl).ToUpper().Replace(".", "");
-            return "WEB";
+                return Path.GetExtension(mrl).ToUpper();
+            if (IsUrlFile(mrl))
+                return "WEB";
+            return "N/A";
         }
 
         public string GetFileSizeString(string mrl)
@@ -368,6 +420,28 @@ namespace CastIt.Services
             var sizeInBytes = fileInfo.Length;
             float sizeInMb = sizeInBytes / 1024F / 1024F;
             return Math.Round(sizeInMb, 2) + " MB";
+        }
+
+        public bool IsVideoFile(string mrl)
+        {
+            if (!IsLocalFile(mrl))
+                return false;
+            return IsVideoOrMusicFile(mrl, true);
+        }
+
+        public bool IsMusicFile(string mrl)
+        {
+            if (!IsLocalFile(mrl))
+                return false;
+            return IsVideoOrMusicFile(mrl, false);
+        }
+
+        private bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
+        {
+            string ext = Path.GetExtension(mrl);
+            if (checkForVideo)
+                return AppConstants.AllowedVideoFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
+            return AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
         }
     }
 }

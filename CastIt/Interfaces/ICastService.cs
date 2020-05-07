@@ -14,6 +14,7 @@ namespace CastIt.Interfaces
         OnTimeChangedHandler OnTimeChanged { get; set; }
 
         void AddSeconds(long seconds);
+        void GoToSeconds(long seconds);
         void CleanThemAll();
         bool DiscoverChromecasts();
         void GoToPosition(float position);
@@ -31,5 +32,9 @@ namespace CastIt.Interfaces
         string GetFileName(string mrl);
         string GetExtension(string mrl);
         string GetFileSizeString(string mrl);
+        void GenerateThumbmnails();
+        void GenerateThumbmnails(string filePath);
+        bool IsVideoFile(string mrl);
+        bool IsMusicFile(string mrl);
     }
 }

@@ -214,6 +214,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No devices were found.
+        /// </summary>
+        public static string NoDevicesWereFound {
+            get {
+                return ResourceManager.GetString("NoDevicesWereFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Now Playing.
         /// </summary>
         public static string NowPlaying {

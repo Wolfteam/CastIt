@@ -1,10 +1,11 @@
 ﻿using CastIt.Models;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace CastIt.Common.Utils
 {
-    public class FileUtils
+    public static class FileUtils
     {
         private const string AppSettingsFilename = "AppSettings.json";
 
@@ -39,9 +40,47 @@ namespace CastIt.Common.Utils
             return CreateDirectory(basePath, "Previews");
         }
 
-        public static string GetThumbnailFilePath(string filename, int second)
+        public static string GetThumbnailFilePath(string filename, long second)
         {
-            return Path.Combine(GetPreviewsPath(), $"{filename}_{second}.jpg");
+            return Path.Combine(GetPreviewsPath(), $"{filename}_{second:D2}.jpg");
+        }
+
+        public static string GetPreviewThumbnailFilePath(string filename)
+        {
+            return Path.Combine(GetPreviewsPath(), $"{filename}_%02d.jpg");
+        }
+
+        public static string GetClosestThumbnail(string filePath, long tentativeSecond)
+        {
+            long second = tentativeSecond / AppConstants.ThumbnailsEachSeconds;
+            string folder = GetPreviewsPath();
+            string filename = Path.GetFileName(filePath);
+            string ext = Path.GetExtension(filePath);
+            string searchPattern = $"{filename}_*";
+
+            try
+            {
+                var files = Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
+                    .Where(p => p.EndsWith(".jpg"))
+                    .Select(p => p.Substring(p.IndexOf(filename)).Replace(filename, string.Empty))
+                    .Select(p => p.Substring(p.LastIndexOf("_") + 1, p.IndexOf(".") - 1))
+                    .Select(p => long.Parse(p))
+                    .ToList();
+
+                if (!files.Any())
+                    return null;
+
+                long closest = files.Aggregate((x, y) => Math.Abs(x - second) < Math.Abs(y - second) ? x : y);
+
+                if (Math.Abs(closest - second) > AppConstants.ThumbnailsEachSeconds)
+                    return null;
+                string previewPath = GetThumbnailFilePath(filename, closest);
+                return previewPath;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public static string CreateDirectory(string baseFolder, string folder)

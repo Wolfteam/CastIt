@@ -216,4 +216,7 @@
   <data name="QuickSearch" xml:space="preserve">
     <value>Búsqueda Rápida</value>
   </data>
+  <data name="NoDevicesWereFound" xml:space="preserve">
+    <value>No se encontraron dispositivos</value>
+  </data>
 </root>
