@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="DesktopComponentsGroup" Directory="DesktopInstallFolder">
+      <!--StartMenu Shorcut to the desktop app-->
+      <Component Id="DesktopStartMenuShorcutComponent" Guid="{CCF424EF-6E57-4034-B697-B65D6171B707}">
+
+        <Shortcut
+          Id="DesktopStartMenuShorcut"
+          Name="!(loc.ProductName)"
+          Target="[DesktopInstallFolder]CastIt.exe"
+          Directory="InstallMenuFolder"
+          WorkingDirectory="DesktopInstallFolder"
+          Icon="icon.ico"/>
+
+        <!--Since we are using a shorcut, we need to define an associated key-->
+        <RegistryValue Id="RegStartMenuShorcutKey" Root="HKCU" Key="SOFTWARE\!(loc.ProductName)" Name="Shorcut" Value="1" Type="integer" KeyPath="yes"/>
+
+        <!--We need to always remove the start menu shorcut-->
+        <RemoveFolder Id="RemoveStartMenu" Directory="InstallMenuFolder" On="uninstall"/>
+      </Component>
+
+      <!--Desktop Shorcut to the desktop app-->
+      <Component Id="DesktopShorcutComponent" Guid="{CC3678BA-4019-415F-B6BA-618FB9445D90}">
+        <Shortcut
+          Id="DesktopShorcut"
+          Name="!(loc.ProductName)"
+          Target="[DesktopInstallFolder]CastIt.exe"
+          Directory="DesktopFolder"
+          WorkingDirectory='DesktopInstallFolder'
+          Icon="icon.ico"/>
+
+        <RegistryValue Id="RegShorcutKey" Root="HKCU" Key="SOFTWARE\!(loc.ProductName)" Name="Shorcut" Value="1" Type="integer" KeyPath="yes"/>
+        <RemoveFolder Id="RemoveShorcut" Directory="DesktopInstallFolder" On="uninstall"/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
