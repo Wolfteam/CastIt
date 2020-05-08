@@ -4,9 +4,9 @@
 </p>
 
 > A casting app made for my personal use
-
-<img height="450" width="500" src="images/img1.png">
-
+<p align="center">
+  <img height="450" width="500" src="images/img1.png">
+</p>
 ### Features
 * Playlists
 * Themes
