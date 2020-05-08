@@ -4,7 +4,11 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <Win32Resource />
+    <Platforms>AnyCPU;x64;x86</Platforms>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="Dragablz.NetCore" Version="0.3.3" />
-    <PackageReference Include="LibVLCSharp.WPF" Version="3.4.4" />
+    <PackageReference Include="LibVLCSharp.WPF" Version="3.4.5" />
     <PackageReference Include="MaterialDesignThemes" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.3" />
