@@ -38,7 +38,7 @@
     <!--  ScrollBars  -->
     <Style x:Key="{x:Type ScrollBar}" TargetType="{x:Type ScrollBar}">
         <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
-        <Setter Property="Foreground" Value="Red" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Width" Value="5" />
         <Setter Property="Template">
