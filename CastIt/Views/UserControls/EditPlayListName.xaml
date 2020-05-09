@@ -11,10 +11,10 @@
     d:DesignHeight="100"
     d:DesignWidth="350"
     mc:Ignorable="d">
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Grid.Background>
-            <SolidColorBrush Opacity=".8" Color="White" />
-        </Grid.Background>
+    <Grid
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Background="{DynamicResource WindowLightBackground}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
@@ -29,8 +29,8 @@
             Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Mode="Accent">
-            <TextBlock Foreground="White" Text="{Binding [PlayList]}" />
+            Background="{DynamicResource PrimaryHueDarkBrush}">
+            <TextBlock Foreground="{DynamicResource FontColorOnDarkBackgroundBrush}" Text="{Binding [PlayList]}" />
         </materialDesign:ColorZone>
         <TextBox
             x:Name="PlayListName"
@@ -40,7 +40,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
             materialDesign:HintAssist.Hint="{Binding [Name]}"
-            Foreground="Black"
+            Foreground="{DynamicResource FontColorBrush}"
             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
             Text="{Binding Name, Mode=OneWay}" />
         <Button

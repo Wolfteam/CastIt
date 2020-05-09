@@ -11,33 +11,33 @@
     StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
-
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 <!--  Include the Dragablz Material Design style  -->
                 <ResourceDictionary Source="pack://application:,,,/Dragablz;component/Themes/materialdesign.xaml" />
                 <materialDesign:CustomColorTheme
                     BaseTheme="Light"
-                    PrimaryColor="Black"
+                    PrimaryColor="Red"
                     SecondaryColor="Red" />
-
-                <!--  App Custom resources  -->
                 <ResourceDictionary Source="/XamlResources/ScrollBar.xaml" />
                 <ResourceDictionary Source="/XamlResources/Slider.xaml" />
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <!--  App Custom resources  -->
+                        <ResourceDictionary x:Name="Dark" Source="/XamlResources/DarkTheme.xaml" />
+                        <ResourceDictionary x:Name="Light" Source="/XamlResources/LightTheme.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
 
             <converters:CenterPopUpConverter x:Key="CenterPopUpConverter" />
             <converters:StringToImgConverter x:Key="StringToImgConverter" />
 
-            <SolidColorBrush x:Key="NavigationDrawerItem" Color="White" />
-            <SolidColorBrush
-                x:Key="SelectedItemBackground"
-                Opacity="0.5"
-                Color="Red" />
+            <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.jpg" />
 
             <Style x:Key="WindowStyle" TargetType="Window">
-                <Setter Property="Background" Value="#202124" />
+                <Setter Property="Background" Value="{DynamicResource WindowBackground}" />
                 <!--<Setter Property="FontFamily" Value="{DynamicResource MaterialDesignFont}" />-->
                 <Setter Property="TextElement.FontSize" Value="14" />
                 <Setter Property="TextElement.FontWeight" Value="Medium" />
@@ -52,13 +52,12 @@
                 x:Key="FileItemSubTextStyle"
                 BasedOn="{StaticResource MaterialDesignCaptionTextBlock}"
                 TargetType="TextBlock">
-                <Setter Property="Foreground" Value="White" />
                 <Setter Property="Padding" Value="0" />
             </Style>
 
             <Style x:Key="AppProgressBarStyle" TargetType="ProgressBar">
-                <Setter Property="Foreground" Value="Red" />
-                <Setter Property="Background" Value="White" />
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+                <Setter Property="Background" Value="{DynamicResource DarkestColorBrush}" />
             </Style>
 
             <Style
@@ -69,7 +68,7 @@
                 <Setter Property="Focusable" Value="False" />
                 <Setter Property="Margin" Value="0" />
                 <Setter Property="Padding" Value="0" />
-                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
             </Style>
 
             <!--  tell Dragablz tab control to use the Material Design theme  -->
@@ -77,7 +76,7 @@
 
             <Style x:Key="FileItemSeparatorStyle" TargetType="{x:Type Separator}">
                 <Setter Property="Margin" Value="20,0,20,10" />
-                <Setter Property="Background" Value="White" />
+                <Setter Property="Background" Value="{DynamicResource FontColorBrush}" />
                 <Setter Property="RenderTransform">
                     <Setter.Value>
                         <ScaleTransform ScaleY="3" />

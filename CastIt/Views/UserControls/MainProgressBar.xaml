@@ -12,7 +12,7 @@
         <Slider
             x:Name="MainSilder"
             Focusable="True"
-            Foreground="Red"
+            Foreground="{DynamicResource PrimaryHueDarkBrush}"
             IsEnabled="{Binding IsCurrentlyPlaying, Mode=OneWay}"
             IsMoveToPointEnabled="True"
             Maximum="{Binding CurrentFileDuration, Mode=OneWay}"
@@ -21,6 +21,7 @@
             MouseMove="MainSilder_MouseMove"
             PreviewMouseUp="MainSilder_PreviewMouseUp"
             Style="{StaticResource CustomSliderStyle}"
+            Visibility="{Binding IsCurrentlyPlaying, Converter={StaticResource BooleanToVisibilityConverter}}"
             Value="{Binding CurrentPlayedSeconds, Mode=OneWay}" />
 
         <Popup
@@ -39,7 +40,7 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     FontWeight="Bold"
-                    Foreground="White" />
+                    Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" />
             </Grid>
         </Popup>
     </Grid>

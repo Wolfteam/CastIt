@@ -1,4 +1,5 @@
 ﻿using CastIt.ViewModels;
+using MvvmCross.Base;
 using MvvmCross.Binding.BindingContext;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
@@ -32,13 +33,11 @@ namespace CastIt.Views
             set
             {
                 if (_setWindowWithAndHeightRequest != null)
-                    _setWindowWithAndHeightRequest.Requested -= (sender, args)
-                        => SetWindowWidthAndHeight(args.Value.Item1, args.Value.Item2);
+                    _setWindowWithAndHeightRequest.Requested -= SetWindowWidthAndHeight;
 
                 _setWindowWithAndHeightRequest = value;
                 if (value != null)
-                    _setWindowWithAndHeightRequest.Requested += (sender, args)
-                        => SetWindowWidthAndHeight(args.Value.Item1, args.Value.Item2);
+                    _setWindowWithAndHeightRequest.Requested += SetWindowWidthAndHeight;
             }
         }
 
@@ -52,11 +51,11 @@ namespace CastIt.Views
             set.Apply();
         }
 
-        private void SetWindowWidthAndHeight(double width, double height)
+        private void SetWindowWidthAndHeight(object sender, MvxValueEventArgs<(double, double)> e)
         {
             var window = System.Windows.Application.Current.MainWindow;
-            window.Width = width;
-            window.Height = height;
+            window.Width = e.Value.Item1;
+            window.Height = e.Value.Item2;
         }
     }
 }

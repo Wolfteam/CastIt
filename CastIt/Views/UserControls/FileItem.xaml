@@ -92,9 +92,11 @@
             Margin="0,0,5,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
+            Background="{DynamicResource DarkestColorBrush}"
             Content="{Binding Position}"
             Focusable="False"
-            IsChecked="{Binding IsSelected}"
+            Foreground="{DynamicResource FontColorBrush}"
+            IsChecked="{Binding IsSelected, Mode=TwoWay}"
             IsTabStop="False"
             Style="{StaticResource MaterialDesignActionLightToggleButton}"
             ToolTip="Select" />
@@ -103,7 +105,6 @@
             Grid.Row="1"
             Grid.Column="1"
             VerticalAlignment="Center"
-            Foreground="White"
             Text="{Binding Filename}"
             TextTrimming="CharacterEllipsis"
             TextWrapping="Wrap" />
@@ -129,7 +130,6 @@
             Grid.RowSpan="5"
             Grid.Column="2"
             VerticalAlignment="Center"
-            Foreground="White"
             Text="{Binding Duration}"
             TextAlignment="Right"
             TextTrimming="CharacterEllipsis" />

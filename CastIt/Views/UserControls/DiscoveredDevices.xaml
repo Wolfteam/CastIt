@@ -35,23 +35,23 @@
                     Grid.Column="0"
                     Width="30"
                     Height="30"
-                    Margin="0,0,5,0"
+                    Margin="0,0,10,0"
                     VerticalAlignment="Center"
-                    Foreground="Red"
+                    Foreground="{DynamicResource PrimaryHueMidBrush}"
                     Kind="Tv" />
 
                 <TextBlock
                     Grid.Row="0"
                     Grid.Column="1"
                     VerticalAlignment="Center"
-                    Foreground="White"
+                    Foreground="{DynamicResource FontColorBrush}"
                     Text="{Binding Name}"
                     TextTrimming="CharacterEllipsis" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
                     VerticalAlignment="Top"
-                    Foreground="White"
+                    Foreground="{DynamicResource FontColorBrush}"
                     Text="{Binding Type}"
                     TextTrimming="CharacterEllipsis" />
                 <Button
@@ -83,7 +83,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     FontSize="24"
-                                    Foreground="White"
+                                    Foreground="{DynamicResource FontColorBrush}"
                                     Text="{Binding [NoDevicesWereFound]}" />
                             </ControlTemplate>
                         </Setter.Value>
@@ -96,7 +96,7 @@
     <Grid
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
-        Background="{StaticResource MaterialDesignDarkBackground}">
+        Background="{DynamicResource WindowLightBackground}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -106,8 +106,8 @@
             Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Mode="Accent">
-            <TextBlock Foreground="White" Text="{Binding [Devices]}" />
+            Background="{DynamicResource PrimaryHueDarkBrush}">
+            <TextBlock Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" Text="{Binding [Devices]}" />
         </materialDesign:ColorZone>
         <ScrollViewer
             Grid.Row="1"

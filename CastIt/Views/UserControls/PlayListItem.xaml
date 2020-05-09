@@ -26,7 +26,6 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="AllowDrop" Value="True" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="White" />
             <Style.Triggers>
                 <Trigger Property="HasItems" Value="False">
                     <Setter Property="Template">
@@ -55,7 +54,7 @@
             Padding="0,0,5,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Mode="Inverted"
+            Background="{DynamicResource DarkestColorBrush}"
             Visibility="{Binding Items.Count, Converter={StaticResource NotZeroToVisibilityConverter}}">
 
             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Center">
@@ -74,8 +73,7 @@
                     VerticalContentAlignment="Center"
                     materialDesign:HintAssist.Hint="{Binding [QuickSearch]}"
                     materialDesign:TextFieldAssist.HasClearButton="True"
-                    materialDesign:TextFieldAssist.UnderlineBrush="Red"
-                    Foreground="White"
+                    materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryHueDarkBrush}"
                     TextChanged="PlayListFilter_TextChanged" />
                 <materialDesign:PackIcon
                     Grid.Column="1"
@@ -96,6 +94,7 @@
         <ListView
             x:Name="PlaylistLv"
             Grid.Row="0"
+            Margin="0,5"
             cb:DragDropExtension.ScrollOnDragDrop="True"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
             DragEnter="PlaylistLv_DragEnter"
@@ -106,6 +105,7 @@
             MouseMove="PlaylistLv_MouseMove"
             PreviewMouseLeftButtonDown="PlaylistLv_PreviewMouseLeftButtonDown"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
             Style="{StaticResource PlayListLvStyle}">
             <behaviours:Interaction.Behaviors>
                 <cb:MultiSelectionBehavior SelectedItems="{Binding SelectedItems}" />
@@ -153,9 +153,11 @@
                     <Setter Property="Padding" Value="5,0,5,0" />
                     <Setter Property="Margin" Value="0" />
                     <Setter Property="BorderThickness" Value="0" />
+                    <!--  This removes the dots  -->
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="true">
-                            <Setter Property="Background" Value="{StaticResource SelectedItemBackground}" />
+                            <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -167,7 +169,7 @@
                     </Border>
                     <DataTemplate.Triggers>
                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource SelectedItemBackground}" />
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
                         </DataTrigger>
                     </DataTemplate.Triggers>
                 </DataTemplate>

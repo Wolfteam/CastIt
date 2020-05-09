@@ -88,6 +88,7 @@
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"
             VerticalContentAlignment="Stretch"
+            BorderBrush="{DynamicResource DarkestColorBrush}"
             BorderThickness="0"
             ItemsSource="{Binding PlayLists}"
             SelectedIndex="{Binding SelectedPlayListIndex, Mode=TwoWay}"

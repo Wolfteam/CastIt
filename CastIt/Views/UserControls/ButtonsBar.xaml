@@ -23,10 +23,10 @@
         <materialDesign:ColorZone
             Grid.Row="0"
             Grid.ColumnSpan="2"
-            Padding="16,0,16,16"
+            Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Mode="Inverted">
+            Background="{DynamicResource DarkestColorBrush}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

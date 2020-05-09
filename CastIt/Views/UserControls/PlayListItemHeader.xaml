@@ -48,14 +48,15 @@
         <materialDesign:Chip
             Margin="0,0,10,0"
             VerticalAlignment="Center"
-            Background="Red"
+            Background="{DynamicResource PrimaryHueDarkBrush}"
             Content="{Binding Items.Count}"
-            FontSize="10" />
+            FontSize="10"
+            Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" />
         <TextBlock
             x:Name="PlayListTitle"
             Grid.Column="1"
             VerticalAlignment="Center"
-            Foreground="White"
+            Foreground="{DynamicResource FontColorBrush}"
             Text="{Binding Name}" />
 
         <Popup

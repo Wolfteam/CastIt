@@ -14,11 +14,7 @@
         Height="120"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
-        d:DesignHeight="100"
-        d:DesignWidth="350">
-        <Grid.Background>
-            <SolidColorBrush Opacity=".8" Color="White" />
-        </Grid.Background>
+        Background="{DynamicResource WindowLightBackground}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
@@ -33,8 +29,8 @@
             Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Mode="Accent">
-            <TextBlock Foreground="White" Text="From url" />
+            Background="{DynamicResource PrimaryHueDarkBrush}">
+            <TextBlock Foreground="White" Text="{Binding [FromUrl]}" />
         </materialDesign:ColorZone>
         <TextBox
             x:Name="UrlTextBox"
