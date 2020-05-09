@@ -27,6 +27,11 @@ namespace CastIt.Services
         private bool _renderWasSet;
         private string _currentFilePath;
 
+        private bool _checkGenerateThumbnailProcess;
+        private readonly Process _generateThumbnailProcess;
+        private bool _checkGenerateAllThumbnailsProcess;
+        private readonly Process _generateAllThumbnailsProcess;
+
         public List<CastableDevice> AvailableDevices => _rendererItems.Select(r => new CastableDevice
         {
             Name = r.Name,
@@ -41,6 +46,24 @@ namespace CastIt.Services
         public CastService(IMvxLogProvider logProvider)
         {
             _logger = logProvider.GetLogFor<CastService>();
+
+            var startInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                FileName = "cmd.exe",
+            };
+
+            _generateThumbnailProcess = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            _generateAllThumbnailsProcess = new Process
+            {
+                StartInfo = startInfo
+            };
         }
 
         public void Init()
@@ -49,7 +72,7 @@ namespace CastIt.Services
 
             if (!File.Exists(FfmpegPath))
             {
-                _logger.Info($"{nameof(Init)}: Fffmpeg does not exist in path = {FfmpegPath}");
+                _logger.Error($"{nameof(Init)}: Fffmpeg does not exist in path = {FfmpegPath}");
                 throw new Exception($"Fffmpeg does not exists in path = {FfmpegPath}");
             }
 
@@ -58,7 +81,6 @@ namespace CastIt.Services
             // create core libvlc object
             _libVLC = new LibVLC("--verbose=3");
             //_libVLC.Log += Log;
-
             DiscoverChromecasts();
 
             _mediaPlayer = new MediaPlayer(_libVLC);
@@ -79,18 +101,19 @@ namespace CastIt.Services
 
         public async Task StartPlay(string mrl)
         {
+            KillThumbnailProcess();
             bool isLocal = IsLocalFile(mrl);
             bool isUrlFile = IsUrlFile(mrl);
             if (!isLocal && !isUrlFile)
             {
-                Debug.WriteLine($"Invalid = {mrl}");
+                _logger.Warn($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
                 return;
             }
+
             //TODO: SHOULD I CHECK IF _libVLC.RendererList IS EMPTY ?
             if (_rendererItems.Count == 0)
             {
-                Debug.WriteLine($"No renders were found");
-                //return;
+                _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl} will be played locally");
             }
             //TODO: MOVE THIS SET TO A METHOD
             //TODO: YOU WILL PROBABLY NEED TO CALL THIS METHOD FROM ANOTHER THREAD
@@ -108,8 +131,7 @@ namespace CastIt.Services
                 mrl,
                 isLocal ? FromType.FromPath : FromType.FromLocation);
 
-            await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal)
-                .ConfigureAwait(false);
+            await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
 
             // start the playback
             ThreadPool.QueueUserWorkItem(_ =>
@@ -128,14 +150,13 @@ namespace CastIt.Services
             => GetThumbnail(filePath, 3);
 
         public string GetThumbnail(int second)
-        {
-            return GetThumbnail(_currentFilePath, second);
-        }
+            => GetThumbnail(_currentFilePath, second);
 
         public string GetThumbnail(string filePath, int second)
         {
             if (!IsLocalFile(filePath))
             {
+                _logger.Warn($"{nameof(GetThumbnail)}: Cant get thumbnail for file = {filePath}. Its not a local file");
                 return null;
             }
 
@@ -150,13 +171,14 @@ namespace CastIt.Services
             //-i filename(the source video's file path)
             //- deinterlace(converts interlaced video to non - interlaced form)
             //- an(audio recording is disabled; we don't need it for thumbnails)
-            //- ss position(input video is decoded and dumped until the timestamp reaches position, our thumbnail's position in seconds)
+            //- ss position(input video is decoded and dumped until the timestamp reaches position, 
+            //     our thumbnail's position in seconds)
             //- t duration(the output file stops writing after duration seconds)
             //-y(overwrites the output file if it already exists)
             //-s widthxheight(size of the frame in pixels)
             string cmd;
 
-            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower()))
+            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase))
             {
                 cmd = $"{FfmpegPath} -y -i " +
                     '"' + filePath + '"'
@@ -170,23 +192,23 @@ namespace CastIt.Services
                     + $" -an -ss {second} -vframes 1 -s 200x150 "
                     + '"' + thumbnailPath + '"';
             }
-
-            var startInfo = new ProcessStartInfo
+            try
             {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                FileName = "cmd.exe",
-                Arguments = "/C " + cmd
-            };
-
-            var process = new Process
+                _logger.Info($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {filePath}");
+                _checkGenerateThumbnailProcess = true;
+                _generateThumbnailProcess.StartInfo.Arguments = "/C " + cmd + " && exit";
+                _generateThumbnailProcess.Start();
+                _generateThumbnailProcess.WaitForExit();
+                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was succesfully generated for file = {filePath}");
+            }
+            catch (Exception ex)
             {
-                StartInfo = startInfo
-            };
-
-            process.Start();
-            process.WaitForExit();
-
+                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+            }
+            finally
+            {
+                _checkGenerateThumbnailProcess = false;
+            }
             return thumbnailPath;
         }
 
@@ -202,8 +224,11 @@ namespace CastIt.Services
             var filename = Path.GetFileName(filePath);
             var ext = Path.GetExtension(filePath);
 
-            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower()))
+            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase))
             {
+                _logger.Info(
+                    $"{nameof(GenerateThumbmnails)}: File = {filePath} is a music one, " +
+                    $"so we wont generate thumbnails for it");
                 return;
             }
             var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
@@ -212,21 +237,23 @@ namespace CastIt.Services
                     + $" -an -vf fps=1/5 -s 200x150 "
                     + '"' + thumbnailPath + '"';
 
-            var startInfo = new ProcessStartInfo
+            try
             {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                FileName = "cmd.exe",
-                Arguments = "/C " + cmd
-            };
-
-            var process = new Process
+                _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {filePath}");
+                _checkGenerateAllThumbnailsProcess = true;
+                _generateAllThumbnailsProcess.StartInfo.Arguments = "/C " + cmd + " && exit";
+                _generateAllThumbnailsProcess.Start();
+                _generateAllThumbnailsProcess.WaitForExit();
+                _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {filePath}");
+            }
+            catch (Exception ex)
             {
-                StartInfo = startInfo
-            };
-
-            process.Start();
-            process.WaitForExit();
+                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+            }
+            finally
+            {
+                _checkGenerateAllThumbnailsProcess = false;
+            }
         }
 
         public void TogglePlayback()
@@ -243,6 +270,7 @@ namespace CastIt.Services
 
         public void StopPlayback()
         {
+            KillThumbnailProcess();
             ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Stop());
         }
 
@@ -263,6 +291,7 @@ namespace CastIt.Services
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, $"{nameof(GoToPosition)}: Unknown error while goin to position = {position}");
                 Debug.WriteLine($"Unknown error while goin to position = {position}. Ex = {ex}");
             }
         }
@@ -275,6 +304,7 @@ namespace CastIt.Services
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, $"{nameof(GoToSeconds)}: Unknown error while going to seconds = {seconds * 1000}");
                 Debug.WriteLine($"Unknown error while going to seconds = {seconds * 1000}. Ex = {ex}");
             }
         }
@@ -295,6 +325,7 @@ namespace CastIt.Services
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, $"{nameof(AddSeconds)}: Unknown error while adding seconds = {seconds}");
                 Debug.WriteLine($"Unknown error while adding seconds. Ex = {ex}");
             }
         }
@@ -304,6 +335,7 @@ namespace CastIt.Services
             // choose the correct service discovery protocol depending on the host platform
             // Apple platforms use the Bonjour protocol
             var renderer = _libVLC.RendererList.FirstOrDefault();
+            _logger.Info($"{nameof(DiscoverChromecasts)}: The renderer to be used is = {renderer.Name}");
 
             _rendererDiscoverer?.Dispose();
 
@@ -311,12 +343,11 @@ namespace CastIt.Services
             _rendererDiscoverer = new RendererDiscoverer(_libVLC, renderer.Name);
 
             // register callback when a new renderer is found
-            _rendererDiscoverer.ItemAdded += RendererDiscoverer_ItemAdded;
+            _rendererDiscoverer.ItemAdded += RendererDiscovererItemAdded;
+            _rendererDiscoverer.ItemDeleted += RendererDiscovererItemDeleted;
 
             // start discovery on the local network
-            bool started = _rendererDiscoverer.Start();
-
-            return started;
+            return _rendererDiscoverer.Start();
         }
 
         public async Task<long> GetDuration(string mrl)
@@ -325,7 +356,7 @@ namespace CastIt.Services
             bool isUrl = IsUrlFile(mrl);
             if (!isLocal && !isUrl)
             {
-                Debug.WriteLine($"Invalid mrl = {mrl}");
+                _logger.Warn($"{nameof(GetDuration)}: Couldnt retrieve duration for file = {mrl}. It is not a local / url file");
                 return -1;
             }
 
@@ -337,8 +368,9 @@ namespace CastIt.Services
                     return media.Duration / 1000;
                 return 0;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Error(ex, $"{nameof(GetDuration)}: Unknown error while trying to parse file = {mrl}");
                 return -1;
             }
         }
@@ -386,28 +418,40 @@ namespace CastIt.Services
 
         private void Clean()
         {
-            _libVLC.Log -= Log;
-            _mediaPlayer.EncounteredError -= EncounteredError;
-            _mediaPlayer.PositionChanged -= PositionChanged;
-            _mediaPlayer.TimeChanged -= TimeChanged;
-            _mediaPlayer.EndReached -= EndReached;
-            _mediaPlayer?.Stop();
-            _currentMedia?.Dispose();
-            _rendererDiscoverer?.Stop();
-            _mediaPlayer?.Dispose();
-            _rendererDiscoverer?.Dispose();
-            _libVLC?.Dispose();
+            try
+            {
+                _libVLC.Log -= Log;
+                _mediaPlayer.EncounteredError -= EncounteredError;
+                _mediaPlayer.PositionChanged -= PositionChanged;
+                _mediaPlayer.TimeChanged -= TimeChanged;
+                _mediaPlayer.EndReached -= EndReached;
+                _mediaPlayer?.Stop();
+                _currentMedia?.Dispose();
+                _rendererDiscoverer.ItemAdded -= RendererDiscovererItemAdded;
+                _rendererDiscoverer.ItemDeleted -= RendererDiscovererItemDeleted;
+                _rendererDiscoverer?.Stop();
+                _mediaPlayer?.Dispose();
+                _rendererDiscoverer?.Dispose();
+                _libVLC?.Dispose();
+
+                _libVLC = null;
+                _mediaPlayer = null;
+                _currentMedia = null;
+                _rendererDiscoverer = null;
+
+                KillThumbnailProcess();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{nameof(Clean)}: An unknown error ocurred");
+            }
         }
 
-        private void RendererDiscoverer_ItemAdded(object sender, RendererDiscovererItemAddedEventArgs e)
+        private void RendererDiscovererItemAdded(object sender, RendererDiscovererItemAddedEventArgs e)
         {
-            Debug.WriteLine($"New item discovered: {e.RendererItem.Name} of type {e.RendererItem.Type}");
-            if (e.RendererItem.CanRenderVideo)
-                Debug.WriteLine("Can render video");
-            if (e.RendererItem.CanRenderAudio)
-                Debug.WriteLine("Can render audio");
-
-            // add newly found renderer item to local collection
+            _logger.Info(
+                $"{nameof(RendererDiscovererItemAdded)}: New item discovered: " +
+                $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
             _rendererItems.Add(e.RendererItem);
 
             OnCastableDeviceAdded?.Invoke(new CastableDevice
@@ -415,6 +459,14 @@ namespace CastIt.Services
                 Name = e.RendererItem.Name,
                 Type = e.RendererItem.Type
             });
+        }
+
+        private void RendererDiscovererItemDeleted(object sender, RendererDiscovererItemDeletedEventArgs e)
+        {
+            _logger.Info(
+                $"{nameof(RendererDiscovererItemAdded)}: Item removed: " +
+                $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
+            _rendererItems.Remove(e.RendererItem);
         }
 
         public string GetFileName(string mrl)
@@ -463,6 +515,39 @@ namespace CastIt.Services
             if (checkForVideo)
                 return AppConstants.AllowedVideoFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
             return AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
+        }
+
+        private void KillThumbnailProcess()
+        {
+            try
+            {
+                if (_checkGenerateAllThumbnailsProcess &&
+                    !_generateAllThumbnailsProcess.HasExited)
+                {
+                    _logger.Info($"{nameof(KillThumbnailProcess)}: Killing the generate all thumbnails process");
+                    _generateAllThumbnailsProcess.Kill(true);
+                    _generateAllThumbnailsProcess.WaitForExit();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate all thumbnails process");
+            }
+
+            try
+            {
+                if (_checkGenerateThumbnailProcess &&
+                    !_generateThumbnailProcess.HasExited)
+                {
+                    _logger.Info($"{nameof(KillThumbnailProcess)}: Killing the generate thumbnail process");
+                    _generateThumbnailProcess.Kill(true);
+                    _generateThumbnailProcess.WaitForExit();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate thumbnail process");
+            }
         }
     }
 }
