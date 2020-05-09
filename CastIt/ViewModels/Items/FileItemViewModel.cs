@@ -146,7 +146,7 @@ namespace CastIt.ViewModels.Items
                 return;
             }
             //TODO: IF THE USER OPENS THE APP, AND HAS A LOT OF ITEMS, AND THEN, IT CLOSES THE APP, A CRASH MAY BE THROWN
-            var seconds = await _castService.GetDuration(Path).ConfigureAwait(false);
+            var seconds = await _castService.GetDuration(Path);
             TotalSeconds = seconds;
             if (seconds <= 0)
             {

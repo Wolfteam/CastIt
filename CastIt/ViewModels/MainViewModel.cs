@@ -196,7 +196,7 @@ namespace CastIt.ViewModels
             IsExpanded = _settingsService.IsPlayListExpanded;
             _castService.Init();
 
-            var playLists = await _playListsService.GetAllPlayLists().ConfigureAwait(false);
+            var playLists = await _playListsService.GetAllPlayLists();
             PlayLists.AddRange(playLists);
 
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
@@ -204,7 +204,7 @@ namespace CastIt.ViewModels
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
-            await base.Initialize().ConfigureAwait(false);
+            await base.Initialize();
         }
 
         public override void SetCommands()
@@ -299,18 +299,11 @@ namespace CastIt.ViewModels
             _castService.GoToSeconds(seconds);
         }
 
-        private async Task SetFileDurations()
+        private Task SetFileDurations()
         {
             var tasks = PlayLists.SelectMany(pl => pl.Items).Select(f => f.SetDuration()).ToList();
 
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-            //foreach (var playlist in PlayLists)
-            //{
-            //    foreach (var item in playlist.Items)
-            //    {
-            //        await item.SetDuration().ConfigureAwait(false);
-            //    }
-            //}
+            return Task.WhenAll(tasks);
         }
 
         private async Task AddNewPlayList()
