@@ -1,12 +1,13 @@
 ﻿using CastIt.Common.Miscellaneous;
 using CastIt.Common.Utils;
+using CastIt.Services;
 using CastIt.ViewModels;
+using CastIt.ViewModels.Items;
 using MvvmCross.Logging;
 using MvvmCross.Platforms.Wpf.Core;
 using MvvmCross.Platforms.Wpf.Presenters;
 using Serilog;
 using Serilog.Filters;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Controls;
@@ -32,6 +33,12 @@ namespace CastIt
             var logs = new Dictionary<string, string>
             {
                 {$"{typeof(MainViewModel).FullName}",  "vm_main_.txt"},
+                {$"{typeof(DevicesViewModel).FullName}",  "vm_devices_.txt"},
+                {$"{typeof(SettingsViewModel).FullName}",  "vm_settings_.txt"},
+                {$"{typeof(PlayListItemViewModel).FullName}",  "vm_playlistitem_.txt"},
+                {$"{typeof(FileItemViewModel).FullName}",  "vm_fileitem_.txt"},
+                {$"{typeof(DeviceItemViewModel).FullName}",  "vm_deviceitem_.txt"},
+                {$"{typeof(CastService).FullName}",  "service_cast_.txt"},
             };
 
             foreach (var kvp in logs)
@@ -44,6 +51,7 @@ namespace CastIt
                             rollingInterval: RollingInterval.Day,
                             rollOnFileSizeLimit: true,
                             outputTemplate: fileOutputTemplate)
+                        .WriteTo.Debug(outputTemplate: fileOutputTemplate)
                     );
             }
             Log.Logger = loggerConfig.CreateLogger();

@@ -38,6 +38,7 @@
     <PackageReference Include="MvvmCross.Plugin.Messenger" Version="6.4.2" />
     <PackageReference Include="MvvmCross.Plugin.ResxLocalization" Version="6.4.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.10" />
   </ItemGroup>
