@@ -219,4 +219,37 @@
   <data name="NoDevicesWereFound" xml:space="preserve">
     <value>No devices were found</value>
   </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="AccentColors" xml:space="preserve">
+    <value>Accent Colors</value>
+  </data>
+  <data name="FromUrl" xml:space="preserve">
+    <value>From URL</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="Mazimize" xml:space="preserve">
+    <value>Mazimize</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Spanish" xml:space="preserve">
+    <value>Spanish</value>
+  </data>
 </root>
