@@ -75,7 +75,7 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isSeparatorBottomLineVisible, value);
         }
 
-        public bool IsLocalFile 
+        public bool IsLocalFile
             => _castService.IsLocalFile(Path);
         public bool IsUrlFile
             => _castService.IsUrlFile(Path);
@@ -117,10 +117,7 @@ namespace CastIt.ViewModels.Items
                 Messenger.Publish(new PlayFileMsg(this));
             });
 
-            PlayFromTheBeginingCommand = new MvxCommand(() =>
-            {
-                _castService.GoToPosition(0);
-            });
+            PlayFromTheBeginingCommand = new MvxCommand(() => _castService.GoToPosition(0));
 
             OpenFileLocationCommand = new MvxCommand(() =>
             {
@@ -149,7 +146,7 @@ namespace CastIt.ViewModels.Items
                 return;
             }
             //TODO: IF THE USER OPENS THE APP, AND HAS A LOT OF ITEMS, AND THEN, IT CLOSES THE APP, A CRASH MAY BE THROWN
-            var seconds = await _castService.GetDuration(Path);
+            var seconds = await _castService.GetDuration(Path).ConfigureAwait(false);
             TotalSeconds = seconds;
             if (seconds <= 0)
             {

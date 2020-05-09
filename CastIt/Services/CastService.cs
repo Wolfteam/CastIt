@@ -46,6 +46,13 @@ namespace CastIt.Services
         public void Init()
         {
             _logger.Info($"{nameof(Init)}: Initializing all...");
+
+            if (!File.Exists(FfmpegPath))
+            {
+                _logger.Info($"{nameof(Init)}: Fffmpeg does not exist in path = {FfmpegPath}");
+                throw new Exception($"Fffmpeg does not exists in path = {FfmpegPath}");
+            }
+
             // load native libvlc libraries
             Core.Initialize();
             // create core libvlc object
@@ -56,6 +63,7 @@ namespace CastIt.Services
 
             _mediaPlayer = new MediaPlayer(_libVLC);
             _mediaPlayer.Playing += Playing;
+            _mediaPlayer.EncounteredError += EncounteredError;
             _mediaPlayer.PositionChanged += PositionChanged;
             _mediaPlayer.TimeChanged += TimeChanged;
             _mediaPlayer.EndReached += EndReached;
@@ -79,14 +87,14 @@ namespace CastIt.Services
                 return;
             }
             //TODO: SHOULD I CHECK IF _libVLC.RendererList IS EMPTY ?
-            if (!_rendererItems.Any())
+            if (_rendererItems.Count == 0)
             {
                 Debug.WriteLine($"No renders were found");
                 //return;
             }
             //TODO: MOVE THIS SET TO A METHOD
             //TODO: YOU WILL PROBABLY NEED TO CALL THIS METHOD FROM ANOTHER THREAD
-            if (!_renderWasSet && _rendererItems.Any())
+            if (!_renderWasSet && _rendererItems.Count > 0)
             {
                 _mediaPlayer.SetRenderer(_rendererItems.First());
                 _renderWasSet = true;
@@ -100,7 +108,8 @@ namespace CastIt.Services
                 mrl,
                 isLocal ? FromType.FromPath : FromType.FromLocation);
 
-            await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
+            await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal)
+                .ConfigureAwait(false);
 
             // start the playback
             ThreadPool.QueueUserWorkItem(_ =>
@@ -254,6 +263,7 @@ namespace CastIt.Services
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Unknown error while goin to position = {position}. Ex = {ex}");
             }
         }
 
@@ -265,6 +275,7 @@ namespace CastIt.Services
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Unknown error while going to seconds = {seconds * 1000}. Ex = {ex}");
             }
         }
 
@@ -284,6 +295,7 @@ namespace CastIt.Services
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Unknown error while adding seconds. Ex = {ex}");
             }
         }
 
@@ -367,9 +379,18 @@ namespace CastIt.Services
             OnTimeChanged?.Invoke(e.Time / 1000);
         }
 
+        private void EncounteredError(object sender, EventArgs e)
+        {
+            Debug.WriteLine("Media player encoutered an error");
+        }
+
         private void Clean()
         {
             _libVLC.Log -= Log;
+            _mediaPlayer.EncounteredError -= EncounteredError;
+            _mediaPlayer.PositionChanged -= PositionChanged;
+            _mediaPlayer.TimeChanged -= TimeChanged;
+            _mediaPlayer.EndReached -= EndReached;
             _mediaPlayer?.Stop();
             _currentMedia?.Dispose();
             _rendererDiscoverer?.Stop();

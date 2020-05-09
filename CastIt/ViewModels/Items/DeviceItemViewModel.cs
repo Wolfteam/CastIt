@@ -1,8 +1,10 @@
-﻿using MvvmCross.ViewModels;
+﻿using CastIt.Interfaces;
+using MvvmCross.Logging;
+using MvvmCross.Plugin.Messenger;
 
 namespace CastIt.ViewModels.Items
 {
-    public class DeviceItemViewModel : MvxViewModel
+    public class DeviceItemViewModel : BaseViewModel
     {
         private string _name;
         private string _type;
@@ -24,6 +26,14 @@ namespace CastIt.ViewModels.Items
         {
             get => _isSelected;
             set => SetProperty(ref _isSelected, value);
+        }
+
+        public DeviceItemViewModel(
+            ITextProvider textProvider,
+            IMvxMessenger messenger,
+            IMvxLogProvider logger)
+            : base(textProvider, messenger, logger.GetLogFor<DeviceItemViewModel>())
+        {
         }
     }
 }

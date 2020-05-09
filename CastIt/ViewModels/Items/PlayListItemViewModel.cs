@@ -19,6 +19,7 @@ namespace CastIt.ViewModels.Items
         private string _name;
         private bool _showEditPopUp;
         private bool _showAddUrlPopUp;
+        private FileItemViewModel _selectedItem;
 
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
@@ -43,6 +44,12 @@ namespace CastIt.ViewModels.Items
         {
             get => _showAddUrlPopUp;
             set => SetProperty(ref _showAddUrlPopUp, value);
+        }
+
+        public FileItemViewModel SelectedItem
+        {
+            get => _selectedItem;
+            set => SetProperty(ref _selectedItem, value);
         }
 
         public MvxObservableCollection<FileItemViewModel> Items { get; set; }
@@ -106,7 +113,7 @@ namespace CastIt.ViewModels.Items
 
             PlayFileCommand = new MvxCommand<FileItemViewModel>((item) => item.PlayCommand.Execute());
 
-            RemoveFileCommand = new MvxAsyncCommand<FileItemViewModel>(async (_) => await RemoveSelectedFiles());
+            RemoveFileCommand = new MvxAsyncCommand<FileItemViewModel>(async (_) => await RemoveSelectedFiles().ConfigureAwait(false));
 
             RemoveAllMissingCommand = new MvxAsyncCommand(RemoveAllMissing);
 
@@ -115,12 +122,12 @@ namespace CastIt.ViewModels.Items
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
         }
 
-        private async Task OnFolderAdded(string folder)
+        private Task OnFolderAdded(string folder)
         {
             var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.TopDirectoryOnly)
                 .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                 .ToArray();
-            await OnFilesAdded(files);
+            return OnFilesAdded(files);
         }
 
         private async Task OnFilesAdded(string[] paths)
@@ -142,12 +149,12 @@ namespace CastIt.ViewModels.Items
                 };
             }).ToList();
 
-            var vms = await _playListsService.AddFiles(files);
+            var vms = await _playListsService.AddFiles(files).ConfigureAwait(false);
 
             foreach (var vm in vms)
             {
                 //vm.Position = Items.Count + 1;
-                await vm.SetDuration();
+                await vm.SetDuration().ConfigureAwait(false);
                 Items.Add(vm);
             }
         }
@@ -158,8 +165,8 @@ namespace CastIt.ViewModels.Items
             bool isUrlFile = _castService.IsUrlFile(url);
             if (!isUrlFile)
                 return;
-            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
-            await vm.SetDuration();
+            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1).ConfigureAwait(false);
+            await vm.SetDuration().ConfigureAwait(false);
             Items.Add(vm);
             ShowAddUrlPopUp = false;
         }
@@ -170,7 +177,7 @@ namespace CastIt.ViewModels.Items
                 return;
 
             var ids = SelectedItems.Select(f => f.Id).ToList();
-            await _playListsService.DeleteFiles(ids);
+            await _playListsService.DeleteFiles(ids).ConfigureAwait(false);
             var itemsToDelete = Items.Where(f => ids.Contains(f.Id)).ToList();
             Items.RemoveItems(itemsToDelete);
             SelectedItems.Clear();
@@ -179,10 +186,10 @@ namespace CastIt.ViewModels.Items
         private async Task RemoveAllMissing()
         {
             var items = Items.Where(f => !f.Exists).ToList();
-            if (!items.Any())
+            if (items.Count == 0)
                 return;
 
-            await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList());
+            await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList()).ConfigureAwait(false);
             Items.RemoveItems(items);
         }
 
@@ -198,11 +205,11 @@ namespace CastIt.ViewModels.Items
         {
             if (Id > 0)
             {
-                await _playListsService.UpdatePlayList(Id, newName, Position);
+                await _playListsService.UpdatePlayList(Id, newName, Position).ConfigureAwait(false);
             }
             else
             {
-                var playList = await _playListsService.AddNewPlayList(newName, Position);
+                var playList = await _playListsService.AddNewPlayList(newName, Position).ConfigureAwait(false);
                 Id = playList.Id;
             }
             Name = newName;

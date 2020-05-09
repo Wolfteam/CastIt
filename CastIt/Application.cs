@@ -30,9 +30,12 @@ namespace CastIt
             //NPI WHY I NEED TO MANUALLY REGISTER THIS ONE
             Mvx.IoCProvider.RegisterSingleton<IMvxMessenger>(new MvxMessengerHub());
 
-            Mvx.IoCProvider.RegisterSingleton<ITextProvider>(
-                new ResxTextProvider(Resource.ResourceManager, Mvx.IoCProvider.Resolve<IMvxMessenger>())
-            );
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ITextProvider>(() =>
+            {
+                var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
+                var appSettings = Mvx.IoCProvider.Resolve<IAppSettingsService>();
+                return new ResxTextProvider(Resource.ResourceManager, messenger, appSettings);
+            });
 
             Mvx.IoCProvider.RegisterSingleton(new AppDbContext());
 

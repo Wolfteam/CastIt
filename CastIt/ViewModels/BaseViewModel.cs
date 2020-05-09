@@ -1,11 +1,10 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Models.Messages;
 using MvvmCross.Logging;
-using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace CastIt.ViewModels
 {
@@ -30,11 +29,11 @@ namespace CastIt.ViewModels
         //public AppLanguageType CurrentAppLanguge
         //    => AppSettings.AppLanguage;
         public string this[string key]
-            => TextProvider.GetText(string.Empty, string.Empty, key) 
+            => TextProvider.GetText(string.Empty, string.Empty, key)
             ?? throw new Exception($"{key} was not found in the resources file");
         #endregion
 
-        public BaseViewModel(
+        protected BaseViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLog logger)
@@ -56,6 +55,7 @@ namespace CastIt.ViewModels
 
         public virtual void RegisterMessages()
         {
+            SubscriptionTokens.Add(Messenger.Subscribe<AppLanguageChangedMessage>(_ => RaiseAllPropertiesChanged()));
         }
 
         public override void ViewAppeared()

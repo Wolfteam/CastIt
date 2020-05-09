@@ -1,6 +1,7 @@
 ﻿using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.ViewModels.Items;
+using MvvmCross;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -21,10 +22,13 @@ namespace CastIt.ViewModels
             : base(textProvider, messenger, logger.GetLogFor<DevicesViewModel>())
         {
             _castService = castService;
-            var devices = _castService.AvailableDevices.Select(d => new DeviceItemViewModel
+            var devices = _castService.AvailableDevices.Select(d =>
             {
-                Name = d.Name,
-                Type = d.Type
+                var vm = Mvx.IoCProvider.IoCConstruct<DeviceItemViewModel>();
+                vm.Name = d.Name;
+                vm.Type = d.Type;
+
+                return vm;
             }).ToList();
 
             Devices.AddRange(devices);
@@ -41,11 +45,11 @@ namespace CastIt.ViewModels
             if (Devices.Any(d => d.Name == device.Name && d.Type == device.Type))
                 return;
 
-            Devices.Add(new DeviceItemViewModel
-            {
-                Name = device.Name,
-                Type = device.Type
-            });
+            var vm = Mvx.IoCProvider.IoCConstruct<DeviceItemViewModel>();
+            vm.Name = device.Name;
+            vm.Type = device.Type;
+
+            Devices.Add(vm);
         }
     }
 }

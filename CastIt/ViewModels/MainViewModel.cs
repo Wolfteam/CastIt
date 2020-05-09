@@ -37,6 +37,7 @@ namespace CastIt.ViewModels
         private string _currentFileThumbnail;
         private double _currentPlayedSeconds;
         private string _previewThumbnailImg;
+        private bool _onSkipOrPrevious;
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
@@ -195,7 +196,7 @@ namespace CastIt.ViewModels
             IsExpanded = _settingsService.IsPlayListExpanded;
             _castService.Init();
 
-            var playLists = await _playListsService.GetAllPlayLists();
+            var playLists = await _playListsService.GetAllPlayLists().ConfigureAwait(false);
             PlayLists.AddRange(playLists);
 
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
@@ -203,7 +204,7 @@ namespace CastIt.ViewModels
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
-            await base.Initialize();
+            await base.Initialize().ConfigureAwait(false);
         }
 
         public override void SetCommands()
@@ -215,10 +216,7 @@ namespace CastIt.ViewModels
                 _setWindowWidthAndHeight.Raise(tuple);
             });
 
-            TogglePlaylistVisibilityCommand = new MvxCommand(() =>
-            {
-                IsExpanded = !IsExpanded;
-            });
+            TogglePlaylistVisibilityCommand = new MvxCommand(() => IsExpanded = !IsExpanded);
 
             CloseAppCommand = new MvxAsyncCommand(HandleCloseApp);
 
@@ -255,8 +253,14 @@ namespace CastIt.ViewModels
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
-                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File))
+                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File).ConfigureAwait(false))
             });
+        }
+
+        public override void ViewAppeared()
+        {
+            base.ViewAppeared();
+            WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
         }
 
         public void SaveWindowWidthAndHeight(double width, double height)
@@ -297,13 +301,16 @@ namespace CastIt.ViewModels
 
         private async Task SetFileDurations()
         {
-            foreach (var playlist in PlayLists)
-            {
-                foreach (var item in playlist.Items)
-                {
-                    await item.SetDuration();
-                }
-            }
+            var tasks = PlayLists.SelectMany(pl => pl.Items).Select(f => f.SetDuration()).ToList();
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+            //foreach (var playlist in PlayLists)
+            //{
+            //    foreach (var item in playlist.Items)
+            //    {
+            //        await item.SetDuration().ConfigureAwait(false);
+            //    }
+            //}
         }
 
         private async Task AddNewPlayList()
@@ -312,7 +319,7 @@ namespace CastIt.ViewModels
             vm.Name = $"New PlayList {PlayLists.Count}";
             vm.Position = PlayLists.Max(pl => pl.Position) + 1;
 
-            var playList = await _playListsService.AddNewPlayList(vm.Name, vm.Position);
+            var playList = await _playListsService.AddNewPlayList(vm.Name, vm.Position).ConfigureAwait(false);
             vm.Id = playList.Id;
 
             PlayLists.Add(vm);
@@ -324,7 +331,7 @@ namespace CastIt.ViewModels
             if (playlist == null)
                 return;
 
-            await _playListsService.DeletePlayList(playlist.Id);
+            await _playListsService.DeletePlayList(playlist.Id).ConfigureAwait(false);
             PlayLists.Remove(playlist);
         }
 
@@ -342,19 +349,19 @@ namespace CastIt.ViewModels
                 items.Add(PlayLists[i]);
             }
 
-            await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList());
+            await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList()).ConfigureAwait(false);
             PlayLists.RemoveItems(items);
         }
 
         private async Task HandleCloseApp()
         {
-            await _playListsService.SavePlayLists(PlayLists.ToList());
-            _castService.OnTimeChanged -= OnFileDurationChanged;
-            _castService.OnPositionChanged -= OnFilePositionChanged;
-            _castService.OnEndReached -= OnFileEndReached;
+            //await _playListsService.SavePlayLists(PlayLists.ToList());
             _castService.StopPlayback();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
+            _castService.OnTimeChanged -= OnFileDurationChanged;
+            _castService.OnPositionChanged -= OnFilePositionChanged;
+            _castService.OnEndReached -= OnFileEndReached;
             _closeApp.Raise();
         }
 
@@ -373,7 +380,7 @@ namespace CastIt.ViewModels
 
         private void GoTo(bool nextTrack)
         {
-            if (_currentlyPlayedFile == null)
+            if (_currentlyPlayedFile == null || _onSkipOrPrevious)
                 return;
 
             var playlist = PlayLists.First(p => p.Id == _currentlyPlayedFile.PlayListId);
@@ -381,6 +388,7 @@ namespace CastIt.ViewModels
             if (fileIndex < 0)
                 return;
 
+            _onSkipOrPrevious = true;
             if (nextTrack)
                 fileIndex++;
             else
@@ -389,6 +397,7 @@ namespace CastIt.ViewModels
 
             if (file is null)
             {
+                Logger.Warn($"File at index = {fileIndex} in playListId {playlist.Id} was not found");
                 return;
             }
 
@@ -401,18 +410,30 @@ namespace CastIt.ViewModels
             if (!file.Exists)
                 return;
 
+            if (!DurationTaskNotifier.IsCompleted)
+            {
+                Logger.Info($"{nameof(PlayFile)}: Some files are not ready yet");
+                return;
+            }
+
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
             SetCurrentlyPlayingInfo(file.Filename, true);
-            await _castService.StartPlay(file.Path);
+            await _castService.StartPlay(file.Path).ConfigureAwait(false);
             CurrentFileThumbnail = _castService.GetFirstThumbnail();
             if (file.PlayedPercentage != 0)
             {
                 _castService.GoToPosition((float)file.PlayedPercentage);
             }
+
+            var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
+            playList.SelectedItem = file;
+
             //ThreadPool.QueueUserWorkItem((_) => _castService.GenerateThumbmnails(file.Path));
             await Task.Run(() => _castService.GenerateThumbmnails(file.Path)).ConfigureAwait(false);
+
+            _onSkipOrPrevious = false;
         }
 
         private void StopPlayBack()
