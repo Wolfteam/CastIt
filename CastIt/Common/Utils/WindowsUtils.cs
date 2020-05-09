@@ -1,4 +1,12 @@
-﻿using System.Windows;
+﻿using CastIt.Common.Enums;
+using CastIt.Common.Extensions;
+using MaterialDesignColors;
+using MaterialDesignThemes.Wpf;
+using System;
+using System.Drawing;
+using System.Linq;
+using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media;
 
 namespace CastIt.Common.Utils
@@ -69,6 +77,43 @@ namespace CastIt.Common.Utils
                 }
             }
             return null;
+        }
+
+        public static void ChangeTheme(AppThemeType appTheme, string hexAccentColor)
+        {
+            var baseTheme = appTheme == AppThemeType.Dark ? Theme.Dark : Theme.Light;
+            ITheme theme = System.Windows.Application.Current.Resources.GetTheme();
+            ControlPaint.LightLight(hexAccentColor.ToColor());
+
+            float lightBy = appTheme == AppThemeType.Dark ? 0.2f : 0.5f;
+            float midBy = appTheme == AppThemeType.Dark ? 0.15f : 0.2f;
+
+            var accentColor = hexAccentColor.ToColor();
+            var primaryLight = accentColor.LerpLight(lightBy).ToHexString().ToMediaColor();
+            var primaryMid = accentColor.LerpLight(midBy).ToHexString().ToMediaColor();
+            var primaryDark = hexAccentColor.ToMediaColor();
+            var secondary = hexAccentColor.ToMediaColor();
+
+            theme.PrimaryLight = new ColorPair(primaryLight, primaryLight);
+            theme.PrimaryMid = new ColorPair(primaryMid, primaryMid);
+            theme.PrimaryDark = new ColorPair(primaryDark, primaryDark);
+
+            theme.SecondaryDark =
+                theme.SecondaryMid =
+                    theme.SecondaryLight = new ColorPair(secondary, secondary);
+            theme.SetBaseTheme(baseTheme);
+
+            string url = appTheme == AppThemeType.Dark
+                ? "/XamlResources/DarkTheme.xaml"
+                : "/XamlResources/LightTheme.xaml";
+            var themeDictionary = System.Windows.Application.Current.Resources.MergedDictionaries.Last();
+            themeDictionary.MergedDictionaries.Clear();
+            themeDictionary.MergedDictionaries.Add(new ResourceDictionary
+            {
+                Source = new Uri(url, UriKind.RelativeOrAbsolute)
+            });
+
+            System.Windows.Application.Current.Resources.SetTheme(theme);
         }
     }
 }

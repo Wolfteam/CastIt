@@ -16,8 +16,8 @@ namespace CastIt.Common
         public const string AccentColorDarkMagenta = "#881199";
         public const string AccentColorMagenta = "#ff00e3";
         public const string AccentColorDarkGray = "#777777";
-        public const string AccentColorOrange = "#ffb900";
-        public const string AccentColorYellow = "#f5ff00";
+        public const string AccentColorOrange = "#f57c00";
+        public const string AccentColorYellow = "#e2fd00";
         public const string AccentColorDarkBlue = "#0063b1";
         public const string AccentColorViolet = "#8600ff";
         public const string AccentColorLightGrey = "#a8a9aa";
@@ -25,7 +25,7 @@ namespace CastIt.Common
         public const string FullElapsedTimeFormat = @"hh\:mm\:ss";
         public const string ShortElapsedTimeFormat = @"mm\:ss";
 
-        public static IReadOnlyList<string> AllowedFormats 
+        public static IReadOnlyList<string> AllowedFormats
             => AllowedVideoFormats.Concat(AllowedMusicFormats).ToList();
         public static IReadOnlyList<string> AllowedVideoFormats => new List<string>
         {
@@ -44,7 +44,7 @@ namespace CastIt.Common
             ".flac",
         };
 
-        public static string AllowedFormatsString 
+        public static string AllowedFormatsString
             => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
 
         public static string AppName
