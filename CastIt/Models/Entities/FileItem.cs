@@ -8,6 +8,7 @@ namespace CastIt.Models.Entities
         public long Id { get; set; }
         public int Position { get; set; }
         public string Path { get; set; }
+        public double PlayedPercentage { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

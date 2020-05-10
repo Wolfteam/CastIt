@@ -73,9 +73,9 @@ namespace CastIt.Common.Behaviours
                 return;
             }
 
-            double tolerance = 60;
+            const double tolerance = 60;
+            const double offset = 3;
             double verticalPos = e.GetPosition(container).Y;
-            double offset = 15;
             if (verticalPos < tolerance) // Top of visible list? 
             {
                 scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - offset); //Scroll up. 

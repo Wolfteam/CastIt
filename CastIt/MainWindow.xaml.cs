@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Views;
 using MvvmCross.Platforms.Wpf.Views;
 using System.Linq;
 using System.Windows;
@@ -11,7 +12,6 @@ namespace CastIt
     {
         private Storyboard _showWin;
         private Storyboard _hideWin;
-        private bool _isCollapsed;
 
         public double CurrentWidth;
         public double CurrentHeight;
@@ -23,7 +23,11 @@ namespace CastIt
 
         public void ToggleWindowHeight(double tabHeight)
         {
-            if (!_isCollapsed)
+            var view = Content as MainPage;
+            //when this method gets called, the IsExpanded property already changed
+            //thats why we negate its value
+            bool collapse = !view.ViewModel.IsExpanded;
+            if (collapse)
             {
                 BeginStoryboard(_hideWin);
                 _hideWin.Begin();
@@ -33,7 +37,6 @@ namespace CastIt
                 (_showWin.Children.First() as DoubleAnimation).To = tabHeight + AppConstants.MinWindowHeight;
                 _showWin.Begin();
             }
-            _isCollapsed = !_isCollapsed;
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -52,6 +55,18 @@ namespace CastIt
 
         private void AppMainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            var view = Content as MainPage;
+
+            if (e.NewSize.Height <= AppConstants.MinWindowHeight &&
+                view.ViewModel.IsExpanded)
+            {
+                view.ViewModel.IsExpanded = false;
+            }
+            else if (e.NewSize.Height > AppConstants.MinWindowHeight &&
+                !view.ViewModel.IsExpanded)
+            {
+                view.ViewModel.IsExpanded = true;
+            }
             CurrentWidth = e.NewSize.Width;
             CurrentHeight = e.NewSize.Height;
         }

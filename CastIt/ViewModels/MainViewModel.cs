@@ -10,7 +10,6 @@ using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,6 +37,10 @@ namespace CastIt.ViewModels
         private double _currentPlayedSeconds;
         private string _previewThumbnailImg;
         private bool _onSkipOrPrevious;
+        private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
+        private bool _showSnackbar;
+        private string _snackbarMsg;
+        private string _snackBarActionMsg;
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
@@ -86,7 +89,7 @@ namespace CastIt.ViewModels
         }
 
         public double CurrentFileDuration
-            => _currentlyPlayedFile?.TotalSeconds ?? 0;
+            => _currentlyPlayedFile?.TotalSeconds ?? 1;
 
         public double CurrentPlayedSeconds
         {
@@ -117,12 +120,7 @@ namespace CastIt.ViewModels
         public string ElapsedTimeString
         {
             get => _elapsedTimeString;
-            set
-            {
-                if (value == _elapsedTimeString)
-                    return;
-                SetProperty(ref _elapsedTimeString, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref _elapsedTimeString, value);
         }
 
         public string CurrentFileThumbnail
@@ -134,12 +132,7 @@ namespace CastIt.ViewModels
         public string PreviewThumbnailImg
         {
             get => _previewThumbnailImg;
-            set
-            {
-                if (value == _previewThumbnailImg)
-                    return;
-                SetProperty(ref _previewThumbnailImg, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref _previewThumbnailImg, value);
         }
 
         public MvxObservableCollection<PlayListItemViewModel> PlayLists { get; set; }
@@ -149,6 +142,24 @@ namespace CastIt.ViewModels
         {
             get => _durationTaskNotifier;
             private set => SetProperty(ref _durationTaskNotifier, value);
+        }
+
+        public bool ShowSnackbar
+        {
+            get => _showSnackbar;
+            set => SetProperty(ref _showSnackbar, value);
+        }
+
+        public string SnackbarMsg
+        {
+            get => _snackbarMsg;
+            set => SetProperty(ref _snackbarMsg, value);
+        }
+
+        public string SnackBarActionMsg
+        {
+            get => _snackBarActionMsg;
+            set => SetProperty(ref _snackBarActionMsg, value);
         }
         #endregion
 
@@ -166,10 +177,10 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand<PlayListItemViewModel> DeleteAllPlayListsExceptCommand { get; private set; }
         public IMvxCommand OpenSettingsCommand { get; private set; }
         public IMvxCommand OpenDevicesCommand { get; private set; }
+        public IMvxCommand SnackbarActionCommand { get; private set; }
         #endregion
 
         #region Interactors
-        public IMvxCommand WindowLoadedCommand { get; private set; }
         public IMvxInteraction CloseApp
             => _closeApp;
         public IMvxInteraction<(double, double)> SetWindowWidthAndHeight
@@ -197,7 +208,7 @@ namespace CastIt.ViewModels
             _castService.Init();
 
             var playLists = await _playListsService.GetAllPlayLists();
-            PlayLists.AddRange(playLists);
+            PlayLists.AddRange(playLists.OrderBy(pl => pl.Position));
 
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
 
@@ -210,11 +221,6 @@ namespace CastIt.ViewModels
         public override void SetCommands()
         {
             base.SetCommands();
-            WindowLoadedCommand = new MvxCommand(() =>
-            {
-                var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
-                _setWindowWidthAndHeight.Raise(tuple);
-            });
 
             TogglePlaylistVisibilityCommand = new MvxCommand(() => IsExpanded = !IsExpanded);
 
@@ -246,6 +252,8 @@ namespace CastIt.ViewModels
             OpenSettingsCommand = new MvxCommand(() => ShowSettingsPopUp = true);
 
             OpenDevicesCommand = new MvxCommand(() => ShowDevicesPopUp = true);
+
+            SnackbarActionCommand = new MvxCommand(() => ShowSnackbar = false);
         }
 
         public override void RegisterMessages()
@@ -253,7 +261,7 @@ namespace CastIt.ViewModels
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
-                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File).ConfigureAwait(false))
+                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File))
             });
         }
 
@@ -261,14 +269,24 @@ namespace CastIt.ViewModels
         {
             base.ViewAppeared();
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
+            var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
+            _setWindowWidthAndHeight.Raise(tuple);
         }
 
-        public void SaveWindowWidthAndHeight(double width, double height)
+        public void SaveChangesBeforeClosing(
+            double width,
+            double height,
+            Dictionary<long, int> positions)
         {
             _settingsService.WindowWidth = width;
             _settingsService.WindowHeight = height;
             _settingsService.IsPlayListExpanded = IsExpanded;
             _settingsService.SaveSettings();
+
+            var files = PlayLists.SelectMany(pl => pl.Items)
+                .Where(f => f.WasPlayed || f.PositionChanged)
+                .ToList();
+            _playListsService.SaveChangesBeforeClosingApp(positions, files);
         }
 
         public long TrySetThumbnail(double sliderWidth, double mouseX)
@@ -301,7 +319,8 @@ namespace CastIt.ViewModels
 
         private Task SetFileDurations()
         {
-            var tasks = PlayLists.SelectMany(pl => pl.Items).Select(f => f.SetDuration()).ToList();
+            Logger.Info($"{nameof(SetFileDurations)}: Setting file duration to all the files");
+            var tasks = PlayLists.SelectMany(pl => pl.Items).Select(f => f.SetDuration(_setDurationTokenSource.Token)).ToList();
 
             return Task.WhenAll(tasks);
         }
@@ -312,7 +331,7 @@ namespace CastIt.ViewModels
             vm.Name = $"New PlayList {PlayLists.Count}";
             vm.Position = PlayLists.Max(pl => pl.Position) + 1;
 
-            var playList = await _playListsService.AddNewPlayList(vm.Name, vm.Position).ConfigureAwait(false);
+            var playList = await _playListsService.AddNewPlayList(vm.Name, vm.Position);
             vm.Id = playList.Id;
 
             PlayLists.Add(vm);
@@ -324,7 +343,7 @@ namespace CastIt.ViewModels
             if (playlist == null)
                 return;
 
-            await _playListsService.DeletePlayList(playlist.Id).ConfigureAwait(false);
+            await _playListsService.DeletePlayList(playlist.Id);
             PlayLists.Remove(playlist);
         }
 
@@ -342,14 +361,20 @@ namespace CastIt.ViewModels
                 items.Add(PlayLists[i]);
             }
 
-            await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList()).ConfigureAwait(false);
+            await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList());
             PlayLists.RemoveItems(items);
         }
 
         private async Task HandleCloseApp()
         {
+            _setDurationTokenSource.Cancel();
+            foreach (var playList in PlayLists)
+            {
+                playList.CleanUp();
+            }
+            await Task.Delay(500);
             //await _playListsService.SavePlayLists(PlayLists.ToList());
-            _castService.StopPlayback();
+            StopPlayBack();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
             _castService.OnTimeChanged -= OnFileDurationChanged;
@@ -401,11 +426,23 @@ namespace CastIt.ViewModels
         private async Task PlayFile(FileItemViewModel file)
         {
             if (!file.Exists)
+            {
+                await ShowSnackbarMsg(GetText("FileDoesntExist"));
                 return;
+            }
+
+            if (file == _currentlyPlayedFile)
+            {
+                await ShowSnackbarMsg(GetText("FileIsAlreadyBeingPlayed"));
+                return;
+            }
 
             if (!DurationTaskNotifier.IsCompleted)
             {
-                Logger.Info($"{nameof(PlayFile)}: Some files are not ready yet");
+                Logger.Info(
+                    $"{nameof(PlayFile)}: Cant play file = {file.Filename} yet, " +
+                    $"because im still setting the duration for some files.");
+                await ShowSnackbarMsg(GetText("FileIsNotReadyYet"));
                 return;
             }
 
@@ -413,9 +450,9 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
             SetCurrentlyPlayingInfo(file.Filename, true);
-            await _castService.StartPlay(file.Path).ConfigureAwait(false);
+            await _castService.StartPlay(file.Path);
             CurrentFileThumbnail = _castService.GetFirstThumbnail();
-            if (file.PlayedPercentage != 0)
+            if (file.CanStartPlayingFromCurrentPercentage)
             {
                 _castService.GoToPosition((float)file.PlayedPercentage);
             }
@@ -424,7 +461,7 @@ namespace CastIt.ViewModels
             playList.SelectedItem = file;
 
             //ThreadPool.QueueUserWorkItem((_) => _castService.GenerateThumbmnails(file.Path));
-            await Task.Run(() => _castService.GenerateThumbmnails(file.Path)).ConfigureAwait(false);
+            await Task.Run(() => _castService.GenerateThumbmnails(file.Path));
 
             _onSkipOrPrevious = false;
         }
@@ -474,6 +511,26 @@ namespace CastIt.ViewModels
             ElapsedTimeString = string.Empty;
             SetCurrentlyPlayingInfo(null, false);
             GoTo(true);
+        }
+
+        private async Task ShowSnackbarMsg(string msg, string actionContent = null)
+        {
+            if (ShowSnackbar)
+                return;
+
+            if (string.IsNullOrEmpty(actionContent))
+            {
+                actionContent = GetText("Dismiss");
+            }
+
+            ShowSnackbar = true;
+            SnackbarMsg = msg;
+            SnackBarActionMsg = actionContent;
+            //The snacbarmsgqueue has a problem that sometimes
+            //it doesnt show the msg, thats why we use this implementation
+            await Task.Delay(2000);
+
+            SnackbarActionCommand.Execute();
         }
         #endregion
     }

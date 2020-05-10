@@ -7,6 +7,7 @@ using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Items
@@ -20,6 +21,7 @@ namespace CastIt.ViewModels.Items
         private bool _showEditPopUp;
         private bool _showAddUrlPopUp;
         private FileItemViewModel _selectedItem;
+        private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
@@ -113,13 +115,18 @@ namespace CastIt.ViewModels.Items
 
             PlayFileCommand = new MvxCommand<FileItemViewModel>((item) => item.PlayCommand.Execute());
 
-            RemoveFileCommand = new MvxAsyncCommand<FileItemViewModel>(async (_) => await RemoveSelectedFiles().ConfigureAwait(false));
+            RemoveFileCommand = new MvxAsyncCommand<FileItemViewModel>(async (_) => await RemoveSelectedFiles());
 
             RemoveAllMissingCommand = new MvxAsyncCommand(RemoveAllMissing);
 
             SelectAllCommand = new MvxCommand(SelectAll);
 
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
+        }
+
+        public void CleanUp()
+        {
+            _setDurationTokenSource.Cancel();
         }
 
         private Task OnFolderAdded(string folder)
@@ -149,12 +156,12 @@ namespace CastIt.ViewModels.Items
                 };
             }).ToList();
 
-            var vms = await _playListsService.AddFiles(files).ConfigureAwait(false);
+            var vms = await _playListsService.AddFiles(files);
 
             foreach (var vm in vms)
             {
                 //vm.Position = Items.Count + 1;
-                await vm.SetDuration().ConfigureAwait(false);
+                await vm.SetDuration(_setDurationTokenSource.Token);
                 Items.Add(vm);
             }
         }
@@ -165,8 +172,8 @@ namespace CastIt.ViewModels.Items
             bool isUrlFile = _castService.IsUrlFile(url);
             if (!isUrlFile)
                 return;
-            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1).ConfigureAwait(false);
-            await vm.SetDuration().ConfigureAwait(false);
+            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
+            await vm.SetDuration(_setDurationTokenSource.Token);
             Items.Add(vm);
             ShowAddUrlPopUp = false;
         }
@@ -177,7 +184,7 @@ namespace CastIt.ViewModels.Items
                 return;
 
             var ids = SelectedItems.Select(f => f.Id).ToList();
-            await _playListsService.DeleteFiles(ids).ConfigureAwait(false);
+            await _playListsService.DeleteFiles(ids);
             var itemsToDelete = Items.Where(f => ids.Contains(f.Id)).ToList();
             Items.RemoveItems(itemsToDelete);
             SelectedItems.Clear();
@@ -189,7 +196,7 @@ namespace CastIt.ViewModels.Items
             if (items.Count == 0)
                 return;
 
-            await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList()).ConfigureAwait(false);
+            await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList());
             Items.RemoveItems(items);
         }
 
@@ -205,11 +212,11 @@ namespace CastIt.ViewModels.Items
         {
             if (Id > 0)
             {
-                await _playListsService.UpdatePlayList(Id, newName, Position).ConfigureAwait(false);
+                await _playListsService.UpdatePlayList(Id, newName, Position);
             }
             else
             {
-                var playList = await _playListsService.AddNewPlayList(newName, Position).ConfigureAwait(false);
+                var playList = await _playListsService.AddNewPlayList(newName, Position);
                 Id = playList.Id;
             }
             Name = newName;

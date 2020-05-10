@@ -142,7 +142,7 @@
             Maximum="100"
             Minimum="0"
             Style="{StaticResource AppProgressBarStyle}"
-            Value="{Binding PlayedPercentage}" />
+            Value="{Binding PlayedPercentage, Mode=OneWay}" />
 
         <Separator
             Grid.Row="5"

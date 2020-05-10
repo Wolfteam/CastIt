@@ -1,6 +1,7 @@
 ﻿using CastIt.Common;
 using CastIt.Models;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.Interfaces
@@ -26,7 +27,7 @@ namespace CastIt.Interfaces
         string GetThumbnail(string filePath, int second);
         void StopPlayback();
         void TogglePlayback();
-        Task<long> GetDuration(string mrl);
+        Task<long> GetDuration(string mrl, CancellationToken cancellationToken = default);
         bool IsLocalFile(string mrl);
         bool IsUrlFile(string mrl);
         string GetFileName(string mrl);

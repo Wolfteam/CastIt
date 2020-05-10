@@ -19,12 +19,6 @@
     d:DesignWidth="800"
     x:TypeArguments="vms:MainViewModel"
     mc:Ignorable="d">
-    <behaviours:Interaction.Triggers>
-        <behaviours:EventTrigger EventName="Loaded">
-            <behaviours:InvokeCommandAction Command="{Binding WindowLoadedCommand}" />
-        </behaviours:EventTrigger>
-    </behaviours:Interaction.Triggers>
-
     <views:MvxWpfView.InputBindings>
         <KeyBinding Key="F1" Command="{Binding PreviousCommand}" />
         <KeyBinding Key="F2" Command="{Binding NextCommand}" />
@@ -58,6 +52,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <uc:WindowButtons
@@ -90,6 +85,7 @@
             VerticalContentAlignment="Stretch"
             BorderBrush="{DynamicResource DarkestColorBrush}"
             BorderThickness="0"
+            FocusVisualStyle="{x:Null}"
             ItemsSource="{Binding PlayLists}"
             SelectedIndex="{Binding SelectedPlayListIndex, Mode=TwoWay}"
             Tag="{Binding}">
@@ -104,7 +100,10 @@
             </dragablz:TabablzControl.ContextMenu>
             <dragablz:TabablzControl.HeaderItemTemplate>
                 <DataTemplate DataType="{x:Type vmis:PlayListItemViewModel}">
-                    <uc:PlayListItemHeader DataContext="{Binding}" Tag="{Binding ElementName=PlayListTabControl, Path=DataContext}" />
+                    <uc:PlayListItemHeader
+                        DataContext="{Binding}"
+                        FocusVisualStyle="{x:Null}"
+                        Tag="{Binding ElementName=PlayListTabControl, Path=DataContext}" />
                 </DataTemplate>
             </dragablz:TabablzControl.HeaderItemTemplate>
             <dragablz:TabablzControl.ContentTemplate>
@@ -113,5 +112,18 @@
                 </DataTemplate>
             </dragablz:TabablzControl.ContentTemplate>
         </dragablz:TabablzControl>
+
+        <materialDesign:Snackbar
+            Grid.Row="4"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Stretch"
+            Background="{DynamicResource WindowBackground}"
+            Foreground="{DynamicResource FontColorBrush}"
+            IsActive="{Binding ShowSnackbar, Mode=TwoWay}">
+            <materialDesign:SnackbarMessage
+                ActionCommand="{Binding SnackbarActionCommand}"
+                ActionContent="{Binding SnackBarActionMsg}"
+                Content="{Binding SnackbarMsg}" />
+        </materialDesign:Snackbar>
     </Grid>
 </views:MvxWpfView>

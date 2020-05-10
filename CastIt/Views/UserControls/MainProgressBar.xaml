@@ -21,7 +21,6 @@
             MouseMove="MainSilder_MouseMove"
             PreviewMouseUp="MainSilder_PreviewMouseUp"
             Style="{StaticResource CustomSliderStyle}"
-            Visibility="{Binding IsCurrentlyPlaying, Converter={StaticResource BooleanToVisibilityConverter}}"
             Value="{Binding CurrentPlayedSeconds, Mode=OneWay}" />
 
         <Popup

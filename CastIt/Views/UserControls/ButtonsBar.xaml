@@ -164,7 +164,7 @@
                 </Popup.HorizontalOffset>
                 <uc:DiscoveredDevices x:Name="DevicesUserControl" />
             </Popup>
-            <Button Click="Button_Click">
+            <Button Click="ToggleCollapse">
                 <Button.Style>
                     <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="Button">
                         <Setter Property="Content">

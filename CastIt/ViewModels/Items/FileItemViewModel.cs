@@ -4,8 +4,10 @@ using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
+using MvvmCross.ViewModels;
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Items
@@ -27,11 +29,12 @@ namespace CastIt.ViewModels.Items
         public long Id { get; set; }
         public long PlayListId { get; set; }
         public long TotalSeconds { get; private set; }
+        public bool PositionChanged { get; set; }
 
         public int Position
         {
             get => _position;
-            set => SetProperty(ref _position, value);
+            set => this.RaiseAndSetIfChanged(ref _position, value);
         }
 
         public string Path
@@ -43,13 +46,14 @@ namespace CastIt.ViewModels.Items
         public double PlayedPercentage
         {
             get => _playedPercentage;
-            set
-            {
-                if (value == _playedPercentage)
-                    return;
-                SetProperty(ref _playedPercentage, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref _playedPercentage, value);
         }
+
+        public bool CanStartPlayingFromCurrentPercentage
+            => PlayedPercentage > 0 && PlayedPercentage < 100;
+
+        public bool WasPlayed
+            => PlayedPercentage > 0 && PlayedPercentage <= 100;
 
         public string Duration
         {
@@ -111,11 +115,7 @@ namespace CastIt.ViewModels.Items
         {
             base.SetCommands();
 
-            PlayCommand = new MvxCommand(() =>
-            {
-                //TODO: DOUBLE CHECK THAT THIS FILE IS NOT BEING ALREADY PLAYED
-                Messenger.Publish(new PlayFileMsg(this));
-            });
+            PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this)));
 
             PlayFromTheBeginingCommand = new MvxCommand(() => _castService.GoToPosition(0));
 
@@ -138,15 +138,14 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        public async Task SetDuration()
+        public async Task SetDuration(CancellationToken cancellationToken)
         {
             if (!Exists)
             {
                 Duration = GetText("Missing");
                 return;
             }
-            //TODO: IF THE USER OPENS THE APP, AND HAS A LOT OF ITEMS, AND THEN, IT CLOSES THE APP, A CRASH MAY BE THROWN
-            var seconds = await _castService.GetDuration(Path);
+            var seconds = await _castService.GetDuration(Path, cancellationToken);
             TotalSeconds = seconds;
             if (seconds <= 0)
             {

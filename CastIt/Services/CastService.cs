@@ -350,7 +350,7 @@ namespace CastIt.Services
             return _rendererDiscoverer.Start();
         }
 
-        public async Task<long> GetDuration(string mrl)
+        public async Task<long> GetDuration(string mrl, CancellationToken cancellationToken = default)
         {
             bool isLocal = IsLocalFile(mrl);
             bool isUrl = IsUrlFile(mrl);
@@ -363,14 +363,17 @@ namespace CastIt.Services
             using var media = new Media(_libVLC, mrl, isLocal ? FromType.FromPath : FromType.FromLocation);
             try
             {
-                var status = await media.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
+                var status = await media.Parse(
+                    MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal, 
+                    cancellationToken: cancellationToken);
                 if (status == MediaParsedStatus.Done)
                     return media.Duration / 1000;
                 return 0;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GetDuration)}: Unknown error while trying to parse file = {mrl}");
+                if (!(ex is TaskCanceledException))
+                    _logger.Error(ex, $"{nameof(GetDuration)}: Unknown error while trying to parse file = {mrl}");
                 return -1;
             }
         }

@@ -39,6 +39,7 @@ namespace CastIt
                 {$"{typeof(FileItemViewModel).FullName}",  "vm_fileitem_.txt"},
                 {$"{typeof(DeviceItemViewModel).FullName}",  "vm_deviceitem_.txt"},
                 {$"{typeof(CastService).FullName}",  "service_cast_.txt"},
+                {$"{typeof(AppSettingsService).FullName}",  "service_appsettings_.txt"},
             };
 
             foreach (var kvp in logs)

@@ -23,7 +23,7 @@ namespace CastIt.Common.Utils
         public static string GetBaseAppFolder()
         {
             var folder = CreateDirectory(
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 AppConstants.AppName);
             return folder;
         }

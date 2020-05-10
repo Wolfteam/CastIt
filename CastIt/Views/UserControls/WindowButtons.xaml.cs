@@ -41,8 +41,10 @@ namespace CastIt.Views.UserControls
         public void CloseApp()
         {
             var window = System.Windows.Application.Current.MainWindow as MainWindow;
+            var view = window.Content as MainPage;
+            var positions = view.GetTabsPosition();
             var vm = DataContext as MainViewModel;
-            vm.SaveWindowWidthAndHeight(window.CurrentWidth, window.CurrentHeight);
+            vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
             System.Windows.Application.Current.Shutdown();
         }
     }

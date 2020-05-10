@@ -3,6 +3,7 @@ using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models;
+using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -12,6 +13,7 @@ namespace CastIt.Services
     public class AppSettingsService : IAppSettingsService
     {
         #region Members
+        private readonly IMvxLog _logger;
         private AppSettings _appSettings;
         #endregion
 
@@ -19,41 +21,25 @@ namespace CastIt.Services
         public AppLanguageType Language
         {
             get => _appSettings.Language;
-            set
-            {
-                _appSettings.Language = value;
-                SaveSettings();
-            }
+            set => _appSettings.Language = value;
         }
 
         public AppThemeType AppTheme
         {
             get => _appSettings.AppTheme;
-            set
-            {
-                _appSettings.AppTheme = value;
-                SaveSettings();
-            }
+            set => _appSettings.AppTheme = value;
         }
 
         public string AccentColor
         {
             get => _appSettings.AccentColor;
-            set
-            {
-                _appSettings.AccentColor = value;
-                SaveSettings();
-            }
+            set => _appSettings.AccentColor = value;
         }
 
         public string CurrentAppMigration
         {
             get => _appSettings.CurrentAppMigration;
-            set
-            {
-                _appSettings.CurrentAppMigration = value;
-                SaveSettings();
-            }
+            set => _appSettings.CurrentAppMigration = value;
         }
 
         public double WindowWidth
@@ -75,19 +61,12 @@ namespace CastIt.Services
         }
         #endregion
 
-        public AppSettingsService()
+        public AppSettingsService(IMvxLogProvider logProvider)
         {
+            _logger = logProvider.GetLogFor<AppSettingsService>();
             LoadSettings();
         }
 
-        //public static AppSettings GetAppSettings()
-        //{
-        //    string basePath = FileUtils.GetBaseAppFolder();
-        //    string filepath = Path.Combine(basePath, AppSettingsFilename);
-        //    using var r = new StreamReader(filepath);
-        //    string json = r.ReadToEnd();
-        //    return JsonConvert.DeserializeObject<AppSettings>(json);
-        //}
 
         #region Methods
         public void SaveSettings()
@@ -96,9 +75,9 @@ namespace CastIt.Services
             {
                 AppTheme = AppThemeType.Dark,
                 AccentColor = AppConstants.AccentColorVividRed,
-                CurrentAppMigration = AppDbContext.CurrentAppMigration,
+                CurrentAppMigration = null,
                 Language = AppLanguageType.English,
-                IsPlayListExpanded = true,
+                IsPlayListExpanded = false,
                 WindowHeight = AppConstants.MinWindowHeight,
                 WindowWidth = AppConstants.MinWindowWidth
             });
@@ -110,6 +89,7 @@ namespace CastIt.Services
             {
                 if (!FileUtils.AppSettingsExists())
                 {
+                    _logger.Info($"{nameof(LoadSettings)}: Settings does not exist. Creating a default one");
                     SaveSettings();
                     return;
                 }
@@ -118,17 +98,20 @@ namespace CastIt.Services
                 var settings = File.Exists(path) ?
                     JsonConvert.DeserializeObject<AppSettings>(text) :
                     null;
+
+                if (settings != null)
+                    _logger.Info($"{nameof(LoadSettings)}: Loaded settings = {JsonConvert.SerializeObject(settings)}");
+
                 _appSettings = settings ?? new AppSettings();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                //_logger.LogError(e, $"{nameof(LoadSettings)}: Unknown error occurred while trying to retrieve user settings");
+                _logger.Error(ex, $"{nameof(LoadSettings)}: Unknown error occurred while trying to retrieve user settings");
             }
         }
 
         private void SaveSettings(AppSettings settings)
         {
-            //_logger.LogInformation($"{nameof(SaveSettings)}: Trying to save user settings...");
             try
             {
                 if (settings is null)
@@ -136,15 +119,17 @@ namespace CastIt.Services
 
                 string path = FileUtils.GetAppSettingsPath();
                 string json = JsonConvert.SerializeObject(settings);
+                _logger.Info($"{nameof(SaveSettings)}: Trying to save settings = {json}");
+
                 File.WriteAllText(path, json);
 
                 _appSettings = settings;
 
-                //_logger.LogInformation($"{nameof(SaveSettings)}: Successfully saved user settings");
+                _logger.Info($"{nameof(SaveSettings)}: Successfully saved settings");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                //_logger.LogError(e, $"{nameof(SaveSettings)}: An unknown error occurred while trying to save the user settings");
+                _logger.Error(ex, $"{nameof(SaveSettings)}: An unknown error occurred");
             }
         }
         #endregion
