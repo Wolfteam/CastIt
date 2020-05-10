@@ -8,7 +8,6 @@ namespace CastIt.Interfaces
     public interface IPlayListsService
     {
         Task<List<PlayListItemViewModel>> GetAllPlayLists();
-        Task SavePlayLists(List<PlayListItemViewModel> playLists);
         Task<PlayListItemViewModel> AddNewPlayList(string name, int position);
         Task UpdatePlayList(long id, string name, int position);
         Task DeletePlayList(long id);
@@ -19,5 +18,7 @@ namespace CastIt.Interfaces
         Task<List<FileItemViewModel>> AddFiles(List<FileItem> files);
         Task DeleteFile(long id);
         Task DeleteFiles(List<long> ids);
+
+        void SaveChangesBeforeClosingApp(Dictionary<long, int> playListsPositions, List<FileItemViewModel> vms);
     }
 }

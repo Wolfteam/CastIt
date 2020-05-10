@@ -24,62 +24,15 @@ namespace CastIt.Services
 
         public async Task<List<PlayListItemViewModel>> GetAllPlayLists()
         {
-            //var playlists = new List<PlayList>
-            //{
-            //    new PlayList
-            //    {
-            //        Id = 1,
-            //        Name = "algo",
-            //        Items = new List<FileItem>
-            //        {
-            //            new FileItem
-            //            {
-            //                Id = 1,
-            //                Path = "C:\\Users\\Efrain Bastidas\\Music\\B Gata H Kei  Nonononon.mp3",
-            //                PlayListId = 1,
-            //                Position= 1,
-            //            },
-            //            new FileItem
-            //            {
-            //                Id = 1,
-            //                Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  課金厨のうた -More Charin Ver.-.mp3",
-            //                PlayListId = 1,
-            //                Position= 2,
-            //            }
-            //        }
-            //    },
-            //    new PlayList
-            //    {
-            //        Id = 2,
-            //        Name = "algo",
-            //        Items = new List<FileItem>
-            //        {
-            //            new FileItem
-            //            {
-            //                Id = 1,
-            //                Path = "C:\\Users\\Efrain Bastidas\\Music\\B Gata H Kei  Nonononon.mp3",
-            //                PlayListId = 2,
-            //                Position= 1,
-            //            },
-            //            new FileItem
-            //            {
-            //                Id = 1,
-            //                Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  課金厨のうた -More Charin Ver.-.mp3",
-            //                PlayListId = 2,
-            //                Position= 2,
-            //            }
-            //        }
-            //    }
-            //};
-
             var playLists = await _dbContext.PlayLists
                 .Include(p => p.Items)
                 .Select(p => new PlayList
                 {
                     CreatedAt = p.CreatedAt,
                     Id = p.Id,
-                    Items = p.Items.OrderBy(f => f.Position).Select(f => f),
+                    Items = p.Items.OrderBy(f => f.Position),
                     Name = p.Name,
+                    Position = p.Position,
                     UpdatedAt = p.UpdatedAt
                 })
                 .AsNoTracking()
@@ -201,31 +154,41 @@ namespace CastIt.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        //TODO: REMOVE THIS METHOD
-        public async Task SavePlayLists(List<PlayListItemViewModel> playLists)
+        public void SaveChangesBeforeClosingApp(
+            Dictionary<long, int> playListsPositions,
+            List<FileItemViewModel> vms)
         {
-            return;
-            //try
-            //{
-            //    var toSave = playLists.Select(pl => new PlayList
-            //    {
-            //        Name = pl.Name,
-            //        Items = pl.Items.Select(f => new FileItem
-            //        {
-            //            Path = f.Path,
-            //            Position = f.Position,
-            //        }).ToList()
-            //    });
-            //    var entitiesToDelete = await _dbContext.PlayLists.ToListAsync();
-            //    _dbContext.RemoveRange(entitiesToDelete);
+            SavePlayListsPositions(playListsPositions);
+            SaveFileChanges(vms);
+            _dbContext.SaveChanges();
+        }
 
-            //    _dbContext.AddRange(toSave);
-            //    await _dbContext.SaveChangesAsync();
-            //}
-            //catch (Exception e)
-            //{
-            //    System.Diagnostics.Debug.WriteLine(e);
-            //}
+        private void SavePlayListsPositions(Dictionary<long, int> positions)
+        {
+            if (positions.Count == 0)
+                return;
+            var entities = _dbContext.PlayLists.ToList();
+            foreach (var kvp in positions)
+            {
+                var playlist = entities.First(pl => pl.Id == kvp.Key);
+                playlist.Position = kvp.Value;
+            }
+        }
+
+        private void SaveFileChanges(List<FileItemViewModel> vms)
+        {
+            if (vms.Count == 0)
+                return;
+            var ids = vms.Select(f => f.Id).ToList();
+            var entities = _dbContext.Files
+                .Where(f => ids.Contains(f.Id))
+                .ToList();
+            foreach (var vm in vms)
+            {
+                var file = entities.First(f => f.Id == vm.Id);
+                file.PlayedPercentage = vm.PlayedPercentage;
+                file.Position = vm.Position;
+            }
         }
     }
 }
