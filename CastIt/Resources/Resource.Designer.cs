@@ -178,6 +178,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dismiss.
+        /// </summary>
+        public static string Dismiss {
+            get {
+                return ResourceManager.GetString("Dismiss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drop files here.
         /// </summary>
         public static string DropFilesHere {
@@ -201,6 +210,33 @@ namespace CastIt.Resources {
         public static string Expand {
             get {
                 return ResourceManager.GetString("Expand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File does not exist.
+        /// </summary>
+        public static string FileDoesntExist {
+            get {
+                return ResourceManager.GetString("FileDoesntExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File is already being played.
+        /// </summary>
+        public static string FileIsAlreadyBeingPlayed {
+            get {
+                return ResourceManager.GetString("FileIsAlreadyBeingPlayed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File is not ready yet.
+        /// </summary>
+        public static string FileIsNotReadyYet {
+            get {
+                return ResourceManager.GetString("FileIsNotReadyYet", resourceCulture);
             }
         }
         

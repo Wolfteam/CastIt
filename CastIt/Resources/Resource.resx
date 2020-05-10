@@ -252,4 +252,16 @@
   <data name="Spanish" xml:space="preserve">
     <value>Spanish</value>
   </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="FileDoesntExist" xml:space="preserve">
+    <value>File does not exist</value>
+  </data>
+  <data name="FileIsAlreadyBeingPlayed" xml:space="preserve">
+    <value>File is already being played</value>
+  </data>
+  <data name="FileIsNotReadyYet" xml:space="preserve">
+    <value>File is not ready yet</value>
+  </data>
 </root>
