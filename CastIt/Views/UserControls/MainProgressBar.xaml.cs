@@ -75,7 +75,7 @@ namespace CastIt.Views.UserControls
             var mousePosition = e.GetPosition(this.MainSilder);
             var seconds = MainViewModel.GetMainProgressBarSeconds(MainSilder.ActualWidth, mousePosition.X);
             System.Diagnostics.Debug.WriteLine($"Going to seconds = {seconds}");
-            MainViewModel.GoToSeconds(seconds);
+            MainViewModel.GoToSecondsCommand.Execute(seconds);
         }
     }
 }

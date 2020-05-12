@@ -16,6 +16,9 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
+    //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT FROM YOUR PHONE, THE ICONS ARE NOT UPDATED
+    //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT AGAIN, THE PLAYED TIME SYNC WILL BE LOST
+    //TODO: QUEUING THE MEDIA EVENTS DOES NOT GUARANTEE THE ORDER OF EXECUTION (E.G: if you enqueue a stop and a play, the final result could be play and stop)
     public class MainViewModel : BaseViewModel
     {
         #region Members
@@ -169,8 +172,8 @@ namespace CastIt.ViewModels
         public IMvxCommand PreviousCommand { get; private set; }
         public IMvxCommand NextCommand { get; private set; }
         public IMvxCommand TogglePlayBackCommand { get; private set; }
-        public IMvxCommand StopPlayBackCommand { get; private set; }
-        public IMvxCommand<int> SkipCommand { get; private set; }
+        public IMvxAsyncCommand StopPlayBackCommand { get; private set; }
+        public IMvxAsyncCommand<int> SkipCommand { get; private set; }
         public IMvxCommand SwitchPlayListsCommand { get; private set; }
         public IMvxAsyncCommand AddNewPlayListCommand { get; private set; }
         public IMvxAsyncCommand<PlayListItemViewModel> DeletePlayListCommand { get; private set; }
@@ -178,6 +181,7 @@ namespace CastIt.ViewModels
         public IMvxCommand OpenSettingsCommand { get; private set; }
         public IMvxCommand OpenDevicesCommand { get; private set; }
         public IMvxCommand SnackbarActionCommand { get; private set; }
+        public IMvxAsyncCommand<long> GoToSecondsCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -236,10 +240,10 @@ namespace CastIt.ViewModels
                 IsPaused = !IsPaused;
             });
 
-            StopPlayBackCommand = new MvxCommand(StopPlayBack);
+            StopPlayBackCommand = new MvxAsyncCommand(StopPlayBack);
 
-            SkipCommand = new MvxCommand<int>(
-                (seconds) => _castService.AddSeconds(seconds));
+            SkipCommand = new MvxAsyncCommand<int>(
+                async (seconds) => await _castService.AddSeconds(seconds));
 
             SwitchPlayListsCommand = new MvxCommand(SwitchPlayLists);
 
@@ -254,6 +258,8 @@ namespace CastIt.ViewModels
             OpenDevicesCommand = new MvxCommand(() => ShowDevicesPopUp = true);
 
             SnackbarActionCommand = new MvxCommand(() => ShowSnackbar = false);
+
+            GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
         }
 
         public override void RegisterMessages()
@@ -312,9 +318,9 @@ namespace CastIt.ViewModels
         public long GetMainProgressBarSeconds(double sliderWidth, double mouseX)
             => Convert.ToInt64(mouseX * _currentlyPlayedFile.TotalSeconds / sliderWidth);
 
-        public void GoToSeconds(long seconds)
+        private async Task GoToSeconds(long seconds)
         {
-            _castService.GoToSeconds(seconds);
+            await _castService.GoToSeconds(seconds);
         }
 
         private Task SetFileDurations()
@@ -374,7 +380,7 @@ namespace CastIt.ViewModels
             }
             await Task.Delay(500);
             //await _playListsService.SavePlayLists(PlayLists.ToList());
-            StopPlayBack();
+            await StopPlayBack();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
             _castService.OnTimeChanged -= OnFileDurationChanged;
@@ -415,11 +421,10 @@ namespace CastIt.ViewModels
 
             if (file is null)
             {
-                Logger.Warn($"File at index = {fileIndex} in playListId {playlist.Id} was not found");
+                Logger.Warn($"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found");
                 return;
             }
 
-            StopPlayBack();
             file.PlayCommand.Execute();
         }
 
@@ -437,7 +442,7 @@ namespace CastIt.ViewModels
                 return;
             }
 
-            if (!DurationTaskNotifier.IsCompleted)
+            if (!DurationTaskNotifier.IsCompleted || string.IsNullOrEmpty(file.Duration))
             {
                 Logger.Info(
                     $"{nameof(PlayFile)}: Cant play file = {file.Filename} yet, " +
@@ -454,7 +459,8 @@ namespace CastIt.ViewModels
             CurrentFileThumbnail = _castService.GetFirstThumbnail();
             if (file.CanStartPlayingFromCurrentPercentage)
             {
-                _castService.GoToPosition((float)file.PlayedPercentage);
+                Logger.Info($"{nameof(PlayFile)}: File can be resumed from = {file.PlayedPercentage} %");
+                await _castService.GoToPosition((float)file.PlayedPercentage);
             }
 
             var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
@@ -466,9 +472,11 @@ namespace CastIt.ViewModels
             _onSkipOrPrevious = false;
         }
 
-        private void StopPlayBack()
+        private async Task StopPlayBack()
         {
-            _castService.StopPlayback();
+            await _castService.StopPlayback();
+            _currentlyPlayedFile?.CleanUp();
+            _currentlyPlayedFile = null;
             SetCurrentlyPlayingInfo(null, false);
             IsPaused = false;
         }

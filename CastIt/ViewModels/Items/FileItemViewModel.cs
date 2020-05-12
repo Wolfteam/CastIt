@@ -23,6 +23,7 @@ namespace CastIt.ViewModels.Items
         private int _position;
         private string _path;
         private double _playedPercentage;
+        private bool _isBeingPlayed;
         #endregion
 
         #region Properties
@@ -47,6 +48,12 @@ namespace CastIt.ViewModels.Items
         {
             get => _playedPercentage;
             set => this.RaiseAndSetIfChanged(ref _playedPercentage, value);
+        }
+
+        public bool IsBeingPlayed
+        {
+            get => _isBeingPlayed;
+            set => SetProperty(ref _isBeingPlayed, value);
         }
 
         public bool CanStartPlayingFromCurrentPercentage
@@ -97,7 +104,7 @@ namespace CastIt.ViewModels.Items
 
         #region Commands
         public IMvxCommand PlayCommand { get; private set; }
-        public IMvxCommand PlayFromTheBeginingCommand { get; private set; }
+        public IMvxAsyncCommand PlayFromTheBeginingCommand { get; private set; }
         public IMvxCommand OpenFileLocationCommand { get; private set; }
         #endregion
 
@@ -117,7 +124,7 @@ namespace CastIt.ViewModels.Items
 
             PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this)));
 
-            PlayFromTheBeginingCommand = new MvxCommand(() => _castService.GoToPosition(0));
+            PlayFromTheBeginingCommand = new MvxAsyncCommand(async () => await _castService.GoToPosition(0));
 
             OpenFileLocationCommand = new MvxCommand(() =>
             {
@@ -167,12 +174,14 @@ namespace CastIt.ViewModels.Items
             CleanUp();
             _castService.OnPositionChanged += OnPositionChanged;
             _castService.OnEndReached += OnEndReached;
+            IsBeingPlayed = true;
         }
 
         public void CleanUp()
         {
             _castService.OnPositionChanged -= OnPositionChanged;
             _castService.OnEndReached -= OnEndReached;
+            IsBeingPlayed = false;
         }
 
         private void OnPositionChanged(float position)

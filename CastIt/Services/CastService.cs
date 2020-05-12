@@ -37,8 +37,9 @@ namespace CastIt.Services
             Name = r.Name,
             Type = r.Type
         }).ToList();
-
+        public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
+        public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
@@ -84,13 +85,11 @@ namespace CastIt.Services
             DiscoverChromecasts();
 
             _mediaPlayer = new MediaPlayer(_libVLC);
-            _mediaPlayer.Playing += Playing;
             _mediaPlayer.EncounteredError += EncounteredError;
             _mediaPlayer.PositionChanged += PositionChanged;
             _mediaPlayer.TimeChanged += TimeChanged;
             _mediaPlayer.EndReached += EndReached;
             _mediaPlayer.EnableHardwareDecoding = true;
-
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
@@ -110,17 +109,14 @@ namespace CastIt.Services
                 return;
             }
 
-            //TODO: SHOULD I CHECK IF _libVLC.RendererList IS EMPTY ?
             if (_rendererItems.Count == 0)
             {
                 _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl} will be played locally");
             }
-            //TODO: MOVE THIS SET TO A METHOD
-            //TODO: YOU WILL PROBABLY NEED TO CALL THIS METHOD FROM ANOTHER THREAD
+
             if (!_renderWasSet && _rendererItems.Count > 0)
             {
-                _mediaPlayer.SetRenderer(_rendererItems.First());
-                _renderWasSet = true;
+                SetCastRenderer(_rendererItems.First());
             }
 
             // create new media
@@ -133,8 +129,7 @@ namespace CastIt.Services
 
             await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
 
-            // start the playback
-            ThreadPool.QueueUserWorkItem(_ =>
+            await Task.Run(() =>
             {
                 if (IsLocalFile(mrl))
                     _mediaPlayer.Play(_currentMedia);
@@ -268,10 +263,10 @@ namespace CastIt.Services
             }
         }
 
-        public void StopPlayback()
+        public Task StopPlayback()
         {
             KillThumbnailProcess();
-            ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Stop());
+            return Task.Run(() => _mediaPlayer.Stop());
         }
 
         public void CleanThemAll()
@@ -279,37 +274,42 @@ namespace CastIt.Services
             Clean();
         }
 
-        public void GoToPosition(float position)
+        public Task GoToPosition(float position)
         {
             try
             {
                 position /= 100;
                 if (position >= 0 && position <= 1)
                 {
-                    ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Position = position);
+                    return Task.Run(() => _mediaPlayer.Position = position);
+                }
+                else
+                {
+                    _logger.Warn($"{nameof(GoToPosition)} Cant go to position = {position}");
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(GoToPosition)}: Unknown error while goin to position = {position}");
-                Debug.WriteLine($"Unknown error while goin to position = {position}. Ex = {ex}");
             }
+
+            return Task.CompletedTask;
         }
 
-        public void GoToSeconds(long seconds)
+        public Task GoToSeconds(long seconds)
         {
             try
             {
-                ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Time = seconds * 1000);
+                return Task.Run(() => _mediaPlayer.Time = seconds * 1000);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(GoToSeconds)}: Unknown error while going to seconds = {seconds * 1000}");
-                Debug.WriteLine($"Unknown error while going to seconds = {seconds * 1000}. Ex = {ex}");
             }
+            return Task.CompletedTask;
         }
 
-        public void AddSeconds(long seconds)
+        public Task AddSeconds(long seconds)
         {
             try
             {
@@ -318,16 +318,16 @@ namespace CastIt.Services
                 current += seconds;
                 if (current < 0)
                 {
+                    _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {current}. They will be set to 0");
                     current = 0;
                 }
-
-                ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Time = current * 1000);
+                return Task.Run(() => _mediaPlayer.Time = current * 1000);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(AddSeconds)}: Unknown error while adding seconds = {seconds}");
-                Debug.WriteLine($"Unknown error while adding seconds. Ex = {ex}");
             }
+            return Task.CompletedTask;
         }
 
         public bool DiscoverChromecasts()
@@ -364,7 +364,7 @@ namespace CastIt.Services
             try
             {
                 var status = await media.Parse(
-                    MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal, 
+                    MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal,
                     cancellationToken: cancellationToken);
                 if (status == MediaParsedStatus.Done)
                     return media.Duration / 1000;
@@ -389,11 +389,6 @@ namespace CastIt.Services
                 (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
         }
 
-        private void Playing(object sender, EventArgs e)
-        {
-            Debug.WriteLine("Playing");
-        }
-
         private void EndReached(object sender, EventArgs e)
         {
             OnEndReached?.Invoke();
@@ -416,7 +411,7 @@ namespace CastIt.Services
 
         private void EncounteredError(object sender, EventArgs e)
         {
-            Debug.WriteLine("Media player encoutered an error");
+            _logger.Error($"{nameof(EncounteredError)}: Unknown error {e}");
         }
 
         private void Clean()
@@ -470,6 +465,11 @@ namespace CastIt.Services
                 $"{nameof(RendererDiscovererItemAdded)}: Item removed: " +
                 $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
             _rendererItems.Remove(e.RendererItem);
+            OnCastableDeviceDeleted?.Invoke(new CastableDevice
+            {
+                Name = e.RendererItem.Name,
+                Type = e.RendererItem.Type
+            });
         }
 
         public string GetFileName(string mrl)
@@ -551,6 +551,36 @@ namespace CastIt.Services
             {
                 _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate thumbnail process");
             }
+        }
+
+        private void SetCastRenderer(RendererItem renderer)
+        {
+            _mediaPlayer.SetRenderer(renderer);
+            _renderWasSet = true;
+            OnCastRendererSet?.Invoke(renderer.Name, renderer.Type);
+        }
+
+        public void SetCastRenderer(string name, string type)
+        {
+            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(type))
+            {
+                SetNullCastRenderer();
+                return;
+            }
+            var renderer = _rendererItems.FirstOrDefault(d => d.Name == name && d.Type == type);
+            if (renderer is null)
+            {
+                SetNullCastRenderer();
+                return;
+            }
+
+            SetCastRenderer(renderer);
+        }
+
+        private void SetNullCastRenderer()
+        {
+            _mediaPlayer.SetRenderer(null);
+            _renderWasSet = false;
         }
     }
 }

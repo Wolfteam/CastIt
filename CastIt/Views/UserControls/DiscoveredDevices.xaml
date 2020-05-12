@@ -23,7 +23,6 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -58,16 +57,22 @@
                     Grid.RowSpan="2"
                     Grid.Column="2"
                     VerticalAlignment="Center"
+                    Command="{Binding DataContext.ConnectCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ScrollViewer}}}"
+                    CommandParameter="{Binding}"
                     Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [Connect]}">
+                    ToolTip="{Binding [Connect]}"
+                    Visibility="{Binding IsSelected, Converter={StaticResource InverseBoolToVisConverter}}">
                     <materialDesign:PackIcon Kind="CastConnected" />
                 </Button>
                 <Button
                     Grid.RowSpan="2"
-                    Grid.Column="3"
+                    Grid.Column="2"
                     VerticalAlignment="Center"
+                    Command="{Binding DataContext.DisconnectCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ScrollViewer}}}"
+                    CommandParameter="{Binding}"
                     Style="{StaticResource MainButtonStyle}"
-                    ToolTip="{Binding [Disconnect]}">
+                    ToolTip="{Binding [Disconnect]}"
+                    Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <materialDesign:PackIcon Kind="CastOff" />
                 </Button>
             </Grid>

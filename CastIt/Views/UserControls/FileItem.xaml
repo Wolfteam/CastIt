@@ -99,40 +99,31 @@
             IsChecked="{Binding IsSelected, Mode=TwoWay}"
             IsTabStop="False"
             Style="{StaticResource MaterialDesignActionLightToggleButton}"
-            ToolTip="Select" />
+            ToolTip="{Binding [Select]}" />
 
         <TextBlock
             Grid.Row="1"
             Grid.Column="1"
-            VerticalAlignment="Center"
-            Text="{Binding Filename}"
-            TextTrimming="CharacterEllipsis"
-            TextWrapping="Wrap" />
+            Style="{StaticResource FileItemTextStyleWithTriggers}"
+            Text="{Binding Filename}" />
         <TextBlock
             Grid.Row="2"
             Grid.Column="1"
-            VerticalAlignment="Center"
-            Style="{StaticResource FileItemSubTextStyle}"
-            Text="{Binding SubTitle}"
-            TextTrimming="CharacterEllipsis"
-            TextWrapping="Wrap" />
+            Style="{StaticResource FileItemSubTextStyleWithTriggers}"
+            Text="{Binding SubTitle}" />
         <TextBlock
             Grid.Row="3"
             Grid.Column="1"
             Margin="0,0,10,0"
-            VerticalAlignment="Center"
-            Style="{StaticResource FileItemSubTextStyle}"
-            Text="{Binding Path}"
-            TextTrimming="CharacterEllipsis"
-            TextWrapping="Wrap" />
+            Style="{StaticResource FileItemSubTextStyleWithTriggers}"
+            Text="{Binding Path}" />
 
         <TextBlock
             Grid.RowSpan="5"
             Grid.Column="2"
-            VerticalAlignment="Center"
+            Style="{StaticResource FileItemTextStyleWithTriggers}"
             Text="{Binding Duration}"
-            TextAlignment="Right"
-            TextTrimming="CharacterEllipsis" />
+            TextAlignment="Right" />
 
         <ProgressBar
             Grid.Row="4"

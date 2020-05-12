@@ -146,6 +146,8 @@
                     Command="{Binding RemoveFileCommand}"
                     CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
                     Gesture="Delete" />
+                <KeyBinding Key="F1" Command="{Binding DataContext.PreviousCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
+                <KeyBinding Key="F2" Command="{Binding DataContext.NextCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
                 <KeyBinding Key="Space" Command="{Binding DataContext.TogglePlayBackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
             </ListView.InputBindings>
             <ListView.ItemContainerStyle>

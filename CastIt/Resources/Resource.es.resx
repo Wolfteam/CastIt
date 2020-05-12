@@ -264,4 +264,7 @@
   <data name="FileIsNotReadyYet" xml:space="preserve">
     <value>El archivo todavía no esta listo</value>
   </data>
+  <data name="Select" xml:space="preserve">
+    <value>Seleccionar</value>
+  </data>
 </root>
