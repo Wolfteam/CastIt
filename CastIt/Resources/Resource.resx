@@ -267,4 +267,22 @@
   <data name="Select" xml:space="preserve">
     <value>Select</value>
   </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Ok</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="DownloadFFMpegMsg" xml:space="preserve">
+    <value>For this app to work, it needs to download the FFMpeg binaries</value>
+  </data>
+  <data name="ClickOkToDownload" xml:space="preserve">
+    <value>Click Ok to download them</value>
+  </data>
+  <data name="ClickCancelToCloseTheApp" xml:space="preserve">
+    <value>Click Cancel to close the app</value>
+  </data>
+  <data name="DownloadMissingFiles" xml:space="preserve">
+    <value>Download missing files</value>
+  </data>
 </root>

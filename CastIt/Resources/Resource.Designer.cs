@@ -106,6 +106,33 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string Cancel {
+            get {
+                return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click Cancel to close the app.
+        /// </summary>
+        public static string ClickCancelToCloseTheApp {
+            get {
+                return ResourceManager.GetString("ClickCancelToCloseTheApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click Ok to download them.
+        /// </summary>
+        public static string ClickOkToDownload {
+            get {
+                return ResourceManager.GetString("ClickOkToDownload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         public static string Close {
@@ -183,6 +210,24 @@ namespace CastIt.Resources {
         public static string Dismiss {
             get {
                 return ResourceManager.GetString("Dismiss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For this app to work, it needs to download the FFMpeg binaries.
+        /// </summary>
+        public static string DownloadFFMpegMsg {
+            get {
+                return ResourceManager.GetString("DownloadFFMpegMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download missing files.
+        /// </summary>
+        public static string DownloadMissingFiles {
+            get {
+                return ResourceManager.GetString("DownloadMissingFiles", resourceCulture);
             }
         }
         
@@ -345,6 +390,15 @@ namespace CastIt.Resources {
         public static string NowPlaying {
             get {
                 return ResourceManager.GetString("NowPlaying", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ok.
+        /// </summary>
+        public static string Ok {
+            get {
+                return ResourceManager.GetString("Ok", resourceCulture);
             }
         }
         
