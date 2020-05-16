@@ -285,4 +285,7 @@
   <data name="DownloadMissingFiles" xml:space="preserve">
     <value>Download missing files</value>
   </data>
+  <data name="AppIsRdyToUse" xml:space="preserve">
+    <value>App is ready to be used</value>
+  </data>
 </root>

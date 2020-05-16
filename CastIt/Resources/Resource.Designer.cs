@@ -106,6 +106,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to App is ready to be used.
+        /// </summary>
+        public static string AppIsRdyToUse {
+            get {
+                return ResourceManager.GetString("AppIsRdyToUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Cancel {

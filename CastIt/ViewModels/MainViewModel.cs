@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
+    //TODO: SWITCH TO FFPROBE TO RETRIEVE FILE METADATA ?
     //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT FROM YOUR PHONE, THE ICONS ARE NOT UPDATED
     //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT AGAIN, THE PLAYED TIME SYNC WILL BE LOST
     //TODO: QUEUING THE MEDIA EVENTS DOES NOT GUARANTEE THE ORDER OF EXECUTION (E.G: if you enqueue a stop and a play, the final result could be play and stop)
@@ -290,6 +291,8 @@ namespace CastIt.ViewModels
                 bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
                 if (!filesWereDownloaded)
                     CloseAppCommand.Execute();
+                else
+                    await ShowSnackbarMsg(GetText("AppIsRdyToUse"));
             });
         }
 
