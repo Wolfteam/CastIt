@@ -9,6 +9,18 @@ namespace CastIt.Common.Utils
     {
         private const string AppSettingsFilename = "AppSettings.json";
 
+        public static string GetFFMpegFolder()
+        {
+            var basePath = GetBaseAppFolder();
+            return CreateDirectory(basePath, "FFMpeg");
+        }
+
+        public static string GetFFMpegPath()
+        {
+            var basePath = GetFFMpegFolder();
+            return Path.Combine(basePath, "ffmpeg.exe");
+        }
+
         public static string GetDbConnectionString()
         {
             var fullPath = Path.Combine(GetBaseAppFolder(), AppDbContext.DatabaseName);
@@ -115,6 +127,18 @@ namespace CastIt.Common.Utils
             string path = GetAppSettingsPath();
             bool exists = File.Exists(path);
             return exists;
+        }
+
+        public static void DeleteFilesInDirectory(string dir)
+        {
+            var files = new DirectoryInfo(dir)
+                .GetFiles()
+                .Where(f => f.LastAccessTime < DateTime.Now.AddDays(-1))
+                .ToList();
+            foreach (var file in files)
+            {
+                file.Delete();
+            }
         }
     }
 }

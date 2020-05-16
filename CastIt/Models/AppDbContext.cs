@@ -5,7 +5,6 @@ using CastIt.Models.EntitiesConfiguration;
 using Microsoft.EntityFrameworkCore;
 using MvvmCross.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,38 +28,12 @@ namespace CastIt.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(FileItemConfigurationType).Assembly);
-
             var playList = new PlayList
             {
                 Id = 1,
                 Name = "Default",
             };
             modelBuilder.Entity<PlayList>().HasData(playList);
-            //modelBuilder.Entity<FileItem>().HasData(
-            //    new FileItem
-            //    {
-            //        Id = 1,
-            //        PlayListId = 1,
-            //        Position = 1,
-            //        CreatedAt = DateTime.Now,
-            //        Path = "C:\\Users\\Efrain Bastidas\\Music\\B Gata H Kei  Nonononon.mp3",
-            //    },
-            //    new FileItem
-            //    {
-            //        Id = 2,
-            //        PlayListId = 1,
-            //        Position = 2,
-            //        CreatedAt = DateTime.Now,
-            //        Path = "C:\\Users\\Efrain Bastidas\\Music\\Nanahira  課金厨のうた -More Charin Ver.-.mp3",
-            //    },
-            //    new FileItem
-            //    {
-            //        Id = 3,
-            //        PlayListId = 1,
-            //        Position = 3,
-            //        CreatedAt = DateTime.Now,
-            //        Path = "C:\\Users\\Efrain Bastidas\\Music\\Minami-Ke  Girl Jundo UP.mp3",
-            //    });
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

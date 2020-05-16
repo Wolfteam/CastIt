@@ -16,10 +16,9 @@ namespace CastIt.Services
 {
     public class CastService : ICastService
     {
-        private const string FfmpegPath = "C:/ffmpeg/ffmpeg.exe";
-
         private readonly IMvxLog _logger;
         private readonly HashSet<RendererItem> _rendererItems = new HashSet<RendererItem>();
+        private readonly string _ffmpegPath;
         private LibVLC _libVLC;
         private MediaPlayer _mediaPlayer;
         private RendererDiscoverer _rendererDiscoverer;
@@ -47,13 +46,14 @@ namespace CastIt.Services
         public CastService(IMvxLogProvider logProvider)
         {
             _logger = logProvider.GetLogFor<CastService>();
+            _ffmpegPath = FileUtils.GetFFMpegPath();
 
             var startInfo = new ProcessStartInfo
             {
                 WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = true,
+                UseShellExecute = false,
                 CreateNoWindow = true,
-                FileName = "cmd.exe",
+                FileName = "cmd.exe"
             };
 
             _generateThumbnailProcess = new Process
@@ -70,12 +70,6 @@ namespace CastIt.Services
         public void Init()
         {
             _logger.Info($"{nameof(Init)}: Initializing all...");
-
-            if (!File.Exists(FfmpegPath))
-            {
-                _logger.Error($"{nameof(Init)}: Fffmpeg does not exist in path = {FfmpegPath}");
-                throw new Exception($"Fffmpeg does not exists in path = {FfmpegPath}");
-            }
 
             // load native libvlc libraries
             Core.Initialize();
@@ -171,27 +165,22 @@ namespace CastIt.Services
             //- t duration(the output file stops writing after duration seconds)
             //-y(overwrites the output file if it already exists)
             //-s widthxheight(size of the frame in pixels)
+            //https://stackoverflow.com/questions/48425905/cmd-exe-via-system-diagnostics-process-cannot-parse-an-argument-with-spaces
             string cmd;
 
             if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase))
             {
-                cmd = $"{FfmpegPath} -y -i " +
-                    '"' + filePath + '"'
-                    + $" -an -filter:v scale=200:150 "
-                    + '"' + thumbnailPath + '"';
+                cmd = $@"/C "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -an -filter:v scale=200:150 ""{thumbnailPath}"" "" && exit";
             }
             else
             {
-                cmd = $"{FfmpegPath} -y -i " +
-                    '"' + filePath + '"'
-                    + $" -an -ss {second} -vframes 1 -s 200x150 "
-                    + '"' + thumbnailPath + '"';
+                cmd = $@"/C "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -an -ss {second} -vframes 1 -s 200x150 ""{thumbnailPath}"" "" && exit";
             }
             try
             {
-                _logger.Info($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {filePath}");
+                _logger.Info($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {filePath}. Cmd = {cmd}");
                 _checkGenerateThumbnailProcess = true;
-                _generateThumbnailProcess.StartInfo.Arguments = "/C " + cmd + " && exit";
+                _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateThumbnailProcess.Start();
                 _generateThumbnailProcess.WaitForExit();
                 _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was succesfully generated for file = {filePath}");
@@ -227,16 +216,12 @@ namespace CastIt.Services
                 return;
             }
             var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
-            var cmd = $"{FfmpegPath} -y -i " +
-                    '"' + filePath + '"'
-                    + $" -an -vf fps=1/5 -s 200x150 "
-                    + '"' + thumbnailPath + '"';
-
+            var cmd = $@"/C "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -an -vf fps=1/5 -s 200x150 ""{thumbnailPath}"" "" && exit";
             try
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {filePath}");
+                _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {filePath}. Cmd = {cmd}");
                 _checkGenerateAllThumbnailsProcess = true;
-                _generateAllThumbnailsProcess.StartInfo.Arguments = "/C " + cmd + " && exit";
+                _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateAllThumbnailsProcess.Start();
                 _generateAllThumbnailsProcess.WaitForExit();
                 _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {filePath}");
