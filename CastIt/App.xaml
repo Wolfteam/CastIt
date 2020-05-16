@@ -32,6 +32,7 @@
 
             <converters:CenterPopUpConverter x:Key="CenterPopUpConverter" />
             <converters:StringToImgConverter x:Key="StringToImgConverter" />
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.jpg" />

@@ -2,14 +2,17 @@
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
+using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
+using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +28,8 @@ namespace CastIt.ViewModels
         private readonly ICastService _castService;
         private readonly IPlayListsService _playListsService;
         private readonly IAppSettingsService _settingsService;
+        private readonly IMvxNavigationService _navigationService;
+
         private FileItemViewModel _currentlyPlayedFile;
         private bool _isPaused;
         private bool _isCurrentlyPlaying;
@@ -182,6 +187,7 @@ namespace CastIt.ViewModels
         public IMvxCommand OpenDevicesCommand { get; private set; }
         public IMvxCommand SnackbarActionCommand { get; private set; }
         public IMvxAsyncCommand<long> GoToSecondsCommand { get; private set; }
+        public IMvxAsyncCommand ShowDownloadDialogCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -197,28 +203,46 @@ namespace CastIt.ViewModels
             IMvxLogProvider logger,
             ICastService castService,
             IPlayListsService playListsService,
-            IAppSettingsService settingsService)
+            IAppSettingsService settingsService,
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger.GetLogFor<MainViewModel>())
         {
             _castService = castService;
             _playListsService = playListsService;
             _settingsService = settingsService;
+            _navigationService = navigationService;
         }
 
         #region Methods
         public override async Task Initialize()
         {
             IsExpanded = _settingsService.IsPlayListExpanded;
+            Logger.Info($"{nameof(Initialize)}: Initializing cast service...");
             _castService.Init();
 
+            Logger.Info($"{nameof(Initialize)}: Getting all playlists...");
             var playLists = await _playListsService.GetAllPlayLists();
             PlayLists.AddRange(playLists.OrderBy(pl => pl.Position));
 
+            Logger.Info($"{nameof(Initialize)}: Creating the file duration task..");
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
 
+            Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
+
+            Logger.Info($"{nameof(Initialize)}: Deleting old preview files...");
+            try
+            {
+                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath());
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
+            }
+
+            Logger.Info($"{nameof(Initialize)}: Completed");
             await base.Initialize();
         }
 
@@ -260,6 +284,13 @@ namespace CastIt.ViewModels
             SnackbarActionCommand = new MvxCommand(() => ShowSnackbar = false);
 
             GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
+
+            ShowDownloadDialogCommand = new MvxAsyncCommand(async() =>
+            {
+                bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
+                if (!filesWereDownloaded)
+                    CloseAppCommand.Execute();
+            });
         }
 
         public override void RegisterMessages()
@@ -277,6 +308,12 @@ namespace CastIt.ViewModels
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
             var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
             _setWindowWidthAndHeight.Raise(tuple);
+
+            string path = FileUtils.GetFFMpegPath();
+            if (File.Exists(path))
+                return;
+
+            ShowDownloadDialogCommand.Execute();
         }
 
         public void SaveChangesBeforeClosing(

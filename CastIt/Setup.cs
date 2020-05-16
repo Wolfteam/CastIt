@@ -2,6 +2,7 @@
 using CastIt.Common.Utils;
 using CastIt.Services;
 using CastIt.ViewModels;
+using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using MvvmCross.Logging;
 using MvvmCross.Platforms.Wpf.Core;
@@ -38,6 +39,7 @@ namespace CastIt
                 {$"{typeof(PlayListItemViewModel).FullName}",  "vm_playlistitem_.txt"},
                 {$"{typeof(FileItemViewModel).FullName}",  "vm_fileitem_.txt"},
                 {$"{typeof(DeviceItemViewModel).FullName}",  "vm_deviceitem_.txt"},
+                {$"{typeof(DownloadDialogViewModel).FullName}",  "vm_download_dialog_.txt"},
                 {$"{typeof(CastService).FullName}",  "service_cast_.txt"},
                 {$"{typeof(AppSettingsService).FullName}",  "service_appsettings_.txt"},
             };
