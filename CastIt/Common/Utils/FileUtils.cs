@@ -23,8 +23,7 @@ namespace CastIt.Common.Utils
 
         public static string GetDbConnectionString()
         {
-            var fullPath = Path.Combine(GetBaseAppFolder(), AppDbContext.DatabaseName);
-            return $"Filename={fullPath}";
+            return Path.Combine(GetBaseAppFolder(), "CastIt.db");
         }
 
         public static string GetDbPath(string connectionString)

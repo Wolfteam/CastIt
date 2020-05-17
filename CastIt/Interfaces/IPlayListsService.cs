@@ -13,8 +13,8 @@ namespace CastIt.Interfaces
         Task DeletePlayList(long id);
         Task DeletePlayLists(List<long> ids);
 
+        Task<List<FileItemViewModel>> GetAllFiles(long playlistId);
         Task<FileItemViewModel> AddFile(long playListId, string path, int position);
-        Task<FileItemViewModel> AddFile(FileItem file);
         Task<List<FileItemViewModel>> AddFiles(List<FileItem> files);
         Task DeleteFile(long id);
         Task DeleteFiles(List<long> ids);

@@ -224,6 +224,11 @@ namespace CastIt.ViewModels
             Logger.Info($"{nameof(Initialize)}: Getting all playlists...");
             var playLists = await _playListsService.GetAllPlayLists();
             PlayLists.AddRange(playLists.OrderBy(pl => pl.Position));
+            foreach (var playlist in playLists)
+            {
+                var files = await _playListsService.GetAllFiles(playlist.Id);
+                playlist.Items.AddRange(files);
+            }
 
             Logger.Info($"{nameof(Initialize)}: Creating the file duration task..");
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
@@ -418,7 +423,6 @@ namespace CastIt.ViewModels
             {
                 playList.CleanUp();
             }
-            await Task.Delay(500);
             //await _playListsService.SavePlayLists(PlayLists.ToList());
             await StopPlayBack();
             _castService.CleanThemAll();

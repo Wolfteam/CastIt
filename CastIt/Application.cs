@@ -37,13 +37,9 @@ namespace CastIt
                 return new ResxTextProvider(Resource.ResourceManager, messenger, appSettings);
             });
 
-            Mvx.IoCProvider.RegisterSingleton(new AppDbContext());
-
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppSettingsService, AppSettingsService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<ICastService, CastService>();
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, PlayListsService>();
-
-            AppDbContext.Init(Mvx.IoCProvider.Resolve<IAppSettingsService>(), Mvx.IoCProvider.Resolve<IMvxLogProvider>().GetLogFor<Setup>());
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, AppDataService>();
 
             //since im using automapper to resolve this one, i need to explicit register it
             Mvx.IoCProvider.RegisterType<PlayListItemViewModel>();

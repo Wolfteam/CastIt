@@ -1,16 +1,21 @@
 ﻿using CastIt.Interfaces;
+using SQLite;
 using System;
-using System.Collections.Generic;
 
 namespace CastIt.Models.Entities
 {
     public class PlayList : IBaseEntity
     {
+        [PrimaryKey, AutoIncrement]
         public long Id { get; set; }
+
+        [NotNull]
         public string Name { get; set; }
+
+        [NotNull]
         public int Position { get; set; }
-        public IEnumerable<FileItem> Items { get; set; }
-            = new List<FileItem>();
+
+        [NotNull]
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
