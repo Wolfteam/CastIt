@@ -3,7 +3,6 @@ using CastIt.Common.Extensions;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using System;
-using System.Drawing;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
@@ -102,18 +101,28 @@ namespace CastIt.Common.Utils
                 theme.SecondaryMid =
                     theme.SecondaryLight = new ColorPair(secondary, secondary);
             theme.SetBaseTheme(baseTheme);
-
-            string url = appTheme == AppThemeType.Dark
-                ? "/XamlResources/DarkTheme.xaml"
-                : "/XamlResources/LightTheme.xaml";
-            var themeDictionary = System.Windows.Application.Current.Resources.MergedDictionaries.Last();
-            themeDictionary.MergedDictionaries.Clear();
-            themeDictionary.MergedDictionaries.Add(new ResourceDictionary
-            {
-                Source = new Uri(url, UriKind.RelativeOrAbsolute)
-            });
-
             System.Windows.Application.Current.Resources.SetTheme(theme);
+
+            const string darkTheme = "/XamlResources/DarkTheme.xaml";
+            const string lightTheme = "/XamlResources/LightTheme.xaml";
+
+            var uri = new Uri(appTheme == AppThemeType.Dark ? darkTheme : lightTheme, UriKind.RelativeOrAbsolute);
+            var uriToRemove = new Uri(appTheme == AppThemeType.Dark ? lightTheme : darkTheme, UriKind.RelativeOrAbsolute);
+            var themeDictionary = System.Windows.Application.Current.Resources.MergedDictionaries.Last();
+
+            var currentTheme = themeDictionary.MergedDictionaries
+                .FirstOrDefault(r => r.Source == uriToRemove);
+
+            if (!themeDictionary.MergedDictionaries.Any(r => r.Source == uri))
+            {
+                themeDictionary.MergedDictionaries.Add(new ResourceDictionary
+                {
+                    Source = uri
+                });
+            }
+
+            if (currentTheme != null)
+                themeDictionary.MergedDictionaries.Remove(currentTheme);
         }
     }
 }

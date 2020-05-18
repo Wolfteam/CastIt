@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
 using CastIt.Common;
 using CastIt.Interfaces;
-using CastIt.Models;
 using CastIt.Resources;
 using CastIt.Services;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Items;
 using MvvmCross;
 using MvvmCross.IoC;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 

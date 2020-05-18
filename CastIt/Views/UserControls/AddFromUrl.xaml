@@ -30,7 +30,15 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="{DynamicResource PrimaryHueDarkBrush}">
-            <TextBlock Foreground="White" Text="{Binding [FromUrl]}" />
+            <DockPanel>
+                <StackPanel
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="LinkAdd" Style="{StaticResource ColorZoneIconStyle}" />
+                    <TextBlock Style="{StaticResource ColorZoneTextBlockWithIconStyle}" Text="{Binding [FromUrl]}" />
+                </StackPanel>
+            </DockPanel>
         </materialDesign:ColorZone>
         <TextBox
             x:Name="UrlTextBox"
@@ -40,7 +48,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
             materialDesign:HintAssist.Hint="URL"
-            Foreground="Black"
+            Foreground="{DynamicResource FontColorBrush}"
             Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
         <Button
             Grid.Row="1"

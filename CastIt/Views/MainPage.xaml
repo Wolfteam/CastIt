@@ -19,6 +19,20 @@
     d:DesignWidth="800"
     x:TypeArguments="vms:MainViewModel"
     mc:Ignorable="d">
+
+    <views:MvxWpfView.Resources>
+        <DataTemplate x:Key="PlayListItemHeaderTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
+            <uc:PlayListItemHeader
+                DataContext="{Binding}"
+                FocusVisualStyle="{x:Null}"
+                Tag="{Binding ElementName=PlayListTabControl, Path=DataContext}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="PlayListItemTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
+            <uc:PlayListItem DataContext="{Binding}" />
+        </DataTemplate>
+    </views:MvxWpfView.Resources>
+
     <views:MvxWpfView.InputBindings>
         <KeyBinding Key="F1" Command="{Binding PreviousCommand}" />
         <KeyBinding Key="F2" Command="{Binding NextCommand}" />
@@ -85,9 +99,13 @@
             VerticalContentAlignment="Stretch"
             BorderBrush="{DynamicResource DarkestColorBrush}"
             BorderThickness="0"
+            ContentTemplate="{StaticResource PlayListItemTemplate}"
             FocusVisualStyle="{x:Null}"
+            HeaderItemTemplate="{StaticResource PlayListItemHeaderTemplate}"
             ItemsSource="{Binding PlayLists}"
             SelectedIndex="{Binding SelectedPlayListIndex, Mode=TwoWay}"
+            ShowDefaultCloseButton="True"
+            Style="{StaticResource CustomTabablzControlStyle}"
             Tag="{Binding}">
             <dragablz:TabablzControl.ContextMenu>
                 <ContextMenu>
@@ -98,19 +116,6 @@
                     </MenuItem>
                 </ContextMenu>
             </dragablz:TabablzControl.ContextMenu>
-            <dragablz:TabablzControl.HeaderItemTemplate>
-                <DataTemplate DataType="{x:Type vmis:PlayListItemViewModel}">
-                    <uc:PlayListItemHeader
-                        DataContext="{Binding}"
-                        FocusVisualStyle="{x:Null}"
-                        Tag="{Binding ElementName=PlayListTabControl, Path=DataContext}" />
-                </DataTemplate>
-            </dragablz:TabablzControl.HeaderItemTemplate>
-            <dragablz:TabablzControl.ContentTemplate>
-                <DataTemplate DataType="{x:Type vmis:PlayListItemViewModel}">
-                    <uc:PlayListItem DataContext="{Binding}" />
-                </DataTemplate>
-            </dragablz:TabablzControl.ContentTemplate>
         </dragablz:TabablzControl>
 
         <materialDesign:Snackbar

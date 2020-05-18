@@ -127,8 +127,10 @@ namespace CastIt.Services
             {
                 if (IsLocalFile(mrl))
                     _mediaPlayer.Play(_currentMedia);
-                else
+                else if (_currentMedia.SubItems.Any())
                     _mediaPlayer.Play(_currentMedia.SubItems.First());
+                else
+                    _mediaPlayer.Play(_currentMedia);
             });
         }
 

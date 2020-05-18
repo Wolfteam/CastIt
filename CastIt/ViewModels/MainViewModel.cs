@@ -238,6 +238,9 @@ namespace CastIt.ViewModels
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
 
+            Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
+            WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
+
             Logger.Info($"{nameof(Initialize)}: Deleting old preview files...");
             try
             {
@@ -313,7 +316,6 @@ namespace CastIt.ViewModels
         public override void ViewAppeared()
         {
             base.ViewAppeared();
-            WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
             var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
             _setWindowWidthAndHeight.Raise(tuple);
 

@@ -112,7 +112,10 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="{DynamicResource PrimaryHueDarkBrush}">
-            <TextBlock Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" Text="{Binding [Devices]}" />
+            <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="Tv" Style="{StaticResource ColorZoneIconStyle}" />
+                <TextBlock Style="{StaticResource ColorZoneTextBlockWithIconStyle}" Text="{Binding [Devices]}" />
+            </StackPanel>
         </materialDesign:ColorZone>
         <ScrollViewer
             Grid.Row="1"

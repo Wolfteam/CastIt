@@ -38,12 +38,7 @@
             Mode="PrimaryMid">
             <DockPanel>
                 <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
-                    <materialDesign:PackIcon
-                        Width="30"
-                        Height="30"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource FontColorOnDarkBackgroundBrush}"
-                        Kind="AboutOutline" />
+                    <materialDesign:PackIcon Kind="AboutOutline" Style="{StaticResource ColorZoneIconStyle}" />
                     <TextBlock
                         Margin="5,0,0,0"
                         HorizontalAlignment="Center"
