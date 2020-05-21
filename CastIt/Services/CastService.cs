@@ -176,7 +176,7 @@ namespace CastIt.Services
             }
             else
             {
-                cmd = $@"/C -ss {second} -an "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -vframes 1 -s 200x150 ""{thumbnailPath}"" "" && exit";
+                cmd = $@"/C "" ""{_ffmpegPath}"" -ss {second} -an -y -i ""{filePath}"" -vframes 1 -s 200x150 ""{thumbnailPath}"" "" && exit";
             }
             try
             {

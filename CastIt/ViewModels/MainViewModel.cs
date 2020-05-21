@@ -231,7 +231,7 @@ namespace CastIt.ViewModels
             }
 
             Logger.Info($"{nameof(Initialize)}: Creating the file duration task..");
-            DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
+            DurationTaskNotifier = MvxNotifyTask.Create(async () => await SetFileDurations().ConfigureAwait(false));
 
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnTimeChanged += OnFileDurationChanged;

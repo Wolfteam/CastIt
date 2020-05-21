@@ -28,16 +28,14 @@ namespace CastIt
             //NPI WHY I NEED TO MANUALLY REGISTER THIS ONE
             Mvx.IoCProvider.RegisterSingleton<IMvxMessenger>(new MvxMessengerHub());
 
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ITextProvider>(() =>
-            {
-                var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
-                var appSettings = Mvx.IoCProvider.Resolve<IAppSettingsService>();
-                return new ResxTextProvider(Resource.ResourceManager, messenger, appSettings);
-            });
-
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppSettingsService, AppSettingsService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<ICastService, CastService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, AppDataService>();
+
+            var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
+            var appSettings = Mvx.IoCProvider.Resolve<IAppSettingsService>();
+            var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger, appSettings);
+            Mvx.IoCProvider.RegisterSingleton<ITextProvider>(textProvider);
 
             //since im using automapper to resolve this one, i need to explicit register it
             Mvx.IoCProvider.RegisterType<PlayListItemViewModel>();
