@@ -6,6 +6,48 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <Style
+        x:Key="CustomCloseItemTabButtonStyle"
+        BasedOn="{StaticResource MaterialDesignCloseItemCommandButtonStyle}"
+        TargetType="{x:Type Button}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Grid>
+                        <Ellipse
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            Fill="{TemplateBinding Background}" />
+                        <Path
+                            x:Name="Path"
+                            Width="10"
+                            Height="10"
+                            Data="M0.5,71 L70,0.5 M0.5,1 L70,70.5"
+                            SnapsToDevicePixels="True"
+                            Stretch="Uniform"
+                            Stroke="{TemplateBinding Foreground}"
+                            StrokeEndLineCap="Square"
+                            StrokeStartLineCap="Square"
+                            StrokeThickness="1.5" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Opacity" Value=".75" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="true">
+                <Setter Property="Opacity" Value="1" />
+                <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style
         x:Key="CustomTabItemContainerStyle"
         BasedOn="{StaticResource MaterialDesignDragableTabItemStyle}"
         TargetType="{x:Type dragablz:DragablzItem}">
@@ -29,6 +71,7 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentPresenter
                                         x:Name="contentPresenter"
+                                        Grid.Column="0"
                                         Margin="{TemplateBinding Control.Padding}"
                                         HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}"
                                         VerticalAlignment="{TemplateBinding Control.VerticalContentAlignment}"
@@ -45,19 +88,12 @@
                                         Style="{StaticResource MaterialDesignInvisibleThumbStyle}" />
                                     <Button
                                         Grid.Column="1"
-                                        Width="24"
-                                        Height="24"
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Center"
                                         Command="{Binding DataContext.DeletePlayListCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}"
                                         CommandParameter="{Binding}"
-                                        Style="{StaticResource MaterialDesignIconButton}"
-                                        ToolTip="{Binding [Delete]}">
-                                        <materialDesign:PackIcon
-                                            Width="18"
-                                            Height="18"
-                                            Kind="Close" />
-                                    </Button>
+                                        Style="{StaticResource CustomCloseItemTabButtonStyle}"
+                                        ToolTip="{Binding [Delete]}" />
                                 </Grid>
                             </materialDesign:Ripple>
                         </Border>
