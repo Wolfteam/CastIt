@@ -50,8 +50,14 @@ namespace CastIt.Common
         public static string AppName
             => "CastIt";
 
+#if DEBUG
+        public string AppVersion
+            =>   FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion + " - DEBUG";
+#else
         public string AppVersion
             => FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion;
+#endif
+
 
         public static IReadOnlyList<string> AppAccentColors => new List<string>
         {

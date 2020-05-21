@@ -6,6 +6,7 @@ using MvvmCross.Binding.BindingContext;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -96,7 +97,7 @@ namespace CastIt.Views.UserControls
             var result = dialog.ShowDialog();
             if (result == System.Windows.Forms.DialogResult.OK)
             {
-                ViewModel.OnFolderAddedCommand.Execute(dialog.SelectedPath);
+                ViewModel.OnFolderAddedCommand.Execute(new[] { dialog.SelectedPath });
             }
         }
 
@@ -168,9 +169,18 @@ namespace CastIt.Views.UserControls
                 HandlePlaylistItemMove(sender as ListView, e);
             }
             else if (e.Data.GetDataPresent(DataFormats.FileDrop) &&
-                e.Data.GetData(DataFormats.FileDrop) is string[] files &&
-                files.Any())
+                e.Data.GetData(DataFormats.FileDrop) is string[] items &&
+                items.Length > 0)
             {
+                var folders = items
+                    .Where(f => (File.GetAttributes(f) & FileAttributes.Directory) != 0)
+                    .ToArray();
+
+                var files = items
+                    .Where(f => (File.GetAttributes(f) & FileAttributes.Directory) == 0)
+                    .ToArray();
+
+                ViewModel.OnFolderAddedCommand.Execute(folders);
                 ViewModel.OnFilesAddedCommand.Execute(files);
             }
         }

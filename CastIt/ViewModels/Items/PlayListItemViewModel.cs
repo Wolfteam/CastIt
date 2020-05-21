@@ -65,7 +65,7 @@ namespace CastIt.ViewModels.Items
         public IMvxCommand AddFilesCommand { get; private set; }
         public IMvxCommand AddFolderCommand { get; private set; }
         public IMvxCommand ShowAddUrlPopUpCommand { get; set; }
-        public IMvxAsyncCommand<string> OnFolderAddedCommand { get; private set; }
+        public IMvxAsyncCommand<string[]> OnFolderAddedCommand { get; private set; }
         public IMvxAsyncCommand<string[]> OnFilesAddedCommand { get; private set; }
         public IMvxAsyncCommand<string> AddUrlCommand { get; private set; }
         public IMvxCommand<FileItemViewModel> PlayFileCommand { get; set; }
@@ -105,7 +105,7 @@ namespace CastIt.ViewModels.Items
 
             ShowAddUrlPopUpCommand = new MvxCommand(() => ShowAddUrlPopUp = true);
 
-            OnFolderAddedCommand = new MvxAsyncCommand<string>(OnFolderAdded);
+            OnFolderAddedCommand = new MvxAsyncCommand<string[]>(OnFolderAdded);
 
             OnFilesAddedCommand = new MvxAsyncCommand<string[]>(OnFilesAdded);
 
@@ -129,12 +129,15 @@ namespace CastIt.ViewModels.Items
             _setDurationTokenSource.Cancel();
         }
 
-        private Task OnFolderAdded(string folder)
+        private async Task OnFolderAdded(string[] folders)
         {
-            var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.TopDirectoryOnly)
-                .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
-                .ToArray();
-            return OnFilesAdded(files);
+            foreach (var folder in folders)
+            {
+                var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
+                    .ToArray();
+                await OnFilesAdded(files);
+            }
         }
 
         private async Task OnFilesAdded(string[] paths)

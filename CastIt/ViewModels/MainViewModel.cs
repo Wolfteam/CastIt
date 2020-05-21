@@ -357,8 +357,7 @@ namespace CastIt.ViewModels
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
             }
-            var preview = FileUtils.GetClosestThumbnail(_currentlyPlayedFile.Path, tentativeSecond);
-            PreviewThumbnailImg = preview;
+            PreviewThumbnailImg = FileUtils.GetClosestThumbnail(_currentlyPlayedFile.Path, tentativeSecond);
             return tentativeSecond;
         }
 
