@@ -1,0 +1,145 @@
+﻿<UserControl
+    x:Class="CastIt.Views.UserControls.FileItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CastIt.Views.UserControls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    d:DesignHeight="80"
+    d:DesignWidth="550"
+    mc:Ignorable="d">
+
+    <!--  This tag binding contains the playlist vm  -->
+    <Grid
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Tag="{Binding Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
+        <Grid.ContextMenu>
+            <ContextMenu StaysOpen="False">
+                <MenuItem Command="{Binding PlayCommand}" Header="{Binding [PlayFile]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Play" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding PlayFromTheBeginingCommand}" Header="{Binding [PlayFromTheBegining]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Refresh" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding PlacementTarget.Tag.AddFolderCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddFolder]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Folder" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding PlacementTarget.Tag.AddFilesCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddFiles]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Add" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                    Command="{Binding PlacementTarget.Tag.RemoveFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}"
+                    CommandParameter="{Binding}"
+                    Header="{Binding [Remove]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Delete" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding PlacementTarget.Tag.RemoveAllMissingCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [RemoveAllMissing]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="DeleteEmpty" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding PlacementTarget.Tag.SelectAllCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [SelectAll]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="SelectAll" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding OpenFileLocationCommand}" Header="{Binding [OpenFileLocation]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Folder" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+        </Grid.ContextMenu>
+        <Grid.InputBindings>
+            <MouseBinding Command="{Binding PlayCommand}" MouseAction="LeftDoubleClick" />
+        </Grid.InputBindings>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Separator
+            Grid.Row="0"
+            Grid.ColumnSpan="3"
+            VerticalAlignment="Center"
+            Style="{StaticResource FileItemSeparatorStyle}"
+            Visibility="{Binding IsSeparatorTopLineVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <ToggleButton
+            Grid.RowSpan="5"
+            Grid.Column="0"
+            Margin="0,0,5,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Background="{DynamicResource DarkestColorBrush}"
+            Content="{Binding Position}"
+            Focusable="False"
+            Foreground="{DynamicResource FontColorBrush}"
+            IsChecked="{Binding IsSelected, Mode=TwoWay}"
+            IsTabStop="False"
+            Style="{StaticResource MaterialDesignActionLightToggleButton}"
+            ToolTip="{Binding [Select]}" />
+
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="1"
+            Style="{StaticResource FileItemTextStyleWithTriggers}"
+            Text="{Binding Filename}" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="1"
+            Style="{StaticResource FileItemSubTextStyleWithTriggers}"
+            Text="{Binding SubTitle}" />
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="0,0,10,0"
+            Style="{StaticResource FileItemSubTextStyleWithTriggers}"
+            Text="{Binding Path}" />
+
+        <TextBlock
+            Grid.RowSpan="5"
+            Grid.Column="2"
+            Style="{StaticResource FileItemTextStyleWithTriggers}"
+            Text="{Binding Duration}"
+            TextAlignment="Right" />
+
+        <ProgressBar
+            Grid.Row="4"
+            Grid.ColumnSpan="3"
+            Margin="0,5"
+            VerticalAlignment="Center"
+            Maximum="100"
+            Minimum="0"
+            Style="{StaticResource AppProgressBarStyle}"
+            Value="{Binding PlayedPercentage, Mode=OneWay}" />
+
+        <Separator
+            Grid.Row="5"
+            Grid.ColumnSpan="3"
+            VerticalAlignment="Center"
+            Style="{StaticResource FileItemSeparatorStyle}"
+            Visibility="{Binding IsSeparatorBottomLineVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+    </Grid>
+</UserControl>

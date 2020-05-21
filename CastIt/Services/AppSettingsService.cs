@@ -1,0 +1,137 @@
+﻿using CastIt.Common;
+using CastIt.Common.Enums;
+using CastIt.Common.Utils;
+using CastIt.Interfaces;
+using CastIt.Models;
+using MvvmCross.Logging;
+using Newtonsoft.Json;
+using System;
+using System.IO;
+
+namespace CastIt.Services
+{
+    public class AppSettingsService : IAppSettingsService
+    {
+        #region Members
+        private readonly IMvxLog _logger;
+        private AppSettings _appSettings;
+        #endregion
+
+        #region Properties
+        public AppLanguageType Language
+        {
+            get => _appSettings.Language;
+            set => _appSettings.Language = value;
+        }
+
+        public AppThemeType AppTheme
+        {
+            get => _appSettings.AppTheme;
+            set => _appSettings.AppTheme = value;
+        }
+
+        public string AccentColor
+        {
+            get => _appSettings.AccentColor;
+            set => _appSettings.AccentColor = value;
+        }
+
+        public string CurrentAppMigration
+        {
+            get => _appSettings.CurrentAppMigration;
+            set => _appSettings.CurrentAppMigration = value;
+        }
+
+        public double WindowWidth
+        {
+            get => _appSettings.WindowWidth;
+            set => _appSettings.WindowWidth = value;
+        }
+
+        public double WindowHeight
+        {
+            get => _appSettings.WindowHeight;
+            set => _appSettings.WindowHeight = value;
+        }
+
+        public bool IsPlayListExpanded
+        {
+            get => _appSettings.IsPlayListExpanded;
+            set => _appSettings.IsPlayListExpanded = value;
+        }
+        #endregion
+
+        public AppSettingsService(IMvxLogProvider logProvider)
+        {
+            _logger = logProvider.GetLogFor<AppSettingsService>();
+            LoadSettings();
+        }
+
+
+        #region Methods
+        public void SaveSettings()
+        {
+            SaveSettings(_appSettings ?? new AppSettings()
+            {
+                AppTheme = AppThemeType.Dark,
+                AccentColor = AppConstants.AccentColorVividRed,
+                CurrentAppMigration = null,
+                Language = AppLanguageType.English,
+                IsPlayListExpanded = false,
+                WindowHeight = AppConstants.MinWindowHeight,
+                WindowWidth = AppConstants.MinWindowWidth
+            });
+        }
+
+        private void LoadSettings()
+        {
+            try
+            {
+                if (!FileUtils.AppSettingsExists())
+                {
+                    _logger.Info($"{nameof(LoadSettings)}: Settings does not exist. Creating a default one");
+                    SaveSettings();
+                    return;
+                }
+                string path = FileUtils.GetAppSettingsPath();
+                var text = File.ReadAllText(path);
+                var settings = File.Exists(path) ?
+                    JsonConvert.DeserializeObject<AppSettings>(text) :
+                    null;
+
+                if (settings != null)
+                    _logger.Info($"{nameof(LoadSettings)}: Loaded settings = {JsonConvert.SerializeObject(settings)}");
+
+                _appSettings = settings ?? new AppSettings();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{nameof(LoadSettings)}: Unknown error occurred while trying to retrieve user settings");
+            }
+        }
+
+        private void SaveSettings(AppSettings settings)
+        {
+            try
+            {
+                if (settings is null)
+                    throw new ArgumentNullException(nameof(settings), "The user settings to be saved cannot be null");
+
+                string path = FileUtils.GetAppSettingsPath();
+                string json = JsonConvert.SerializeObject(settings);
+                _logger.Info($"{nameof(SaveSettings)}: Trying to save settings = {json}");
+
+                File.WriteAllText(path, json);
+
+                _appSettings = settings;
+
+                _logger.Info($"{nameof(SaveSettings)}: Successfully saved settings");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{nameof(SaveSettings)}: An unknown error occurred");
+            }
+        }
+        #endregion
+    }
+}

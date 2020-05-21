@@ -1,0 +1,11 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:CastIt.XamlResources">
+
+    <SolidColorBrush x:Key="DarkestColorBrush" Color="#d9d9dc" />
+    <SolidColorBrush x:Key="FontColorBrush" Color="Black" />
+    <SolidColorBrush x:Key="FontColorBrushInverted" Color="White" />
+    <SolidColorBrush x:Key="WindowBackground" Color="White" />
+    <SolidColorBrush x:Key="WindowLightBackground" Color="#d9d9dc" />
+</ResourceDictionary>
