@@ -21,6 +21,21 @@ namespace CastIt
             InitializeComponent();
         }
 
+        public void BringToForeground()
+        {
+            if (WindowState == WindowState.Minimized || Visibility == Visibility.Hidden)
+            {
+                Show();
+                WindowState = WindowState.Normal;
+            }
+
+            // According to some sources these steps gurantee that an app will be brought to foreground.
+            Activate();
+            Topmost = true;
+            Topmost = false;
+            Focus();
+        }
+
         public void ToggleWindowHeight(double tabHeight)
         {
             var view = Content as MainPage;
