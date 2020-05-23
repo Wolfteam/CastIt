@@ -79,6 +79,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Separator
             Grid.Row="0"
@@ -104,19 +105,31 @@
         <TextBlock
             Grid.Row="1"
             Grid.Column="1"
-            Style="{StaticResource FileItemTextStyleWithTriggers}"
-            Text="{Binding Filename}" />
+            Text="{Binding Filename}">
+            <TextBlock.Style>
+                <Style BasedOn="{StaticResource FileItemTextStyleWithTriggers}" TargetType="{x:Type TextBlock}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowFileDetails}" Value="False">
+                            <Setter Property="Grid.RowSpan" Value="5" />
+                            <Setter Property="Margin" Value="0,0,0,5" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
         <TextBlock
             Grid.Row="2"
             Grid.Column="1"
             Style="{StaticResource FileItemSubTextStyleWithTriggers}"
-            Text="{Binding SubTitle}" />
+            Text="{Binding SubTitle}"
+            Visibility="{Binding ShowFileDetails, Converter={StaticResource BooleanToVisibilityConverter}}" />
         <TextBlock
             Grid.Row="3"
             Grid.Column="1"
             Margin="0,0,10,0"
             Style="{StaticResource FileItemSubTextStyleWithTriggers}"
-            Text="{Binding Path}" />
+            Text="{Binding Path}"
+            Visibility="{Binding ShowFileDetails, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
         <TextBlock
             Grid.RowSpan="5"
@@ -132,8 +145,18 @@
             VerticalAlignment="Center"
             Maximum="100"
             Minimum="0"
-            Style="{StaticResource AppProgressBarStyle}"
-            Value="{Binding PlayedPercentage, Mode=OneWay}" />
+            Value="{Binding PlayedPercentage, Mode=OneWay}">
+            <ProgressBar.Style>
+                <Style BasedOn="{StaticResource AppProgressBarStyle}" TargetType="{x:Type ProgressBar}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowFileDetails}" Value="False">
+                            <Setter Property="Grid.Column" Value="1" />
+                            <Setter Property="Grid.ColumnSpan" Value="2" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ProgressBar.Style>
+        </ProgressBar>
 
         <Separator
             Grid.Row="5"

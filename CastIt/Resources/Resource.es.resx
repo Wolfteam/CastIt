@@ -288,4 +288,7 @@
   <data name="AppIsRdyToUse" xml:space="preserve">
     <value>La aplicación esta lista para ser usada</value>
   </data>
+  <data name="ShowFileDetails" xml:space="preserve">
+    <value>Mostrar el detalle de los archivos</value>
+  </data>
 </root>

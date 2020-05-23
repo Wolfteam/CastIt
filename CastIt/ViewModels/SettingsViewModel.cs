@@ -3,6 +3,7 @@ using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models;
+using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
@@ -69,6 +70,17 @@ namespace CastIt.ViewModels
 
         public string CurrentAccentColor
             => _settingsService.AccentColor;
+
+        public bool ShowFileDetails
+        {
+            get => _settingsService.ShowFileDetails;
+            set
+            {
+                _settingsService.ShowFileDetails = value;
+                Messenger.Publish(new ShowFileDetailsMessage(this, value));
+                RaisePropertyChanged(() => ShowFileDetails);
+            }
+        }
         #endregion
 
         #region Commands

@@ -16,6 +16,8 @@ namespace CastIt.ViewModels.Items
     {
         #region Members
         private readonly ICastService _castService;
+        private readonly IAppSettingsService _settingsService;
+
         private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
         private bool _isSeparatorBottomLineVisible;
@@ -86,6 +88,9 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isSeparatorBottomLineVisible, value);
         }
 
+        public bool ShowFileDetails
+            => _settingsService.ShowFileDetails;
+
         public bool IsLocalFile
             => _castService.IsLocalFile(Path);
         public bool IsUrlFile
@@ -104,7 +109,7 @@ namespace CastIt.ViewModels.Items
 
         #region Commands
         public IMvxCommand PlayCommand { get; private set; }
-        public IMvxAsyncCommand PlayFromTheBeginingCommand { get; private set; }
+        public IMvxCommand PlayFromTheBeginingCommand { get; private set; }
         public IMvxCommand OpenFileLocationCommand { get; private set; }
         #endregion
 
@@ -112,10 +117,12 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            ICastService castService)
+            ICastService castService,
+            IAppSettingsService settingsService)
             : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
         {
             _castService = castService;
+            _settingsService = settingsService;
         }
 
         public override void SetCommands()
@@ -124,13 +131,19 @@ namespace CastIt.ViewModels.Items
 
             PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this)));
 
-            PlayFromTheBeginingCommand = new MvxAsyncCommand(async () => await _castService.GoToPosition(0));
+            PlayFromTheBeginingCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this, true)));
 
             OpenFileLocationCommand = new MvxCommand(() =>
             {
                 var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
                 Process.Start(psi);
             });
+        }
+
+        public override void RegisterMessages()
+        {
+            base.RegisterMessages();
+            SubscriptionTokens.Add(Messenger.Subscribe<ShowFileDetailsMessage>(_ => RaisePropertyChanged(() => ShowFileDetails)));
         }
 
         public void ShowItemSeparators(bool showTop, bool showBottom)

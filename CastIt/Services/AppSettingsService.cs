@@ -59,6 +59,12 @@ namespace CastIt.Services
             get => _appSettings.IsPlayListExpanded;
             set => _appSettings.IsPlayListExpanded = value;
         }
+
+        public bool ShowFileDetails
+        {
+            get => _appSettings.ShowFileDetails;
+            set => _appSettings.ShowFileDetails = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider)

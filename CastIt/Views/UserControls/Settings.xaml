@@ -45,6 +45,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -113,6 +114,16 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <StackPanel
+                    Grid.Row="3"
+                    Margin="0,10"
+                    Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding ShowFileDetails}"
+                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                        ToolTip="{Binding [ShowFileDetails]}" />
+                    <TextBlock Margin="5,0" Text="{Binding [ShowFileDetails]}" />
+                </StackPanel>
             </Grid>
         </ScrollViewer>
     </Grid>

@@ -309,7 +309,7 @@ namespace CastIt.ViewModels
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
-                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File))
+                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File, msg.Force))
             });
         }
 
@@ -473,7 +473,7 @@ namespace CastIt.ViewModels
             file.PlayCommand.Execute();
         }
 
-        private async Task PlayFile(FileItemViewModel file)
+        private async Task PlayFile(FileItemViewModel file, bool force)
         {
             if (!file.Exists)
             {
@@ -481,7 +481,7 @@ namespace CastIt.ViewModels
                 return;
             }
 
-            if (file == _currentlyPlayedFile)
+            if (file == _currentlyPlayedFile && !force)
             {
                 await ShowSnackbarMsg(GetText("FileIsAlreadyBeingPlayed"));
                 return;
@@ -502,7 +502,7 @@ namespace CastIt.ViewModels
             SetCurrentlyPlayingInfo(file.Filename, true);
             await _castService.StartPlay(file.Path);
             CurrentFileThumbnail = _castService.GetFirstThumbnail();
-            if (file.CanStartPlayingFromCurrentPercentage)
+            if (file.CanStartPlayingFromCurrentPercentage && !force)
             {
                 Logger.Info($"{nameof(PlayFile)}: File can be resumed from = {file.PlayedPercentage} %");
                 await _castService.GoToPosition((float)file.PlayedPercentage);

@@ -547,6 +547,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show file details.
+        /// </summary>
+        public static string ShowFileDetails {
+            get {
+                return ResourceManager.GetString("ShowFileDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spanish.
         /// </summary>
         public static string Spanish {

@@ -5,12 +5,14 @@ namespace CastIt.Models.Messages
 {
     public class PlayFileMsg : MvxMessage
     {
-        public FileItemViewModel File { get; private set; }
+        public FileItemViewModel File { get; }
+        public bool Force { get; }
 
-        public PlayFileMsg(FileItemViewModel sender) 
+        public PlayFileMsg(FileItemViewModel sender, bool force = false)
             : base(sender)
         {
             File = sender;
+            Force = force;
         }
     }
 }
