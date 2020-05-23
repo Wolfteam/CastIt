@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Comparers;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
 using MvvmCross.Commands;
@@ -148,7 +149,7 @@ namespace CastIt.ViewModels.Items
                 var ext = Path.GetExtension(path);
                 return AppConstants.AllowedFormats.Contains(ext.ToLower()) &&
                     !Items.Any(f => f.Path == path);
-            }).OrderBy(p => p)
+            }).OrderBy(p => p, new WindowsExplorerComparer())
             .Select((path, index) =>
             {
                 return new FileItem
