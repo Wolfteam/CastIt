@@ -33,7 +33,7 @@ namespace CastIt.Services
 
         public async Task<FileItemViewModel> AddFile(long playListId, string path, int position)
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var file = new FileItem
             {
                 CreatedAt = DateTime.Now,
@@ -49,7 +49,7 @@ namespace CastIt.Services
 
         public async Task<List<FileItemViewModel>> AddFiles(List<FileItem> files)
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             db.InsertAll(files);
 
             return _mapper.Map<List<FileItemViewModel>>(files);
@@ -63,14 +63,14 @@ namespace CastIt.Services
                 Name = name,
                 Position = position,
             };
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             db.Insert(playlist);
             return _mapper.Map<PlayListItemViewModel>(playlist);
         }
 
         public async Task DeleteFile(long id)
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             db.Delete<FileItem>(id);
         }
 
@@ -78,7 +78,7 @@ namespace CastIt.Services
         {
             if (ids.Count == 0)
                 return;
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var files = db.Table<FileItem>()
                 .Where(f => ids.Contains(f.Id))
                 .ToList();
@@ -90,7 +90,7 @@ namespace CastIt.Services
 
         public async Task DeletePlayList(long id)
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             db.Delete<PlayList>(id);
         }
 
@@ -98,7 +98,7 @@ namespace CastIt.Services
         {
             if (ids.Count == 0)
                 return;
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var playlists = db.Table<PlayList>()
                 .Where(f => ids.Contains(f.Id))
                 .ToList();
@@ -110,14 +110,14 @@ namespace CastIt.Services
 
         public async Task<List<PlayListItemViewModel>> GetAllPlayLists()
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var playlists = db.Table<PlayList>().ToList();
             return _mapper.Map<List<PlayListItemViewModel>>(playlists);
         }
 
         public async Task<List<FileItemViewModel>> GetAllFiles(long playlistId)
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var files = db.Table<FileItem>().Where(f => f.PlayListId == playlistId).ToList();
             return _mapper.Map<List<FileItemViewModel>>(files);
         }
@@ -130,7 +130,7 @@ namespace CastIt.Services
 
         public async Task UpdatePlayList(long id, string name, int position)
         {
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var playlist = db.Table<PlayList>().Where(pl => pl.Id == id).First();
             playlist.Name = name;
             playlist.Position = position;
@@ -139,25 +139,23 @@ namespace CastIt.Services
 
         private void CreateDb()
         {
-            using (var db = new SQLiteConnection(_connectionString))
+            using var db = new SQLiteConnection(_connectionString);
+            db.CreateTable<PlayList>();
+            db.CreateTable<FileItem>();
+            var playList = new PlayList
             {
-                db.CreateTable<PlayList>();
-                db.CreateTable<FileItem>();
-                var playList = new PlayList
-                {
-                    CreatedAt = DateTime.Now,
-                    Name = "Default",
-                    Position = 1,
-                };
-                db.Insert(playList);
+                CreatedAt = DateTime.Now,
+                Name = "Default",
+                Position = 1,
             };
+            db.Insert(playList);
         }
 
         private void SavePlayListsPositions(Dictionary<long, int> positions)
         {
             if (positions.Count == 0)
                 return;
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var playlists = db.Table<PlayList>().ToList();
             foreach (var kvp in positions)
             {
@@ -173,7 +171,7 @@ namespace CastIt.Services
             if (vms.Count == 0)
                 return;
             var ids = vms.Select(f => f.Id).ToList();
-            var db = new SQLiteConnection(_connectionString);
+            using var db = new SQLiteConnection(_connectionString);
             var entities = db.Table<FileItem>()
                 .Where(f => ids.Contains(f.Id))
                 .ToList();
