@@ -14,7 +14,19 @@ namespace CastIt.GoogleCast.Extensions
             }
 
             logger?.Info(msg);
-            Debug.WriteLine(msg);
+            Debug.WriteLine(msg, "INFO");
+            Console.WriteLine(msg);
+        }
+
+        public static void LogWarn(this IMvxLog logger, string msg)
+        {
+            if (!Player.CanLog)
+            {
+                return;
+            }
+
+            logger?.Warn(msg);
+            Debug.WriteLine(msg, "WARNING");
             Console.WriteLine(msg);
         }
 
@@ -24,10 +36,23 @@ namespace CastIt.GoogleCast.Extensions
             {
                 return;
             }
-
             logger?.Error(ex, msg);
-            Debug.WriteLine(msg);
+            Debug.WriteLine(msg, "ERROR");
             Console.WriteLine(msg);
+        }
+
+        public static void LogTrace(this IMvxLog logger, string msg)
+        {
+            if (!Player.CanLog)
+            {
+                return;
+            }
+            logger?.Trace(msg);
+            if (logger?.IsTraceEnabled() == true)
+            {
+                Debug.WriteLine(msg, "TRACE");
+                Console.WriteLine(msg);
+            }
         }
     }
 }

@@ -19,11 +19,9 @@ using System.Threading.Tasks;
 
 namespace CastIt.GoogleCast
 {
-    //TODO: THE DESTINATION ID CAN BE THE SESSION ID IDK WHY
     internal class Sender : ISender
     {
         private const int RECEIVE_TIMEOUT = 30000;
-
 
         private readonly IMvxLog _logger;
         private readonly string _senderId;
@@ -38,8 +36,9 @@ namespace CastIt.GoogleCast
         private SemaphoreSlim EnsureConnectionSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
         private CancellationTokenSource CancellationTokenSource { get; set; }
         public ConcurrentDictionary<int, object> WaitingTasks { get; } = new ConcurrentDictionary<int, object>();
+        public bool IsConnected
+            => NetworkStream != null;
 
-        //TODO: ADD AN ILOGGER
         public Sender(
             IMvxLog logger,
             string senderId,
@@ -78,7 +77,6 @@ namespace CastIt.GoogleCast
             var secureStream = new SslStream(TcpClient.GetStream(), true, (a, b, c, d) => true);
             await secureStream.AuthenticateAsClientAsync(CurrentReceiver.Host);
             NetworkStream = secureStream;
-
             Receive();
         }
 
@@ -126,7 +124,7 @@ namespace CastIt.GoogleCast
             try
             {
                 await SendSemaphoreSlim.WaitAsync();
-                _logger.LogInfo($"SENT    : {castMessage.DestinationId}: {castMessage.PayloadUtf8}");
+                _logger.LogTrace($"{nameof(SendAsync)}: {castMessage.DestinationId}: {castMessage.PayloadUtf8}");
 
                 byte[] message;
                 using (var ms = new MemoryStream())
@@ -156,20 +154,14 @@ namespace CastIt.GoogleCast
         [MethodImpl(MethodImplOptions.Synchronized)]
         private void Dispose()
         {
-            if (TcpClient != null)
-            {
-                WaitingTasks.Clear();
-                if (CancellationTokenSource != null)
-                {
-                    CancellationTokenSource.Cancel();
-                    CancellationTokenSource = null;
-                }
-                NetworkStream?.Dispose();
-                TcpClient?.Dispose();
-                NetworkStream = null;
-                TcpClient = null;
-                Disconnected?.Invoke(this, EventArgs.Empty);
-            }
+            WaitingTasks.Clear();
+            CancellationTokenSource?.Cancel();
+            CancellationTokenSource = null;
+            NetworkStream?.Dispose();
+            TcpClient?.Dispose();
+            NetworkStream = null;
+            TcpClient = null;
+            Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
         private async Task EnsureConnection()
@@ -220,6 +212,8 @@ namespace CastIt.GoogleCast
                 }
                 catch (Exception e)
                 {
+                    if (e is NullReferenceException)
+                        return;
                     _logger.LogError($"{nameof(Receive)}: Unknown error", e);
                 }
             }, cancellationToken);

@@ -188,7 +188,8 @@ namespace CastIt.GoogleCast
             //_receiverChannel.Status = null;
             //_mediaChannel.Status = null;
             CancelAndSetMediaToken();
-            await _receiverChannel.StopAsync(_sender);
+            if (_sender.IsConnected)
+                await _receiverChannel.StopAsync(_sender);
             _sender.Disconnect();
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
@@ -201,11 +202,14 @@ namespace CastIt.GoogleCast
             double seekedSeconds = 0,
             params int[] activeTrackIds)
         {
+            CancelAndSetMediaToken();
             var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
             var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
             CurrentMediaDuration = media.Duration ?? status.Media.Duration ?? 0;
             ElapsedSeconds = 0;
             _seekedSeconds = seekedSeconds;
+
+            TriggerTimeEvents();
             IsPlaying = true;
             ListenForMediaChanges();
 
@@ -247,17 +251,19 @@ namespace CastIt.GoogleCast
             var payload = msg.PayloadType == PayloadType.Binary
                 ? Encoding.UTF8.GetString(msg.PayloadBinary)
                 : msg.PayloadUtf8;
-            _logger.LogInfo($"RECEIVED: {msg.Namespace} : {payload}");
+            _logger.LogTrace($"{nameof(HandleResponseMsg)}: {msg.Namespace} : {payload}");
             var channel = GetChannel(msg.Namespace);
             if (channel == null)
             {
-                _logger.LogInfo($"Cant process payload {Environment.NewLine} {payload}. {Environment.NewLine} No suitable channel was found");
+                _logger.LogWarn(
+                    $"{nameof(HandleResponseMsg)}: Cant process payload {Environment.NewLine} {payload}. " +
+                    $"{Environment.NewLine} No suitable channel was found");
                 return;
             }
             var message = JsonConvert.DeserializeObject<MessageWithId>(payload, AppConstants.JsonSettings);
             if (_supportedMsgs.TryGetValue(message.Type, out Type type))
             {
-                _logger.LogInfo($"Got msg type = {message.Type}");
+                _logger.LogTrace($"{nameof(HandleResponseMsg)}: Got msg type = {message.Type}");
                 try
                 {
 
@@ -277,7 +283,7 @@ namespace CastIt.GoogleCast
             }
             else
             {
-                _logger.LogInfo($"Could not get a supported msg for type {message.Type}");
+                _logger.LogInfo($"{nameof(HandleResponseMsg)}: Could not get a supported msg for type {message.Type}");
             }
         }
 
@@ -330,14 +336,12 @@ namespace CastIt.GoogleCast
                         {
                             IsPlaying = false;
                             checkMediaStatus = false;
-                            _logger.LogInfo("MediaStatusChanged wont be raised anymore");
+                            _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Media is null, end is reached.");
                             EndReached?.Invoke(this, EventArgs.Empty);
                             break;
                         }
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
-                        TimeChanged?.Invoke(this, ElapsedSeconds);
-                        PositionChanged?.Invoke(this, PlayedPercentage);
-
+                        TriggerTimeEvents();
                         if (ElapsedSeconds >= CurrentMediaDuration)
                         {
                             IsPlaying = false;
@@ -349,10 +353,16 @@ namespace CastIt.GoogleCast
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException)
+                if (e is TaskCanceledException || e is TimeoutException)
                     return;
-                _logger.LogError("Unknown error occurred", e);
+                _logger.LogError($"{nameof(ListenForMediaChanges)}: Unknown error occurred", e);
             }
+        }
+
+        private void TriggerTimeEvents()
+        {
+            TimeChanged?.Invoke(this, ElapsedSeconds);
+            PositionChanged?.Invoke(this, PlayedPercentage);
         }
         #endregion
     }
