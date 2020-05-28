@@ -65,6 +65,12 @@ namespace CastIt.Services
             get => _appSettings.ShowFileDetails;
             set => _appSettings.ShowFileDetails = value;
         }
+
+        public bool StartFilesFromTheStart
+        {
+            get => _appSettings.StartFilesFromTheStart;
+            set => _appSettings.StartFilesFromTheStart = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider)

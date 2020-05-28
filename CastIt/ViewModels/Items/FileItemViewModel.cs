@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using MvvmCross.Commands;
@@ -31,7 +32,7 @@ namespace CastIt.ViewModels.Items
         #region Properties
         public long Id { get; set; }
         public long PlayListId { get; set; }
-        public long TotalSeconds { get; private set; }
+        public double TotalSeconds { get; private set; }
         public bool PositionChanged { get; set; }
 
         public int Position
@@ -90,11 +91,10 @@ namespace CastIt.ViewModels.Items
 
         public bool ShowFileDetails
             => _settingsService.ShowFileDetails;
-
         public bool IsLocalFile
-            => _castService.IsLocalFile(Path);
+            => FileUtils.IsLocalFile(Path);
         public bool IsUrlFile
-            => _castService.IsUrlFile(Path);
+            => FileUtils.IsUrlFile(Path);
         public bool Exists
             => IsLocalFile || IsUrlFile;
         public string Filename
@@ -129,9 +129,9 @@ namespace CastIt.ViewModels.Items
         {
             base.SetCommands();
 
-            PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this)));
+            PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMessage(this)));
 
-            PlayFromTheBeginingCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this, true)));
+            PlayFromTheBeginingCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMessage(this, true)));
 
             OpenFileLocationCommand = new MvxCommand(() =>
             {
@@ -158,14 +158,14 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        public async Task SetDuration(CancellationToken cancellationToken)
+        public async Task SetDuration(CancellationToken token)
         {
             if (!Exists)
             {
                 Duration = GetText("Missing");
                 return;
             }
-            var seconds = await _castService.GetDuration(Path, cancellationToken);
+            var seconds = await _castService.GetDuration(Path, token);
             TotalSeconds = seconds;
             if (seconds <= 0)
             {
@@ -197,7 +197,7 @@ namespace CastIt.ViewModels.Items
             IsBeingPlayed = false;
         }
 
-        private void OnPositionChanged(float position)
+        private void OnPositionChanged(double position)
             => PlayedPercentage = position;
 
         private void OnEndReached()

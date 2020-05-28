@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace CastIt.Common.Utils
 {
@@ -19,6 +20,12 @@ namespace CastIt.Common.Utils
         {
             var basePath = GetFFMpegFolder();
             return Path.Combine(basePath, "ffmpeg.exe");
+        }
+
+        public static string GetFFprobePath()
+        {
+            var basePath = GetFFMpegFolder();
+            return Path.Combine(basePath, "ffprobe.exe");
         }
 
         public static string GetDbConnectionString()
@@ -138,6 +145,39 @@ namespace CastIt.Common.Utils
             {
                 file.Delete();
             }
+        }
+
+        public static bool IsLocalFile(string mrl)
+        {
+            return File.Exists(mrl);
+        }
+
+        public static bool IsUrlFile(string mrl)
+        {
+            return Uri.TryCreate(mrl, UriKind.Absolute, out Uri uriResult) &&
+                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        }
+
+        public static bool IsVideoFile(string mrl)
+        {
+            if (!IsLocalFile(mrl))
+                return false;
+            return IsVideoOrMusicFile(mrl, true);
+        }
+
+        public static bool IsMusicFile(string mrl)
+        {
+            if (!IsLocalFile(mrl))
+                return false;
+            return IsVideoOrMusicFile(mrl, false);
+        }
+
+        private static bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
+        {
+            string ext = Path.GetExtension(mrl);
+            if (checkForVideo)
+                return AppConstants.AllowedVideoFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
+            return AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
         }
     }
 }

@@ -12,5 +12,6 @@ namespace CastIt.Models
         public double WindowHeight { get; set; }
         public bool IsPlayListExpanded { get; set; }
         public bool ShowFileDetails { get; set; }
+        public bool StartFilesFromTheStart { get; set; }
     }
 }

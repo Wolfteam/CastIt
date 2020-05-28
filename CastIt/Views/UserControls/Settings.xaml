@@ -11,7 +11,7 @@
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     Width="350"
-    Height="350"
+    Height="400"
     d:DesignHeight="350"
     d:DesignWidth="350"
     x:TypeArguments="vms:SettingsViewModel"
@@ -42,6 +42,7 @@
             ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -116,6 +117,7 @@
                 </ItemsControl>
                 <StackPanel
                     Grid.Row="3"
+                    Grid.ColumnSpan="2"
                     Margin="0,10"
                     Orientation="Horizontal">
                     <ToggleButton
@@ -123,6 +125,17 @@
                         Style="{StaticResource MaterialDesignSwitchToggleButton}"
                         ToolTip="{Binding [ShowFileDetails]}" />
                     <TextBlock Margin="5,0" Text="{Binding [ShowFileDetails]}" />
+                </StackPanel>
+                <StackPanel
+                    Grid.Row="4"
+                    Grid.ColumnSpan="2"
+                    Margin="0,10"
+                    Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding StartFilesFromTheStart}"
+                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                        ToolTip="{Binding [PlayFilesFromTheStart]}" />
+                    <TextBlock Margin="5,0" Text="{Binding [PlayFilesFromTheStart]}" />
                 </StackPanel>
             </Grid>
         </ScrollViewer>

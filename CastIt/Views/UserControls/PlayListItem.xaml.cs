@@ -2,6 +2,7 @@
 using CastIt.Common.Utils;
 using CastIt.ViewModels.Items;
 using Microsoft.Win32;
+using MvvmCross.Base;
 using MvvmCross.Binding.BindingContext;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
@@ -13,6 +14,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace CastIt.Views.UserControls
 {
@@ -24,6 +26,7 @@ namespace CastIt.Views.UserControls
 
         private IMvxInteraction _openFileDialogRequest;
         private IMvxInteraction _openFolderDialogRequest;
+        private IMvxInteraction<FileItemViewModel> _scrollToSelectedItemRequest;
 
         public IMvxInteraction OpenFileDialogRequest
         {
@@ -53,6 +56,20 @@ namespace CastIt.Views.UserControls
             }
         }
 
+        public IMvxInteraction<FileItemViewModel> ScrollToSelectedItemRequest
+        {
+            get => _scrollToSelectedItemRequest;
+            set
+            {
+                if (_scrollToSelectedItemRequest != null)
+                    _scrollToSelectedItemRequest.Requested -= ScrollToSelectedItem;
+
+                _scrollToSelectedItemRequest = value;
+                if (value != null)
+                    _scrollToSelectedItemRequest.Requested += ScrollToSelectedItem;
+            }
+        }
+
         public PlayListItem()
         {
             InitializeComponent();
@@ -60,6 +77,7 @@ namespace CastIt.Views.UserControls
             var set = this.CreateBindingSet<PlayListItem, PlayListItemViewModel>();
             set.Bind(this).For(v => v.OpenFileDialogRequest).To(vm => vm.OpenFileDialog).OneWay();
             set.Bind(this).For(v => v.OpenFolderDialogRequest).To(vm => vm.OpenFolderDialog).OneWay();
+            set.Bind(this).For(v => v.ScrollToSelectedItemRequest).To(vm => vm.ScrollToSelectedItem).OneWay();
             set.Apply();
 
             Loaded += (sender, args) => SetViewModel();
@@ -294,6 +312,12 @@ namespace CastIt.Views.UserControls
         private void PlayListFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
             CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource)?.Refresh();
+        }
+
+        private void ScrollToSelectedItem(object sender, MvxValueEventArgs<FileItemViewModel> e)
+        {
+            if (e.Value != null)
+                Dispatcher.Invoke(() => PlaylistLv.ScrollIntoView(e.Value));
         }
     }
 }

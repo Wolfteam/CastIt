@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Comparers;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
 using MvvmCross.Commands;
@@ -26,6 +27,7 @@ namespace CastIt.ViewModels.Items
 
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
+        private readonly MvxInteraction<FileItemViewModel> _scrollToSelectedItem = new MvxInteraction<FileItemViewModel>();
         #endregion
 
         #region Properties
@@ -52,7 +54,11 @@ namespace CastIt.ViewModels.Items
         public FileItemViewModel SelectedItem
         {
             get => _selectedItem;
-            set => SetProperty(ref _selectedItem, value);
+            set
+            {
+                SetProperty(ref _selectedItem, value);
+                _scrollToSelectedItem.Raise(value);
+            }
         }
 
         public MvxObservableCollection<FileItemViewModel> Items { get; set; }
@@ -82,6 +88,9 @@ namespace CastIt.ViewModels.Items
 
         public IMvxInteraction OpenFolderDialog
             => _openFolderDialog;
+
+        public IMvxInteraction<FileItemViewModel> ScrollToSelectedItem
+            => _scrollToSelectedItem;
         #endregion
 
         public PlayListItemViewModel(
@@ -173,7 +182,7 @@ namespace CastIt.ViewModels.Items
         private async Task OnUrlAdded(string url)
         {
             //TODO: URL CAN BE A PLAYLIST, SO YOU WILL NEED TO PARSE IT
-            bool isUrlFile = _castService.IsUrlFile(url);
+            bool isUrlFile = FileUtils.IsUrlFile(url);
             if (!isUrlFile)
                 return;
             var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);

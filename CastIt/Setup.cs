@@ -1,5 +1,7 @@
 ﻿using CastIt.Common.Miscellaneous;
 using CastIt.Common.Utils;
+using CastIt.GoogleCast;
+using CastIt.Server;
 using CastIt.Services;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Dialogs;
@@ -29,7 +31,7 @@ namespace CastIt
                 "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{Level}] {Message:lj}{NewLine}{Exception}";
             var basePath = FileUtils.GetLogsPath();
             var loggerConfig = new LoggerConfiguration().MinimumLevel
-                .Verbose();
+                .Debug();
 
             var logs = new Dictionary<string, string>
             {
@@ -42,6 +44,9 @@ namespace CastIt
                 {$"{typeof(DownloadDialogViewModel).FullName}",  "vm_download_dialog_.txt"},
                 {$"{typeof(CastService).FullName}",  "service_cast_.txt"},
                 {$"{typeof(AppSettingsService).FullName}",  "service_appsettings_.txt"},
+                {$"{typeof(FFMpegService).FullName}",  "service_ffmpeg_.txt"},
+                {$"{typeof(Player).FullName}",  "googlecast_player_.txt"},
+                {$"{typeof(VideoModule).FullName}",  "server_video_.txt"},
             };
 
             foreach (var kvp in logs)

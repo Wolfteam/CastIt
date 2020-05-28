@@ -1,6 +1,5 @@
 ﻿using CastIt.Common;
-using CastIt.Models;
-using CastIt.ViewModels.Items;
+using CastIt.GoogleCast.Interfaces;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +8,7 @@ namespace CastIt.Interfaces
 {
     public interface ICastService
     {
-        List<CastableDevice> AvailableDevices { get; }
+        IList<IReceiver> AvailableDevices { get; }
         OnCastRendererSetHandler OnCastRendererSet { get; set; }
         OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
@@ -17,29 +16,24 @@ namespace CastIt.Interfaces
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
 
-        Task AddSeconds(long seconds);
-        Task GoToSeconds(long seconds);
+        Task AddSeconds(double seconds);
+        Task GoToSeconds(double seconds);
         void CleanThemAll();
-        bool DiscoverChromecasts();
-        Task GoToPosition(float position);
+        Task GoToPosition(string filePath, double position, double totalSeconds);
         void Init();
-        Task StartPlay(string mrl);
+        Task StartPlay(string mrl, double seconds = 0);
         string GetFirstThumbnail();
         string GetFirstThumbnail(string filePath);
         string GetThumbnail(int second);
         string GetThumbnail(string filePath, int second);
         Task StopPlayback();
-        void TogglePlayback();
-        Task<long> GetDuration(string mrl, CancellationToken cancellationToken = default);
-        bool IsLocalFile(string mrl);
-        bool IsUrlFile(string mrl);
+        Task TogglePlayback();
+        Task<double> GetDuration(string mrl, CancellationToken token);
         string GetFileName(string mrl);
         string GetExtension(string mrl);
         string GetFileSizeString(string mrl);
         void GenerateThumbmnails();
         void GenerateThumbmnails(string filePath);
-        bool IsVideoFile(string mrl);
-        bool IsMusicFile(string mrl);
-        void SetCastRenderer(string name, string type);
+        Task SetCastRenderer(string id);
     }
 }

@@ -448,6 +448,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Play files from the start.
+        /// </summary>
+        public static string PlayFilesFromTheStart {
+            get {
+                return ResourceManager.GetString("PlayFilesFromTheStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Play from the begining.
         /// </summary>
         public static string PlayFromTheBegining {

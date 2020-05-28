@@ -2,11 +2,13 @@
 using CastIt.Common;
 using CastIt.Interfaces;
 using CastIt.Resources;
+using CastIt.Server;
 using CastIt.Services;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Items;
 using MvvmCross;
 using MvvmCross.IoC;
+using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 
@@ -29,8 +31,13 @@ namespace CastIt
             Mvx.IoCProvider.RegisterSingleton<IMvxMessenger>(new MvxMessengerHub());
 
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppSettingsService, AppSettingsService>();
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<ICastService, CastService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, AppDataService>();
+
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton(() =>
+                AppWebServer.CreateWebServer(Mvx.IoCProvider.Resolve<IMvxLogProvider>(), Mvx.IoCProvider.Resolve<IFFMpegService>())
+            );
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFMpegService, FFMpegService>();
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
 
             var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
             var appSettings = Mvx.IoCProvider.Resolve<IAppSettingsService>();
@@ -40,6 +47,7 @@ namespace CastIt
             //since im using automapper to resolve this one, i need to explicit register it
             Mvx.IoCProvider.RegisterType<PlayListItemViewModel>();
             Mvx.IoCProvider.RegisterType<FileItemViewModel>();
+            Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
 
             RegisterAppStart<MainViewModel>();
         }

@@ -230,9 +230,6 @@ namespace CastIt.ViewModels
                 playlist.Items.AddRange(files);
             }
 
-            Logger.Info($"{nameof(Initialize)}: Creating the file duration task..");
-            DurationTaskNotifier = MvxNotifyTask.Create(async () => await SetFileDurations().ConfigureAwait(false));
-
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
@@ -294,7 +291,7 @@ namespace CastIt.ViewModels
 
             GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
 
-            ShowDownloadDialogCommand = new MvxAsyncCommand(async() =>
+            ShowDownloadDialogCommand = new MvxAsyncCommand(async () =>
             {
                 bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
                 if (!filesWereDownloaded)
@@ -309,7 +306,7 @@ namespace CastIt.ViewModels
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
-                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File, msg.Force))
+                Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force))
             });
         }
 
@@ -319,10 +316,13 @@ namespace CastIt.ViewModels
             var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
             _setWindowWidthAndHeight.Raise(tuple);
 
+            Logger.Info($"{nameof(ViewAppeared)}: Creating the file duration task..");
+            DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations());
             string path = FileUtils.GetFFMpegPath();
             if (File.Exists(path))
                 return;
 
+            Logger.Info($"{nameof(ViewAppeared)}: Ffmpeg is not in user folder, showing download dialog...");
             ShowDownloadDialogCommand.Execute();
         }
 
@@ -352,7 +352,7 @@ namespace CastIt.ViewModels
 
             long tentativeSecond = GetMainProgressBarSeconds(sliderWidth, mouseX);
 
-            if (_castService.IsMusicFile(_currentlyPlayedFile.Path))
+            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path))
             {
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
@@ -372,7 +372,13 @@ namespace CastIt.ViewModels
         private Task SetFileDurations()
         {
             Logger.Info($"{nameof(SetFileDurations)}: Setting file duration to all the files");
-            var tasks = PlayLists.SelectMany(pl => pl.Items).Select(f => f.SetDuration(_setDurationTokenSource.Token)).ToList();
+            var tasks = PlayLists.Select(pl => Task.Run(async () =>
+            {
+                foreach (var file in pl.Items)
+                {
+                    await file.SetDuration(_setDurationTokenSource.Token);
+                }
+            }, _setDurationTokenSource.Token)).ToList();
 
             return Task.WhenAll(tasks);
         }
@@ -487,7 +493,7 @@ namespace CastIt.ViewModels
                 return;
             }
 
-            if (!DurationTaskNotifier.IsCompleted || string.IsNullOrEmpty(file.Duration))
+            if (string.IsNullOrEmpty(file.Duration))
             {
                 Logger.Info(
                     $"{nameof(PlayFile)}: Cant play file = {file.Filename} yet, " +
@@ -496,25 +502,39 @@ namespace CastIt.ViewModels
                 return;
             }
 
+            if (_castService.AvailableDevices.Count == 0)
+            {
+                await ShowSnackbarMsg(GetText("NoDevicesWereFound"));
+                return;
+            }
+
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
             SetCurrentlyPlayingInfo(file.Filename, true);
-            await _castService.StartPlay(file.Path);
-            CurrentFileThumbnail = _castService.GetFirstThumbnail();
-            if (file.CanStartPlayingFromCurrentPercentage && !force)
-            {
-                Logger.Info($"{nameof(PlayFile)}: File can be resumed from = {file.PlayedPercentage} %");
-                await _castService.GoToPosition((float)file.PlayedPercentage);
-            }
+
+            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
             playList.SelectedItem = file;
 
-            //ThreadPool.QueueUserWorkItem((_) => _castService.GenerateThumbmnails(file.Path));
+            if (file.CanStartPlayingFromCurrentPercentage && !force && !_settingsService.StartFilesFromTheStart)
+            {
+                Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
+                await _castService.GoToPosition(file.Path, file.PlayedPercentage, file.TotalSeconds);
+            }
+            else
+            {
+                Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
+                await _castService.StartPlay(file.Path);
+            }
+
+            CurrentFileThumbnail = _castService.GetFirstThumbnail();
             await Task.Run(() => _castService.GenerateThumbmnails(file.Path));
 
             _onSkipOrPrevious = false;
+
+            Logger.Info($"{nameof(PlayFile)}: Playing...");
         }
 
         private async Task StopPlayBack()
@@ -529,17 +549,18 @@ namespace CastIt.ViewModels
         private void SetCurrentlyPlayingInfo(
             string filename,
             bool isPlaying,
-            float playedPercentage = 0,
-            long playedSeconds = 0)
+            double playedPercentage = 0,
+            double playedSeconds = 0)
         {
             OnFilePositionChanged(playedPercentage);
+            CurrentFileThumbnail = null;
             CurrentlyPlayingFilename = filename;
             IsCurrentlyPlaying = isPlaying;
             CurrentPlayedSeconds = playedSeconds;
             RaisePropertyChanged(() => CurrentFileDuration);
         }
 
-        private void OnFileDurationChanged(long seconds)
+        private void OnFileDurationChanged(double seconds)
         {
             if (_currentlyPlayedFile is null)
                 return;
@@ -556,7 +577,7 @@ namespace CastIt.ViewModels
                 ElapsedTimeString = $"{elapsed} / {total}";
         }
 
-        private void OnFilePositionChanged(float playedPercentage)
+        private void OnFilePositionChanged(double playedPercentage)
             => PlayedPercentage = playedPercentage;
 
         private void OnFileEndReached()

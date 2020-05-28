@@ -77,6 +77,7 @@
             Orientation="Horizontal">
             <Button
                 Command="{Binding PreviousCommand}"
+                IsEnabled="{Binding IsCurrentlyPlaying}"
                 Style="{StaticResource MainButtonStyle}"
                 ToolTip="{Binding [Previous]}">
                 <materialDesign:PackIcon Kind="SkipPrevious" />
@@ -84,11 +85,12 @@
             <Button
                 Command="{Binding SkipCommand}"
                 CommandParameter="-30"
+                IsEnabled="{Binding IsCurrentlyPlaying}"
                 Style="{StaticResource MainButtonStyle}"
                 ToolTip="{Binding [GoBack30Sec]}">
                 <materialDesign:PackIcon Kind="TitleBackward" />
             </Button>
-            <Button Command="{Binding TogglePlayBackCommand}">
+            <Button Command="{Binding TogglePlayBackCommand}" IsEnabled="{Binding IsCurrentlyPlaying}">
                 <Button.Style>
                     <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="Button">
                         <Setter Property="ToolTip" Value="{Binding [Play]}" />
@@ -112,6 +114,7 @@
             </Button>
             <Button
                 Command="{Binding StopPlayBackCommand}"
+                IsEnabled="{Binding IsCurrentlyPlaying}"
                 Style="{StaticResource MainButtonStyle}"
                 ToolTip="{Binding [Stop]}">
                 <materialDesign:PackIcon Kind="Stop" />
@@ -119,12 +122,14 @@
             <Button
                 Command="{Binding SkipCommand}"
                 CommandParameter="30"
+                IsEnabled="{Binding IsCurrentlyPlaying}"
                 Style="{StaticResource MainButtonStyle}"
                 ToolTip="{Binding [GoForward30Sec]}">
                 <materialDesign:PackIcon Kind="TitleForward" />
             </Button>
             <Button
                 Command="{Binding NextCommand}"
+                IsEnabled="{Binding IsCurrentlyPlaying}"
                 Style="{StaticResource MainButtonStyle}"
                 ToolTip="{Binding [Next]}">
                 <materialDesign:PackIcon Kind="SkipNext" />

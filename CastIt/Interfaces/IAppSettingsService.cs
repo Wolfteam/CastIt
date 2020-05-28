@@ -12,6 +12,7 @@ namespace CastIt.Interfaces
         double WindowHeight { get; set; }
         bool IsPlayListExpanded { get; set; }
         bool ShowFileDetails { get; set; }
+        bool StartFilesFromTheStart { get; set; }
 
         void SaveSettings();
     }

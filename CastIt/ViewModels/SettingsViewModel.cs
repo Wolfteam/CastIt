@@ -81,6 +81,16 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => ShowFileDetails);
             }
         }
+
+        public bool StartFilesFromTheStart
+        {
+            get => _settingsService.StartFilesFromTheStart;
+            set
+            {
+                _settingsService.StartFilesFromTheStart = value;
+                RaisePropertyChanged(() => StartFilesFromTheStart);
+            }
+        }
         #endregion
 
         #region Commands

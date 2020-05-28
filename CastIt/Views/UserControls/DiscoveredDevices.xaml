@@ -44,14 +44,14 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     Foreground="{DynamicResource FontColorBrush}"
-                    Text="{Binding Name}"
+                    Text="{Binding FriendlyName}"
                     TextTrimming="CharacterEllipsis" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
                     VerticalAlignment="Top"
                     Foreground="{DynamicResource FontColorBrush}"
-                    Text="{Binding Type}"
+                    Text="{Binding IpAdress}"
                     TextTrimming="CharacterEllipsis" />
                 <Button
                     Grid.RowSpan="2"

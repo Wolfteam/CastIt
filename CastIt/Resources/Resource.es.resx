@@ -291,4 +291,7 @@
   <data name="ShowFileDetails" xml:space="preserve">
     <value>Mostrar el detalle de los archivos</value>
   </data>
+  <data name="PlayFilesFromTheStart" xml:space="preserve">
+    <value>Reproducir archivos desde el inicio</value>
+  </data>
 </root>
