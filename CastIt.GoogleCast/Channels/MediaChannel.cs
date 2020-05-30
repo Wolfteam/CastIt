@@ -110,12 +110,12 @@ namespace CastIt.GoogleCast.Channels
             {
                 var sessionId = await _getCurrentSessionId.Invoke();
                 var response = await sender.SendAsync<MediaStatusMessage>(Namespace, message, sessionId);
-                return response.Status.FirstOrDefault();
+                return response?.Status?.FirstOrDefault();
             }
             catch (Exception)
             {
                 ((IStatusChannel)this).Status = null;
-                throw;
+                return null;
             }
         }
     }

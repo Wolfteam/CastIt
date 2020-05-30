@@ -183,40 +183,37 @@ namespace CastIt.GoogleCast
             }
         }
 
-        private void Receive()
+        private async void Receive()
         {
             CancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = CancellationTokenSource.Token;
-            Task.Run(async () =>
+            try
             {
-                try
+                while (true)
                 {
-                    while (true)
+                    var buffer = await ReadAsync(4, cancellationToken);
+                    if (BitConverter.IsLittleEndian)
                     {
-                        var buffer = await ReadAsync(4, cancellationToken);
-                        if (BitConverter.IsLittleEndian)
-                        {
-                            Array.Reverse(buffer);
-                        }
-                        var length = BitConverter.ToInt32(buffer, 0);
-                        CastMessage castMessage;
-                        using (var ms = new MemoryStream())
-                        {
-                            await ms.WriteAsync(await ReadAsync(length, cancellationToken), 0, length, cancellationToken);
-                            ms.Position = 0;
-                            castMessage = Serializer.Deserialize<CastMessage>(ms);
-                        }
-
-                        await _onResponseMsg.Invoke(castMessage);
+                        Array.Reverse(buffer);
                     }
+                    var length = BitConverter.ToInt32(buffer, 0);
+                    CastMessage castMessage;
+                    using (var ms = new MemoryStream())
+                    {
+                        await ms.WriteAsync(await ReadAsync(length, cancellationToken), 0, length, cancellationToken);
+                        ms.Position = 0;
+                        castMessage = Serializer.Deserialize<CastMessage>(ms);
+                    }
+
+                    await _onResponseMsg.Invoke(castMessage);
                 }
-                catch (Exception e)
-                {
-                    if (e is NullReferenceException)
-                        return;
-                    _logger.LogError($"{nameof(Receive)}: Unknown error", e);
-                }
-            }, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e is NullReferenceException || e is OperationCanceledException)
+                    return;
+                _logger.LogError($"{nameof(Receive)}: Unknown error", e);
+            }
         }
 
         private CastMessage CreateCastMessage(string ns, string destinationId)

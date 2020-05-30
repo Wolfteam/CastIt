@@ -10,12 +10,14 @@ namespace CastIt.GoogleCast.Extensions
         {
             if (!Player.CanLog)
             {
-                return;
+                logger?.Info(msg);
             }
-
-            logger?.Info(msg);
-            Debug.WriteLine(msg, "INFO");
-            Console.WriteLine(msg);
+            else
+            {
+                logger?.Info(msg);
+                Debug.WriteLine(msg, "INFO");
+                Console.WriteLine(msg);
+            }
         }
 
         public static void LogWarn(this IMvxLog logger, string msg)

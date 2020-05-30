@@ -24,6 +24,7 @@ namespace CastIt.GoogleCast
     {
         #region Members
         private const string ApplicationId = "CC1AD845";
+        private const int GetStatusDelay = 150;
 
         private readonly IMvxLog _logger;
         private readonly ISender _sender;
@@ -52,6 +53,7 @@ namespace CastIt.GoogleCast
         #region Properties
         public static bool CanLog { get; private set; }
         public bool IsPlaying { get; private set; }
+        public string CurrentContentId { get; private set; }
         public double CurrentMediaDuration { get; private set; }
         public double ElapsedSeconds { get; private set; }
         public double PlayedPercentage
@@ -191,6 +193,10 @@ namespace CastIt.GoogleCast
             if (_sender.IsConnected)
                 await _receiverChannel.StopAsync(_sender);
             _sender.Disconnect();
+            IsPlaying = false;
+            CurrentContentId = null;
+            CurrentMediaDuration = 0;
+            ElapsedSeconds = 0;
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
         #endregion
@@ -202,17 +208,20 @@ namespace CastIt.GoogleCast
             double seekedSeconds = 0,
             params int[] activeTrackIds)
         {
+            CurrentContentId = null;
             CancelAndSetMediaToken();
+
             var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
             var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
-            CurrentMediaDuration = media.Duration ?? status.Media.Duration ?? 0;
+
+            CurrentContentId = media.ContentId;
+            CurrentMediaDuration = media.Duration ?? status?.Media?.Duration ?? 0;
             ElapsedSeconds = 0;
             _seekedSeconds = seekedSeconds;
 
             TriggerTimeEvents();
             IsPlaying = true;
             ListenForMediaChanges();
-
             return status;
         }
 
@@ -235,6 +244,7 @@ namespace CastIt.GoogleCast
 
         public Task<MediaStatus> StopPlaybackAsync()
         {
+            CurrentContentId = null;
             IsPlaying = false;
             return _mediaChannel.StopAsync(_sender);
         }
@@ -292,8 +302,18 @@ namespace CastIt.GoogleCast
             if (message.HasRequestId && _sender.WaitingTasks.TryRemove(message.RequestId, out object tcs))
             {
                 var tcsType = tcs.GetType();
-                var m = types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types);
-                m.Invoke(tcs, new object[] { parameter });
+                var methodToInvoke = types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types);
+                var methodParameters = methodToInvoke.GetParameters();
+                bool isAsignable = methodParameters.First().ParameterType.IsAssignableFrom(parameter.GetType());
+
+                if (isAsignable)
+                {
+                    methodToInvoke.Invoke(tcs, new object[] { parameter });
+                }
+                else
+                {
+                    methodToInvoke.Invoke(tcs, new object[] { null });
+                }
             }
         }
 
@@ -330,26 +350,29 @@ namespace CastIt.GoogleCast
                     bool checkMediaStatus = true;
                     while (checkMediaStatus)
                     {
-                        await Task.Delay(250);
+                        await Task.Delay(GetStatusDelay);
                         var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
                         if (mediaStatus is null)
                         {
                             IsPlaying = false;
                             checkMediaStatus = false;
-                            _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Media is null, end is reached.");
-                            EndReached?.Invoke(this, EventArgs.Empty);
+                            _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {!string.IsNullOrEmpty(CurrentContentId)}.");
+                            if (!string.IsNullOrEmpty(CurrentContentId))
+                                EndReached?.Invoke(this, EventArgs.Empty);
                             break;
                         }
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
                         TriggerTimeEvents();
-                        if (ElapsedSeconds >= CurrentMediaDuration)
+                        if (string.IsNullOrEmpty(CurrentContentId) &&
+                            Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
                         {
+                            _logger.LogInfo($"{nameof(ListenForMediaChanges)}: End reached because the ElapsedSeconds >= CurrentMediaDuration.");
                             IsPlaying = false;
                             EndReached?.Invoke(this, EventArgs.Empty);
                             break;
                         }
                     }
-                }, _mediaChangedToken.Token);
+                }, _mediaChangedToken.Token).ConfigureAwait(false);
             }
             catch (Exception e)
             {
