@@ -42,6 +42,8 @@ namespace CastIt.Common
             ".wav",
             ".aac",
             ".flac",
+            ".m4a",
+            ".wav"
         };
 
         public static string AllowedFormatsString

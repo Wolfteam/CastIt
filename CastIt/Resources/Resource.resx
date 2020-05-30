@@ -294,4 +294,7 @@
   <data name="PlayFilesFromTheStart" xml:space="preserve">
     <value>Play files from the start</value>
   </data>
+  <data name="CouldntPlayFile" xml:space="preserve">
+    <value>Could not play file</value>
+  </data>
 </root>

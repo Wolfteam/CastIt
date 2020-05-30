@@ -1,8 +1,11 @@
 ﻿using CastIt.Common.Utils;
 using CastIt.Interfaces;
+using CastIt.Models.FFMpeg;
 using EmbedIO;
 using MvvmCross.Logging;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -17,6 +20,34 @@ namespace CastIt.Services
         private readonly Process _generateThumbnailProcess;
         private readonly Process _generateAllThumbnailsProcess;
         private readonly Process _transcodeProcess;
+
+        private static readonly IReadOnlyList<string> AllowedVideoContainers = new List<string>
+        {
+            ".mp4"
+        };
+        private static readonly IReadOnlyList<string> AllowedVideoCodecs = new List<string>
+        {
+            "h264"
+        };
+        private static readonly IReadOnlyList<string> AllowedVideoProfiles = new List<string>
+        {
+            "Main", "High"
+        };
+        private const int MaxVideoLevel = 41;
+
+        private static readonly IReadOnlyList<string> AllowedMusicContainers = new List<string>
+        {
+            ".aac", ".mp3"
+        };
+        private static readonly IReadOnlyList<string> AllowedMusicCodecs = new List<string>
+        {
+            "mp3", "aac"
+        };
+
+        private static readonly IReadOnlyList<string> AllowedMusicProfiles = new List<string>
+        {
+            "HE-AAC", "LC-AAC", "LC", "HE"
+        };
 
         private bool _checkGenerateThumbnailProcess;
         private bool _checkGenerateAllThumbnailsProcess;
@@ -151,6 +182,7 @@ namespace CastIt.Services
 
         public void KillThumbnailProcess()
         {
+            _logger.Info($"{nameof(KillThumbnailProcess)}: Killing thumbnail process");
             try
             {
                 if (_checkGenerateAllThumbnailsProcess &&
@@ -192,7 +224,7 @@ namespace CastIt.Services
             bool isUrl = FileUtils.IsUrlFile(mrl);
             if (!isLocal || isUrl)
             {
-                _logger.Warn($"{nameof(GetFileDuration)}: Couldnt retrieve duration for file = {mrl}. It is not a local / url file");
+                _logger.Info($"{nameof(GetFileDuration)}: Couldnt retrieve duration for file = {mrl}. It is not a local file");
                 return Task.FromResult<double>(-1);
             }
 
@@ -230,6 +262,7 @@ namespace CastIt.Services
 
         public void KillTranscodeProcess()
         {
+            _logger.Info($"{nameof(KillTranscodeProcess)}: Killing transcode process");
             try
             {
                 if (!_transcodeProcess.HasExited)
@@ -246,9 +279,51 @@ namespace CastIt.Services
             }
         }
 
+        public FFProbeFileInfo GetFileInfo(string filePath)
+        {
+            _logger.Info($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}");
+            var process = new Process
+            {
+                EnableRaisingEvents = true,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = FileUtils.GetFFprobePath(),
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            };
+            process.StartInfo.Arguments = @$"-v quiet -print_format json -show_streams -show_format -i ""{filePath}""";
+            process.Start();
+            string json = process.StandardOutput.ReadToEnd();
+            return JsonConvert.DeserializeObject<FFProbeFileInfo>(json);
+        }
+
         public Task TranscodeVideo(Stream outputStream, string filePath, double seconds, CancellationToken token)
         {
-            string cmd = $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -crf 22 -preset veryfast -c:v libx264 -acodec aac -b:a 128k -movflags frag_keyframe+faststart -f mp4 -";
+            var ffprobeFileInfo = GetFileInfo(filePath);
+            var videoInfo = ffprobeFileInfo.Streams.Find(f => f.IsVideo);
+            var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
+            string fileExt = Path.GetExtension(filePath);
+
+            bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
+            bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
+            bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
+
+            bool videoNeedsTranscode = !videoCodecIsValid || !videoProfileIsValid || !videoLevelIsValid;
+            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
+
+            string cmd = string.Format(
+                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset ultrafast {{0}} {{1}} -movflags frag_keyframe+faststart -f mp4 -",
+                videoNeedsTranscode ? "-c:v libx264 -profile:v high -level 4" : "-c:v copy",
+                audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+
+            //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
+            //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
+            //string cmd = $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset superfast -c:v copy -acodec aac -b:a 128k -movflags frag_keyframe+faststart -f mp4 -";
             _logger.Info($"{nameof(TranscodeVideo)}: Trying to transcode file = {filePath} with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
@@ -259,8 +334,14 @@ namespace CastIt.Services
 
         public async Task TranscodeMusic(IHttpContext context, string filePath, double seconds, CancellationToken token)
         {
+            var ffprobeFileInfo = GetFileInfo(filePath);
+            var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
+            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
             //To generate an aac output you need to set adts
-            string cmd = $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset veryfast -acodec aac -b:a 128k -f adts -";
+            string cmd = string.Format(
+                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset ultrafast {{0}} -f adts -",
+                audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+
             _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file = {filePath} with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
@@ -283,7 +364,7 @@ namespace CastIt.Services
                 //The transcode process generate either of these
                 return isVideoFile ? "video/mp4" : "audio/aac";
             }
-            return null;
+            return "video/webm";
         }
     }
 }

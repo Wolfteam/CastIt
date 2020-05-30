@@ -19,10 +19,8 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    //TODO: SWITCH TO FFPROBE TO RETRIEVE FILE METADATA ?
     //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT FROM YOUR PHONE, THE ICONS ARE NOT UPDATED
     //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT AGAIN, THE PLAYED TIME SYNC WILL BE LOST
-    //TODO: QUEUING THE MEDIA EVENTS DOES NOT GUARANTEE THE ORDER OF EXECUTION (E.G: if you enqueue a stop and a play, the final result could be play and stop)
     public class MainViewModel : BaseViewModel
     {
         #region Members
@@ -511,6 +509,7 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
+
             SetCurrentlyPlayingInfo(file.Filename, true);
 
             Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
@@ -518,19 +517,30 @@ namespace CastIt.ViewModels
             var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
             playList.SelectedItem = file;
 
-            if (file.CanStartPlayingFromCurrentPercentage && !force && !_settingsService.StartFilesFromTheStart)
+            try
             {
-                Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
-                await _castService.GoToPosition(file.Path, file.PlayedPercentage, file.TotalSeconds);
-            }
-            else
-            {
-                Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
-                await _castService.StartPlay(file.Path);
-            }
+                if (file.CanStartPlayingFromCurrentPercentage && !force && !_settingsService.StartFilesFromTheStart)
+                {
+                    Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
+                    await _castService.GoToPosition(file.Path, file.PlayedPercentage, file.TotalSeconds);
+                }
+                else
+                {
+                    Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
+                    await _castService.StartPlay(file.Path);
+                }
 
-            CurrentFileThumbnail = _castService.GetFirstThumbnail();
-            await Task.Run(() => _castService.GenerateThumbmnails(file.Path));
+                CurrentFileThumbnail = _castService.GetFirstThumbnail();
+                await Task.Run(() => _castService.GenerateThumbmnails(file.Path));
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, $"{nameof(PlayFile)}: Unknown error occurred");
+                _currentlyPlayedFile?.CleanUp();
+                playList.SelectedItem = _currentlyPlayedFile = null;
+                await ShowSnackbarMsg(GetText("CouldntPlayFile"));
+                return;
+            }
 
             _onSkipOrPrevious = false;
 

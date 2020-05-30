@@ -31,11 +31,18 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontSize="24"
-                                    Text="{Binding [DropFilesHere]}" />
+                                <!--  The background is required, otherwise the drag and drop wont work  -->
+                                <Grid
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Background="Transparent">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="24"
+                                        Text="{Binding [DropFilesHere]}"
+                                        TextAlignment="Center" />
+                                </Grid>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>

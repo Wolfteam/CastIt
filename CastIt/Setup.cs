@@ -31,7 +31,7 @@ namespace CastIt
                 "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{Level}] {Message:lj}{NewLine}{Exception}";
             var basePath = FileUtils.GetLogsPath();
             var loggerConfig = new LoggerConfiguration().MinimumLevel
-                .Debug();
+                .Verbose();
 
             var logs = new Dictionary<string, string>
             {

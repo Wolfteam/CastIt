@@ -43,7 +43,7 @@ namespace CastIt.Services
             _logger = logProvider.GetLogFor<CastService>();
             _ffmpegService = ffmpegService;
             _webServer = webServer;
-            _player = new Player(logProvider.GetLogFor<Player>());
+            _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: false);
         }
 
         public void Init()
@@ -62,7 +62,6 @@ namespace CastIt.Services
 
         public async Task StartPlay(string mrl, double seconds = 0)
         {
-            _ffmpegService.KillThumbnailProcess();
             _ffmpegService.KillTranscodeProcess();
             bool isLocal = FileUtils.IsLocalFile(mrl);
             bool isUrlFile = FileUtils.IsUrlFile(mrl);
@@ -88,8 +87,9 @@ namespace CastIt.Services
             // create new media
             _currentFilePath = mrl;
             string title = isLocal ? Path.GetFileName(mrl) : mrl;
-            string url = AppWebServer.GetMediaUrl(_webServer, mrl, seconds);
+            string url = isLocal ? AppWebServer.GetMediaUrl(_webServer, mrl, seconds) : mrl;
 
+            //TODO: IMPLEMENT YOUTUBE LOGIC
             //TODO: SUBTITLES
             //TODO: CHANGE THE AUDIO TRACK
             var metdata = isVideoFile ? new MovieMetadata
@@ -136,10 +136,10 @@ namespace CastIt.Services
         }
 
         public string GetFirstThumbnail()
-            => GetThumbnail(3);
+            => GetThumbnail(10);
 
         public string GetFirstThumbnail(string filePath)
-            => GetThumbnail(filePath, 3);
+            => GetThumbnail(filePath, 10);
 
         public string GetThumbnail(int second)
             => GetThumbnail(_currentFilePath, second);
@@ -151,7 +151,10 @@ namespace CastIt.Services
             => GenerateThumbmnails(_currentFilePath);
 
         public void GenerateThumbmnails(string filePath)
-            => _ffmpegService.GenerateThumbmnails(filePath);
+        {
+            _ffmpegService.KillThumbnailProcess();
+            _ffmpegService.GenerateThumbmnails(filePath);
+        }
 
         public Task TogglePlayback()
         {

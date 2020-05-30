@@ -169,6 +169,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not play file.
+        /// </summary>
+        public static string CouldntPlayFile {
+            get {
+                return ResourceManager.GetString("CouldntPlayFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dark.
         /// </summary>
         public static string Dark {
