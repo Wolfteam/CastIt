@@ -564,6 +564,7 @@ namespace CastIt.ViewModels
         {
             OnFilePositionChanged(playedPercentage);
             CurrentFileThumbnail = null;
+            ElapsedTimeString = string.Empty;
             CurrentlyPlayingFilename = filename;
             IsCurrentlyPlaying = isPlaying;
             CurrentPlayedSeconds = playedSeconds;
@@ -592,9 +593,18 @@ namespace CastIt.ViewModels
 
         private void OnFileEndReached()
         {
-            ElapsedTimeString = string.Empty;
             SetCurrentlyPlayingInfo(null, false);
-            GoTo(true);
+
+            if (_settingsService.PlayNextFileAutomatically)
+            {
+                GoTo(true);
+            }
+            else
+            {
+                _currentlyPlayedFile?.CleanUp();
+                _currentlyPlayedFile = null;
+                IsPaused = false;
+            }
         }
 
         private async Task ShowSnackbarMsg(string msg, string actionContent = null)

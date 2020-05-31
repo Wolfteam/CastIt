@@ -484,6 +484,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Play next file automatically.
+        /// </summary>
+        public static string PlayNextFileAutomatically {
+            get {
+                return ResourceManager.GetString("PlayNextFileAutomatically", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Previous.
         /// </summary>
         public static string Previous {

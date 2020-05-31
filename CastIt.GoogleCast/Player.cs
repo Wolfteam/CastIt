@@ -195,8 +195,6 @@ namespace CastIt.GoogleCast
             _sender.Disconnect();
             IsPlaying = false;
             CurrentContentId = null;
-            CurrentMediaDuration = 0;
-            ElapsedSeconds = 0;
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
         #endregion

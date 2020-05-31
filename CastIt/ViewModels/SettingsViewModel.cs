@@ -91,6 +91,16 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => StartFilesFromTheStart);
             }
         }
+
+        public bool PlayNextFileAutomatically
+        {
+            get => _settingsService.PlayNextFileAutomatically;
+            set
+            {
+                _settingsService.PlayNextFileAutomatically = value;
+                RaisePropertyChanged(() => PlayNextFileAutomatically);
+            }
+        }
         #endregion
 
         #region Commands

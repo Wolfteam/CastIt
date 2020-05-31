@@ -13,5 +13,6 @@ namespace CastIt.Models
         public bool IsPlayListExpanded { get; set; }
         public bool ShowFileDetails { get; set; }
         public bool StartFilesFromTheStart { get; set; }
+        public bool PlayNextFileAutomatically { get; set; }
     }
 }

@@ -71,6 +71,12 @@ namespace CastIt.Services
             get => _appSettings.StartFilesFromTheStart;
             set => _appSettings.StartFilesFromTheStart = value;
         }
+
+        public bool PlayNextFileAutomatically
+        {
+            get => _appSettings.PlayNextFileAutomatically;
+            set => _appSettings.PlayNextFileAutomatically = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider)

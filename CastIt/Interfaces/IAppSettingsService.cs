@@ -13,6 +13,7 @@ namespace CastIt.Interfaces
         bool IsPlayListExpanded { get; set; }
         bool ShowFileDetails { get; set; }
         bool StartFilesFromTheStart { get; set; }
+        bool PlayNextFileAutomatically { get; set; }
 
         void SaveSettings();
     }

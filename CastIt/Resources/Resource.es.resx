@@ -297,4 +297,7 @@
   <data name="CouldntPlayFile" xml:space="preserve">
     <value>No se pudo reproducir el archivo</value>
   </data>
+  <data name="PlayNextFileAutomatically" xml:space="preserve">
+    <value>Reproducir el archivo siguiente de forma automatica</value>
+  </data>
 </root>

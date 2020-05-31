@@ -297,4 +297,7 @@
   <data name="CouldntPlayFile" xml:space="preserve">
     <value>Could not play file</value>
   </data>
+  <data name="PlayNextFileAutomatically" xml:space="preserve">
+    <value>Play next file automatically</value>
+  </data>
 </root>
