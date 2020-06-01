@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <Win32Resource />
-    <Platforms>AnyCPU;x64;x86</Platforms>
+    <Platforms>x64;x86</Platforms>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <NoWarn>$(NoWarn);NU1605</NoWarn>

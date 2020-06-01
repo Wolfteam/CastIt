@@ -61,6 +61,33 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to About.
+        /// </summary>
+        public static string About {
+            get {
+                return ResourceManager.GetString("About", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A casting app made for my personal use.
+        /// </summary>
+        public static string AboutSummary {
+            get {
+                return ResourceManager.GetString("AboutSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I made this app in my free time and it is also open source. If you would like to help me, report an issue, have an idea, want a feature to be implemented, etc please open an issue here:.
+        /// </summary>
+        public static string AboutSupportMsg {
+            get {
+                return ResourceManager.GetString("AboutSupportMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accent Colors.
         /// </summary>
         public static string AccentColors {
@@ -228,6 +255,24 @@ namespace CastIt.Resources {
         public static string Dismiss {
             get {
                 return ResourceManager.GetString("Dismiss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Donations.
+        /// </summary>
+        public static string Donations {
+            get {
+                return ResourceManager.GetString("Donations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I hope you are enjoying using this app, if you would like to buy me a coffee/beer, just send me an email !.
+        /// </summary>
+        public static string DonationsMsg {
+            get {
+                return ResourceManager.GetString("DonationsMsg", resourceCulture);
             }
         }
         
@@ -597,6 +642,15 @@ namespace CastIt.Resources {
         public static string Stop {
             get {
                 return ResourceManager.GetString("Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Support.
+        /// </summary>
+        public static string Support {
+            get {
+                return ResourceManager.GetString("Support", resourceCulture);
             }
         }
         

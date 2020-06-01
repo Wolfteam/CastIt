@@ -300,4 +300,22 @@
   <data name="PlayNextFileAutomatically" xml:space="preserve">
     <value>Play next file automatically</value>
   </data>
+  <data name="About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AboutSupportMsg" xml:space="preserve">
+    <value>I made this app in my free time and it is also open source. If you would like to help me, report an issue, have an idea, want a feature to be implemented, etc please open an issue here:</value>
+  </data>
+  <data name="Support" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="Donations" xml:space="preserve">
+    <value>Donations</value>
+  </data>
+  <data name="DonationsMsg" xml:space="preserve">
+    <value>I hope you are enjoying using this app, if you would like to buy me a coffee/beer, just send me an email !</value>
+  </data>
+  <data name="AboutSummary" xml:space="preserve">
+    <value>A casting app made for my personal use</value>
+  </data>
 </root>

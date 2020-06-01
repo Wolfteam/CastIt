@@ -4,8 +4,10 @@ using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.ViewModels.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
+using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -18,6 +20,8 @@ namespace CastIt.ViewModels
     {
         #region Members
         private readonly IAppSettingsService _settingsService;
+        private readonly IMvxNavigationService _navigationService;
+
         private Item _currentTheme;
         private Item _currentLanguage;
 
@@ -105,6 +109,7 @@ namespace CastIt.ViewModels
 
         #region Commands
         public IMvxCommand<string> AccentColorChangedCommand { get; private set; }
+        public IMvxAsyncCommand OpenAboutDialogCommand { get; private set; }
         #endregion
 
         #region Interactos
@@ -116,10 +121,12 @@ namespace CastIt.ViewModels
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IAppSettingsService settingsService)
+            IAppSettingsService settingsService,
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger.GetLogFor<SettingsViewModel>())
         {
             _settingsService = settingsService;
+            _navigationService = navigationService;
         }
 
         public override void SetCommands()
@@ -131,6 +138,9 @@ namespace CastIt.ViewModels
                 _changeSelectedAccentColor.Raise(hexColor);
                 WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
             });
+
+            OpenAboutDialogCommand = new MvxAsyncCommand(
+                async () => await _navigationService.Navigate<AboutDialogViewModel>());
         }
 
         private MvxObservableCollection<Item> GetThemes()

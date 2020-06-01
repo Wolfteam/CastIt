@@ -53,10 +53,10 @@ namespace CastIt.Common
             => "CastIt";
 
 #if DEBUG
-        public string AppVersion
+        public static string AppVersion
             =>   FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion + " - DEBUG";
 #else
-        public string AppVersion
+        public static string AppVersion
             => FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion;
 #endif
 
