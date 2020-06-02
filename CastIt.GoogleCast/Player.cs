@@ -6,9 +6,11 @@ using CastIt.GoogleCast.Interfaces.Channels;
 using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Messages;
 using CastIt.GoogleCast.Messages.Base;
+using CastIt.GoogleCast.Models;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
+using CastIt.GoogleCast.Utils;
 using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
@@ -204,10 +206,29 @@ namespace CastIt.GoogleCast
             MediaInformation media,
             bool autoPlay = true,
             double seekedSeconds = 0,
+            int quality = 360,
             params int[] activeTrackIds)
         {
             CurrentContentId = null;
             CancelAndSetMediaToken();
+
+            if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
+            {
+                var youtubeMedia = await YoutubeUrlDecoder.Parse(_logger, media.ContentId, quality);
+                media.ContentId = youtubeMedia.Url;
+                media.Metadata = new MovieMetadata
+                {
+                    Title = youtubeMedia.Title,
+                    Subtitle = youtubeMedia.Description,
+                    Images = new List<Image>
+                    {
+                        new Image
+                        {
+                            Url = youtubeMedia.ThumbnailUrl
+                        }
+                    }
+                };
+            }
 
             var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
             var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
@@ -230,7 +251,7 @@ namespace CastIt.GoogleCast
 
         public Task<MediaStatus> PlayAsync()
         {
-            IsPlaying = false;
+            IsPlaying = true;
             return _mediaChannel.PlayAsync(_sender);
         }
 
@@ -291,7 +312,7 @@ namespace CastIt.GoogleCast
             }
             else
             {
-                _logger.LogInfo($"{nameof(HandleResponseMsg)}: Could not get a supported msg for type {message.Type}");
+                _logger.LogInfo($"{nameof(HandleResponseMsg)}: Could not get a supported msg for type {message.Type}. Payload = {payload}");
             }
         }
 
