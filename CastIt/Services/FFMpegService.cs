@@ -349,7 +349,7 @@ namespace CastIt.Services
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(memoryStream, token);
             memoryStream.Position = 0;
-
+            //TODO: THIS LENGTH IS NOT WORKING PROPERLY
             context.Response.ContentLength64 = memoryStream.Length;
             await memoryStream.CopyToAsync(context.Response.OutputStream, token);
         }

@@ -60,7 +60,7 @@ namespace CastIt.Services
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
-        public async Task StartPlay(string mrl, double seconds = 0)
+        public async Task<MediaStatus> StartPlay(string mrl, double seconds = 0)
         {
             _ffmpegService.KillTranscodeProcess();
             bool isLocal = FileUtils.IsLocalFile(mrl);
@@ -71,13 +71,13 @@ namespace CastIt.Services
             if (!isLocal && !isUrlFile)
             {
                 _logger.Warn($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
-                return;
+                return null;
             }
 
             if (AvailableDevices.Count == 0)
             {
                 _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl}");
-                return;
+                return null;
             }
 
             if (!_renderWasSet && AvailableDevices.Count > 0)
@@ -131,8 +131,10 @@ namespace CastIt.Services
             }
 
             _logger.Info($"{nameof(StartPlay)}: Trying to load file = {mrl} on seconds = {seconds}");
-            await _player.LoadAsync(media, seekedSeconds: seconds);
+            var status = await _player.LoadAsync(media, seekedSeconds: seconds);
             _logger.Info($"{nameof(StartPlay)}: File loaded");
+
+            return status;
         }
 
         public string GetFirstThumbnail()
@@ -178,32 +180,42 @@ namespace CastIt.Services
             Clean();
         }
 
-        public Task GoToPosition(string filePath, double position, double totalSeconds)
+        public Task<MediaStatus> GoToPosition(string filePath, double position, double totalSeconds)
         {
             if (position >= 0 && position <= 100)
             {
                 double seconds = position * totalSeconds / 100;
-                return StartPlay(filePath, seconds);
+                if (FileUtils.IsLocalFile(_currentFilePath))
+                    return StartPlay(filePath, seconds);
+
+                return _player.SeekAsync(seconds);
             }
 
             _logger.Warn($"{nameof(GoToPosition)} Cant go to position = {position}");
-            return Task.CompletedTask;
+            return Task.FromResult<MediaStatus>(null);
         }
 
-        public Task GoToSeconds(double seconds)
+        public Task<MediaStatus> GoToSeconds(double seconds)
         {
-            return StartPlay(_currentFilePath, seconds);
+            if (FileUtils.IsLocalFile(_currentFilePath))
+                return StartPlay(_currentFilePath, seconds);
+
+            return _player.SeekAsync(seconds);
         }
 
-        public Task AddSeconds(double seconds)
+        public Task<MediaStatus> AddSeconds(double seconds)
         {
             var current = _player.ElapsedSeconds + seconds;
-            if (current < 0)
+            if (FileUtils.IsLocalFile(_currentFilePath))
             {
-                _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {current}. They will be set to 0");
-                current = 0;
+                if (current < 0)
+                {
+                    _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {current}. They will be set to 0");
+                    current = 0;
+                }
+                return StartPlay(_currentFilePath, current);
             }
-            return StartPlay(_currentFilePath, current);
+            return _player.SeekAsync(current);
         }
 
         public Task<double> GetDuration(string mrl, CancellationToken token)

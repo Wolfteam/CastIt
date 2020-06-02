@@ -160,19 +160,23 @@ namespace CastIt.ViewModels.Items
 
         public async Task SetDuration(CancellationToken token)
         {
+            var seconds = await _castService.GetDuration(Path, token);
+            SetDuration(seconds);
+        }
+
+        public void SetDuration(double seconds)
+        {
             if (!Exists)
             {
                 Duration = GetText("Missing");
                 return;
             }
-            var seconds = await _castService.GetDuration(Path, token);
             TotalSeconds = seconds;
             if (seconds <= 0)
             {
                 Duration = "N/A";
                 return;
             }
-
             var time = TimeSpan.FromSeconds(seconds);
             //here backslash is must to tell that colon is
             //not the part of format, it just a character that we want in output

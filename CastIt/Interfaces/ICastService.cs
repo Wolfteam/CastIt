@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.GoogleCast.Interfaces;
+using CastIt.GoogleCast.Models.Media;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,12 +17,12 @@ namespace CastIt.Interfaces
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
 
-        Task AddSeconds(double seconds);
-        Task GoToSeconds(double seconds);
+        Task<MediaStatus> AddSeconds(double seconds);
+        Task<MediaStatus> GoToSeconds(double seconds);
         void CleanThemAll();
-        Task GoToPosition(string filePath, double position, double totalSeconds);
+        Task<MediaStatus> GoToPosition(string filePath, double position, double totalSeconds);
         void Init();
-        Task StartPlay(string mrl, double seconds = 0);
+        Task<MediaStatus> StartPlay(string mrl, double seconds = 0);
         string GetFirstThumbnail();
         string GetFirstThumbnail(string filePath);
         string GetThumbnail(int second);

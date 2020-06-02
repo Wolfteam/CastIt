@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Dialogs;
@@ -519,15 +520,25 @@ namespace CastIt.ViewModels
 
             try
             {
-                if (file.CanStartPlayingFromCurrentPercentage && !force && !_settingsService.StartFilesFromTheStart)
+                MediaStatus mediaStatus;
+                if (file.CanStartPlayingFromCurrentPercentage &&
+                    !file.IsUrlFile &&
+                    !force &&
+                    !_settingsService.StartFilesFromTheStart)
                 {
                     Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
-                    await _castService.GoToPosition(file.Path, file.PlayedPercentage, file.TotalSeconds);
+                    mediaStatus = await _castService.GoToPosition(file.Path, file.PlayedPercentage, file.TotalSeconds);
                 }
                 else
                 {
                     Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
-                    await _castService.StartPlay(file.Path);
+                    mediaStatus = await _castService.StartPlay(file.Path);
+                }
+
+                if (file.IsUrlFile)
+                {
+                    file.SetDuration(mediaStatus?.Media?.Duration ?? 0);
+                    await RaisePropertyChanged(() => CurrentFileDuration);
                 }
 
                 CurrentFileThumbnail = _castService.GetFirstThumbnail();
@@ -582,7 +593,7 @@ namespace CastIt.ViewModels
                 .ToString(AppConstants.FullElapsedTimeFormat);
             var total = TimeSpan.FromSeconds(_currentlyPlayedFile.TotalSeconds)
                 .ToString(AppConstants.FullElapsedTimeFormat);
-            if (_currentlyPlayedFile.IsUrlFile)
+            if (_currentlyPlayedFile.IsUrlFile && _currentlyPlayedFile.TotalSeconds <= 0)
                 ElapsedTimeString = $"{elapsed}";
             else
                 ElapsedTimeString = $"{elapsed} / {total}";
