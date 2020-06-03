@@ -6,11 +6,9 @@ using CastIt.GoogleCast.Interfaces.Channels;
 using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Messages;
 using CastIt.GoogleCast.Messages.Base;
-using CastIt.GoogleCast.Models;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
-using CastIt.GoogleCast.Utils;
 using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
@@ -206,29 +204,12 @@ namespace CastIt.GoogleCast
             MediaInformation media,
             bool autoPlay = true,
             double seekedSeconds = 0,
-            int quality = 360,
             params int[] activeTrackIds)
         {
             CurrentContentId = null;
             CancelAndSetMediaToken();
 
-            if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
-            {
-                var youtubeMedia = await YoutubeUrlDecoder.Parse(_logger, media.ContentId, quality);
-                media.ContentId = youtubeMedia.Url;
-                media.Metadata = new MovieMetadata
-                {
-                    Title = youtubeMedia.Title,
-                    Subtitle = youtubeMedia.Description,
-                    Images = new List<Image>
-                    {
-                        new Image
-                        {
-                            Url = youtubeMedia.ThumbnailUrl
-                        }
-                    }
-                };
-            }
+            await Task.Delay(GetStatusDelay * 2);
 
             var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
             var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
@@ -367,22 +348,27 @@ namespace CastIt.GoogleCast
                 await Task.Run(async () =>
                 {
                     bool checkMediaStatus = true;
-                    while (checkMediaStatus)
+                    while (checkMediaStatus || !_mediaChangedToken.IsCancellationRequested)
                     {
+                        bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                         await Task.Delay(GetStatusDelay);
                         var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
+                        if (_mediaChangedToken.IsCancellationRequested)
+                            return;
                         if (mediaStatus is null)
                         {
                             IsPlaying = false;
                             checkMediaStatus = false;
-                            _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {!string.IsNullOrEmpty(CurrentContentId)}.");
-                            if (!string.IsNullOrEmpty(CurrentContentId))
+                            _logger.LogInfo(
+                                $"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {contentIsBeingPlayed}. " +
+                                $"CurrentContentId = {CurrentContentId}");
+                            if (contentIsBeingPlayed)
                                 EndReached?.Invoke(this, EventArgs.Empty);
                             break;
                         }
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
                         TriggerTimeEvents();
-                        if (string.IsNullOrEmpty(CurrentContentId) &&
+                        if (!contentIsBeingPlayed &&
                             Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
                         {
                             _logger.LogInfo($"{nameof(ListenForMediaChanges)}: End reached because the ElapsedSeconds >= CurrentMediaDuration.");

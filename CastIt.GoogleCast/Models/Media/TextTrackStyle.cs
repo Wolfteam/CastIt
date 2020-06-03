@@ -84,6 +84,14 @@ namespace CastIt.GoogleCast.Models.Media
 
         public ushort? WindowRoundedCornerRadius { get; set; }
 
+        [JsonIgnore]
         public TextTrackWindowType? WindowType { get; set; }
+
+        [JsonProperty(PropertyName = "windowType")]
+        public string WindowTypeString
+        {
+            get { return WindowType.GetName(); }
+            set { WindowType = value.ParseNullable<TextTrackWindowType>(); }
+        }
     }
 }
