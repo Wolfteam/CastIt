@@ -1,6 +1,7 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
+using CastIt.Models.FFMpeg;
 using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
@@ -18,6 +19,7 @@ namespace CastIt.ViewModels.Items
         #region Members
         private readonly ICastService _castService;
         private readonly IAppSettingsService _settingsService;
+        private readonly IFFMpegService _ffmpegService;
 
         private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
@@ -105,6 +107,8 @@ namespace CastIt.ViewModels.Items
             => _castService.GetExtension(Path);
         public string SubTitle
             => $"{Extension}, {Size}";
+
+        public FFProbeFileInfo FileInfo { get; set; }
         #endregion
 
         #region Commands
@@ -118,11 +122,13 @@ namespace CastIt.ViewModels.Items
             IMvxMessenger messenger,
             IMvxLogProvider logger,
             ICastService castService,
-            IAppSettingsService settingsService)
+            IAppSettingsService settingsService,
+            IFFMpegService ffmpegService)
             : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
         {
             _castService = castService;
             _settingsService = settingsService;
+            _ffmpegService = ffmpegService;
         }
 
         public override void SetCommands()
@@ -158,10 +164,21 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        public async Task SetDuration(CancellationToken token)
+        public async Task SetFileInfo(CancellationToken token)
         {
-            var seconds = await _castService.GetDuration(Path, token);
-            SetDuration(seconds);
+            if (IsUrlFile)
+            {
+                FileInfo = new FFProbeFileInfo
+                {
+                    Format = new FileInfoFormat()
+                };
+                SetDuration(-1);
+                return;
+            }
+
+            FileInfo = await _ffmpegService.GetFileInfo(Path, token);
+
+            SetDuration(FileInfo.Format.Duration);
         }
 
         public void SetDuration(double seconds)

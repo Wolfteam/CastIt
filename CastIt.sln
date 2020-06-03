@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CastIt", "CastIt\CastIt.csp
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "CastIt.Setup", "CastIt.Setup\CastIt.Setup.wixproj", "{CAEE4ECB-1448-4468-9776-01F5FEB188BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CastIt.GoogleCast", "CastIt.GoogleCast\CastIt.GoogleCast.csproj", "{6C18B012-420F-4289-A8B2-941B7433C0DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CastIt.GoogleCast", "CastIt.GoogleCast\CastIt.GoogleCast.csproj", "{6C18B012-420F-4289-A8B2-941B7433C0DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CastIt.ConsoleApp", "CastIt.GoogleCast.ConsoleApp\CastIt.ConsoleApp.csproj", "{3864A4E9-BF1C-45D6-BFC3-872F43B6BE89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CastIt.ConsoleApp", "CastIt.GoogleCast.ConsoleApp\CastIt.ConsoleApp.csproj", "{3864A4E9-BF1C-45D6-BFC3-872F43B6BE89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,14 +21,12 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|x64.ActiveCfg = Debug|x64
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|x64.Build.0 = Debug|x64
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|x86.ActiveCfg = Debug|x86
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Debug|x86.Build.0 = Debug|x86
-		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|Any CPU.ActiveCfg = Release|x86
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|x64.ActiveCfg = Release|x64
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|x64.Build.0 = Release|x64
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|x86.ActiveCfg = Release|x86

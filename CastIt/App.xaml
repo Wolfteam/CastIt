@@ -20,12 +20,13 @@
                     BaseTheme="Light"
                     PrimaryColor="Red"
                     SecondaryColor="Red" />
+                <!--  App Custom resources  -->
+                <ResourceDictionary Source="/XamlResources/MenuItem.xaml" />
                 <ResourceDictionary Source="/XamlResources/ScrollBar.xaml" />
                 <ResourceDictionary Source="/XamlResources/Slider.xaml" />
                 <ResourceDictionary Source="/XamlResources/TabablzControl.xaml" />
                 <ResourceDictionary>
                     <ResourceDictionary.MergedDictionaries>
-                        <!--  App Custom resources  -->
                         <ResourceDictionary x:Name="Dark" Source="/XamlResources/DarkTheme.xaml" />
                         <ResourceDictionary x:Name="Light" Source="/XamlResources/LightTheme.xaml" />
                     </ResourceDictionary.MergedDictionaries>
@@ -35,6 +36,7 @@
             <converters:CenterPopUpConverter x:Key="CenterPopUpConverter" />
             <converters:StringToImgConverter x:Key="StringToImgConverter" />
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <converters:FileOptionsMultiConverter x:Key="FileOptionsMultiConverter" />
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.jpg" />

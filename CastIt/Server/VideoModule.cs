@@ -47,6 +47,9 @@ namespace CastIt.Server
             {
                 string filepath = query[AppWebServer.FileQueryParameter];
                 double seconds = double.Parse(query[AppWebServer.SecondsQueryParameter]);
+                int videoStreamIndex = int.Parse(query[AppWebServer.VideoStreamIndexParameter]);
+                int audioStreamIndex = int.Parse(query[AppWebServer.AudioStreamIndexParameter]);
+
                 if (!File.Exists(filepath))
                 {
                     context.Response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
@@ -54,7 +57,10 @@ namespace CastIt.Server
                     return Task.CompletedTask;
                 }
 
-                _logger.Info($"{nameof(OnRequestAsync)}: Handling request for file = {filepath} with seconds = {seconds}");
+                _logger.Info(
+                    $"{nameof(OnRequestAsync)}: Handling request for file = {filepath} " +
+                    $"with seconds = {seconds}, with videoStreamIndex = {videoStreamIndex} " +
+                    $"and audioStreamIndex = {audioStreamIndex}");
 
                 context.Response.ContentType = _ffmpegService.GetOutputTranscodeMimeType(filepath);
 
@@ -71,9 +77,15 @@ namespace CastIt.Server
                 _logger.Info($"{nameof(OnRequestAsync)}: Transcode will start on seconds = {seconds} for file = {filepath}");
                 if (FileUtils.IsVideoFile(filepath))
                 {
-                    return _ffmpegService.TranscodeVideo(context.Response.OutputStream, filepath, seconds, _tokenSource.Token);
+                    return _ffmpegService.TranscodeVideo(
+                        context.Response.OutputStream,
+                        filepath,
+                        videoStreamIndex,
+                        audioStreamIndex,
+                        seconds,
+                        _tokenSource.Token);
                 }
-                return _ffmpegService.TranscodeMusic(context, filepath, seconds, _tokenSource.Token);
+                return _ffmpegService.TranscodeMusic(context, filepath, audioStreamIndex, seconds, _tokenSource.Token);
             }
             catch (Exception e)
             {

@@ -17,14 +17,20 @@ namespace CastIt.Server
     {
         private const string VideosPath = "/videos";
         private const string ImagesPath = "/images";
+        private const string SubTitlesPath = "/subtitles";
 
         public const string SecondsQueryParameter = "seconds";
         public const string FileQueryParameter = "file";
+        public const string VideoStreamIndexParameter = "videoStream";
+        public const string AudioStreamIndexParameter = "audioStream";
+        //public const string SubTitleStreamIndexParameter = "subtitleStream";
 
         public static IReadOnlyList<string> AllowedQueryParameters => new List<string>
         {
             SecondsQueryParameter,
-            FileQueryParameter
+            FileQueryParameter,
+            VideoStreamIndexParameter,
+            AudioStreamIndexParameter
         };
 
         public static WebServer CreateWebServer(
@@ -33,35 +39,48 @@ namespace CastIt.Server
         {
             var url = GetIpAddress();
             string previewPath = FileUtils.GetPreviewsPath();
+            string subtitlesPath = FileUtils.GetSubTitleFolder();
 
             var server = new WebServer(o => o
                 .WithUrlPrefix(url)
                 .WithMode(HttpListenerMode.EmbedIO))
                 .WithLocalSessionManager()
+                .WithCors()
                 .WithStaticFolder(ImagesPath, previewPath, false)
+                .WithStaticFolder(SubTitlesPath, subtitlesPath, false)
                 .WithModule(new VideoModule(logger.GetLogFor<VideoModule>(), ffmpegService, VideosPath))
-                .WithModule(new ActionModule("/", HttpVerbs.Any, ctx =>
-                {
-                    return ctx.SendDataAsync(new { Message = "Server initialized" });
-                }));
+                .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));
             //if a clients is disconected this throws an exception
             server.Listener.IgnoreWriteExceptions = false;
             return server;
         }
 
-        public static string GetMediaUrl(WebServer webServer, string filePath, double seconds)
+        public static string GetMediaUrl(WebServer webServer, string filePath, int videoStreamIndex, int audioStreamIndex, double seconds)
         {
-            var baseUrl = webServer.Options.UrlPrefixes.First();
-
-            return $"{baseUrl}{VideosPath}?{SecondsQueryParameter}={seconds}&{FileQueryParameter}={Uri.EscapeDataString(filePath)}";
+            var baseUrl = GetBaseUrl(webServer);
+            return $"{baseUrl}{VideosPath}?" +
+                $"{VideoStreamIndexParameter}={videoStreamIndex}" +
+                $"&{AudioStreamIndexParameter}={audioStreamIndex}" +
+                $"&{SecondsQueryParameter}={seconds}" +
+                $"&{FileQueryParameter}={Uri.EscapeDataString(filePath)}";
         }
 
         public static string GetPreviewPath(WebServer webServer, string filepath)
         {
-            var baseUrl = webServer.Options.UrlPrefixes.First();
+            var baseUrl = GetBaseUrl(webServer);
             string filename = Path.GetFileName(filepath);
             return $"{baseUrl}{ImagesPath}/{Uri.EscapeDataString(filename)}";
         }
+
+        public static string GetSubTitlePath(WebServer webServer, string filepath)
+        {
+            var baseUrl = GetBaseUrl(webServer);
+            string filename = Path.GetFileName(filepath);
+            return $"{baseUrl}{SubTitlesPath}/{Uri.EscapeDataString(filename)}";
+        }
+
+        private static string GetBaseUrl(WebServer webServer)
+            => webServer.Options.UrlPrefixes.First();
 
         private static string GetIpAddress()
         {

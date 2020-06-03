@@ -22,9 +22,6 @@ namespace CastIt.ViewModels
         private readonly IAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
 
-        private Item _currentTheme;
-        private Item _currentLanguage;
-
         private readonly MvxInteraction<string> _changeSelectedAccentColor = new MvxInteraction<string>();
         #endregion     
 
@@ -33,11 +30,7 @@ namespace CastIt.ViewModels
             => GetThemes();
         public Item CurrentTheme
         {
-            get
-            {
-                _currentTheme = Themes.First(l => l.Id == _settingsService.AppTheme.ToString());
-                return _currentTheme;
-            }
+            get => Themes.First(l => l.Id == _settingsService.AppTheme.ToString());
             set
             {
                 if (value == null)
@@ -45,7 +38,7 @@ namespace CastIt.ViewModels
                 var selectedTheme = (AppThemeType)Enum.Parse(typeof(AppThemeType), value.Id, true);
                 WindowsUtils.ChangeTheme(selectedTheme, _settingsService.AccentColor);
                 _settingsService.AppTheme = selectedTheme;
-                SetProperty(ref _currentTheme, value);
+                RaisePropertyChanged(() => CurrentTheme);
             }
         }
 
@@ -53,11 +46,7 @@ namespace CastIt.ViewModels
             => GetLanguages();
         public Item CurrentLanguage
         {
-            get
-            {
-                _currentLanguage = Languages.First(l => l.Id == _settingsService.Language.ToString());
-                return _currentLanguage;
-            }
+            get => Languages.First(l => l.Id == _settingsService.Language.ToString());
             set
             {
                 if (value == null)
@@ -65,7 +54,7 @@ namespace CastIt.ViewModels
                 var selectedLang = (AppLanguageType)Enum.Parse(typeof(AppLanguageType), value.Id, true);
                 _settingsService.Language = selectedLang;
                 TextProvider.SetLanguage(selectedLang, true);
-                SetProperty(ref _currentLanguage, value);
+                RaisePropertyChanged(() => CurrentLanguage);
             }
         }
 

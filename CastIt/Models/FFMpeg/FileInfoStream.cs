@@ -31,17 +31,38 @@ namespace CastIt.Models.FFMpeg
         [JsonProperty(PropertyName = "height")]
         public int Height { get; set; }
 
+        [JsonProperty(PropertyName = "sample_rate")]
+        public long SampleRate { get; set; }
+
         [JsonProperty(PropertyName = "tags")]
         public FileInfoTag Tag { get; set; }
-
-        public string WidthAndHeight
-            => $"{Width}x{Height}";
 
         public bool IsVideo
             => CodecType == "video";
 
         public bool IsAudio
             => CodecType == "audio";
+
+        public bool IsSubTitle
+            => CodecType == "subtitle";
+
+        public string WidthAndHeightText
+            => $"{Width}x{Height}";
+
+        private string TitleTag
+            => string.IsNullOrEmpty(Tag?.Title) ? string.Empty : Tag?.Title;
+
+        private string LanguageTag
+            => $"{(string.IsNullOrEmpty(Tag?.Language) ? string.Empty : $"[{Tag.Language}]")}";
+
+        public string VideoText
+            => $"{CodecName} {Profile} {Level}, {PixelFormat}, {WidthAndHeightText}".Trim();
+
+        public string AudioText
+            => $"{TitleTag} {LanguageTag} ({CodecName} {Profile}, {SampleRate} Hz)".Trim();
+
+        public string SubTitleText
+            => $"{TitleTag} {LanguageTag} ({CodecName})".Trim();
 
         public bool VideoCodecIsValid(IEnumerable<string> allowedCodecs)
             => IsVideo && allowedCodecs.Contains(CodecName, StringComparer.OrdinalIgnoreCase);

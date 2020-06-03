@@ -1,4 +1,5 @@
 ﻿using CastIt.GoogleCast.Interfaces;
+using System.Collections.Generic;
 
 namespace CastIt.Common
 {
@@ -8,4 +9,5 @@ namespace CastIt.Common
     public delegate void OnPositionChangedHandler(double newPosition);
     public delegate void OnEndReachedHandler();
     public delegate void OnTimeChangedHandler(double seconds);
+    public delegate void OnQualitiesChanged(int selectedQuality, List<int> qualities);
 }

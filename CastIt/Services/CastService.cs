@@ -3,7 +3,6 @@ using CastIt.Common.Utils;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Interfaces;
-using CastIt.GoogleCast.Models;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
@@ -12,6 +11,7 @@ using EmbedIO;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,11 +21,15 @@ namespace CastIt.Services
 {
     public class CastService : ICastService
     {
+        private const int SubTitleDefaultTrackId = 1;
+
         private readonly IMvxLog _logger;
         private readonly IFFMpegService _ffmpegService;
         private readonly WebServer _webServer;
         private readonly Player _player;
         private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
+        private readonly Track _subtitle;
+        private readonly TextTrackStyle _subtitlesStyle;
 
         private bool _renderWasSet;
         private string _currentFilePath;
@@ -37,6 +41,7 @@ namespace CastIt.Services
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
+        public OnQualitiesChanged QualitiesChanged { get; set; }
 
         public CastService(IMvxLogProvider logProvider, IFFMpegService ffmpegService, WebServer webServer)
         {
@@ -44,6 +49,24 @@ namespace CastIt.Services
             _ffmpegService = ffmpegService;
             _webServer = webServer;
             _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: false);
+            _subtitle = new Track
+            {
+                TrackId = SubTitleDefaultTrackId,
+                SubType = TextTrackType.Subtitles,
+                Type = TrackType.Text,
+                Name = "English",
+                Language = "en-US"
+            };
+            _subtitlesStyle = new TextTrackStyle
+            {
+                BackgroundColor = Color.Transparent,
+                EdgeColor = Color.Black,
+                FontScale = 1.2F,
+                WindowType = TextTrackWindowType.Normal,
+                EdgeType = TextTrackEdgeType.None,
+                FontStyle = TextTrackFontStyleType.Normal,
+                FontGenericFamily = TextTrackFontGenericFamilyType.Casual,
+            };
         }
 
         public void Init()
@@ -60,7 +83,13 @@ namespace CastIt.Services
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
-        public async Task<MediaStatus> StartPlay(string mrl, double seconds = 0)
+        public async Task<MediaStatus> StartPlay(
+            string mrl,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double seconds = 0)
         {
             _ffmpegService.KillTranscodeProcess();
             bool isLocal = FileUtils.IsLocalFile(mrl);
@@ -87,11 +116,10 @@ namespace CastIt.Services
             // create new media
             _currentFilePath = mrl;
             string title = isLocal ? Path.GetFileName(mrl) : mrl;
-            string url = isLocal ? AppWebServer.GetMediaUrl(_webServer, mrl, seconds) : mrl;
+            string url = isLocal
+                ? AppWebServer.GetMediaUrl(_webServer, mrl, videoStreamIndex, audioStreamIndex, seconds)
+                : mrl;
 
-            //TODO: IMPLEMENT YOUTUBE LOGIC
-            //TODO: SUBTITLES
-            //TODO: CHANGE THE AUDIO TRACK
             var metdata = isVideoFile ? new MovieMetadata
             {
                 Title = title,
@@ -115,23 +143,44 @@ namespace CastIt.Services
                 ContentType = _ffmpegService.GetOutputTranscodeMimeType(mrl)
             };
 
+            var activeTrackIds = new List<int>();
             if (isLocal)
             {
                 string imgUrl = AppWebServer.GetPreviewPath(_webServer, GetFirstThumbnail());
-                media.Metadata.Images = new List<Image>
+
+                if (subtitleStreamIndex >= 0)
                 {
-                    new Image
-                    {
-                        Url = imgUrl
-                    }
-                };
+                    string subTitleFilePath = FileUtils.GetSubTitleFilePath();
+                    await _ffmpegService.GenerateSubTitles(mrl, subTitleFilePath, seconds, subtitleStreamIndex, default);
+                    _subtitle.TrackContentId = AppWebServer.GetSubTitlePath(_webServer, subTitleFilePath);
+                    media.Tracks.Add(_subtitle);
+                    media.TextTrackStyle = _subtitlesStyle;
+                    activeTrackIds.Add(SubTitleDefaultTrackId);
+                }
+
+                media.Metadata.Images.Add(new GoogleCast.Models.Image
+                {
+                    Url = imgUrl
+                });
                 if (isVideoFile)
                     media.StreamType = StreamType.Live;
                 media.Duration = await _ffmpegService.GetFileDuration(mrl, default);
             }
+            else if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
+            {
+                var youtubeMedia = await YoutubeUrlDecoder.Parse(_logger, media.ContentId, quality);
+                QualitiesChanged?.Invoke(youtubeMedia.SelectedQuality, youtubeMedia.Qualities);
+                media.ContentId = youtubeMedia.Url;
+                media.Metadata.Title = youtubeMedia.Title;
+                media.Metadata.Subtitle = youtubeMedia.Description;
+                media.Metadata.Images.Add(new GoogleCast.Models.Image
+                {
+                    Url = youtubeMedia.ThumbnailUrl
+                });
+            }
 
             _logger.Info($"{nameof(StartPlay)}: Trying to load file = {mrl} on seconds = {seconds}");
-            var status = await _player.LoadAsync(media, seekedSeconds: seconds);
+            var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
             _logger.Info($"{nameof(StartPlay)}: File loaded");
 
             return status;
@@ -152,10 +201,13 @@ namespace CastIt.Services
         public void GenerateThumbmnails()
             => GenerateThumbmnails(_currentFilePath);
 
-        public void GenerateThumbmnails(string filePath)
+        public async void GenerateThumbmnails(string filePath)
         {
-            _ffmpegService.KillThumbnailProcess();
-            _ffmpegService.GenerateThumbmnails(filePath);
+            await Task.Run(() =>
+            {
+                _ffmpegService.KillThumbnailProcess();
+                _ffmpegService.GenerateThumbmnails(filePath);
+            }).ConfigureAwait(false);
         }
 
         public Task TogglePlayback()
@@ -180,13 +232,20 @@ namespace CastIt.Services
             Clean();
         }
 
-        public Task<MediaStatus> GoToPosition(string filePath, double position, double totalSeconds)
+        public Task<MediaStatus> GoToPosition(
+            string filePath,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double position,
+            double totalSeconds)
         {
             if (position >= 0 && position <= 100)
             {
                 double seconds = position * totalSeconds / 100;
-                if (FileUtils.IsLocalFile(_currentFilePath))
-                    return StartPlay(filePath, seconds);
+                if (FileUtils.IsLocalFile(filePath))
+                    return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
 
                 return _player.SeekAsync(seconds);
             }
@@ -195,15 +254,25 @@ namespace CastIt.Services
             return Task.FromResult<MediaStatus>(null);
         }
 
-        public Task<MediaStatus> GoToSeconds(double seconds)
+        public Task<MediaStatus> GoToSeconds(
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double seconds)
         {
             if (FileUtils.IsLocalFile(_currentFilePath))
-                return StartPlay(_currentFilePath, seconds);
+                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
 
             return _player.SeekAsync(seconds);
         }
 
-        public Task<MediaStatus> AddSeconds(double seconds)
+        public Task<MediaStatus> AddSeconds(
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double seconds)
         {
             var current = _player.ElapsedSeconds + seconds;
             if (FileUtils.IsLocalFile(_currentFilePath))
@@ -213,7 +282,7 @@ namespace CastIt.Services
                     _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {current}. They will be set to 0");
                     current = 0;
                 }
-                return StartPlay(_currentFilePath, current);
+                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, current);
             }
             return _player.SeekAsync(current);
         }

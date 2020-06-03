@@ -279,32 +279,49 @@ namespace CastIt.Services
             }
         }
 
-        public FFProbeFileInfo GetFileInfo(string filePath)
+        public Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token)
         {
-            _logger.Info($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}");
-            var process = new Process
+            _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}");
+            try
             {
-                EnableRaisingEvents = true,
-                StartInfo = new ProcessStartInfo
+                return Task.Run(() =>
                 {
-                    FileName = FileUtils.GetFFprobePath(),
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                }
-            };
-            process.StartInfo.Arguments = @$"-v quiet -print_format json -show_streams -show_format -i ""{filePath}""";
-            process.Start();
-            string json = process.StandardOutput.ReadToEnd();
-            return JsonConvert.DeserializeObject<FFProbeFileInfo>(json);
+                    var process = new Process
+                    {
+                        EnableRaisingEvents = true,
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = FileUtils.GetFFprobePath(),
+                            UseShellExecute = false,
+                            RedirectStandardInput = true,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true,
+                            WindowStyle = ProcessWindowStyle.Hidden
+                        }
+                    };
+                    process.StartInfo.Arguments = @$"-v quiet -print_format json -show_streams -show_format -i ""{filePath}""";
+                    process.Start();
+                    string json = process.StandardOutput.ReadToEnd();
+                    return JsonConvert.DeserializeObject<FFProbeFileInfo>(json);
+                }, token);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, $"{nameof(GetFileInfo)}: Unknown error");
+                return Task.FromResult<FFProbeFileInfo>(null);
+            }
         }
 
-        public Task TranscodeVideo(Stream outputStream, string filePath, double seconds, CancellationToken token)
+        public async Task TranscodeVideo(
+            Stream outputStream,
+            string filePath,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            double seconds,
+            CancellationToken token)
         {
-            var ffprobeFileInfo = GetFileInfo(filePath);
+            var ffprobeFileInfo = await GetFileInfo(filePath, token);
             var videoInfo = ffprobeFileInfo.Streams.Find(f => f.IsVideo);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
             string fileExt = Path.GetExtension(filePath);
@@ -317,7 +334,7 @@ namespace CastIt.Services
             bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
 
             string cmd = string.Format(
-                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset ultrafast {{0}} {{1}} -movflags frag_keyframe+faststart -f mp4 -",
+                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -map 0:{videoStreamIndex} -map 0:{audioStreamIndex} -preset ultrafast {{0}} {{1}} -movflags frag_keyframe+faststart -f mp4 -",
                 videoNeedsTranscode ? "-c:v libx264 -profile:v high -level 4" : "-c:v copy",
                 audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
 
@@ -329,17 +346,18 @@ namespace CastIt.Services
             _transcodeProcess.Start();
 
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            return stream.CopyToAsync(outputStream, token);
+            await stream.CopyToAsync(outputStream, token);
+            _logger.Info($"{nameof(TranscodeVideo)}: Transcode completed for file = {filePath}");
         }
 
-        public async Task TranscodeMusic(IHttpContext context, string filePath, double seconds, CancellationToken token)
+        public async Task TranscodeMusic(IHttpContext context, string filePath, int audioStreamIndex, double seconds, CancellationToken token)
         {
-            var ffprobeFileInfo = GetFileInfo(filePath);
+            var ffprobeFileInfo = await GetFileInfo(filePath, token);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
             bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
             //To generate an aac output you need to set adts
             string cmd = string.Format(
-                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset ultrafast {{0}} -f adts -",
+                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -map 0:{audioStreamIndex} -preset ultrafast {{0}} -f adts -",
                 audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
 
             _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file = {filePath} with CMD = {cmd}");
@@ -352,6 +370,7 @@ namespace CastIt.Services
             //TODO: THIS LENGTH IS NOT WORKING PROPERLY
             context.Response.ContentLength64 = memoryStream.Length;
             await memoryStream.CopyToAsync(context.Response.OutputStream, token);
+            _logger.Info($"{nameof(TranscodeMusic)}: Transcode completed for file = {filePath}");
         }
 
         public string GetOutputTranscodeMimeType(string filepath)
@@ -365,6 +384,42 @@ namespace CastIt.Services
                 return isVideoFile ? "video/mp4" : "audio/aac";
             }
             return "video/webm";
+        }
+
+        public Task GenerateSubTitles(
+            string filePath,
+            string subtitleFinalPath,
+            double seconds,
+            int index,
+            CancellationToken token)
+        {
+            try
+            {
+                string cmd = @$"-y -i ""{filePath}"" -ss {seconds} -map 0:{index} -f webvtt ""{subtitleFinalPath}""";
+                _logger.Info($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
+                return Task.Run(() =>
+                {
+                    var process = new Process
+                    {
+                        EnableRaisingEvents = true,
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = FileUtils.GetFFMpegPath(),
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            WindowStyle = ProcessWindowStyle.Hidden
+                        }
+                    };
+                    process.StartInfo.Arguments = cmd;
+                    process.Start();
+                    process.WaitForExit();
+                }, token);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, $"{nameof(GenerateSubTitles)}: Unknown error");
+                return Task.FromResult<string>(null);
+            }
         }
     }
 }

@@ -174,7 +174,7 @@ namespace CastIt.ViewModels.Items
             foreach (var vm in vms)
             {
                 //vm.Position = Items.Count + 1;
-                await vm.SetDuration(_setDurationTokenSource.Token);
+                await vm.SetFileInfo(_setDurationTokenSource.Token);
                 Items.Add(vm);
             }
         }
@@ -186,7 +186,7 @@ namespace CastIt.ViewModels.Items
             if (!isUrlFile)
                 return;
             var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
-            await vm.SetDuration(_setDurationTokenSource.Token);
+            await vm.SetFileInfo(_setDurationTokenSource.Token);
             Items.Add(vm);
             ShowAddUrlPopUp = false;
         }

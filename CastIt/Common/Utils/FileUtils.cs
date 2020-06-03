@@ -1,8 +1,6 @@
-﻿using CastIt.Models;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 
 namespace CastIt.Common.Utils
 {
@@ -170,6 +168,18 @@ namespace CastIt.Common.Utils
             if (!IsLocalFile(mrl))
                 return false;
             return IsVideoOrMusicFile(mrl, false);
+        }
+
+        public static string GetSubTitleFolder()
+        {
+            var basePath = GetBaseAppFolder();
+            return CreateDirectory(basePath, "SubTitles");
+        }
+
+        public static string GetSubTitleFilePath(string subsFilename = "subs.vtt")
+        {
+            var basePath = GetSubTitleFolder();
+            return Path.Combine(basePath, subsFilename);
         }
 
         private static bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
