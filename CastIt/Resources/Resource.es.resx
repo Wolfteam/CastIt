@@ -318,4 +318,22 @@
   <data name="AboutSummary" xml:space="preserve">
     <value>Una aplicación de casteo hecha para mi uso personal</value>
   </data>
+  <data name="Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Subtitles" xml:space="preserve">
+    <value>Subtítulos</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>Calidad</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Ninguno</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="NoInternetConnection" xml:space="preserve">
+    <value>No hay una conexión a internet disponible</value>
+  </data>
 </root>
