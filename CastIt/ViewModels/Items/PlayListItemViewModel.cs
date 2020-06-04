@@ -80,6 +80,7 @@ namespace CastIt.ViewModels.Items
         public IMvxAsyncCommand RemoveAllMissingCommand { get; private set; }
         public IMvxCommand SelectAllCommand { get; private set; }
         public IMvxAsyncCommand<string> RenameCommand { get; private set; }
+        public IMvxCommand ScrollToSelectedFileCommand { get; set; }
         #endregion
 
         #region Interactors
@@ -132,6 +133,8 @@ namespace CastIt.ViewModels.Items
             SelectAllCommand = new MvxCommand(SelectAll);
 
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
+
+            ScrollToSelectedFileCommand = new MvxCommand(() => _scrollToSelectedItem.Raise(SelectedItem));
         }
 
         public void CleanUp()

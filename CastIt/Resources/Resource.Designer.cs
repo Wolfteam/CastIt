@@ -358,6 +358,24 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Force audio transcode.
+        /// </summary>
+        public static string ForceAudioTranscode {
+            get {
+                return ResourceManager.GetString("ForceAudioTranscode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Force video transcode.
+        /// </summary>
+        public static string ForceVideoTranscode {
+            get {
+                return ResourceManager.GetString("ForceVideoTranscode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to From URL.
         /// </summary>
         public static string FromUrl {
@@ -381,6 +399,15 @@ namespace CastIt.Resources {
         public static string GoForward30Sec {
             get {
                 return ResourceManager.GetString("GoForward30Sec", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go to selected file.
+        /// </summary>
+        public static string GoToSelectedFile {
+            get {
+                return ResourceManager.GetString("GoToSelectedFile", resourceCulture);
             }
         }
         

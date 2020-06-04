@@ -342,4 +342,13 @@
   <data name="Paused" xml:space="preserve">
     <value>Pausado</value>
   </data>
+  <data name="ForceVideoTranscode" xml:space="preserve">
+    <value>Forzar la transcodificación del video</value>
+  </data>
+  <data name="ForceAudioTranscode" xml:space="preserve">
+    <value>Forzar la transcodificación del audio</value>
+  </data>
+  <data name="GoToSelectedFile" xml:space="preserve">
+    <value>Ir al archivo seleccionado</value>
+  </data>
 </root>

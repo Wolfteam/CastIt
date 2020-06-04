@@ -90,6 +90,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <materialDesign:PackIcon
                     Grid.Column="0"
@@ -111,8 +112,33 @@
                     materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryHueDarkBrush}"
                     TextChanged="PlayListFilter_TextChanged" />
 
-                <Menu
+                <Button
                     Grid.Column="2"
+                    Height="36"
+                    VerticalAlignment="Stretch"
+                    BorderThickness="0"
+                    Command="{Binding ScrollToSelectedFileCommand}"
+                    ToolTip="{Binding [GoToSelectedFile]}">
+                    <Button.Style>
+                        <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="{x:Type Button}">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <materialDesign:PackIcon
+                        Grid.Column="0"
+                        Width="16"
+                        Height="16"
+                        VerticalAlignment="Center"
+                        Kind="Jump  " />
+                </Button>
+
+                <Menu
+                    Grid.Column="3"
                     Background="{StaticResource DarkestColorBrush}"
                     IsMainMenu="True"
                     ToolTip="Current file options">
@@ -220,6 +246,7 @@
             DragEnter="PlaylistLv_DragEnter"
             DragLeave="PlaylistLv_DragLeave"
             Drop="PlaylistLv_Drop"
+            FocusVisualStyle="{x:Null}"
             ItemsSource="{Binding Items}"
             KeyboardNavigation.TabNavigation="Cycle"
             MouseMove="PlaylistLv_MouseMove"
@@ -286,14 +313,7 @@
             </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate DataType="{x:Type vmis:FileItemViewModel}">
-                    <Border x:Name="Border" HorizontalAlignment="Stretch">
-                        <uc:FileItem DataContext="{Binding}" Tag="{Binding Source={x:Reference Name=PlaylistLv}, Path=DataContext}" />
-                    </Border>
-                    <DataTemplate.Triggers>
-                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
-                        </DataTrigger>
-                    </DataTemplate.Triggers>
+                    <uc:FileItem DataContext="{Binding}" Tag="{Binding Source={x:Reference Name=PlaylistLv}, Path=DataContext}" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
