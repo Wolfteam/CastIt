@@ -761,5 +761,14 @@ namespace CastIt.Resources {
                 return ResourceManager.GetString("Theme", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Video scale.
+        /// </summary>
+        public static string VideoScale {
+            get {
+                return ResourceManager.GetString("VideoScale", resourceCulture);
+            }
+        }
     }
 }

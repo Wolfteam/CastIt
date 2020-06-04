@@ -10,8 +10,8 @@
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     Width="480"
-    Height="420"
-    d:DesignHeight="420"
+    Height="400"
+    d:DesignHeight="400"
     d:DesignWidth="480"
     x:TypeArguments="vms:SettingsViewModel"
     mc:Ignorable="d">
@@ -64,39 +64,61 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ComboBox
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    HorizontalAlignment="Stretch"
-                    materialDesign:HintAssist.Hint="{Binding [Theme]}"
-                    DisplayMemberPath="Text"
-                    ItemsSource="{Binding Themes}"
-                    SelectedItem="{Binding CurrentTheme}"
-                    SelectedValuePath="Id"
-                    Style="{StaticResource MaterialDesignFloatingHintComboBox}">
-                    <ComboBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ComboBox.ItemsPanel>
-                </ComboBox>
-                <ComboBox
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Margin="5,0"
-                    HorizontalAlignment="Stretch"
-                    materialDesign:HintAssist.Hint="{Binding [Language]}"
-                    DisplayMemberPath="Text"
-                    ItemsSource="{Binding Languages}"
-                    SelectedItem="{Binding CurrentLanguage}"
-                    SelectedValuePath="Id"
-                    Style="{StaticResource MaterialDesignFloatingHintComboBox}">
-                    <ComboBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ComboBox.ItemsPanel>
-                </ComboBox>
+                <Grid Grid.Row="0" Grid.ColumnSpan="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [Theme]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding Themes}"
+                        SelectedItem="{Binding CurrentTheme}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Column="1"
+                        Margin="5,0"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [Language]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding Languages}"
+                        SelectedItem="{Binding CurrentLanguage}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Column="2"
+                        Margin="5,0"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [VideoScale]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding VideoScales}"
+                        SelectedItem="{Binding CurrentVideoScale}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                </Grid>
+
                 <TextBlock
                     Grid.Row="1"
                     Grid.ColumnSpan="2"
@@ -109,7 +131,7 @@
                     ItemsSource="{Binding AccentColors}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <UniformGrid Columns="6" />
+                            <UniformGrid Columns="8" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>

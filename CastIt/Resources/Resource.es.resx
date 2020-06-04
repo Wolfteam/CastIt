@@ -351,4 +351,7 @@
   <data name="GoToSelectedFile" xml:space="preserve">
     <value>Ir al archivo seleccionado</value>
   </data>
+  <data name="VideoScale" xml:space="preserve">
+    <value>Escala de video</value>
+  </data>
 </root>

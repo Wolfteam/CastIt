@@ -16,6 +16,7 @@ namespace CastIt.Interfaces
         bool PlayNextFileAutomatically { get; set; }
         bool ForceVideoTranscode { get; set; }
         bool ForceAudioTranscode { get; set; }
+        VideoScaleType VideoScale { get; set; }
 
         void SaveSettings();
     }

@@ -16,5 +16,6 @@ namespace CastIt.Models
         public bool PlayNextFileAutomatically { get; set; }
         public bool ForceVideoTranscode { get; set; }
         public bool ForceAudioTranscode { get; set; }
+        public VideoScaleType VideoScale { get; set; }
     }
 }

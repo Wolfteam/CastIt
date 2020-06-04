@@ -74,7 +74,6 @@ namespace CastIt.Server
                 }
 
                 _checkTranscodeProcess = true;
-                _logger.Info($"{nameof(OnRequestAsync)}: Transcode will start on seconds = {seconds} for file = {filepath}");
                 if (FileUtils.IsVideoFile(filepath))
                 {
                     return _ffmpegService.TranscodeVideo(

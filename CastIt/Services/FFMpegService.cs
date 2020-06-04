@@ -1,4 +1,5 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Common.Enums;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.FFMpeg;
 using EmbedIO;
@@ -333,13 +334,23 @@ namespace CastIt.Services
             bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
             bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
 
-            bool videoNeedsTranscode = !videoCodecIsValid || !videoProfileIsValid || !videoLevelIsValid;
-            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
+            bool videoNeedsTranscode = !videoCodecIsValid ||
+                !videoProfileIsValid ||
+                !videoLevelIsValid ||
+                _settingsService.ForceVideoTranscode ||
+                _settingsService.VideoScale != VideoScaleType.Original;
+            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
+                !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
+                _settingsService.ForceAudioTranscode;
+            string scale = _settingsService.VideoScale == VideoScaleType.Original
+                ? string.Empty
+                : $"-vf scale='trunc(oh*a/2)*2:{(int)_settingsService.VideoScale}'";
 
             string cmd = string.Format(
-                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -map 0:{videoStreamIndex} -map 0:{audioStreamIndex} -preset ultrafast {{0}} {{1}} -movflags frag_keyframe+faststart -f mp4 -",
-                videoNeedsTranscode || _settingsService.ForceVideoTranscode ? "-c:v libx264 -profile:v high -level 4" : "-c:v copy",
-                audioNeedsTranscode || _settingsService.ForceAudioTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+                $@"-v quiet {{0}} -y -i ""{filePath}"" -map 0:{videoStreamIndex} -map 0:{audioStreamIndex} -preset ultrafast {{1}} {{2}} -movflags frag_keyframe+faststart -f mp4 -",
+                seconds <= 0 ? string.Empty : $"-ss {seconds}",
+                videoNeedsTranscode ? $"{scale} -c:v libx264 -profile:v high -level 4" : "-c:v copy",
+                audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
 
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]

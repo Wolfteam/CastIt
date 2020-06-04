@@ -97,7 +97,7 @@ namespace CastIt.ViewModels
 
         public bool ForceVideoTranscode
         {
-            get => _settingsService.ForceVideoTranscode; 
+            get => _settingsService.ForceVideoTranscode;
             set
             {
                 _settingsService.ForceVideoTranscode = value;
@@ -112,6 +112,21 @@ namespace CastIt.ViewModels
             {
                 _settingsService.ForceAudioTranscode = value;
                 RaisePropertyChanged(() => ForceAudioTranscode);
+            }
+        }
+
+        public MvxObservableCollection<Item> VideoScales
+            => GetVideoScales();
+
+        public Item CurrentVideoScale
+        {
+            get => VideoScales.First(l => l.Id == _settingsService.VideoScale.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.VideoScale = (VideoScaleType)Enum.Parse(typeof(VideoScaleType), value.Id, true);
+                RaisePropertyChanged(() => CurrentVideoScale);
             }
         }
         #endregion
@@ -172,6 +187,32 @@ namespace CastIt.ViewModels
             });
 
             return new MvxObservableCollection<Item>(languages);
+        }
+
+        private MvxObservableCollection<Item> GetVideoScales()
+        {
+            var scales = new List<Item>
+            {
+                new Item
+                {
+                    Id = nameof(VideoScaleType.Original),
+                    Text = GetText("Original")
+                },
+
+                new Item
+                {
+                    Id = nameof(VideoScaleType.Hd),
+                    Text = "720p"
+                },
+
+                new Item
+                {
+                    Id = nameof(VideoScaleType.FullHd),
+                    Text = "1080p"
+                }
+            };
+
+            return new MvxObservableCollection<Item>(scales);
         }
     }
 }

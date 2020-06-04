@@ -89,6 +89,12 @@ namespace CastIt.Services
             get => _appSettings.ForceAudioTranscode;
             set => _appSettings.ForceAudioTranscode = value;
         }
+
+        public VideoScaleType VideoScale
+        {
+            get => _appSettings.VideoScale;
+            set => _appSettings.VideoScale = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider)
