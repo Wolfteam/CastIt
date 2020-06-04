@@ -115,8 +115,32 @@
                     Grid.Column="2"
                     Background="{StaticResource DarkestColorBrush}"
                     IsMainMenu="True"
-                    ToolTip="Current file options"
-                    Visibility="{Binding DataContext.IsCurrentlyPlaying, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    ToolTip="Current file options">
+                    <Menu.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenu}" TargetType="{x:Type Menu}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding DataContext.IsCurrentlyPlaying, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
+                                        <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Menu.Style>
+
                     <MenuItem Height="40" Style="{StaticResource CustomIconMenuItem}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon

@@ -13,15 +13,38 @@
             x:Name="MainSilder"
             Focusable="True"
             Foreground="{DynamicResource PrimaryHueDarkBrush}"
-            IsEnabled="{Binding IsCurrentlyPlaying, Mode=OneWay}"
             IsMoveToPointEnabled="True"
             Maximum="{Binding CurrentFileDuration, Mode=OneWay}"
             Minimum="0"
             MouseLeave="MainSilder_MouseLeave"
             MouseMove="MainSilder_MouseMove"
             PreviewMouseUp="MainSilder_PreviewMouseUp"
-            Style="{StaticResource CustomSliderStyle}"
-            Value="{Binding CurrentPlayedSeconds, Mode=OneWay}" />
+            Value="{Binding CurrentPlayedSeconds, Mode=OneWay}">
+            <Slider.Style>
+                <Style BasedOn="{StaticResource CustomSliderStyle}" TargetType="{x:Type Slider}">
+                    <Setter Property="IsEnabled" Value="False" />
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsCurrentlyPlaying}" Value="True" />
+                                <Condition Binding="{Binding IsBusy}" Value="False" />
+                            </MultiDataTrigger.Conditions>
+                            <MultiDataTrigger.Setters>
+                                <Setter Property="IsEnabled" Value="True" />
+                            </MultiDataTrigger.Setters>
+                        </MultiDataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsBusy}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <MultiDataTrigger.Setters>
+                                <Setter Property="IsEnabled" Value="False" />
+                            </MultiDataTrigger.Setters>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Slider.Style>
+        </Slider>
 
         <Popup
             Name="SliderPopup"

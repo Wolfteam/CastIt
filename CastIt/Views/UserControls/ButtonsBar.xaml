@@ -36,6 +36,13 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
+                <ProgressBar
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    IsIndeterminate="True"
+                    Style="{StaticResource MaterialDesignCircularProgressBar}"
+                    Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <TextBlock
                     Grid.Row="0"
                     Grid.Column="0"
@@ -45,9 +52,32 @@
                         <Style BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}" TargetType="TextBlock">
                             <Setter Property="Text" Value="" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsCurrentlyPlaying}" Value="True">
-                                    <Setter Property="Text" Value="{Binding [NowPlaying]}" />
-                                </DataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsCurrentlyPlaying}" Value="True" />
+                                        <Condition Binding="{Binding IsBusy}" Value="False" />
+                                        <Condition Binding="{Binding IsPaused}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Text" Value="{Binding [NowPlaying]}" />
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsBusy}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Text" Value="{Binding [NowLoading]}" />
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsPaused}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Text" Value="{Binding [Paused]}" />
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
@@ -77,22 +107,20 @@
             Orientation="Horizontal">
             <Button
                 Command="{Binding PreviousCommand}"
-                IsEnabled="{Binding IsCurrentlyPlaying}"
-                Style="{StaticResource MainButtonStyle}"
+                Style="{StaticResource MainButtonStyleWithTriggers}"
                 ToolTip="{Binding [Previous]}">
                 <materialDesign:PackIcon Kind="SkipPrevious" />
             </Button>
             <Button
                 Command="{Binding SkipCommand}"
                 CommandParameter="-30"
-                IsEnabled="{Binding IsCurrentlyPlaying}"
-                Style="{StaticResource MainButtonStyle}"
+                Style="{StaticResource MainButtonStyleWithTriggers}"
                 ToolTip="{Binding [GoBack30Sec]}">
                 <materialDesign:PackIcon Kind="TitleBackward" />
             </Button>
-            <Button Command="{Binding TogglePlayBackCommand}" IsEnabled="{Binding IsCurrentlyPlaying}">
+            <Button Command="{Binding TogglePlayBackCommand}">
                 <Button.Style>
-                    <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="Button">
+                    <Style BasedOn="{StaticResource MainButtonStyleWithTriggers}" TargetType="Button">
                         <Setter Property="ToolTip" Value="{Binding [Play]}" />
                         <Setter Property="Content">
                             <Setter.Value>
@@ -100,6 +128,23 @@
                             </Setter.Value>
                         </Setter>
                         <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsCurrentlyPlaying}" Value="True" />
+                                    <Condition Binding="{Binding IsBusy}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <MultiDataTrigger.Setters>
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </MultiDataTrigger.Setters>
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsBusy}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <MultiDataTrigger.Setters>
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </MultiDataTrigger.Setters>
+                            </MultiDataTrigger>
                             <DataTrigger Binding="{Binding IsPaused}" Value="True">
                                 <Setter Property="Content">
                                     <Setter.Value>
@@ -114,23 +159,20 @@
             </Button>
             <Button
                 Command="{Binding StopPlayBackCommand}"
-                IsEnabled="{Binding IsCurrentlyPlaying}"
-                Style="{StaticResource MainButtonStyle}"
+                Style="{StaticResource MainButtonStyleWithTriggers}"
                 ToolTip="{Binding [Stop]}">
                 <materialDesign:PackIcon Kind="Stop" />
             </Button>
             <Button
                 Command="{Binding SkipCommand}"
                 CommandParameter="30"
-                IsEnabled="{Binding IsCurrentlyPlaying}"
-                Style="{StaticResource MainButtonStyle}"
+                Style="{StaticResource MainButtonStyleWithTriggers}"
                 ToolTip="{Binding [GoForward30Sec]}">
                 <materialDesign:PackIcon Kind="TitleForward" />
             </Button>
             <Button
                 Command="{Binding NextCommand}"
-                IsEnabled="{Binding IsCurrentlyPlaying}"
-                Style="{StaticResource MainButtonStyle}"
+                Style="{StaticResource MainButtonStyleWithTriggers}"
                 ToolTip="{Binding [Next]}">
                 <materialDesign:PackIcon Kind="SkipNext" />
             </Button>

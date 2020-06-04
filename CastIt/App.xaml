@@ -123,6 +123,32 @@
                 <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
             </Style>
 
+            <Style
+                x:Key="MainButtonStyleWithTriggers"
+                BasedOn="{StaticResource MainButtonStyle}"
+                TargetType="{x:Type Button}">
+                <Setter Property="IsEnabled" Value="False" />
+                <Style.Triggers>
+                    <MultiDataTrigger>
+                        <MultiDataTrigger.Conditions>
+                            <Condition Binding="{Binding IsCurrentlyPlaying}" Value="True" />
+                            <Condition Binding="{Binding IsBusy}" Value="False" />
+                        </MultiDataTrigger.Conditions>
+                        <MultiDataTrigger.Setters>
+                            <Setter Property="IsEnabled" Value="True" />
+                        </MultiDataTrigger.Setters>
+                    </MultiDataTrigger>
+                    <MultiDataTrigger>
+                        <MultiDataTrigger.Conditions>
+                            <Condition Binding="{Binding IsBusy}" Value="True" />
+                        </MultiDataTrigger.Conditions>
+                        <MultiDataTrigger.Setters>
+                            <Setter Property="IsEnabled" Value="False" />
+                        </MultiDataTrigger.Setters>
+                    </MultiDataTrigger>
+                </Style.Triggers>
+            </Style>
+
             <Style x:Key="FileItemSeparatorStyle" TargetType="{x:Type Separator}">
                 <Setter Property="Margin" Value="20,0,20,10" />
                 <Setter Property="Background" Value="{DynamicResource FontColorBrush}" />

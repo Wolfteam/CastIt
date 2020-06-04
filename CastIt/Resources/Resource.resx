@@ -336,4 +336,10 @@
   <data name="NoInternetConnection" xml:space="preserve">
     <value>No internet connection available</value>
   </data>
+  <data name="NowLoading" xml:space="preserve">
+    <value>Now Loading...</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
 </root>

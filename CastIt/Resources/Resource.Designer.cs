@@ -475,6 +475,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Now Loading....
+        /// </summary>
+        public static string NowLoading {
+            get {
+                return ResourceManager.GetString("NowLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Now Playing.
         /// </summary>
         public static string NowPlaying {
@@ -516,6 +525,15 @@ namespace CastIt.Resources {
         public static string Pause {
             get {
                 return ResourceManager.GetString("Pause", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paused.
+        /// </summary>
+        public static string Paused {
+            get {
+                return ResourceManager.GetString("Paused", resourceCulture);
             }
         }
         

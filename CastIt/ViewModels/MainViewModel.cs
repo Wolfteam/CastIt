@@ -49,6 +49,7 @@ namespace CastIt.ViewModels
         private bool _showSnackbar;
         private string _snackbarMsg;
         private string _snackBarActionMsg;
+        private bool _isBusy;
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
@@ -168,6 +169,12 @@ namespace CastIt.ViewModels
         {
             get => _snackBarActionMsg;
             set => SetProperty(ref _snackBarActionMsg, value);
+        }
+
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
         }
 
         public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileVideos { get; }
@@ -291,13 +298,7 @@ namespace CastIt.ViewModels
 
             StopPlayBackCommand = new MvxAsyncCommand(StopPlayBack);
 
-            SkipCommand = new MvxAsyncCommand<int>(
-                async (seconds) => await _castService.AddSeconds(
-                    CurrentFileVideoStreamIndex,
-                    CurrentFileAudioStreamIndex,
-                    CurrentFileSubTitleStreamIndex,
-                    CurrentFileQuality,
-                    seconds));
+            SkipCommand = new MvxAsyncCommand<int>(SkipSeconds);
 
             SwitchPlayListsCommand = new MvxCommand(SwitchPlayLists);
 
@@ -392,12 +393,26 @@ namespace CastIt.ViewModels
 
         private async Task GoToSeconds(long seconds)
         {
+            IsBusy = true;
             await _castService.GoToSeconds(
                 CurrentFileVideoStreamIndex,
                 CurrentFileAudioStreamIndex,
                 CurrentFileSubTitleStreamIndex,
                 CurrentFileQuality,
                 seconds);
+            IsBusy = false;
+        }
+
+        private async Task SkipSeconds(int seconds)
+        {
+            IsBusy = true;
+            await _castService.AddSeconds(
+                CurrentFileVideoStreamIndex,
+                CurrentFileAudioStreamIndex,
+                CurrentFileSubTitleStreamIndex,
+                CurrentFileQuality,
+                seconds);
+            IsBusy = false;
         }
 
         private Task SetFileDurations()
@@ -545,6 +560,8 @@ namespace CastIt.ViewModels
                 return false;
             }
 
+            IsBusy = true;
+
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
@@ -610,6 +627,10 @@ namespace CastIt.ViewModels
                 await StopPlayBack();
                 await ShowSnackbarMsg(GetText("CouldntPlayFile"));
                 return false;
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
