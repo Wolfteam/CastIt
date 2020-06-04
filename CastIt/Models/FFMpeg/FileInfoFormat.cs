@@ -12,5 +12,8 @@ namespace CastIt.Models.FFMpeg
 
         [JsonProperty(PropertyName = "bit_rate")]
         public long BitRate { get; set; }
+
+        [JsonProperty(PropertyName = "tags")]
+        public FileInfoTag Tag { get; set; }
     }
 }

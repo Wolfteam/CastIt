@@ -448,6 +448,7 @@ namespace CastIt.ViewModels
                 return;
 
             await _playListsService.DeletePlayList(playlist.Id);
+            playlist.CleanUp();
             PlayLists.Remove(playlist);
         }
 
@@ -466,6 +467,11 @@ namespace CastIt.ViewModels
             }
 
             await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList());
+            foreach (var playlist in items)
+            {
+                playlist.CleanUp();
+            }
+
             PlayLists.RemoveItems(items);
         }
 
@@ -773,6 +779,7 @@ namespace CastIt.ViewModels
                 });
             }
 
+            isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 0;
             foreach (var subtitle in _currentlyPlayedFile.FileInfo.SubTitles)
             {
                 CurrentFileSubTitles.Add(new FileItemOptionsViewModel

@@ -123,14 +123,6 @@ namespace CastIt.Services
             var metdata = isVideoFile ? new MovieMetadata
             {
                 Title = title,
-            } : isMusicFile ? new MusicTrackMediaMetadata
-            {
-                //TODO: OBTAIN MEDIA INFORMATION
-                Title = title,
-                AlbumArtist = "Hatsune Miku",
-                AlbumName = "Dying tomorrow",
-                Artist = "Hatsune Miku",
-                SongName = "Unninstall",
             } : new GenericMediaMetadata
             {
                 Title = title,
@@ -148,6 +140,8 @@ namespace CastIt.Services
             {
                 string imgUrl = AppWebServer.GetPreviewPath(_webServer, GetFirstThumbnail());
 
+                if (isVideoFile)
+                    media.StreamType = StreamType.Live;
                 if (subtitleStreamIndex >= 0)
                 {
                     string subTitleFilePath = FileUtils.GetSubTitleFilePath();
@@ -158,13 +152,22 @@ namespace CastIt.Services
                     activeTrackIds.Add(SubTitleDefaultTrackId);
                 }
 
+                var fileInfo = await _ffmpegService.GetFileInfo(mrl, default);
+                media.Duration = fileInfo.Format.Duration;
+                if (isMusicFile)
+                {
+                    media.Metadata = new MusicTrackMediaMetadata
+                    {
+                        Title = title,
+                        AlbumName = fileInfo.Format.Tag?.Album,
+                        Artist = fileInfo.Format.Tag?.Artist,
+                    };
+                }
+
                 media.Metadata.Images.Add(new GoogleCast.Models.Image
                 {
                     Url = imgUrl
                 });
-                if (isVideoFile)
-                    media.StreamType = StreamType.Live;
-                media.Duration = await _ffmpegService.GetFileDuration(mrl, default);
             }
             else if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
             {
