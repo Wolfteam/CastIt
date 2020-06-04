@@ -94,6 +94,26 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => PlayNextFileAutomatically);
             }
         }
+
+        public bool ForceVideoTranscode
+        {
+            get => _settingsService.ForceVideoTranscode; 
+            set
+            {
+                _settingsService.ForceVideoTranscode = value;
+                RaisePropertyChanged(() => ForceVideoTranscode);
+            }
+        }
+
+        public bool ForceAudioTranscode
+        {
+            get => _settingsService.ForceAudioTranscode;
+            set
+            {
+                _settingsService.ForceAudioTranscode = value;
+                RaisePropertyChanged(() => ForceAudioTranscode);
+            }
+        }
         #endregion
 
         #region Commands

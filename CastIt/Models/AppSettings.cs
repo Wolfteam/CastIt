@@ -14,5 +14,7 @@ namespace CastIt.Models
         public bool ShowFileDetails { get; set; }
         public bool StartFilesFromTheStart { get; set; }
         public bool PlayNextFileAutomatically { get; set; }
+        public bool ForceVideoTranscode { get; set; }
+        public bool ForceAudioTranscode { get; set; }
     }
 }

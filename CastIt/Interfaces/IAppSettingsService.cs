@@ -14,6 +14,8 @@ namespace CastIt.Interfaces
         bool ShowFileDetails { get; set; }
         bool StartFilesFromTheStart { get; set; }
         bool PlayNextFileAutomatically { get; set; }
+        bool ForceVideoTranscode { get; set; }
+        bool ForceAudioTranscode { get; set; }
 
         void SaveSettings();
     }

@@ -16,6 +16,7 @@ namespace CastIt.Services
     public class FFMpegService : IFFMpegService
     {
         private readonly IMvxLog _logger;
+        private readonly IAppSettingsService _settingsService;
 
         private readonly Process _generateThumbnailProcess;
         private readonly Process _generateAllThumbnailsProcess;
@@ -52,9 +53,11 @@ namespace CastIt.Services
         private bool _checkGenerateThumbnailProcess;
         private bool _checkGenerateAllThumbnailsProcess;
 
-        public FFMpegService(IMvxLogProvider logProvider)
+        public FFMpegService(IMvxLogProvider logProvider, IAppSettingsService settingsService)
         {
             _logger = logProvider.GetLogFor<FFMpegService>();
+            _settingsService = settingsService;
+
             _transcodeProcess = new Process
             {
                 EnableRaisingEvents = true,
@@ -321,7 +324,7 @@ namespace CastIt.Services
             double seconds,
             CancellationToken token)
         {
-            var ffprobeFileInfo = await GetFileInfo(filePath, token);
+            var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
             var videoInfo = ffprobeFileInfo.Streams.Find(f => f.IsVideo);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
             string fileExt = Path.GetExtension(filePath);
@@ -335,8 +338,8 @@ namespace CastIt.Services
 
             string cmd = string.Format(
                 $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -map 0:{videoStreamIndex} -map 0:{audioStreamIndex} -preset ultrafast {{0}} {{1}} -movflags frag_keyframe+faststart -f mp4 -",
-                videoNeedsTranscode ? "-c:v libx264 -profile:v high -level 4" : "-c:v copy",
-                audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+                videoNeedsTranscode || _settingsService.ForceVideoTranscode ? "-c:v libx264 -profile:v high -level 4" : "-c:v copy",
+                audioNeedsTranscode || _settingsService.ForceAudioTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
 
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
@@ -344,32 +347,31 @@ namespace CastIt.Services
             _logger.Info($"{nameof(TranscodeVideo)}: Trying to transcode file = {filePath} with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
-
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            await stream.CopyToAsync(outputStream, token);
+            await stream.CopyToAsync(outputStream, token).ConfigureAwait(false);
             _logger.Info($"{nameof(TranscodeVideo)}: Transcode completed for file = {filePath}");
         }
 
         public async Task TranscodeMusic(IHttpContext context, string filePath, int audioStreamIndex, double seconds, CancellationToken token)
         {
-            var ffprobeFileInfo = await GetFileInfo(filePath, token);
+            var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
             bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
             //To generate an aac output you need to set adts
             string cmd = string.Format(
                 $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -map 0:{audioStreamIndex} -preset ultrafast {{0}} -f adts -",
-                audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+                audioNeedsTranscode || _settingsService.ForceAudioTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
 
             _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file = {filePath} with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
             using var memoryStream = new MemoryStream();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            await stream.CopyToAsync(memoryStream, token);
+            await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
             memoryStream.Position = 0;
             //TODO: THIS LENGTH IS NOT WORKING PROPERLY
             context.Response.ContentLength64 = memoryStream.Length;
-            await memoryStream.CopyToAsync(context.Response.OutputStream, token);
+            await memoryStream.CopyToAsync(context.Response.OutputStream, token).ConfigureAwait(false);
             _logger.Info($"{nameof(TranscodeMusic)}: Transcode completed for file = {filePath}");
         }
 
