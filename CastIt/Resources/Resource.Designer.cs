@@ -430,6 +430,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loop this playlist.
+        /// </summary>
+        public static string LoopPlayList {
+            get {
+                return ResourceManager.GetString("LoopPlayList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mazimize.
         /// </summary>
         public static string Mazimize {
@@ -714,6 +723,15 @@ namespace CastIt.Resources {
         public static string ShowFileDetails {
             get {
                 return ResourceManager.GetString("ShowFileDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shuffle.
+        /// </summary>
+        public static string Shuffle {
+            get {
+                return ResourceManager.GetString("Shuffle", resourceCulture);
             }
         }
         

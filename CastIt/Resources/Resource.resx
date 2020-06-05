@@ -354,4 +354,10 @@
   <data name="VideoScale" xml:space="preserve">
     <value>Video scale</value>
   </data>
+  <data name="LoopPlayList" xml:space="preserve">
+    <value>Loop this playlist</value>
+  </data>
+  <data name="Shuffle" xml:space="preserve">
+    <value>Shuffle</value>
+  </data>
 </root>

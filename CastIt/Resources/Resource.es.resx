@@ -354,4 +354,10 @@
   <data name="VideoScale" xml:space="preserve">
     <value>Escala de video</value>
   </data>
+  <data name="LoopPlayList" xml:space="preserve">
+    <value>Repetir esta lista de reproducción</value>
+  </data>
+  <data name="Shuffle" xml:space="preserve">
+    <value>Aleatorio</value>
+  </data>
 </root>

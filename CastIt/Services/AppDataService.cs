@@ -122,7 +122,7 @@ namespace CastIt.Services
             return _mapper.Map<List<FileItemViewModel>>(files);
         }
 
-        public void SaveChangesBeforeClosingApp(Dictionary<long, int> playListsPositions, List<FileItemViewModel> vms)
+        public void SaveChangesBeforeClosingApp(Dictionary<PlayListItemViewModel, int> playListsPositions, List<FileItemViewModel> vms)
         {
             SavePlayListsPositions(playListsPositions);
             SaveFileChanges(vms);
@@ -151,7 +151,7 @@ namespace CastIt.Services
             db.Insert(playList);
         }
 
-        private void SavePlayListsPositions(Dictionary<long, int> positions)
+        private void SavePlayListsPositions(Dictionary<PlayListItemViewModel, int> positions)
         {
             if (positions.Count == 0)
                 return;
@@ -159,8 +159,11 @@ namespace CastIt.Services
             var playlists = db.Table<PlayList>().ToList();
             foreach (var kvp in positions)
             {
-                var playlist = playlists.First(pl => pl.Id == kvp.Key);
+                var vm = kvp.Key;
+                var playlist = playlists.First(pl => pl.Id == vm.Id);
                 playlist.Position = kvp.Value;
+                playlist.Shuffle = vm.Shuffle;
+                playlist.Loop = vm.Loop;
             }
 
             db.UpdateAll(playlists);

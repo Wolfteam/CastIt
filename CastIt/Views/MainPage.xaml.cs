@@ -54,9 +54,9 @@ namespace CastIt.Views
             set.Apply();
         }
 
-        public Dictionary<long, int> GetTabsPosition()
+        public Dictionary<PlayListItemViewModel, int> GetTabsPosition()
             => PlayListTabControl.GetOrderedHeaders()
-                .ToDictionary(a => (a.Content as PlayListItemViewModel).Id, a => a.LogicalIndex);
+                .ToDictionary(a => (a.Content as PlayListItemViewModel), a => a.LogicalIndex);
 
         private void SetWindowWidthAndHeight(object sender, MvxValueEventArgs<(double, double)> e)
         {

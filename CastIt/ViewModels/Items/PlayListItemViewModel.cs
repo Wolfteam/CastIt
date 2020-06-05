@@ -17,11 +17,12 @@ namespace CastIt.ViewModels.Items
     public class PlayListItemViewModel : BaseViewModel
     {
         #region Members
-        private readonly ICastService _castService;
         private readonly IPlayListsService _playListsService;
         private string _name;
         private bool _showEditPopUp;
         private bool _showAddUrlPopUp;
+        private bool _loop;
+        private bool _shuffle;
         private FileItemViewModel _selectedItem;
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
@@ -49,6 +50,18 @@ namespace CastIt.ViewModels.Items
         {
             get => _showAddUrlPopUp;
             set => SetProperty(ref _showAddUrlPopUp, value);
+        }
+
+        public bool Loop
+        {
+            get => _loop;
+            set => SetProperty(ref _loop, value);
+        }
+
+        public bool Shuffle
+        {
+            get => _shuffle;
+            set => SetProperty(ref _shuffle, value);
         }
 
         public FileItemViewModel SelectedItem
@@ -98,11 +111,9 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            ICastService castService,
             IPlayListsService playListsService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
-            _castService = castService;
             _playListsService = playListsService;
         }
 
@@ -134,7 +145,7 @@ namespace CastIt.ViewModels.Items
 
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
 
-            ScrollToSelectedFileCommand = new MvxCommand(() => _scrollToSelectedItem.Raise(SelectedItem));
+            ScrollToSelectedFileCommand = new MvxCommand(ScrollToSelectedFile);
         }
 
         public void CleanUp()
@@ -237,6 +248,16 @@ namespace CastIt.ViewModels.Items
             }
             Name = newName;
             ShowEditPopUp = false;
+        }
+
+        private void ScrollToSelectedFile()
+        {
+            var currentPlayedFile = Items.FirstOrDefault(f => f.IsBeingPlayed);
+            if (currentPlayedFile != null)
+            {
+                SelectedItem = currentPlayedFile;
+            }
+            _scrollToSelectedItem.Raise(SelectedItem);
         }
         #endregion
     }

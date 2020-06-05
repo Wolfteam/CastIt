@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Extensions;
 using CastIt.Common.Utils;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
@@ -356,7 +357,7 @@ namespace CastIt.ViewModels
         public void SaveChangesBeforeClosing(
             double width,
             double height,
-            Dictionary<long, int> positions)
+            Dictionary<PlayListItemViewModel, int> positions)
         {
             _settingsService.WindowWidth = width;
             _settingsService.WindowHeight = height;
@@ -510,21 +511,39 @@ namespace CastIt.ViewModels
             if (_currentlyPlayedFile == null || _onSkipOrPrevious)
                 return;
 
-            var playlist = PlayLists.First(p => p.Id == _currentlyPlayedFile.PlayListId);
-            var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
-            if (fileIndex < 0)
+            var playlist = PlayLists.FirstOrDefault(p => p.Id == _currentlyPlayedFile.PlayListId);
+            if (playlist is null)
                 return;
 
             _onSkipOrPrevious = true;
-            if (nextTrack)
-                fileIndex++;
-            else
-                fileIndex--;
-            var file = playlist.Items.ElementAtOrDefault(fileIndex);
+            var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
+            if (fileIndex < 0)
+            {
+                int nextPosition = _currentlyPlayedFile.Position + 1;
+                int closestPosition = playlist.Items
+                    .Select(f => f.Position)
+                    .Aggregate((x, y) => Math.Abs(x - nextPosition) < Math.Abs(y - nextPosition) ? x : y);
+
+                var f = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
+                f?.PlayCommand?.Execute();
+                return;
+            }
+
+            int newIndex = nextTrack ? fileIndex + 1 : fileIndex - 1;
+
+            var file = playlist.Shuffle && playlist.Items.Count > 1
+                ? playlist.Items.PickRandom(fileIndex)
+                : playlist.Items.ElementAtOrDefault(newIndex);
 
             if (file is null)
             {
-                Logger.Warn($"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found");
+                Logger.Info(
+                    $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
+                    $"Probably an end of playlist");
+                if (playlist.Loop)
+                {
+                    playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
+                }
                 return;
             }
 
@@ -567,6 +586,7 @@ namespace CastIt.ViewModels
             }
 
             IsBusy = true;
+            IsPaused = false;
 
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
@@ -620,8 +640,6 @@ namespace CastIt.ViewModels
                 CurrentFileThumbnail = _castService.GetFirstThumbnail();
                 _castService.GenerateThumbmnails(file.Path);
 
-                _onSkipOrPrevious = false;
-
                 Logger.Info($"{nameof(PlayFile)}: Playing...");
 
                 return true;
@@ -637,6 +655,7 @@ namespace CastIt.ViewModels
             finally
             {
                 IsBusy = false;
+                _onSkipOrPrevious = false;
             }
         }
 
@@ -690,6 +709,7 @@ namespace CastIt.ViewModels
 
             SetCurrentlyPlayingInfo(null, false);
 
+            IsPaused = false;
             if (_settingsService.PlayNextFileAutomatically)
             {
                 GoTo(true);
@@ -698,7 +718,6 @@ namespace CastIt.ViewModels
             {
                 _currentlyPlayedFile?.CleanUp();
                 _currentlyPlayedFile = null;
-                IsPaused = false;
             }
         }
 
