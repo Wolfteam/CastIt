@@ -12,6 +12,11 @@ namespace CastIt.Interfaces
         double WindowHeight { get; set; }
         bool IsPlayListExpanded { get; set; }
         bool ShowFileDetails { get; set; }
+        bool StartFilesFromTheStart { get; set; }
+        bool PlayNextFileAutomatically { get; set; }
+        bool ForceVideoTranscode { get; set; }
+        bool ForceAudioTranscode { get; set; }
+        VideoScaleType VideoScale { get; set; }
 
         void SaveSettings();
     }

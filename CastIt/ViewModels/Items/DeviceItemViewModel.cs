@@ -6,21 +6,14 @@ namespace CastIt.ViewModels.Items
 {
     public class DeviceItemViewModel : BaseViewModel
     {
-        private string _name;
-        private string _type;
         private bool _isSelected;
 
-        public string Name
-        {
-            get => _name;
-            set => SetProperty(ref _name, value);
-        }
-
-        public string Type
-        {
-            get => _type;
-            set => SetProperty(ref _type, value);
-        }
+        public string Id { get; set; }
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public string FriendlyName { get; set; }
+        public string IpAdress 
+            => $"{Host}:{Port}";
 
         public bool IsSelected
         {

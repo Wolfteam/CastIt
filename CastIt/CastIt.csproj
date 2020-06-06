@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <Win32Resource />
-    <Platforms>AnyCPU;x64;x86</Platforms>
+    <Platforms>x64;x86</Platforms>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <NoWarn>$(NoWarn);NU1605</NoWarn>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="Dragablz.NetCore" Version="0.3.3" />
-    <PackageReference Include="LibVLCSharp.WPF" Version="3.4.5" />
+    <PackageReference Include="EmbedIO" Version="3.4.3" />
     <PackageReference Include="MaterialDesignThemes" Version="3.1.2" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
     <PackageReference Include="MvvmCross" Version="6.4.2" />
@@ -35,8 +35,11 @@
     <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
-    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.10" />
     <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Comparers;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
 using MvvmCross.Commands;
@@ -16,16 +17,18 @@ namespace CastIt.ViewModels.Items
     public class PlayListItemViewModel : BaseViewModel
     {
         #region Members
-        private readonly ICastService _castService;
         private readonly IPlayListsService _playListsService;
         private string _name;
         private bool _showEditPopUp;
         private bool _showAddUrlPopUp;
+        private bool _loop;
+        private bool _shuffle;
         private FileItemViewModel _selectedItem;
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
+        private readonly MvxInteraction<FileItemViewModel> _scrollToSelectedItem = new MvxInteraction<FileItemViewModel>();
         #endregion
 
         #region Properties
@@ -49,10 +52,26 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _showAddUrlPopUp, value);
         }
 
+        public bool Loop
+        {
+            get => _loop;
+            set => SetProperty(ref _loop, value);
+        }
+
+        public bool Shuffle
+        {
+            get => _shuffle;
+            set => SetProperty(ref _shuffle, value);
+        }
+
         public FileItemViewModel SelectedItem
         {
             get => _selectedItem;
-            set => SetProperty(ref _selectedItem, value);
+            set
+            {
+                SetProperty(ref _selectedItem, value);
+                _scrollToSelectedItem.Raise(value);
+            }
         }
 
         public MvxObservableCollection<FileItemViewModel> Items { get; set; }
@@ -74,6 +93,7 @@ namespace CastIt.ViewModels.Items
         public IMvxAsyncCommand RemoveAllMissingCommand { get; private set; }
         public IMvxCommand SelectAllCommand { get; private set; }
         public IMvxAsyncCommand<string> RenameCommand { get; private set; }
+        public IMvxCommand ScrollToSelectedFileCommand { get; set; }
         #endregion
 
         #region Interactors
@@ -82,17 +102,18 @@ namespace CastIt.ViewModels.Items
 
         public IMvxInteraction OpenFolderDialog
             => _openFolderDialog;
+
+        public IMvxInteraction<FileItemViewModel> ScrollToSelectedItem
+            => _scrollToSelectedItem;
         #endregion
 
         public PlayListItemViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            ICastService castService,
             IPlayListsService playListsService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
-            _castService = castService;
             _playListsService = playListsService;
         }
 
@@ -123,6 +144,8 @@ namespace CastIt.ViewModels.Items
             SelectAllCommand = new MvxCommand(SelectAll);
 
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
+
+            ScrollToSelectedFileCommand = new MvxCommand(ScrollToSelectedFile);
         }
 
         public void CleanUp()
@@ -165,7 +188,7 @@ namespace CastIt.ViewModels.Items
             foreach (var vm in vms)
             {
                 //vm.Position = Items.Count + 1;
-                await vm.SetDuration(_setDurationTokenSource.Token);
+                await vm.SetFileInfo(_setDurationTokenSource.Token);
                 Items.Add(vm);
             }
         }
@@ -173,11 +196,11 @@ namespace CastIt.ViewModels.Items
         private async Task OnUrlAdded(string url)
         {
             //TODO: URL CAN BE A PLAYLIST, SO YOU WILL NEED TO PARSE IT
-            bool isUrlFile = _castService.IsUrlFile(url);
+            bool isUrlFile = FileUtils.IsUrlFile(url);
             if (!isUrlFile)
                 return;
             var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
-            await vm.SetDuration(_setDurationTokenSource.Token);
+            await vm.SetFileInfo(_setDurationTokenSource.Token);
             Items.Add(vm);
             ShowAddUrlPopUp = false;
         }
@@ -225,6 +248,16 @@ namespace CastIt.ViewModels.Items
             }
             Name = newName;
             ShowEditPopUp = false;
+        }
+
+        private void ScrollToSelectedFile()
+        {
+            var currentPlayedFile = Items.FirstOrDefault(f => f.IsBeingPlayed);
+            if (currentPlayedFile != null)
+            {
+                SelectedItem = currentPlayedFile;
+            }
+            _scrollToSelectedItem.Raise(SelectedItem);
         }
         #endregion
     }

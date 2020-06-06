@@ -48,14 +48,7 @@ namespace CastIt.Views.UserControls
                 if (c is null)
                     continue;
                 var tb = c.ContentTemplate.FindName("AccentColorButton", c) as ToggleButton;
-                if ((string)tb.DataContext == hexColor)
-                {
-                    tb.IsChecked = true;
-                }
-                else
-                {
-                    tb.IsChecked = false;
-                }
+                tb.IsChecked = (string)tb.DataContext == hexColor;
             }
         }
     }

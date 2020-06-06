@@ -65,6 +65,36 @@ namespace CastIt.Services
             get => _appSettings.ShowFileDetails;
             set => _appSettings.ShowFileDetails = value;
         }
+
+        public bool StartFilesFromTheStart
+        {
+            get => _appSettings.StartFilesFromTheStart;
+            set => _appSettings.StartFilesFromTheStart = value;
+        }
+
+        public bool PlayNextFileAutomatically
+        {
+            get => _appSettings.PlayNextFileAutomatically;
+            set => _appSettings.PlayNextFileAutomatically = value;
+        }
+
+        public bool ForceVideoTranscode
+        {
+            get => _appSettings.ForceVideoTranscode;
+            set => _appSettings.ForceVideoTranscode = value;
+        }
+
+        public bool ForceAudioTranscode
+        {
+            get => _appSettings.ForceAudioTranscode;
+            set => _appSettings.ForceAudioTranscode = value;
+        }
+
+        public VideoScaleType VideoScale
+        {
+            get => _appSettings.VideoScale;
+            set => _appSettings.VideoScale = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider)
