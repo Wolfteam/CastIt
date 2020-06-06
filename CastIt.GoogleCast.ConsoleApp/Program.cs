@@ -18,10 +18,12 @@ namespace CastIt.ConsoleApp
 
         private static async Task TestPlayer()
         {
-            var devices = await Player.GetDevicesAsync();
+            var devices = await Player.GetDevicesAsync(TimeSpan.FromSeconds(3));
             if (devices.Count == 0)
             {
                 Console.WriteLine("No devices were found");
+                Console.ReadLine();
+                return;
             }
             var device = devices.First();
             var player = new Player(device, logMsgs: false);
