@@ -90,6 +90,25 @@ namespace CastIt.GoogleCast
         }
 
         public Player(
+            IReceiver receiver,
+            string destinationId = AppConstants.DESTINATION_ID,
+            string senderId = AppConstants.SENDER_ID,
+            bool logMsgs = true)
+            : this(null, receiver, destinationId, senderId, logMsgs)
+        {
+        }
+
+        public Player(
+            string host,
+            int port = 8009,
+            string destinationId = AppConstants.DESTINATION_ID,
+            string senderId = AppConstants.SENDER_ID,
+            bool logMsgs = true)
+            : this(null, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logMsgs)
+        {
+        }
+
+        public Player(
             IMvxLog logger,
             IReceiver receiver,
             string destinationId = AppConstants.DESTINATION_ID,
@@ -101,40 +120,7 @@ namespace CastIt.GoogleCast
             CanLog = logMsgs;
 
             _sender = new Sender(_logger, senderId, receiver, HandleResponseMsg);
-            _connectionChannel = new ConnectionChannel(destinationId);
-            _heartbeatChannel = new HeartbeatChannel(destinationId);
-            _mediaChannel = new MediaChannel(destinationId, async () =>
-            {
-                var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
-                return app.SessionId;
-            });
-            _receiverChannel = new ReceiverChannel(destinationId);
-            //_receiverChannel.StatusChanged += (s, e) =>
-            //{
-            //    _logger.Info($"Receiver status changed = {JsonConvert.SerializeObject(_receiverChannel.Status)}");
-            //};
-        }
-
-        public Player(
-            IReceiver receiver,
-            string destinationId = AppConstants.DESTINATION_ID,
-            string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(receiver?.Host, receiver?.Port ?? 0, destinationId, senderId, logMsgs)
-        {
-        }
-
-        public Player(
-            string host,
-            int port = 8009,
-            string destinationId = AppConstants.DESTINATION_ID,
-            string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-        {
-            _destinationId = destinationId;
-            CanLog = logMsgs;
-
-            _sender = new Sender(_logger, senderId, host, port, HandleResponseMsg);
+            _sender.Disconnected += OnDisconnect;
             _connectionChannel = new ConnectionChannel(destinationId);
             _heartbeatChannel = new HeartbeatChannel(destinationId);
             _mediaChannel = new MediaChannel(destinationId, async () =>
@@ -176,13 +162,13 @@ namespace CastIt.GoogleCast
                 subscription.Dispose();
             }
 
-            DisconnectAsync().GetAwaiter().GetResult();
             Disconnected = null;
             DeviceAdded = null;
             PositionChanged = null;
             TimeChanged = null;
             EndReached = null;
             Paused = null;
+            DisconnectAsync().GetAwaiter().GetResult();
         }
 
         public static Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
@@ -203,15 +189,14 @@ namespace CastIt.GoogleCast
 
         public async Task DisconnectAsync()
         {
+            if (_sender.IsConnected)
+                await _receiverChannel.StopAsync(_sender);
             (_receiverChannel as IStatusChannel).Status = null;
             (_mediaChannel as IStatusChannel).Status = null;
             CancelAndSetMediaToken();
-            if (_sender.IsConnected)
-                await _receiverChannel.StopAsync(_sender);
-            _sender.Disconnect();
-            IsPlaying = false;
+            _sender.Disconnect(true);
             CurrentContentId = null;
-            Disconnected?.Invoke(this, EventArgs.Empty);
+            OnDisconnect(this, EventArgs.Empty);
         }
         #endregion
 
@@ -368,9 +353,9 @@ namespace CastIt.GoogleCast
                         bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                         await Task.Delay(GetStatusDelay);
 
+                        var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
                         if (token.IsCancellationRequested)
                             return;
-                        var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
 
                         if (mediaStatus is null)
                         {
@@ -414,6 +399,13 @@ namespace CastIt.GoogleCast
         {
             TimeChanged?.Invoke(this, ElapsedSeconds);
             PositionChanged?.Invoke(this, PlayedPercentage);
+        }
+
+        private void OnDisconnect(object sender, EventArgs e)
+        {
+            Disconnected?.Invoke(this, e);
+            IsPlaying = false;
+            _receiverChannel.IsConnected = false;
         }
         #endregion
     }

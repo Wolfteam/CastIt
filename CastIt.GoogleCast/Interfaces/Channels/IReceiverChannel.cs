@@ -5,6 +5,8 @@ namespace CastIt.GoogleCast.Interfaces.Channels
 {
     internal interface IReceiverChannel : IStatusChannel<ReceiverStatus>
     {
+        bool IsConnected { get; set; }
+
         Task<ReceiverStatus> LaunchAsync(ISender sender, string applicationId);
 
         Task<ReceiverStatus> GetStatusAsync(ISender sender);

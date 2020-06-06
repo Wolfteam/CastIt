@@ -69,7 +69,7 @@ namespace CastIt.GoogleCast
 
         public async Task ConnectAsync()
         {
-            Disconnect();
+            Disconnect(false);
 
             TcpClient = new TcpClient();
             await TcpClient.ConnectAsync(CurrentReceiver.Host, CurrentReceiver.Port);
@@ -77,7 +77,9 @@ namespace CastIt.GoogleCast
             var secureStream = new SslStream(TcpClient.GetStream(), true, (a, b, c, d) => true);
             await secureStream.AuthenticateAsClientAsync(CurrentReceiver.Host);
             NetworkStream = secureStream;
-            Receive();
+
+            CancellationTokenSource = new CancellationTokenSource();
+            Receive(CancellationTokenSource.Token);
         }
 
         public Task ConnectAsync(IReceiver receiver)
@@ -86,9 +88,9 @@ namespace CastIt.GoogleCast
             return ConnectAsync();
         }
 
-        public void Disconnect()
+        public void Disconnect(bool triggerDisconnectEvent)
         {
-            Dispose();
+            Dispose(triggerDisconnectEvent);
         }
 
         public Task SendAsync(AppMessage msg)
@@ -106,11 +108,10 @@ namespace CastIt.GoogleCast
         public async Task<TResponse> SendAsync<TResponse>(string ns, IMessageWithId message, string destinationId)
             where TResponse : IMessageWithId
         {
-            bool isStopMsg = message is StopMessage;
             var taskCompletionSource = new TaskCompletionSource<TResponse>();
             WaitingTasks[message.RequestId] = taskCompletionSource;
             await SendAsync(ns, message, destinationId);
-            if (isStopMsg)
+            if (message is StopMessage)
             {
                 return default;
             }
@@ -152,8 +153,15 @@ namespace CastIt.GoogleCast
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        private void Dispose()
+        private void Dispose(bool triggerDisconnectEvent)
         {
+            foreach (var kvp in WaitingTasks)
+            {
+                var tcsType = kvp.Value.GetType();
+                var methodToInvoke = tcsType.GetMethod("SetResult");
+                methodToInvoke.Invoke(kvp.Value, new object[] { null });
+                _logger.LogInfo("Calling set result...");
+            }
             WaitingTasks.Clear();
             CancellationTokenSource?.Cancel();
             CancellationTokenSource = null;
@@ -161,7 +169,9 @@ namespace CastIt.GoogleCast
             TcpClient?.Dispose();
             NetworkStream = null;
             TcpClient = null;
-            Disconnected?.Invoke(this, EventArgs.Empty);
+
+            if (triggerDisconnectEvent)
+                Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
         private async Task EnsureConnection()
@@ -183,13 +193,11 @@ namespace CastIt.GoogleCast
             }
         }
 
-        private async void Receive()
+        private async void Receive(CancellationToken cancellationToken)
         {
-            CancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = CancellationTokenSource.Token;
             try
             {
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     var buffer = await ReadAsync(4, cancellationToken);
                     if (BitConverter.IsLittleEndian)
@@ -235,7 +243,7 @@ namespace CastIt.GoogleCast
                 nb = await NetworkStream.ReadAsync(buffer, length, bufferLength - length, cancellationToken);
                 if (nb == 0)
                 {
-                    continue;
+                    throw new Exception("Number of bytes read is 0");
                 }
                 length += nb;
             }

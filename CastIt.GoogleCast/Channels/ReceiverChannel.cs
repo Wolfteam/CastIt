@@ -12,11 +12,10 @@ namespace CastIt.GoogleCast.Channels
 {
     internal class ReceiverChannel : StatusChannel<ReceiverStatus, ReceiverStatusMessage>, IReceiverChannel
     {
+        public bool IsConnected { get; set; }
         public ReceiverChannel(string destinationId) : base("receiver", destinationId)
         {
         }
-
-        private bool IsConnected { get; set; }
 
         public async Task<ReceiverStatus> LaunchAsync(ISender sender, string applicationId)
         {
@@ -54,7 +53,6 @@ namespace CastIt.GoogleCast.Channels
             return Status ?? await GetStatusAsync(sender);
         }
 
-
         public async Task StopAsync(ISender sender, params Application[] applications)
         {
             IEnumerable<Application> apps = applications;
@@ -69,9 +67,11 @@ namespace CastIt.GoogleCast.Channels
             }
             foreach (var application in apps)
             {
-                var msg = new StopMessage() { SessionId = application.SessionId };
-                await sender.SendAsync<ReceiverStatusMessage>(Namespace, msg, DestinationId);
+                var msg = new StopMessage { SessionId = application.SessionId };
+                var response = await sender.SendAsync<ReceiverStatusMessage>(Namespace, msg, DestinationId);
+                await OnMessageReceivedAsync(sender, response);
             }
+            IsConnected = false;
         }
 
         public async Task<ReceiverStatus> GetStatusAsync(ISender sender)
@@ -91,10 +91,5 @@ namespace CastIt.GoogleCast.Channels
             }
             return application;
         }
-
-        //private void Disconnected(object sender, System.EventArgs e)
-        //{
-        //    IsConnected = false;
-        //}
     }
 }
