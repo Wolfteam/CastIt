@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.Interfaces;
+using CastIt.Models.Messages;
 using CastIt.ViewModels.Items;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
@@ -40,6 +41,7 @@ namespace CastIt.ViewModels
             _castService.OnCastRendererSet += OnCastRendererSet;
             _castService.OnCastableDeviceAdded += OnCastDeviceAdded;
             _castService.OnCastableDeviceDeleted += OnCastDeviceDeleted;
+            _castService.OnDisconnected += DeSelectAllDevices;
         }
 
         public override void SetCommands()
@@ -55,14 +57,14 @@ namespace CastIt.ViewModels
         {
             _castService.OnCastableDeviceAdded -= OnCastDeviceAdded;
             _castService.OnCastableDeviceDeleted -= OnCastDeviceDeleted;
+            _castService.OnDisconnected -= DeSelectAllDevices;
         }
 
         private Task ToggleConectedDevice(DeviceItemViewModel device)
         {
-            foreach (var item in Devices)
-            {
-                item.IsSelected = false;
-            }
+            DeSelectAllDevices();
+
+            Messenger.Publish(new DisconnectMessage(this));
             return _castService.SetCastRenderer(device?.Id);
         }
 
@@ -72,10 +74,7 @@ namespace CastIt.ViewModels
             if (renderer == null)
                 return;
 
-            foreach (var item in Devices)
-            {
-                item.IsSelected = false;
-            }
+            DeSelectAllDevices();
             renderer.IsSelected = true;
         }
 
@@ -94,6 +93,14 @@ namespace CastIt.ViewModels
             if (toDelete == null)
                 return;
             Devices.Remove(toDelete);
+        }
+
+        private void DeSelectAllDevices()
+        {
+            foreach (var device in Devices)
+            {
+                device.IsSelected = false;
+            }
         }
     }
 }

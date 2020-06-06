@@ -2,7 +2,6 @@
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Media;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.Interfaces
@@ -17,7 +16,12 @@ namespace CastIt.Interfaces
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
         OnQualitiesChanged QualitiesChanged { get; set; }
+        OnPaused OnPaused { get; set; }
+        OnDisconnected OnDisconnected { get; set; }
 
+        void Init();
+        void CleanThemAll();
+        void StopRunningProcess();
         Task<MediaStatus> AddSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
@@ -30,7 +34,6 @@ namespace CastIt.Interfaces
             int subtitleStreamIndex,
             int quality,
             double seconds);
-        void CleanThemAll();
         Task<MediaStatus> GoToPosition(
             string filePath,
             int videoStreamIndex,
@@ -39,7 +42,6 @@ namespace CastIt.Interfaces
             int quality,
             double position,
             double totalSeconds);
-        void Init();
         Task<MediaStatus> StartPlay(
             string mrl,
             int videoStreamIndex,
@@ -53,7 +55,6 @@ namespace CastIt.Interfaces
         string GetThumbnail(string filePath, int second);
         Task StopPlayback();
         Task TogglePlayback();
-        Task<double> GetDuration(string mrl, CancellationToken token);
         string GetFileName(string mrl);
         string GetExtension(string mrl);
         string GetFileSizeString(string mrl);

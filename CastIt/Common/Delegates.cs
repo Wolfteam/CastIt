@@ -10,4 +10,6 @@ namespace CastIt.Common
     public delegate void OnEndReachedHandler();
     public delegate void OnTimeChangedHandler(double seconds);
     public delegate void OnQualitiesChanged(int selectedQuality, List<int> qualities);
+    public delegate void OnPaused();
+    public delegate void OnDisconnected();
 }

@@ -222,48 +222,6 @@ namespace CastIt.Services
             }
         }
 
-        public Task<double> GetFileDuration(string mrl, CancellationToken token)
-        {
-            bool isLocal = FileUtils.IsLocalFile(mrl);
-            bool isUrl = FileUtils.IsUrlFile(mrl);
-            if (!isLocal || isUrl)
-            {
-                _logger.Info($"{nameof(GetFileDuration)}: Couldnt retrieve duration for file = {mrl}. It is not a local file");
-                return Task.FromResult<double>(-1);
-            }
-
-            try
-            {
-                return Task.Run(() =>
-                {
-                    var process = new Process
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            FileName = FileUtils.GetFFprobePath(),
-                            UseShellExecute = false,
-                            LoadUserProfile = false,
-                            RedirectStandardInput = true,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            CreateNoWindow = true
-                        }
-                    };
-                    process.StartInfo.Arguments = @$"-v quiet -i ""{mrl}"" -show_entries format=duration -of csv=p=0";
-                    process.Start();
-                    process.WaitForExit();
-                    string stringDuration = process.StandardOutput.ReadToEnd();
-                    return double.Parse(stringDuration.Replace(Environment.NewLine, string.Empty));
-                }, token);
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, $"{nameof(GetFileDuration)}: Unknown error occurred");
-                return Task.FromResult<double>(0);
-            }
-        }
-
         public void KillTranscodeProcess()
         {
             _logger.Info($"{nameof(KillTranscodeProcess)}: Killing transcode process");

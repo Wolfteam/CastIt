@@ -11,7 +11,6 @@ namespace CastIt.Interfaces
         string GetThumbnail(string mrl, int second);
         void GenerateThumbmnails(string mrl);
         void KillThumbnailProcess();
-        Task<double> GetFileDuration(string mrl, CancellationToken token);
         void KillTranscodeProcess();
         Task TranscodeVideo(
             Stream outputStream,

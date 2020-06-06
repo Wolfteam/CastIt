@@ -42,6 +42,8 @@ namespace CastIt.Services
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
         public OnQualitiesChanged QualitiesChanged { get; set; }
+        public OnPaused OnPaused { get; set; }
+        public OnDisconnected OnDisconnected { get; set; }
 
         public CastService(IMvxLogProvider logProvider, IFFMpegService ffmpegService, WebServer webServer)
         {
@@ -76,6 +78,8 @@ namespace CastIt.Services
             _player.EndReached += EndReached;
             _player.TimeChanged += TimeChanged;
             _player.PositionChanged += PositionChanged;
+            _player.Paused += Paused;
+            _player.Disconnected += Disconnected;
 
             _player.Init();
 
@@ -225,14 +229,8 @@ namespace CastIt.Services
 
         public Task StopPlayback()
         {
-            _ffmpegService.KillThumbnailProcess();
-            _ffmpegService.KillTranscodeProcess();
+            StopRunningProcess();
             return _player.StopPlaybackAsync();
-        }
-
-        public void CleanThemAll()
-        {
-            Clean();
         }
 
         public Task<MediaStatus> GoToPosition(
@@ -290,9 +288,72 @@ namespace CastIt.Services
             return _player.SeekAsync(current);
         }
 
-        public Task<double> GetDuration(string mrl, CancellationToken token)
+        public void StopRunningProcess()
         {
-            return _ffmpegService.GetFileDuration(mrl, token);
+            _ffmpegService.KillThumbnailProcess();
+            _ffmpegService.KillTranscodeProcess();
+        }
+
+        public void CleanThemAll()
+        {
+            try
+            {
+                _player.DeviceAdded -= RendererDiscovererItemAdded;
+                _player.EndReached -= EndReached;
+                _player.TimeChanged -= TimeChanged;
+                _player.PositionChanged -= PositionChanged;
+                _player.Paused -= Paused;
+                _player.Disconnected -= Disconnected;
+
+                _webServerCancellationToken.Cancel();
+                StopRunningProcess();
+
+                _webServer.Dispose();
+                _player.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error ocurred");
+            }
+        }
+
+        public string GetFileName(string mrl)
+        {
+            if (FileUtils.IsLocalFile(mrl))
+                return Path.GetFileName(mrl);
+            return mrl;
+        }
+
+        public string GetExtension(string mrl)
+        {
+            if (FileUtils.IsLocalFile(mrl))
+                return Path.GetExtension(mrl).ToUpper();
+            if (FileUtils.IsUrlFile(mrl))
+                return "WEB";
+            return "N/A";
+        }
+
+        public string GetFileSizeString(string mrl)
+        {
+            if (!FileUtils.IsLocalFile(mrl))
+                return "N/A";
+            var fileInfo = new FileInfo(mrl);
+            return GetBytesReadable(fileInfo.Length);
+        }
+
+        public Task SetCastRenderer(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return SetNullCastRenderer();
+            }
+            var renderer = AvailableDevices.FirstOrDefault(d => d.Id == id);
+            if (renderer is null)
+            {
+                return SetNullCastRenderer();
+            }
+
+            return SetCastRenderer(renderer);
         }
 
         private void EndReached(object sender, EventArgs e)
@@ -314,26 +375,15 @@ namespace CastIt.Services
             OnTimeChanged?.Invoke(seconds);
         }
 
-        private void Clean()
+        private void Paused(object sender, EventArgs e)
         {
-            try
-            {
-                _player.DeviceAdded -= RendererDiscovererItemAdded;
-                _player.EndReached -= EndReached;
-                _player.TimeChanged -= TimeChanged;
-                _player.PositionChanged -= PositionChanged;
+            OnPaused?.Invoke();
+        }
 
-                _webServerCancellationToken.Cancel();
-                _ffmpegService.KillThumbnailProcess();
-                _ffmpegService.KillTranscodeProcess();
-
-                _webServer.Dispose();
-                _player.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(Clean)}: An unknown error ocurred");
-            }
+        private void Disconnected(object sender, EventArgs e)
+        {
+            _renderWasSet = false;
+            OnDisconnected?.Invoke();
         }
 
         private void RendererDiscovererItemAdded(object sender, DeviceAddedArgs e)
@@ -360,50 +410,11 @@ namespace CastIt.Services
         //    });
         //}
 
-        public string GetFileName(string mrl)
-        {
-            if (FileUtils.IsLocalFile(mrl))
-                return Path.GetFileName(mrl);
-            return mrl;
-        }
-
-        public string GetExtension(string mrl)
-        {
-            if (FileUtils.IsLocalFile(mrl))
-                return Path.GetExtension(mrl).ToUpper();
-            if (FileUtils.IsUrlFile(mrl))
-                return "WEB";
-            return "N/A";
-        }
-
-        public string GetFileSizeString(string mrl)
-        {
-            if (!FileUtils.IsLocalFile(mrl))
-                return "N/A";
-            var fileInfo = new FileInfo(mrl);
-            return GetBytesReadable(fileInfo.Length);
-        }
-
         private Task SetCastRenderer(IReceiver receiver)
         {
             _renderWasSet = true;
             OnCastRendererSet?.Invoke(receiver.Id);
             return _player.ConnectAsync(receiver);
-        }
-
-        public Task SetCastRenderer(string id)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                return SetNullCastRenderer();
-            }
-            var renderer = AvailableDevices.FirstOrDefault(d => d.Id == id);
-            if (renderer is null)
-            {
-                return SetNullCastRenderer();
-            }
-
-            return SetCastRenderer(renderer);
         }
 
         private Task SetNullCastRenderer()
@@ -412,7 +423,7 @@ namespace CastIt.Services
             return _player.DisconnectAsync();
         }
 
-        public string GetBytesReadable(long i)
+        private string GetBytesReadable(long i)
         {
             // Get absolute value
             long absolute_i = i < 0 ? -i : i;

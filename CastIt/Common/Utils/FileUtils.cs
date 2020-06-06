@@ -133,11 +133,11 @@ namespace CastIt.Common.Utils
             return exists;
         }
 
-        public static void DeleteFilesInDirectory(string dir)
+        public static void DeleteFilesInDirectory(string dir, DateTime lastAccessTime)
         {
             var files = new DirectoryInfo(dir)
                 .GetFiles()
-                .Where(f => f.LastAccessTime < DateTime.Now.AddDays(-1))
+                .Where(f => f.LastAccessTime < lastAccessTime)
                 .ToList();
             foreach (var file in files)
             {

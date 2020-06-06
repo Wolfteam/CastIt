@@ -66,7 +66,7 @@ namespace CastIt.ViewModels
         public bool IsPaused
         {
             get => _isPaused;
-            set => SetProperty(ref _isPaused, value);
+            set => this.RaiseAndSetIfChanged(ref _isPaused, value);
         }
 
         public bool IsCurrentlyPlaying
@@ -260,15 +260,18 @@ namespace CastIt.ViewModels
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
-            _castService.QualitiesChanged += QualitiesChanged;
+            _castService.QualitiesChanged += OnQualitiesChanged;
+            _castService.OnPaused += OnPaused;
+            _castService.OnDisconnected += OnDisconnected;
 
             Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
 
-            Logger.Info($"{nameof(Initialize)}: Deleting old preview files...");
+            Logger.Info($"{nameof(Initialize)}: Deleting old preview / log files...");
             try
             {
-                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath());
+                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath(), DateTime.Now.AddDays(-1));
+                FileUtils.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
             }
             catch (Exception e)
             {
@@ -334,7 +337,8 @@ namespace CastIt.ViewModels
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
-                Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force))
+                Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force)),
+                Messenger.Subscribe<DisconnectMessage>(_ => OnStoppedPlayBack())
             });
         }
 
@@ -483,13 +487,14 @@ namespace CastIt.ViewModels
             {
                 playList.CleanUp();
             }
-            //await _playListsService.SavePlayLists(PlayLists.ToList());
             await StopPlayBack();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
             _castService.OnTimeChanged -= OnFileDurationChanged;
             _castService.OnPositionChanged -= OnFilePositionChanged;
             _castService.OnEndReached -= OnFileEndReached;
+            _castService.OnPaused -= OnPaused;
+            _castService.OnDisconnected -= OnDisconnected;
             _closeApp.Raise();
         }
 
@@ -540,8 +545,11 @@ namespace CastIt.ViewModels
                 Logger.Info(
                     $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
                     $"Probably an end of playlist");
+                _castService.StopRunningProcess();
+
                 if (playlist.Loop)
                 {
+                    Logger.Info($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
                     playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
                 }
                 return;
@@ -662,6 +670,12 @@ namespace CastIt.ViewModels
         private async Task StopPlayBack()
         {
             await _castService.StopPlayback();
+            OnStoppedPlayBack();
+        }
+
+        private void OnStoppedPlayBack()
+        {
+            _castService.StopRunningProcess();
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = null;
             SetCurrentlyPlayingInfo(null, false);
@@ -685,6 +699,8 @@ namespace CastIt.ViewModels
 
         private void OnFileDurationChanged(double seconds)
         {
+            IsPaused = false;
+
             if (_currentlyPlayedFile is null)
                 return;
 
@@ -849,7 +865,7 @@ namespace CastIt.ViewModels
             return PlayFile(_currentlyPlayedFile, false, true);
         }
 
-        private void QualitiesChanged(int selectedQuality, List<int> qualities)
+        private void OnQualitiesChanged(int selectedQuality, List<int> qualities)
         {
             var vms = qualities.OrderBy(q => q).Select(q => new FileItemOptionsViewModel
             {
@@ -861,6 +877,12 @@ namespace CastIt.ViewModels
             }).ToList();
             CurrentFileQualities.ReplaceWith(vms);
         }
+
+        private void OnPaused()
+            => IsPaused = true;
+
+        private void OnDisconnected()
+            => OnStoppedPlayBack();
         #endregion
     }
 }
