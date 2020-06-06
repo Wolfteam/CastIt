@@ -5,20 +5,21 @@
 
 > A casting app made for my personal use
 <p align="center">
-  <img height="450" width="700" src="images/img1.png">
+  <img height="450" width="700" src="images/imgA.png">
 </p>
 
 
 
 <p align="center">
-  <img height="450" width="700" src="images/img2.png">    
+  <img height="450" width="700" src="images/imgB.png">    
 </p>
 
 
 
 <p align="center">
-  <img height="450" width="700" src="images/img3.png">    
+  <img height="450" width="700" src="images/imgC.png">    
 </p>
+
 
 ### Features
 * Playlists
