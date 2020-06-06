@@ -6,6 +6,8 @@
 
         string FriendlyName { get; }
 
+        string Type { get; }
+
         string Host { get; }
 
         int Port { get; }

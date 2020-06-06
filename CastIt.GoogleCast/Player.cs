@@ -47,6 +47,7 @@ namespace CastIt.GoogleCast
         public event EventHandler<DeviceAddedArgs> DeviceAdded;
         public event EventHandler<double> TimeChanged;
         public event EventHandler<double> PositionChanged;
+        public event EventHandler Paused;
         public event EventHandler EndReached;
         #endregion
 
@@ -79,25 +80,39 @@ namespace CastIt.GoogleCast
 
         public Player(
             IMvxLog logger,
-            IReceiver receiver,
-            string destinationId = AppConstants.DESTINATION_ID,
-            string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(receiver?.Host, receiver?.Port ?? 0, destinationId, senderId, logMsgs)
-        {
-            _logger = logger;
-        }
-
-        public Player(
-            IMvxLog logger,
             string host,
             int port = 8009,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
             bool logMsgs = true)
-            : this(host, port, destinationId, senderId, logMsgs)
+            : this(logger, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logMsgs)
+        {
+        }
+
+        public Player(
+            IMvxLog logger,
+            IReceiver receiver,
+            string destinationId = AppConstants.DESTINATION_ID,
+            string senderId = AppConstants.SENDER_ID,
+            bool logMsgs = true)
         {
             _logger = logger;
+            _destinationId = destinationId;
+            CanLog = logMsgs;
+
+            _sender = new Sender(_logger, senderId, receiver, HandleResponseMsg);
+            _connectionChannel = new ConnectionChannel(destinationId);
+            _heartbeatChannel = new HeartbeatChannel(destinationId);
+            _mediaChannel = new MediaChannel(destinationId, async () =>
+            {
+                var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
+                return app.SessionId;
+            });
+            _receiverChannel = new ReceiverChannel(destinationId);
+            //_receiverChannel.StatusChanged += (s, e) =>
+            //{
+            //    _logger.Info($"Receiver status changed = {JsonConvert.SerializeObject(_receiverChannel.Status)}");
+            //};
         }
 
         public Player(
@@ -167,11 +182,12 @@ namespace CastIt.GoogleCast
             PositionChanged = null;
             TimeChanged = null;
             EndReached = null;
+            Paused = null;
         }
 
-        public static Task<List<IReceiver>> GetDevicesAsync()
+        public static Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
         {
-            return DeviceLocator.FindReceiversAsync();
+            return DeviceLocator.FindReceiversAsync(scanTime);
         }
 
         #region Receiver Channel
@@ -187,8 +203,8 @@ namespace CastIt.GoogleCast
 
         public async Task DisconnectAsync()
         {
-            //_receiverChannel.Status = null;
-            //_mediaChannel.Status = null;
+            (_receiverChannel as IStatusChannel).Status = null;
+            (_mediaChannel as IStatusChannel).Status = null;
             CancelAndSetMediaToken();
             if (_sender.IsConnected)
                 await _receiverChannel.StopAsync(_sender);
@@ -221,7 +237,7 @@ namespace CastIt.GoogleCast
 
             TriggerTimeEvents();
             IsPlaying = true;
-            ListenForMediaChanges();
+            ListenForMediaChanges(_mediaChangedToken.Token);
             return status;
         }
 
@@ -340,21 +356,22 @@ namespace CastIt.GoogleCast
             _mediaChangedToken = new CancellationTokenSource();
         }
 
-        private async void ListenForMediaChanges()
+        private async void ListenForMediaChanges(CancellationToken token)
         {
-            CancelAndSetMediaToken();
             try
             {
                 await Task.Run(async () =>
                 {
                     bool checkMediaStatus = true;
-                    while (checkMediaStatus || !_mediaChangedToken.IsCancellationRequested)
+                    while (checkMediaStatus || !token.IsCancellationRequested)
                     {
                         bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                         await Task.Delay(GetStatusDelay);
-                        var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
-                        if (_mediaChangedToken.IsCancellationRequested)
+
+                        if (token.IsCancellationRequested)
                             return;
+                        var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
+
                         if (mediaStatus is null)
                         {
                             IsPlaying = false;
@@ -367,9 +384,15 @@ namespace CastIt.GoogleCast
                             break;
                         }
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
+                        if (mediaStatus.PlayerState == PlayerState.Paused)
+                        {
+                            IsPlaying = false;
+                            Paused?.Invoke(this, EventArgs.Empty);
+                            continue;
+                        }
+                        IsPlaying = true;
                         TriggerTimeEvents();
-                        if (!contentIsBeingPlayed &&
-                            Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
+                        if (Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
                         {
                             _logger.LogInfo($"{nameof(ListenForMediaChanges)}: End reached because the ElapsedSeconds >= CurrentMediaDuration.");
                             IsPlaying = false;
@@ -377,7 +400,7 @@ namespace CastIt.GoogleCast
                             break;
                         }
                     }
-                }, _mediaChangedToken.Token).ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
             }
             catch (Exception e)
             {

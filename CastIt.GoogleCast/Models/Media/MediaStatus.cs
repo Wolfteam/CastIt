@@ -1,10 +1,21 @@
-﻿namespace CastIt.GoogleCast.Models.Media
+﻿using CastIt.GoogleCast.Enums;
+using Newtonsoft.Json;
+using System;
+
+namespace CastIt.GoogleCast.Models.Media
 {
     public class MediaStatus
     {
         public long MediaSessionId { get; set; }
         public int PlaybackRate { get; set; }
-        public string PlayerState { get; set; }
+
+        [JsonProperty(PropertyName = "playerState")]
+        public string PlayerStateString { get; set; }
+
+        [JsonProperty(PropertyName = "playerStateEnum")]
+        public PlayerState PlayerState
+            => (PlayerState)Enum.Parse(typeof(PlayerState), PlayerStateString, true);
+
         public double CurrentTime { get; set; }
         public int SupportedMediaCommands { get; set; }
         public Volume Volume { get; set; }

@@ -19,16 +19,19 @@ namespace CastIt.GoogleCast
             var properties = service.Properties.First();
             return new Receiver()
             {
-                Id = properties["id"],
-                FriendlyName = properties["fn"],
+                Id = properties.ContainsKey("id") ? properties["id"] : string.Empty,
+                FriendlyName = properties.ContainsKey("fn") ? properties["fn"] : string.Empty,
+                Type = properties.ContainsKey("md") ? properties["md"] : string.Empty,
                 Host = host.IPAddress,
                 Port = service.Port
             };
         }
 
-        public static async Task<List<IReceiver>> FindReceiversAsync()
+        public static async Task<List<IReceiver>> FindReceiversAsync(TimeSpan scanTime)
         {
-            var devices = await ZeroconfResolver.ResolveAsync(PROTOCOL, retries: 1, retryDelayMilliseconds: 100);
+            var devices = await ZeroconfResolver
+                .ResolveAsync(PROTOCOL, scanTime: scanTime, retries: 1, retryDelayMilliseconds: 100)
+                .ConfigureAwait(false);
             return devices.Select(CreateReceiver).ToList();
         }
 

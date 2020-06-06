@@ -8,6 +8,8 @@ namespace CastIt.GoogleCast.Models.Receiver
 
         public string FriendlyName { get; set; }
 
+        public string Type { get; set; }
+
         public string Host { get; set; }
 
         public int Port { get; set; }
