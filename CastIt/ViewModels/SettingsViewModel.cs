@@ -3,8 +3,11 @@ using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models;
+using CastIt.Models.Messages;
+using CastIt.ViewModels.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
+using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -17,8 +20,7 @@ namespace CastIt.ViewModels
     {
         #region Members
         private readonly IAppSettingsService _settingsService;
-        private Item _currentTheme;
-        private Item _currentLanguage;
+        private readonly IMvxNavigationService _navigationService;
 
         private readonly MvxInteraction<string> _changeSelectedAccentColor = new MvxInteraction<string>();
         #endregion     
@@ -28,11 +30,7 @@ namespace CastIt.ViewModels
             => GetThemes();
         public Item CurrentTheme
         {
-            get
-            {
-                _currentTheme = Themes.First(l => l.Id == _settingsService.AppTheme.ToString());
-                return _currentTheme;
-            }
+            get => Themes.First(l => l.Id == _settingsService.AppTheme.ToString());
             set
             {
                 if (value == null)
@@ -40,7 +38,7 @@ namespace CastIt.ViewModels
                 var selectedTheme = (AppThemeType)Enum.Parse(typeof(AppThemeType), value.Id, true);
                 WindowsUtils.ChangeTheme(selectedTheme, _settingsService.AccentColor);
                 _settingsService.AppTheme = selectedTheme;
-                SetProperty(ref _currentTheme, value);
+                RaisePropertyChanged(() => CurrentTheme);
             }
         }
 
@@ -48,11 +46,7 @@ namespace CastIt.ViewModels
             => GetLanguages();
         public Item CurrentLanguage
         {
-            get
-            {
-                _currentLanguage = Languages.First(l => l.Id == _settingsService.Language.ToString());
-                return _currentLanguage;
-            }
+            get => Languages.First(l => l.Id == _settingsService.Language.ToString());
             set
             {
                 if (value == null)
@@ -60,7 +54,7 @@ namespace CastIt.ViewModels
                 var selectedLang = (AppLanguageType)Enum.Parse(typeof(AppLanguageType), value.Id, true);
                 _settingsService.Language = selectedLang;
                 TextProvider.SetLanguage(selectedLang, true);
-                SetProperty(ref _currentLanguage, value);
+                RaisePropertyChanged(() => CurrentLanguage);
             }
         }
 
@@ -69,10 +63,77 @@ namespace CastIt.ViewModels
 
         public string CurrentAccentColor
             => _settingsService.AccentColor;
+
+        public bool ShowFileDetails
+        {
+            get => _settingsService.ShowFileDetails;
+            set
+            {
+                _settingsService.ShowFileDetails = value;
+                Messenger.Publish(new ShowFileDetailsMessage(this, value));
+                RaisePropertyChanged(() => ShowFileDetails);
+            }
+        }
+
+        public bool StartFilesFromTheStart
+        {
+            get => _settingsService.StartFilesFromTheStart;
+            set
+            {
+                _settingsService.StartFilesFromTheStart = value;
+                RaisePropertyChanged(() => StartFilesFromTheStart);
+            }
+        }
+
+        public bool PlayNextFileAutomatically
+        {
+            get => _settingsService.PlayNextFileAutomatically;
+            set
+            {
+                _settingsService.PlayNextFileAutomatically = value;
+                RaisePropertyChanged(() => PlayNextFileAutomatically);
+            }
+        }
+
+        public bool ForceVideoTranscode
+        {
+            get => _settingsService.ForceVideoTranscode;
+            set
+            {
+                _settingsService.ForceVideoTranscode = value;
+                RaisePropertyChanged(() => ForceVideoTranscode);
+            }
+        }
+
+        public bool ForceAudioTranscode
+        {
+            get => _settingsService.ForceAudioTranscode;
+            set
+            {
+                _settingsService.ForceAudioTranscode = value;
+                RaisePropertyChanged(() => ForceAudioTranscode);
+            }
+        }
+
+        public MvxObservableCollection<Item> VideoScales
+            => GetVideoScales();
+
+        public Item CurrentVideoScale
+        {
+            get => VideoScales.First(l => l.Id == _settingsService.VideoScale.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.VideoScale = (VideoScaleType)Enum.Parse(typeof(VideoScaleType), value.Id, true);
+                RaisePropertyChanged(() => CurrentVideoScale);
+            }
+        }
         #endregion
 
         #region Commands
         public IMvxCommand<string> AccentColorChangedCommand { get; private set; }
+        public IMvxAsyncCommand OpenAboutDialogCommand { get; private set; }
         #endregion
 
         #region Interactos
@@ -84,10 +145,12 @@ namespace CastIt.ViewModels
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IAppSettingsService settingsService)
+            IAppSettingsService settingsService,
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger.GetLogFor<SettingsViewModel>())
         {
             _settingsService = settingsService;
+            _navigationService = navigationService;
         }
 
         public override void SetCommands()
@@ -99,6 +162,9 @@ namespace CastIt.ViewModels
                 _changeSelectedAccentColor.Raise(hexColor);
                 WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
             });
+
+            OpenAboutDialogCommand = new MvxAsyncCommand(
+                async () => await _navigationService.Navigate<AboutDialogViewModel>());
         }
 
         private MvxObservableCollection<Item> GetThemes()
@@ -121,6 +187,32 @@ namespace CastIt.ViewModels
             });
 
             return new MvxObservableCollection<Item>(languages);
+        }
+
+        private MvxObservableCollection<Item> GetVideoScales()
+        {
+            var scales = new List<Item>
+            {
+                new Item
+                {
+                    Id = nameof(VideoScaleType.Original),
+                    Text = GetText("Original")
+                },
+
+                new Item
+                {
+                    Id = nameof(VideoScaleType.Hd),
+                    Text = "720p"
+                },
+
+                new Item
+                {
+                    Id = nameof(VideoScaleType.FullHd),
+                    Text = "1080p"
+                }
+            };
+
+            return new MvxObservableCollection<Item>(scales);
         }
     }
 }

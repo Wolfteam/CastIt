@@ -1,12 +1,17 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.GoogleCast;
+using CastIt.GoogleCast.Enums;
+using CastIt.GoogleCast.Interfaces;
+using CastIt.GoogleCast.Models.Events;
+using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
-using CastIt.Models;
-using LibVLCSharp.Shared;
+using CastIt.Server;
+using EmbedIO;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,364 +21,339 @@ namespace CastIt.Services
 {
     public class CastService : ICastService
     {
+        private const int SubTitleDefaultTrackId = 1;
+
         private readonly IMvxLog _logger;
-        private readonly HashSet<RendererItem> _rendererItems = new HashSet<RendererItem>();
-        private readonly string _ffmpegPath;
-        private LibVLC _libVLC;
-        private MediaPlayer _mediaPlayer;
-        private RendererDiscoverer _rendererDiscoverer;
-        private Media _currentMedia;
+        private readonly IFFMpegService _ffmpegService;
+        private readonly WebServer _webServer;
+        private readonly Player _player;
+        private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
+        private readonly Track _subtitle;
+        private readonly TextTrackStyle _subtitlesStyle;
+
         private bool _renderWasSet;
         private string _currentFilePath;
 
-        private bool _checkGenerateThumbnailProcess;
-        private readonly Process _generateThumbnailProcess;
-        private bool _checkGenerateAllThumbnailsProcess;
-        private readonly Process _generateAllThumbnailsProcess;
-
-        public List<CastableDevice> AvailableDevices => _rendererItems.Select(r => new CastableDevice
-        {
-            Name = r.Name,
-            Type = r.Type
-        }).ToList();
+        public IList<IReceiver> AvailableDevices { get; } = new List<IReceiver>();
         public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
+        public OnQualitiesChanged QualitiesChanged { get; set; }
+        public OnPaused OnPaused { get; set; }
+        public OnDisconnected OnDisconnected { get; set; }
 
-        public CastService(IMvxLogProvider logProvider)
+        public CastService(IMvxLogProvider logProvider, IFFMpegService ffmpegService, WebServer webServer)
         {
             _logger = logProvider.GetLogFor<CastService>();
-            _ffmpegPath = FileUtils.GetFFMpegPath();
-
-            var startInfo = new ProcessStartInfo
+            _ffmpegService = ffmpegService;
+            _webServer = webServer;
+            _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: false);
+            _subtitle = new Track
             {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                FileName = "cmd.exe"
+                TrackId = SubTitleDefaultTrackId,
+                SubType = TextTrackType.Subtitles,
+                Type = TrackType.Text,
+                Name = "English",
+                Language = "en-US"
             };
-
-            _generateThumbnailProcess = new Process
+            _subtitlesStyle = new TextTrackStyle
             {
-                StartInfo = startInfo
-            };
-
-            _generateAllThumbnailsProcess = new Process
-            {
-                StartInfo = startInfo
+                BackgroundColor = Color.Transparent,
+                EdgeColor = Color.Black,
+                FontScale = 1.2F,
+                WindowType = TextTrackWindowType.Normal,
+                EdgeType = TextTrackEdgeType.None,
+                FontStyle = TextTrackFontStyleType.Normal,
+                FontGenericFamily = TextTrackFontGenericFamilyType.Casual,
             };
         }
 
         public void Init()
         {
             _logger.Info($"{nameof(Init)}: Initializing all...");
+            _player.DeviceAdded += RendererDiscovererItemAdded;
+            _player.EndReached += EndReached;
+            _player.TimeChanged += TimeChanged;
+            _player.PositionChanged += PositionChanged;
+            _player.Paused += Paused;
+            _player.Disconnected += Disconnected;
 
-            // load native libvlc libraries
-            Core.Initialize();
-            // create core libvlc object
-            _libVLC = new LibVLC("--verbose=3");
-            //_libVLC.Log += Log;
-            DiscoverChromecasts();
+            _player.Init();
 
-            _mediaPlayer = new MediaPlayer(_libVLC);
-            _mediaPlayer.EncounteredError += EncounteredError;
-            _mediaPlayer.PositionChanged += PositionChanged;
-            _mediaPlayer.TimeChanged += TimeChanged;
-            _mediaPlayer.EndReached += EndReached;
-            _mediaPlayer.EnableHardwareDecoding = true;
+            _webServer.Start(_webServerCancellationToken.Token);
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
-        private void Log(object sender, LogEventArgs args)
+        public async Task<MediaStatus> StartPlay(
+            string mrl,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double seconds = 0)
         {
-            Debug.WriteLine(args.Message);
-        }
+            _ffmpegService.KillTranscodeProcess();
+            bool isLocal = FileUtils.IsLocalFile(mrl);
+            bool isUrlFile = FileUtils.IsUrlFile(mrl);
+            bool isVideoFile = FileUtils.IsVideoFile(mrl);
+            bool isMusicFile = FileUtils.IsMusicFile(mrl);
 
-        public async Task StartPlay(string mrl)
-        {
-            KillThumbnailProcess();
-            bool isLocal = IsLocalFile(mrl);
-            bool isUrlFile = IsUrlFile(mrl);
             if (!isLocal && !isUrlFile)
             {
                 _logger.Warn($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
-                return;
+                return null;
             }
 
-            if (_rendererItems.Count == 0)
+            if (AvailableDevices.Count == 0)
             {
-                _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl} will be played locally");
+                _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl}");
+                return null;
             }
 
-            if (!_renderWasSet && _rendererItems.Count > 0)
+            if (!_renderWasSet && AvailableDevices.Count > 0)
             {
-                SetCastRenderer(_rendererItems.First());
+                await SetCastRenderer(AvailableDevices.First());
             }
-
             // create new media
             _currentFilePath = mrl;
-            _currentMedia?.Dispose();
-            _currentMedia = new Media(
-                _libVLC,
-                mrl,
-                isLocal ? FromType.FromPath : FromType.FromLocation);
+            string title = isLocal ? Path.GetFileName(mrl) : mrl;
+            string url = isLocal
+                ? AppWebServer.GetMediaUrl(_webServer, mrl, videoStreamIndex, audioStreamIndex, seconds)
+                : mrl;
 
-            await _currentMedia.Parse(MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal);
-
-            await Task.Run(() =>
+            var metdata = isVideoFile ? new MovieMetadata
             {
-                if (IsLocalFile(mrl))
-                    _mediaPlayer.Play(_currentMedia);
-                else if (_currentMedia.SubItems.Any())
-                    _mediaPlayer.Play(_currentMedia.SubItems.First());
-                else
-                    _mediaPlayer.Play(_currentMedia);
-            });
+                Title = title,
+            } : new GenericMediaMetadata
+            {
+                Title = title,
+            };
+            var media = new MediaInformation
+            {
+                ContentId = url,
+                Metadata = metdata,
+                //You have to set the contenttype before hand, with that, the album art of a music file will be shown
+                ContentType = _ffmpegService.GetOutputTranscodeMimeType(mrl)
+            };
+
+            var activeTrackIds = new List<int>();
+            if (isLocal)
+            {
+                string imgUrl = AppWebServer.GetPreviewPath(_webServer, GetFirstThumbnail());
+
+                if (isVideoFile)
+                    media.StreamType = StreamType.Live;
+                if (subtitleStreamIndex >= 0)
+                {
+                    string subTitleFilePath = FileUtils.GetSubTitleFilePath();
+                    await _ffmpegService.GenerateSubTitles(mrl, subTitleFilePath, seconds, subtitleStreamIndex, default);
+                    _subtitle.TrackContentId = AppWebServer.GetSubTitlePath(_webServer, subTitleFilePath);
+                    media.Tracks.Add(_subtitle);
+                    media.TextTrackStyle = _subtitlesStyle;
+                    activeTrackIds.Add(SubTitleDefaultTrackId);
+                }
+
+                var fileInfo = await _ffmpegService.GetFileInfo(mrl, default);
+                media.Duration = fileInfo.Format.Duration;
+                if (isMusicFile)
+                {
+                    media.Metadata = new MusicTrackMediaMetadata
+                    {
+                        Title = title,
+                        AlbumName = fileInfo.Format.Tag?.Album,
+                        Artist = fileInfo.Format.Tag?.Artist,
+                    };
+                }
+
+                media.Metadata.Images.Add(new GoogleCast.Models.Image
+                {
+                    Url = imgUrl
+                });
+            }
+            else if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
+            {
+                var youtubeMedia = await YoutubeUrlDecoder.Parse(_logger, media.ContentId, quality);
+                QualitiesChanged?.Invoke(youtubeMedia.SelectedQuality, youtubeMedia.Qualities);
+                media.ContentId = youtubeMedia.Url;
+                media.Metadata.Title = youtubeMedia.Title;
+                media.Metadata.Subtitle = youtubeMedia.Description;
+                media.Metadata.Images.Add(new GoogleCast.Models.Image
+                {
+                    Url = youtubeMedia.ThumbnailUrl
+                });
+            }
+
+            _logger.Info($"{nameof(StartPlay)}: Trying to load file = {mrl} on seconds = {seconds}");
+            var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
+            _logger.Info($"{nameof(StartPlay)}: File loaded");
+
+            return status;
         }
 
         public string GetFirstThumbnail()
-            => GetThumbnail(3);
+            => GetThumbnail(10);
 
         public string GetFirstThumbnail(string filePath)
-            => GetThumbnail(filePath, 3);
+            => GetThumbnail(filePath, 10);
 
         public string GetThumbnail(int second)
             => GetThumbnail(_currentFilePath, second);
 
         public string GetThumbnail(string filePath, int second)
-        {
-            if (!IsLocalFile(filePath))
-            {
-                _logger.Warn($"{nameof(GetThumbnail)}: Cant get thumbnail for file = {filePath}. Its not a local file");
-                return null;
-            }
-
-            var filename = Path.GetFileName(filePath);
-            var ext = Path.GetExtension(filePath);
-            var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, second);
-            if (File.Exists(thumbnailPath))
-            {
-                return thumbnailPath;
-            }
-
-            //-i filename(the source video's file path)
-            //- deinterlace(converts interlaced video to non - interlaced form)
-            //- an(audio recording is disabled; we don't need it for thumbnails)
-            //- ss position(input video is decoded and dumped until the timestamp reaches position, 
-            //     our thumbnail's position in seconds)
-            //- t duration(the output file stops writing after duration seconds)
-            //-y(overwrites the output file if it already exists)
-            //-s widthxheight(size of the frame in pixels)
-            //https://stackoverflow.com/questions/48425905/cmd-exe-via-system-diagnostics-process-cannot-parse-an-argument-with-spaces
-            string cmd;
-
-            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase))
-            {
-                cmd = $@"/C "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -an -filter:v scale=200:150 ""{thumbnailPath}"" "" && exit";
-            }
-            else
-            {
-                cmd = $@"/C -ss {second} -an "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -vframes 1 -s 200x150 ""{thumbnailPath}"" "" && exit";
-            }
-            try
-            {
-                _logger.Info($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {filePath}. Cmd = {cmd}");
-                _checkGenerateThumbnailProcess = true;
-                _generateThumbnailProcess.StartInfo.Arguments = cmd;
-                _generateThumbnailProcess.Start();
-                _generateThumbnailProcess.WaitForExit();
-                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was succesfully generated for file = {filePath}");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
-            }
-            finally
-            {
-                _checkGenerateThumbnailProcess = false;
-            }
-            return thumbnailPath;
-        }
+            => _ffmpegService.GetThumbnail(filePath, second);
 
         public void GenerateThumbmnails()
             => GenerateThumbmnails(_currentFilePath);
 
-        public void GenerateThumbmnails(string filePath)
+        public async void GenerateThumbmnails(string filePath)
         {
-            if (!IsLocalFile(filePath))
+            await Task.Run(() =>
             {
-                return;
-            }
-            var filename = Path.GetFileName(filePath);
-            var ext = Path.GetExtension(filePath);
-
-            if (AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase))
-            {
-                _logger.Info(
-                    $"{nameof(GenerateThumbmnails)}: File = {filePath} is a music one, " +
-                    $"so we wont generate thumbnails for it");
-                return;
-            }
-            var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
-            var cmd = $@"/C "" ""{_ffmpegPath}"" -y -i ""{filePath}"" -an -vf fps=1/5 -s 200x150 ""{thumbnailPath}"" "" && exit";
-            try
-            {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {filePath}. Cmd = {cmd}");
-                _checkGenerateAllThumbnailsProcess = true;
-                _generateThumbnailProcess.StartInfo.Arguments = cmd;
-                _generateAllThumbnailsProcess.Start();
-                _generateAllThumbnailsProcess.WaitForExit();
-                _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {filePath}");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
-            }
-            finally
-            {
-                _checkGenerateAllThumbnailsProcess = false;
-            }
+                _ffmpegService.KillThumbnailProcess();
+                _ffmpegService.GenerateThumbmnails(filePath);
+            }).ConfigureAwait(false);
         }
 
-        public void TogglePlayback()
+        public Task TogglePlayback()
         {
-            if (_mediaPlayer.IsPlaying)
+            if (_player.IsPlaying)
             {
-                _mediaPlayer.Pause();
+                return _player.PauseAsync();
             }
-            else
-            {
-                _mediaPlayer.Play();
-            }
+
+            return _player.PlayAsync();
         }
 
         public Task StopPlayback()
         {
-            KillThumbnailProcess();
-            return Task.Run(() => _mediaPlayer.Stop());
+            StopRunningProcess();
+            return _player.StopPlaybackAsync();
         }
 
-        public void CleanThemAll()
+        public Task<MediaStatus> GoToPosition(
+            string filePath,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double position,
+            double totalSeconds)
         {
-            Clean();
+            if (position >= 0 && position <= 100)
+            {
+                double seconds = position * totalSeconds / 100;
+                if (FileUtils.IsLocalFile(filePath))
+                    return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
+
+                return _player.SeekAsync(seconds);
+            }
+
+            _logger.Warn($"{nameof(GoToPosition)} Cant go to position = {position}");
+            return Task.FromResult<MediaStatus>(null);
         }
 
-        public Task GoToPosition(float position)
+        public Task<MediaStatus> GoToSeconds(
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double seconds)
         {
-            try
-            {
-                position /= 100;
-                if (position >= 0 && position <= 1)
-                {
-                    return Task.Run(() => _mediaPlayer.Position = position);
-                }
-                else
-                {
-                    _logger.Warn($"{nameof(GoToPosition)} Cant go to position = {position}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(GoToPosition)}: Unknown error while goin to position = {position}");
-            }
+            if (FileUtils.IsLocalFile(_currentFilePath))
+                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
 
-            return Task.CompletedTask;
+            return _player.SeekAsync(seconds);
         }
 
-        public Task GoToSeconds(long seconds)
+        public Task<MediaStatus> AddSeconds(
+            int videoStreamIndex,
+            int audioStreamIndex,
+            int subtitleStreamIndex,
+            int quality,
+            double seconds)
         {
-            try
+            var current = _player.ElapsedSeconds + seconds;
+            if (FileUtils.IsLocalFile(_currentFilePath))
             {
-                return Task.Run(() => _mediaPlayer.Time = seconds * 1000);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(GoToSeconds)}: Unknown error while going to seconds = {seconds * 1000}");
-            }
-            return Task.CompletedTask;
-        }
-
-        public Task AddSeconds(long seconds)
-        {
-            try
-            {
-                //Time is expresed in ms
-                var current = _mediaPlayer.Time / 1000;
-                current += seconds;
                 if (current < 0)
                 {
                     _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {current}. They will be set to 0");
                     current = 0;
                 }
-                return Task.Run(() => _mediaPlayer.Time = current * 1000);
+                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, current);
             }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(AddSeconds)}: Unknown error while adding seconds = {seconds}");
-            }
-            return Task.CompletedTask;
+            return _player.SeekAsync(current);
         }
 
-        public bool DiscoverChromecasts()
+        public void StopRunningProcess()
         {
-            // choose the correct service discovery protocol depending on the host platform
-            // Apple platforms use the Bonjour protocol
-            var renderer = _libVLC.RendererList.FirstOrDefault();
-            _logger.Info($"{nameof(DiscoverChromecasts)}: The renderer to be used is = {renderer.Name}");
-
-            _rendererDiscoverer?.Dispose();
-
-            // create a renderer discoverer
-            _rendererDiscoverer = new RendererDiscoverer(_libVLC, renderer.Name);
-
-            // register callback when a new renderer is found
-            _rendererDiscoverer.ItemAdded += RendererDiscovererItemAdded;
-            _rendererDiscoverer.ItemDeleted += RendererDiscovererItemDeleted;
-
-            // start discovery on the local network
-            return _rendererDiscoverer.Start();
+            _ffmpegService.KillThumbnailProcess();
+            _ffmpegService.KillTranscodeProcess();
         }
 
-        public async Task<long> GetDuration(string mrl, CancellationToken cancellationToken = default)
+        public void CleanThemAll()
         {
-            bool isLocal = IsLocalFile(mrl);
-            bool isUrl = IsUrlFile(mrl);
-            if (!isLocal && !isUrl)
-            {
-                _logger.Warn($"{nameof(GetDuration)}: Couldnt retrieve duration for file = {mrl}. It is not a local / url file");
-                return -1;
-            }
-
-            using var media = new Media(_libVLC, mrl, isLocal ? FromType.FromPath : FromType.FromLocation);
             try
             {
-                var status = await media.Parse(
-                    MediaParseOptions.ParseNetwork | MediaParseOptions.ParseLocal,
-                    cancellationToken: cancellationToken);
-                if (status == MediaParsedStatus.Done)
-                    return media.Duration / 1000;
-                return 0;
+                _player.DeviceAdded -= RendererDiscovererItemAdded;
+                _player.EndReached -= EndReached;
+                _player.TimeChanged -= TimeChanged;
+                _player.PositionChanged -= PositionChanged;
+                _player.Paused -= Paused;
+                _player.Disconnected -= Disconnected;
+
+                _webServerCancellationToken.Cancel();
+                StopRunningProcess();
+
+                _webServer.Dispose();
+                _player.Dispose();
             }
             catch (Exception ex)
             {
-                if (!(ex is TaskCanceledException))
-                    _logger.Error(ex, $"{nameof(GetDuration)}: Unknown error while trying to parse file = {mrl}");
-                return -1;
+                _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error ocurred");
             }
         }
 
-        public bool IsLocalFile(string mrl)
+        public string GetFileName(string mrl)
         {
-            return File.Exists(mrl);
+            if (FileUtils.IsLocalFile(mrl))
+                return Path.GetFileName(mrl);
+            return mrl;
         }
 
-        public bool IsUrlFile(string mrl)
+        public string GetExtension(string mrl)
         {
-            return Uri.TryCreate(mrl, UriKind.Absolute, out Uri uriResult) &&
-                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            if (FileUtils.IsLocalFile(mrl))
+                return Path.GetExtension(mrl).ToUpper();
+            if (FileUtils.IsUrlFile(mrl))
+                return "WEB";
+            return "N/A";
+        }
+
+        public string GetFileSizeString(string mrl)
+        {
+            if (!FileUtils.IsLocalFile(mrl))
+                return "N/A";
+            var fileInfo = new FileInfo(mrl);
+            return GetBytesReadable(fileInfo.Length);
+        }
+
+        public Task SetCastRenderer(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return SetNullCastRenderer();
+            }
+            var renderer = AvailableDevices.FirstOrDefault(d => d.Id == id);
+            if (renderer is null)
+            {
+                return SetNullCastRenderer();
+            }
+
+            return SetCastRenderer(renderer);
         }
 
         private void EndReached(object sender, EventArgs e)
@@ -381,9 +361,8 @@ namespace CastIt.Services
             OnEndReached?.Invoke();
         }
 
-        private void PositionChanged(object sender, MediaPlayerPositionChangedEventArgs e)
+        private void PositionChanged(object sender, double position)
         {
-            var position = e.Position * 100;
             if (position > 100)
             {
                 position = 100;
@@ -391,183 +370,104 @@ namespace CastIt.Services
             OnPositionChanged?.Invoke(position);
         }
 
-        private void TimeChanged(object sender, MediaPlayerTimeChangedEventArgs e)
+        private void TimeChanged(object sender, double seconds)
         {
-            OnTimeChanged?.Invoke(e.Time / 1000);
+            OnTimeChanged?.Invoke(seconds);
         }
 
-        private void EncounteredError(object sender, EventArgs e)
+        private void Paused(object sender, EventArgs e)
         {
-            _logger.Error($"{nameof(EncounteredError)}: Unknown error {e}");
+            OnPaused?.Invoke();
         }
 
-        private void Clean()
+        private void Disconnected(object sender, EventArgs e)
         {
-            try
-            {
-                _libVLC.Log -= Log;
-                _mediaPlayer.EncounteredError -= EncounteredError;
-                _mediaPlayer.PositionChanged -= PositionChanged;
-                _mediaPlayer.TimeChanged -= TimeChanged;
-                _mediaPlayer.EndReached -= EndReached;
-                _mediaPlayer?.Stop();
-                _currentMedia?.Dispose();
-                _rendererDiscoverer.ItemAdded -= RendererDiscovererItemAdded;
-                _rendererDiscoverer.ItemDeleted -= RendererDiscovererItemDeleted;
-                _rendererDiscoverer?.Stop();
-                _mediaPlayer?.Dispose();
-                _rendererDiscoverer?.Dispose();
-                _libVLC?.Dispose();
-
-                _libVLC = null;
-                _mediaPlayer = null;
-                _currentMedia = null;
-                _rendererDiscoverer = null;
-
-                KillThumbnailProcess();
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(Clean)}: An unknown error ocurred");
-            }
+            _renderWasSet = false;
+            OnDisconnected?.Invoke();
         }
 
-        private void RendererDiscovererItemAdded(object sender, RendererDiscovererItemAddedEventArgs e)
+        private void RendererDiscovererItemAdded(object sender, DeviceAddedArgs e)
         {
             _logger.Info(
                 $"{nameof(RendererDiscovererItemAdded)}: New item discovered: " +
-                $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
-            _rendererItems.Add(e.RendererItem);
+                $"{e.Receiver.FriendlyName} - Ip = {e.Receiver.Host}:{e.Receiver.Port}");
+            AvailableDevices.Add(e.Receiver);
 
-            OnCastableDeviceAdded?.Invoke(new CastableDevice
-            {
-                Name = e.RendererItem.Name,
-                Type = e.RendererItem.Type
-            });
+            OnCastableDeviceAdded?.Invoke(e.Receiver);
         }
 
-        private void RendererDiscovererItemDeleted(object sender, RendererDiscovererItemDeletedEventArgs e)
-        {
-            _logger.Info(
-                $"{nameof(RendererDiscovererItemAdded)}: Item removed: " +
-                $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
-            _rendererItems.Remove(e.RendererItem);
-            OnCastableDeviceDeleted?.Invoke(new CastableDevice
-            {
-                Name = e.RendererItem.Name,
-                Type = e.RendererItem.Type
-            });
-        }
+        //TODO: CHECK IF WE CAN KNOW WHEN A DEVICE IS REMOVED
+        //private void RendererDiscovererItemDeleted(object sender, RendererDiscovererItemDeletedEventArgs e)
+        //{
+        //    _logger.Info(
+        //        $"{nameof(RendererDiscovererItemAdded)}: Item removed: " +
+        //        $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
+        //    _rendererItems.Remove(e.RendererItem);
+        //    OnCastableDeviceDeleted?.Invoke(new CastableDevice
+        //    {
+        //        Name = e.RendererItem.Name,
+        //        Type = e.RendererItem.Type
+        //    });
+        //}
 
-        public string GetFileName(string mrl)
+        private Task SetCastRenderer(IReceiver receiver)
         {
-            if (IsLocalFile(mrl))
-                return Path.GetFileName(mrl);
-            return mrl;
-        }
-
-        public string GetExtension(string mrl)
-        {
-            if (IsLocalFile(mrl))
-                return Path.GetExtension(mrl).ToUpper();
-            if (IsUrlFile(mrl))
-                return "WEB";
-            return "N/A";
-        }
-
-        public string GetFileSizeString(string mrl)
-        {
-            if (!IsLocalFile(mrl))
-                return "N/A";
-            var fileInfo = new FileInfo(mrl);
-            var sizeInBytes = fileInfo.Length;
-            float sizeInMb = sizeInBytes / 1024F / 1024F;
-            return Math.Round(sizeInMb, 2) + " MB";
-        }
-
-        public bool IsVideoFile(string mrl)
-        {
-            if (!IsLocalFile(mrl))
-                return false;
-            return IsVideoOrMusicFile(mrl, true);
-        }
-
-        public bool IsMusicFile(string mrl)
-        {
-            if (!IsLocalFile(mrl))
-                return false;
-            return IsVideoOrMusicFile(mrl, false);
-        }
-
-        private bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
-        {
-            string ext = Path.GetExtension(mrl);
-            if (checkForVideo)
-                return AppConstants.AllowedVideoFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
-            return AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
-        }
-
-        private void KillThumbnailProcess()
-        {
-            try
-            {
-                if (_checkGenerateAllThumbnailsProcess &&
-                    !_generateAllThumbnailsProcess.HasExited)
-                {
-                    _logger.Info($"{nameof(KillThumbnailProcess)}: Killing the generate all thumbnails process");
-                    _generateAllThumbnailsProcess.Kill(true);
-                    _generateAllThumbnailsProcess.WaitForExit();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate all thumbnails process");
-            }
-
-            try
-            {
-                if (_checkGenerateThumbnailProcess &&
-                    !_generateThumbnailProcess.HasExited)
-                {
-                    _logger.Info($"{nameof(KillThumbnailProcess)}: Killing the generate thumbnail process");
-                    _generateThumbnailProcess.Kill(true);
-                    _generateThumbnailProcess.WaitForExit();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate thumbnail process");
-            }
-        }
-
-        private void SetCastRenderer(RendererItem renderer)
-        {
-            _mediaPlayer.SetRenderer(renderer);
             _renderWasSet = true;
-            OnCastRendererSet?.Invoke(renderer.Name, renderer.Type);
+            OnCastRendererSet?.Invoke(receiver.Id);
+            return _player.ConnectAsync(receiver);
         }
 
-        public void SetCastRenderer(string name, string type)
+        private Task SetNullCastRenderer()
         {
-            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(type))
-            {
-                SetNullCastRenderer();
-                return;
-            }
-            var renderer = _rendererItems.FirstOrDefault(d => d.Name == name && d.Type == type);
-            if (renderer is null)
-            {
-                SetNullCastRenderer();
-                return;
-            }
-
-            SetCastRenderer(renderer);
-        }
-
-        private void SetNullCastRenderer()
-        {
-            _mediaPlayer.SetRenderer(null);
             _renderWasSet = false;
+            return _player.DisconnectAsync();
+        }
+
+        private string GetBytesReadable(long i)
+        {
+            // Get absolute value
+            long absolute_i = i < 0 ? -i : i;
+            // Determine the suffix and readable value
+            string suffix;
+            double readable;
+            if (absolute_i >= 0x1000000000000000) // Exabyte
+            {
+                suffix = "EB";
+                readable = i >> 50;
+            }
+            else if (absolute_i >= 0x4000000000000) // Petabyte
+            {
+                suffix = "PB";
+                readable = i >> 40;
+            }
+            else if (absolute_i >= 0x10000000000) // Terabyte
+            {
+                suffix = "TB";
+                readable = i >> 30;
+            }
+            else if (absolute_i >= 0x40000000) // Gigabyte
+            {
+                suffix = "GB";
+                readable = i >> 20;
+            }
+            else if (absolute_i >= 0x100000) // Megabyte
+            {
+                suffix = "MB";
+                readable = i >> 10;
+            }
+            else if (absolute_i >= 0x400) // Kilobyte
+            {
+                suffix = "KB";
+                readable = i;
+            }
+            else
+            {
+                return i.ToString("0 B"); // Byte
+            }
+            // Divide by 1024 to get fractional value
+            readable /= 1024;
+            // Return formatted number with suffix
+            return readable.ToString("0.## ") + suffix;
         }
     }
 }

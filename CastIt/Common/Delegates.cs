@@ -1,11 +1,15 @@
-﻿using CastIt.Models;
+﻿using CastIt.GoogleCast.Interfaces;
+using System.Collections.Generic;
 
 namespace CastIt.Common
 {
-    public delegate void OnCastRendererSetHandler(string name, string type);
-    public delegate void OnCastableDeviceAddedHandler(CastableDevice newDevice);
-    public delegate void OnCastableDeviceDeletedHandler(CastableDevice deletedDevice);
-    public delegate void OnPositionChangedHandler(float newPosition);
+    public delegate void OnCastRendererSetHandler(string id);
+    public delegate void OnCastableDeviceAddedHandler(IReceiver receiver);
+    public delegate void OnCastableDeviceDeletedHandler(IReceiver receiver);
+    public delegate void OnPositionChangedHandler(double newPosition);
     public delegate void OnEndReachedHandler();
-    public delegate void OnTimeChangedHandler(long seconds);
+    public delegate void OnTimeChangedHandler(double seconds);
+    public delegate void OnQualitiesChanged(int selectedQuality, List<int> qualities);
+    public delegate void OnPaused();
+    public delegate void OnDisconnected();
 }

@@ -1,5 +1,7 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Extensions;
 using CastIt.Common.Utils;
+using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Dialogs;
@@ -19,10 +21,8 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    //TODO: SWITCH TO FFPROBE TO RETRIEVE FILE METADATA ?
     //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT FROM YOUR PHONE, THE ICONS ARE NOT UPDATED
     //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT AGAIN, THE PLAYED TIME SYNC WILL BE LOST
-    //TODO: QUEUING THE MEDIA EVENTS DOES NOT GUARANTEE THE ORDER OF EXECUTION (E.G: if you enqueue a stop and a play, the final result could be play and stop)
     public class MainViewModel : BaseViewModel
     {
         #region Members
@@ -50,6 +50,7 @@ namespace CastIt.ViewModels
         private bool _showSnackbar;
         private string _snackbarMsg;
         private string _snackBarActionMsg;
+        private bool _isBusy;
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
@@ -65,7 +66,7 @@ namespace CastIt.ViewModels
         public bool IsPaused
         {
             get => _isPaused;
-            set => SetProperty(ref _isPaused, value);
+            set => this.RaiseAndSetIfChanged(ref _isPaused, value);
         }
 
         public bool IsCurrentlyPlaying
@@ -170,6 +171,30 @@ namespace CastIt.ViewModels
             get => _snackBarActionMsg;
             set => SetProperty(ref _snackBarActionMsg, value);
         }
+
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
+        }
+
+        public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileVideos { get; }
+            = new MvxObservableCollection<FileItemOptionsViewModel>();
+        public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileAudios { get; }
+            = new MvxObservableCollection<FileItemOptionsViewModel>();
+        public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileSubTitles { get; }
+            = new MvxObservableCollection<FileItemOptionsViewModel>();
+        public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileQualities { get; }
+            = new MvxObservableCollection<FileItemOptionsViewModel>();
+
+        public int CurrentFileVideoStreamIndex
+            => CurrentFileVideos.FirstOrDefault(f => f.IsSelected)?.Id ?? 0;
+        public int CurrentFileAudioStreamIndex
+            => CurrentFileAudios.FirstOrDefault(f => f.IsSelected)?.Id ?? 0;
+        public int CurrentFileSubTitleStreamIndex
+            => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Id ?? -1;
+        public int CurrentFileQuality
+            => CurrentFileQualities.FirstOrDefault(f => f.IsSelected)?.Id ?? 360;
         #endregion
 
         #region Commands
@@ -189,6 +214,7 @@ namespace CastIt.ViewModels
         public IMvxCommand SnackbarActionCommand { get; private set; }
         public IMvxAsyncCommand<long> GoToSecondsCommand { get; private set; }
         public IMvxAsyncCommand ShowDownloadDialogCommand { get; private set; }
+        public IMvxAsyncCommand<FileItemOptionsViewModel> FileOptionsChangedCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -230,21 +256,22 @@ namespace CastIt.ViewModels
                 playlist.Items.AddRange(files);
             }
 
-            Logger.Info($"{nameof(Initialize)}: Creating the file duration task..");
-            DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations);
-
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
+            _castService.QualitiesChanged += OnQualitiesChanged;
+            _castService.OnPaused += OnPaused;
+            _castService.OnDisconnected += OnDisconnected;
 
             Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
 
-            Logger.Info($"{nameof(Initialize)}: Deleting old preview files...");
+            Logger.Info($"{nameof(Initialize)}: Deleting old preview / log files...");
             try
             {
-                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath());
+                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath(), DateTime.Now.AddDays(-1));
+                FileUtils.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
             }
             catch (Exception e)
             {
@@ -275,8 +302,7 @@ namespace CastIt.ViewModels
 
             StopPlayBackCommand = new MvxAsyncCommand(StopPlayBack);
 
-            SkipCommand = new MvxAsyncCommand<int>(
-                async (seconds) => await _castService.AddSeconds(seconds));
+            SkipCommand = new MvxAsyncCommand<int>(SkipSeconds);
 
             SwitchPlayListsCommand = new MvxCommand(SwitchPlayLists);
 
@@ -294,7 +320,7 @@ namespace CastIt.ViewModels
 
             GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
 
-            ShowDownloadDialogCommand = new MvxAsyncCommand(async() =>
+            ShowDownloadDialogCommand = new MvxAsyncCommand(async () =>
             {
                 bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
                 if (!filesWereDownloaded)
@@ -302,6 +328,8 @@ namespace CastIt.ViewModels
                 else
                     await ShowSnackbarMsg(GetText("AppIsRdyToUse"));
             });
+
+            FileOptionsChangedCommand = new MvxAsyncCommand<FileItemOptionsViewModel>(FileOptionsChanged);
         }
 
         public override void RegisterMessages()
@@ -309,7 +337,8 @@ namespace CastIt.ViewModels
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
-                Messenger.Subscribe<PlayFileMsg>(async(msg) => await PlayFile(msg.File))
+                Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force)),
+                Messenger.Subscribe<DisconnectMessage>(_ => OnStoppedPlayBack())
             });
         }
 
@@ -319,17 +348,20 @@ namespace CastIt.ViewModels
             var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
             _setWindowWidthAndHeight.Raise(tuple);
 
+            Logger.Info($"{nameof(ViewAppeared)}: Creating the file duration task..");
+            DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations());
             string path = FileUtils.GetFFMpegPath();
             if (File.Exists(path))
                 return;
 
+            Logger.Info($"{nameof(ViewAppeared)}: Ffmpeg is not in user folder, showing download dialog...");
             ShowDownloadDialogCommand.Execute();
         }
 
         public void SaveChangesBeforeClosing(
             double width,
             double height,
-            Dictionary<long, int> positions)
+            Dictionary<PlayListItemViewModel, int> positions)
         {
             _settingsService.WindowWidth = width;
             _settingsService.WindowHeight = height;
@@ -352,7 +384,7 @@ namespace CastIt.ViewModels
 
             long tentativeSecond = GetMainProgressBarSeconds(sliderWidth, mouseX);
 
-            if (_castService.IsMusicFile(_currentlyPlayedFile.Path))
+            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path))
             {
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
@@ -366,13 +398,38 @@ namespace CastIt.ViewModels
 
         private async Task GoToSeconds(long seconds)
         {
-            await _castService.GoToSeconds(seconds);
+            IsBusy = true;
+            await _castService.GoToSeconds(
+                CurrentFileVideoStreamIndex,
+                CurrentFileAudioStreamIndex,
+                CurrentFileSubTitleStreamIndex,
+                CurrentFileQuality,
+                seconds);
+            IsBusy = false;
+        }
+
+        private async Task SkipSeconds(int seconds)
+        {
+            IsBusy = true;
+            await _castService.AddSeconds(
+                CurrentFileVideoStreamIndex,
+                CurrentFileAudioStreamIndex,
+                CurrentFileSubTitleStreamIndex,
+                CurrentFileQuality,
+                seconds);
+            IsBusy = false;
         }
 
         private Task SetFileDurations()
         {
             Logger.Info($"{nameof(SetFileDurations)}: Setting file duration to all the files");
-            var tasks = PlayLists.SelectMany(pl => pl.Items).Select(f => f.SetDuration(_setDurationTokenSource.Token)).ToList();
+            var tasks = PlayLists.Select(pl => Task.Run(async () =>
+            {
+                foreach (var file in pl.Items)
+                {
+                    await file.SetFileInfo(_setDurationTokenSource.Token);
+                }
+            }, _setDurationTokenSource.Token)).ToList();
 
             return Task.WhenAll(tasks);
         }
@@ -396,6 +453,7 @@ namespace CastIt.ViewModels
                 return;
 
             await _playListsService.DeletePlayList(playlist.Id);
+            playlist.CleanUp();
             PlayLists.Remove(playlist);
         }
 
@@ -414,6 +472,11 @@ namespace CastIt.ViewModels
             }
 
             await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList());
+            foreach (var playlist in items)
+            {
+                playlist.CleanUp();
+            }
+
             PlayLists.RemoveItems(items);
         }
 
@@ -424,13 +487,14 @@ namespace CastIt.ViewModels
             {
                 playList.CleanUp();
             }
-            //await _playListsService.SavePlayLists(PlayLists.ToList());
             await StopPlayBack();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
             _castService.OnTimeChanged -= OnFileDurationChanged;
             _castService.OnPositionChanged -= OnFilePositionChanged;
             _castService.OnEndReached -= OnFileEndReached;
+            _castService.OnPaused -= OnPaused;
+            _castService.OnDisconnected -= OnDisconnected;
             _closeApp.Raise();
         }
 
@@ -452,74 +516,166 @@ namespace CastIt.ViewModels
             if (_currentlyPlayedFile == null || _onSkipOrPrevious)
                 return;
 
-            var playlist = PlayLists.First(p => p.Id == _currentlyPlayedFile.PlayListId);
-            var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
-            if (fileIndex < 0)
+            var playlist = PlayLists.FirstOrDefault(p => p.Id == _currentlyPlayedFile.PlayListId);
+            if (playlist is null)
                 return;
 
             _onSkipOrPrevious = true;
-            if (nextTrack)
-                fileIndex++;
-            else
-                fileIndex--;
-            var file = playlist.Items.ElementAtOrDefault(fileIndex);
+            var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
+            if (fileIndex < 0)
+            {
+                int nextPosition = _currentlyPlayedFile.Position + 1;
+                int closestPosition = playlist.Items
+                    .Select(f => f.Position)
+                    .Aggregate((x, y) => Math.Abs(x - nextPosition) < Math.Abs(y - nextPosition) ? x : y);
+
+                var f = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
+                f?.PlayCommand?.Execute();
+                return;
+            }
+
+            int newIndex = nextTrack ? fileIndex + 1 : fileIndex - 1;
+
+            var file = playlist.Shuffle && playlist.Items.Count > 1
+                ? playlist.Items.PickRandom(fileIndex)
+                : playlist.Items.ElementAtOrDefault(newIndex);
 
             if (file is null)
             {
-                Logger.Warn($"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found");
+                Logger.Info(
+                    $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
+                    $"Probably an end of playlist");
+                _castService.StopRunningProcess();
+
+                if (playlist.Loop)
+                {
+                    Logger.Info($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
+                    playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
+                }
                 return;
             }
 
             file.PlayCommand.Execute();
         }
 
-        private async Task PlayFile(FileItemViewModel file)
+        private async Task<bool> PlayFile(FileItemViewModel file, bool force, bool fileOptionsChanged = false)
         {
             if (!file.Exists)
             {
                 await ShowSnackbarMsg(GetText("FileDoesntExist"));
-                return;
+                return false;
             }
 
-            if (file == _currentlyPlayedFile)
+            if (file == _currentlyPlayedFile && !force && !fileOptionsChanged)
             {
                 await ShowSnackbarMsg(GetText("FileIsAlreadyBeingPlayed"));
-                return;
+                return false;
             }
 
-            if (!DurationTaskNotifier.IsCompleted || string.IsNullOrEmpty(file.Duration))
+            if (string.IsNullOrEmpty(file.Duration))
             {
                 Logger.Info(
                     $"{nameof(PlayFile)}: Cant play file = {file.Filename} yet, " +
                     $"because im still setting the duration for some files.");
                 await ShowSnackbarMsg(GetText("FileIsNotReadyYet"));
-                return;
+                return false;
             }
+
+            if (_castService.AvailableDevices.Count == 0)
+            {
+                await ShowSnackbarMsg(GetText("NoDevicesWereFound"));
+                return false;
+            }
+
+            if (file.IsUrlFile && !NetworkUtils.IsInternetAvailable())
+            {
+                await ShowSnackbarMsg(GetText("NoInternetConnection"));
+                return false;
+            }
+
+            IsBusy = true;
+            IsPaused = false;
 
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
+
             SetCurrentlyPlayingInfo(file.Filename, true);
-            await _castService.StartPlay(file.Path);
-            CurrentFileThumbnail = _castService.GetFirstThumbnail();
-            if (file.CanStartPlayingFromCurrentPercentage)
-            {
-                Logger.Info($"{nameof(PlayFile)}: File can be resumed from = {file.PlayedPercentage} %");
-                await _castService.GoToPosition((float)file.PlayedPercentage);
-            }
+            if (!fileOptionsChanged)
+                SetAvailableAudiosAndSubTitles();
+
+            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
             playList.SelectedItem = file;
 
-            //ThreadPool.QueueUserWorkItem((_) => _castService.GenerateThumbmnails(file.Path));
-            await Task.Run(() => _castService.GenerateThumbmnails(file.Path));
+            try
+            {
+                //TODO: CHECK IF WE SHOULD REMOVE THIS MEDIASTATUS
+                MediaStatus mediaStatus;
+                if (file.CanStartPlayingFromCurrentPercentage &&
+                    !file.IsUrlFile &&
+                    !force &&
+                    !_settingsService.StartFilesFromTheStart)
+                {
+                    Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
+                    mediaStatus = await _castService.GoToPosition(
+                        file.Path,
+                        CurrentFileVideoStreamIndex,
+                        CurrentFileAudioStreamIndex,
+                        CurrentFileSubTitleStreamIndex,
+                        CurrentFileQuality,
+                        file.PlayedPercentage,
+                        file.TotalSeconds);
+                }
+                else
+                {
+                    Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
+                    mediaStatus = await _castService.StartPlay(
+                        file.Path,
+                        CurrentFileVideoStreamIndex,
+                        CurrentFileAudioStreamIndex,
+                        CurrentFileSubTitleStreamIndex,
+                        CurrentFileQuality);
+                }
 
-            _onSkipOrPrevious = false;
+                if (file.IsUrlFile)
+                {
+                    file.SetDuration(mediaStatus?.Media?.Duration ?? 0);
+                    await RaisePropertyChanged(() => CurrentFileDuration);
+                }
+
+                CurrentFileThumbnail = _castService.GetFirstThumbnail();
+                _castService.GenerateThumbmnails(file.Path);
+
+                Logger.Info($"{nameof(PlayFile)}: Playing...");
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, $"{nameof(PlayFile)}: Unknown error occurred");
+                playList.SelectedItem = null;
+                await StopPlayBack();
+                await ShowSnackbarMsg(GetText("CouldntPlayFile"));
+                return false;
+            }
+            finally
+            {
+                IsBusy = false;
+                _onSkipOrPrevious = false;
+            }
         }
 
         private async Task StopPlayBack()
         {
             await _castService.StopPlayback();
+            OnStoppedPlayBack();
+        }
+
+        private void OnStoppedPlayBack()
+        {
+            _castService.StopRunningProcess();
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = null;
             SetCurrentlyPlayingInfo(null, false);
@@ -529,18 +685,22 @@ namespace CastIt.ViewModels
         private void SetCurrentlyPlayingInfo(
             string filename,
             bool isPlaying,
-            float playedPercentage = 0,
-            long playedSeconds = 0)
+            double playedPercentage = 0,
+            double playedSeconds = 0)
         {
             OnFilePositionChanged(playedPercentage);
+            CurrentFileThumbnail = null;
+            ElapsedTimeString = string.Empty;
             CurrentlyPlayingFilename = filename;
             IsCurrentlyPlaying = isPlaying;
             CurrentPlayedSeconds = playedSeconds;
             RaisePropertyChanged(() => CurrentFileDuration);
         }
 
-        private void OnFileDurationChanged(long seconds)
+        private void OnFileDurationChanged(double seconds)
         {
+            IsPaused = false;
+
             if (_currentlyPlayedFile is null)
                 return;
 
@@ -550,20 +710,31 @@ namespace CastIt.ViewModels
                 .ToString(AppConstants.FullElapsedTimeFormat);
             var total = TimeSpan.FromSeconds(_currentlyPlayedFile.TotalSeconds)
                 .ToString(AppConstants.FullElapsedTimeFormat);
-            if (_currentlyPlayedFile.IsUrlFile)
+            if (_currentlyPlayedFile.IsUrlFile && _currentlyPlayedFile.TotalSeconds <= 0)
                 ElapsedTimeString = $"{elapsed}";
             else
                 ElapsedTimeString = $"{elapsed} / {total}";
         }
 
-        private void OnFilePositionChanged(float playedPercentage)
+        private void OnFilePositionChanged(double playedPercentage)
             => PlayedPercentage = playedPercentage;
 
         private void OnFileEndReached()
         {
-            ElapsedTimeString = string.Empty;
+            Logger.Info($"{nameof(OnFileEndReached)}: End reached for file = {_currentlyPlayedFile?.Path}");
+
             SetCurrentlyPlayingInfo(null, false);
-            GoTo(true);
+
+            IsPaused = false;
+            if (_settingsService.PlayNextFileAutomatically)
+            {
+                GoTo(true);
+            }
+            else
+            {
+                _currentlyPlayedFile?.CleanUp();
+                _currentlyPlayedFile = null;
+            }
         }
 
         private async Task ShowSnackbarMsg(string msg, string actionContent = null)
@@ -585,6 +756,133 @@ namespace CastIt.ViewModels
 
             SnackbarActionCommand.Execute();
         }
+
+        private void SetAvailableAudiosAndSubTitles()
+        {
+            Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Cleaning current file videos, audios and subs streams");
+            CurrentFileVideos.Clear();
+            CurrentFileAudios.Clear();
+            CurrentFileSubTitles.Clear();
+            CurrentFileQualities.Clear();
+            if (_currentlyPlayedFile?.FileInfo == null)
+            {
+                Logger.Warn($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file = {_currentlyPlayedFile?.Path} doesnt have a fileinfo");
+                return;
+            }
+
+            Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Setting available file videos, audios and subs streams");
+            bool isSelected = true;
+            bool isEnabled = isEnabled = _currentlyPlayedFile.FileInfo.Videos.Count > 1;
+            foreach (var video in _currentlyPlayedFile.FileInfo.Videos)
+            {
+                CurrentFileVideos.Add(new FileItemOptionsViewModel
+                {
+                    Id = video.Index,
+                    IsSelected = isSelected,
+                    IsEnabled = isEnabled,
+                    IsVideo = true,
+                    Text = video.VideoText
+                });
+                isSelected = false;
+            }
+
+            isSelected = true;
+            isEnabled = _currentlyPlayedFile.FileInfo.Audios.Count > 1;
+            foreach (var audio in _currentlyPlayedFile.FileInfo.Audios)
+            {
+                CurrentFileAudios.Add(new FileItemOptionsViewModel
+                {
+                    Id = audio.Index,
+                    IsSelected = isSelected,
+                    IsEnabled = isEnabled,
+                    IsAudio = true,
+                    Text = audio.AudioText
+                });
+                isSelected = false;
+            }
+
+            isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 1;
+            if (_currentlyPlayedFile.FileInfo.SubTitles.Count > 0)
+            {
+                CurrentFileSubTitles.Add(new FileItemOptionsViewModel
+                {
+                    Id = -1,
+                    IsSubTitle = true,
+                    IsSelected = true,
+                    IsEnabled = isEnabled,
+                    Text = GetText("None")
+                });
+            }
+
+            isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 0;
+            foreach (var subtitle in _currentlyPlayedFile.FileInfo.SubTitles)
+            {
+                CurrentFileSubTitles.Add(new FileItemOptionsViewModel
+                {
+                    Id = subtitle.Index,
+                    IsSelected = false,
+                    IsEnabled = isEnabled,
+                    IsSubTitle = true,
+                    Text = subtitle.SubTitleText
+                });
+            }
+        }
+
+        private Task FileOptionsChanged(FileItemOptionsViewModel selectedItem)
+        {
+            if (selectedItem == null)
+            {
+                Logger.Warn($"{nameof(FileOptionsChanged)}: Selected option is null");
+                return Task.CompletedTask;
+            }
+
+            var options = selectedItem.IsVideo
+                ? CurrentFileVideos
+                : selectedItem.IsAudio
+                    ? CurrentFileAudios
+                    : selectedItem.IsSubTitle
+                        ? CurrentFileSubTitles
+                        : selectedItem.IsQuality
+                            ? CurrentFileQualities
+                            : throw new ArgumentOutOfRangeException(
+                                "File option changed, but the one that changes is not audio, " +
+                                "nor video, nor subs, nor quality");
+
+            if (selectedItem.IsSelected)
+            {
+                return Task.CompletedTask;
+            }
+
+            foreach (var item in options)
+            {
+                if (item.IsSelected)
+                    item.IsSelected = false;
+            }
+
+            selectedItem.IsSelected = true;
+            Logger.Info($"{nameof(FileOptionsChanged)}: StreamId = {selectedItem.Id}  was selected. Text = {selectedItem.Text}");
+
+            return PlayFile(_currentlyPlayedFile, false, true);
+        }
+
+        private void OnQualitiesChanged(int selectedQuality, List<int> qualities)
+        {
+            var vms = qualities.OrderBy(q => q).Select(q => new FileItemOptionsViewModel
+            {
+                Id = q,
+                IsSelected = selectedQuality == q,
+                IsEnabled = qualities.Count > 1,
+                IsQuality = true,
+                Text = $"{q}"
+            }).ToList();
+            CurrentFileQualities.ReplaceWith(vms);
+        }
+
+        private void OnPaused()
+            => IsPaused = true;
+
+        private void OnDisconnected()
+            => OnStoppedPlayBack();
         #endregion
     }
 }

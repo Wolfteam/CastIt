@@ -288,4 +288,76 @@
   <data name="AppIsRdyToUse" xml:space="preserve">
     <value>App is ready to be used</value>
   </data>
+  <data name="ShowFileDetails" xml:space="preserve">
+    <value>Show file details</value>
+  </data>
+  <data name="PlayFilesFromTheStart" xml:space="preserve">
+    <value>Play files from the start</value>
+  </data>
+  <data name="CouldntPlayFile" xml:space="preserve">
+    <value>Could not play file</value>
+  </data>
+  <data name="PlayNextFileAutomatically" xml:space="preserve">
+    <value>Play next file automatically</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AboutSupportMsg" xml:space="preserve">
+    <value>I made this app in my free time and it is also open source. If you would like to help me, report an issue, have an idea, want a feature to be implemented, etc please open an issue here:</value>
+  </data>
+  <data name="Support" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="Donations" xml:space="preserve">
+    <value>Donations</value>
+  </data>
+  <data name="DonationsMsg" xml:space="preserve">
+    <value>I hope you are enjoying using this app, if you would like to buy me a coffee/beer, just send me an email !</value>
+  </data>
+  <data name="AboutSummary" xml:space="preserve">
+    <value>A casting app made for my personal use</value>
+  </data>
+  <data name="Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Subtitles" xml:space="preserve">
+    <value>Subtitles</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="NoInternetConnection" xml:space="preserve">
+    <value>No internet connection available</value>
+  </data>
+  <data name="NowLoading" xml:space="preserve">
+    <value>Now Loading...</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="ForceVideoTranscode" xml:space="preserve">
+    <value>Force video transcode</value>
+  </data>
+  <data name="ForceAudioTranscode" xml:space="preserve">
+    <value>Force audio transcode</value>
+  </data>
+  <data name="GoToSelectedFile" xml:space="preserve">
+    <value>Go to selected file</value>
+  </data>
+  <data name="VideoScale" xml:space="preserve">
+    <value>Video scale</value>
+  </data>
+  <data name="LoopPlayList" xml:space="preserve">
+    <value>Loop this playlist</value>
+  </data>
+  <data name="Shuffle" xml:space="preserve">
+    <value>Shuffle</value>
+  </data>
 </root>

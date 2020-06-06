@@ -34,8 +34,8 @@
         <materialDesign:ColorZone
             Padding="16"
             materialDesign:ShadowAssist.ShadowDepth="Depth2"
-            DockPanel.Dock="Top"
-            Mode="PrimaryMid">
+            Background="{DynamicResource PrimaryHueDarkBrush}"
+            DockPanel.Dock="Top">
             <DockPanel>
                 <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="AboutOutline" Style="{StaticResource ColorZoneIconStyle}" />

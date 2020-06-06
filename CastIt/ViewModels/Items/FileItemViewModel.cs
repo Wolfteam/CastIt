@@ -1,5 +1,7 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
+using CastIt.Models.FFMpeg;
 using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
@@ -16,6 +18,9 @@ namespace CastIt.ViewModels.Items
     {
         #region Members
         private readonly ICastService _castService;
+        private readonly IAppSettingsService _settingsService;
+        private readonly IFFMpegService _ffmpegService;
+
         private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
         private bool _isSeparatorBottomLineVisible;
@@ -29,7 +34,7 @@ namespace CastIt.ViewModels.Items
         #region Properties
         public long Id { get; set; }
         public long PlayListId { get; set; }
-        public long TotalSeconds { get; private set; }
+        public double TotalSeconds { get; private set; }
         public bool PositionChanged { get; set; }
 
         public int Position
@@ -86,10 +91,12 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isSeparatorBottomLineVisible, value);
         }
 
+        public bool ShowFileDetails
+            => _settingsService.ShowFileDetails;
         public bool IsLocalFile
-            => _castService.IsLocalFile(Path);
+            => FileUtils.IsLocalFile(Path);
         public bool IsUrlFile
-            => _castService.IsUrlFile(Path);
+            => FileUtils.IsUrlFile(Path);
         public bool Exists
             => IsLocalFile || IsUrlFile;
         public string Filename
@@ -100,11 +107,13 @@ namespace CastIt.ViewModels.Items
             => _castService.GetExtension(Path);
         public string SubTitle
             => $"{Extension}, {Size}";
+
+        public FFProbeFileInfo FileInfo { get; set; }
         #endregion
 
         #region Commands
         public IMvxCommand PlayCommand { get; private set; }
-        public IMvxAsyncCommand PlayFromTheBeginingCommand { get; private set; }
+        public IMvxCommand PlayFromTheBeginingCommand { get; private set; }
         public IMvxCommand OpenFileLocationCommand { get; private set; }
         #endregion
 
@@ -112,25 +121,35 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            ICastService castService)
+            ICastService castService,
+            IAppSettingsService settingsService,
+            IFFMpegService ffmpegService)
             : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
         {
             _castService = castService;
+            _settingsService = settingsService;
+            _ffmpegService = ffmpegService;
         }
 
         public override void SetCommands()
         {
             base.SetCommands();
 
-            PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMsg(this)));
+            PlayCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMessage(this)));
 
-            PlayFromTheBeginingCommand = new MvxAsyncCommand(async () => await _castService.GoToPosition(0));
+            PlayFromTheBeginingCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMessage(this, true)));
 
             OpenFileLocationCommand = new MvxCommand(() =>
             {
                 var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
                 Process.Start(psi);
             });
+        }
+
+        public override void RegisterMessages()
+        {
+            base.RegisterMessages();
+            SubscriptionTokens.Add(Messenger.Subscribe<ShowFileDetailsMessage>(_ => RaisePropertyChanged(() => ShowFileDetails)));
         }
 
         public void ShowItemSeparators(bool showTop, bool showBottom)
@@ -145,21 +164,36 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        public async Task SetDuration(CancellationToken cancellationToken)
+        public async Task SetFileInfo(CancellationToken token)
+        {
+            if (IsUrlFile)
+            {
+                FileInfo = new FFProbeFileInfo
+                {
+                    Format = new FileInfoFormat()
+                };
+                SetDuration(-1);
+                return;
+            }
+
+            FileInfo = await _ffmpegService.GetFileInfo(Path, token);
+
+            SetDuration(FileInfo.Format.Duration);
+        }
+
+        public void SetDuration(double seconds)
         {
             if (!Exists)
             {
                 Duration = GetText("Missing");
                 return;
             }
-            var seconds = await _castService.GetDuration(Path, cancellationToken);
             TotalSeconds = seconds;
             if (seconds <= 0)
             {
                 Duration = "N/A";
                 return;
             }
-
             var time = TimeSpan.FromSeconds(seconds);
             //here backslash is must to tell that colon is
             //not the part of format, it just a character that we want in output
@@ -184,7 +218,7 @@ namespace CastIt.ViewModels.Items
             IsBeingPlayed = false;
         }
 
-        private void OnPositionChanged(float position)
+        private void OnPositionChanged(double position)
             => PlayedPercentage = position;
 
         private void OnEndReached()

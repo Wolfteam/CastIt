@@ -19,6 +19,6 @@ namespace CastIt.Interfaces
         Task DeleteFile(long id);
         Task DeleteFiles(List<long> ids);
 
-        void SaveChangesBeforeClosingApp(Dictionary<long, int> playListsPositions, List<FileItemViewModel> vms);
+        void SaveChangesBeforeClosingApp(Dictionary<PlayListItemViewModel, int> playListsPositions, List<FileItemViewModel> vms);
     }
 }

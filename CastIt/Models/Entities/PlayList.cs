@@ -16,6 +16,12 @@ namespace CastIt.Models.Entities
         public int Position { get; set; }
 
         [NotNull]
+        public bool Loop { get; set; }
+
+        [NotNull]
+        public bool Shuffle { get; set; }
+
+        [NotNull]
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

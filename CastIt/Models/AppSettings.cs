@@ -11,5 +11,11 @@ namespace CastIt.Models
         public double WindowWidth { get; set; }
         public double WindowHeight { get; set; }
         public bool IsPlayListExpanded { get; set; }
+        public bool ShowFileDetails { get; set; }
+        public bool StartFilesFromTheStart { get; set; }
+        public bool PlayNextFileAutomatically { get; set; }
+        public bool ForceVideoTranscode { get; set; }
+        public bool ForceAudioTranscode { get; set; }
+        public VideoScaleType VideoScale { get; set; }
     }
 }

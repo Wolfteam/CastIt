@@ -288,4 +288,76 @@
   <data name="AppIsRdyToUse" xml:space="preserve">
     <value>La aplicación esta lista para ser usada</value>
   </data>
+  <data name="ShowFileDetails" xml:space="preserve">
+    <value>Mostrar el detalle de los archivos</value>
+  </data>
+  <data name="PlayFilesFromTheStart" xml:space="preserve">
+    <value>Reproducir archivos desde el inicio</value>
+  </data>
+  <data name="CouldntPlayFile" xml:space="preserve">
+    <value>No se pudo reproducir el archivo</value>
+  </data>
+  <data name="PlayNextFileAutomatically" xml:space="preserve">
+    <value>Reproducir el archivo siguiente de forma automatica</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="AboutSupportMsg" xml:space="preserve">
+    <value>Hice esta aplicación en mi tiempo libre y también es de código abierto. Si desea ayudarme, informar un problema, tienes una idea, deseas que se implemente una función, etc., crea un issue aquí:</value>
+  </data>
+  <data name="Support" xml:space="preserve">
+    <value>Soporte</value>
+  </data>
+  <data name="Donations" xml:space="preserve">
+    <value>Donaciones</value>
+  </data>
+  <data name="DonationsMsg" xml:space="preserve">
+    <value>Espero que esté disfrutando de esta aplicación, si desea comprarme un café / cerveza, ¡solo envíeme un correo electrónico!</value>
+  </data>
+  <data name="AboutSummary" xml:space="preserve">
+    <value>Una aplicación de casteo hecha para mi uso personal</value>
+  </data>
+  <data name="Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Subtitles" xml:space="preserve">
+    <value>Subtítulos</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>Calidad</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Ninguno</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="NoInternetConnection" xml:space="preserve">
+    <value>No hay una conexión a internet disponible</value>
+  </data>
+  <data name="NowLoading" xml:space="preserve">
+    <value>Cargando...</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>Pausado</value>
+  </data>
+  <data name="ForceVideoTranscode" xml:space="preserve">
+    <value>Forzar la transcodificación del video</value>
+  </data>
+  <data name="ForceAudioTranscode" xml:space="preserve">
+    <value>Forzar la transcodificación del audio</value>
+  </data>
+  <data name="GoToSelectedFile" xml:space="preserve">
+    <value>Ir al archivo seleccionado</value>
+  </data>
+  <data name="VideoScale" xml:space="preserve">
+    <value>Escala de video</value>
+  </data>
+  <data name="LoopPlayList" xml:space="preserve">
+    <value>Repetir esta lista de reproducción</value>
+  </data>
+  <data name="Shuffle" xml:space="preserve">
+    <value>Aleatorio</value>
+  </data>
 </root>
