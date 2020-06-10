@@ -45,6 +45,7 @@ namespace CastIt.Views.UserControls
             var positions = view.GetTabsPosition();
             var vm = DataContext as MainViewModel;
             vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
+            view.ButtonsBar.DisposeViewModels();
             System.Windows.Application.Current.Shutdown();
         }
     }

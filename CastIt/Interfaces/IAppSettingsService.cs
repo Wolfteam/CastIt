@@ -17,6 +17,7 @@ namespace CastIt.Interfaces
         bool ForceVideoTranscode { get; set; }
         bool ForceAudioTranscode { get; set; }
         VideoScaleType VideoScale { get; set; }
+        bool EnableHardwareAcceleration { get; set; }
 
         void SaveSettings();
     }

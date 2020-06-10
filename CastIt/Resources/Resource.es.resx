@@ -360,4 +360,28 @@
   <data name="Shuffle" xml:space="preserve">
     <value>Aleatorio</value>
   </data>
+  <data name="EnableHardwareAcceleration" xml:space="preserve">
+    <value>Habilitar la aceleración por hardware</value>
+  </data>
+  <data name="ShowFileDetailsMsg" xml:space="preserve">
+    <value>Mostrar detalles como el tamaño, extensión, etc</value>
+  </data>
+  <data name="UseIfPlaybackIssues" xml:space="preserve">
+    <value>Usa esta opción si tienes problemas de reproducción</value>
+  </data>
+  <data name="PlayFilesFromTheStartMsg" xml:space="preserve">
+    <value>Si se selecciona, los archivos serán reproducidos desde el comienzo, de lo contrario, serán reproducidos desde la última posición guardada</value>
+  </data>
+  <data name="PlayNextFileAutomaticallyMsg" xml:space="preserve">
+    <value>Reproduce el siguiente archivo de la lista de reproducción de forma automática</value>
+  </data>
+  <data name="EnableHardwareAccelerationMsg" xml:space="preserve">
+    <value>Si se habilita, la aplicación intentara usar la aceleración por hardware que se encuentre disponible</value>
+  </data>
+  <data name="ChangeLangMsg" xml:space="preserve">
+    <value>Cambiar el lenguaje de la aplicación</value>
+  </data>
+  <data name="ChangeAppTheme" xml:space="preserve">
+    <value>Cambiar el tema de la aplicación</value>
+  </data>
 </root>

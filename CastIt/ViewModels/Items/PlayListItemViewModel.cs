@@ -151,6 +151,9 @@ namespace CastIt.ViewModels.Items
         public void CleanUp()
         {
             _setDurationTokenSource.Cancel();
+
+            foreach (var file in Items)
+                file.CleanUp();
         }
 
         private async Task OnFolderAdded(string[] folders)

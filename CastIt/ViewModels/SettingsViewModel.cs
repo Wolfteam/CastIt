@@ -129,6 +129,16 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => CurrentVideoScale);
             }
         }
+
+        public bool EnableHardwareAcceleration
+        {
+            get => _settingsService.EnableHardwareAcceleration;
+            set
+            {
+                _settingsService.EnableHardwareAcceleration = value;
+                RaisePropertyChanged(() => EnableHardwareAcceleration);
+            }
+        }
         #endregion
 
         #region Commands

@@ -78,7 +78,8 @@
                         ItemsSource="{Binding Themes}"
                         SelectedItem="{Binding CurrentTheme}"
                         SelectedValuePath="Id"
-                        Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [ChangeAppTheme]}">
                         <ComboBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel />
@@ -94,7 +95,8 @@
                         ItemsSource="{Binding Languages}"
                         SelectedItem="{Binding CurrentLanguage}"
                         SelectedValuePath="Id"
-                        Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [ChangeLangMsg]}">
                         <ComboBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel />
@@ -110,7 +112,8 @@
                         ItemsSource="{Binding VideoScales}"
                         SelectedItem="{Binding CurrentVideoScale}"
                         SelectedValuePath="Id"
-                        Style="{StaticResource MaterialDesignFloatingHintComboBox}">
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [UseIfPlaybackIssues]}">
                         <ComboBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel />
@@ -151,15 +154,13 @@
                 <Grid
                     Grid.Row="3"
                     Grid.Column="0"
-                    Margin="0,8">
+                    Margin="0,8"
+                    ToolTip="{Binding [ShowFileDetailsMsg]}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ToggleButton
-                        IsChecked="{Binding ShowFileDetails}"
-                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                        ToolTip="{Binding [ShowFileDetails]}" />
+                    <ToggleButton IsChecked="{Binding ShowFileDetails}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
                     <TextBlock
                         Grid.Column="1"
                         Style="{StaticResource TogleButtonTextStyle}"
@@ -168,15 +169,13 @@
                 <Grid
                     Grid.Row="3"
                     Grid.Column="1"
-                    Margin="0,8">
+                    Margin="0,8"
+                    ToolTip="{Binding [UseIfPlaybackIssues]}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ToggleButton
-                        IsChecked="{Binding ForceVideoTranscode}"
-                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                        ToolTip="{Binding [ForceVideoTranscode]}" />
+                    <ToggleButton IsChecked="{Binding ForceVideoTranscode}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
                     <TextBlock
                         Grid.Column="1"
                         Style="{StaticResource TogleButtonTextStyle}"
@@ -185,15 +184,13 @@
                 <Grid
                     Grid.Row="4"
                     Grid.ColumnSpan="1"
-                    Margin="0,8">
+                    Margin="0,8"
+                    ToolTip="{Binding [PlayFilesFromTheStartMsg]}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ToggleButton
-                        IsChecked="{Binding StartFilesFromTheStart}"
-                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                        ToolTip="{Binding [PlayFilesFromTheStart]}" />
+                    <ToggleButton IsChecked="{Binding StartFilesFromTheStart}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
                     <TextBlock
                         Grid.Column="1"
                         Style="{StaticResource TogleButtonTextStyle}"
@@ -202,15 +199,13 @@
                 <Grid
                     Grid.Row="4"
                     Grid.Column="1"
-                    Margin="0,8">
+                    Margin="0,8"
+                    ToolTip="{Binding [UseIfPlaybackIssues]}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ToggleButton
-                        IsChecked="{Binding ForceAudioTranscode}"
-                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                        ToolTip="{Binding [ForceAudioTranscode]}" />
+                    <ToggleButton IsChecked="{Binding ForceAudioTranscode}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
                     <TextBlock
                         Grid.Column="1"
                         Style="{StaticResource TogleButtonTextStyle}"
@@ -218,20 +213,33 @@
                 </Grid>
                 <Grid
                     Grid.Row="5"
-                    Grid.ColumnSpan="2"
-                    Margin="0,8">
+                    Grid.Column="0"
+                    Margin="0,8"
+                    ToolTip="{Binding [PlayNextFileAutomaticallyMsg]}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ToggleButton
-                        IsChecked="{Binding PlayNextFileAutomatically}"
-                        Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                        ToolTip="{Binding [PlayNextFileAutomatically]}" />
+                    <ToggleButton IsChecked="{Binding PlayNextFileAutomatically}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
                     <TextBlock
                         Grid.Column="1"
                         Style="{StaticResource TogleButtonTextStyle}"
                         Text="{Binding [PlayNextFileAutomatically]}" />
+                </Grid>
+                <Grid
+                    Grid.Row="5"
+                    Grid.Column="1"
+                    Margin="0,8"
+                    ToolTip="{Binding [EnableHardwareAccelerationMsg]}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton IsChecked="{Binding EnableHardwareAcceleration}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Style="{StaticResource TogleButtonTextStyle}"
+                        Text="{Binding [EnableHardwareAcceleration]}" />
                 </Grid>
                 <Button
                     Grid.Row="6"

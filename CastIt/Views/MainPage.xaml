@@ -83,7 +83,10 @@
             Focusable="False"
             Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}" />
 
-        <uc:ButtonsBar Grid.Row="1" Grid.Column="1" />
+        <uc:ButtonsBar
+            x:Name="ButtonsBar"
+            Grid.Row="1"
+            Grid.Column="1" />
 
         <uc:MainProgressBar
             Grid.Row="2"

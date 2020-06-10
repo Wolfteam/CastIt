@@ -2,6 +2,7 @@
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.FFMpeg;
+using CastIt.Models.FFMpeg.Args;
 using EmbedIO;
 using MvvmCross.Logging;
 using Newtonsoft.Json;
@@ -9,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Management;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +25,7 @@ namespace CastIt.Services
         private readonly Process _generateThumbnailProcess;
         private readonly Process _generateAllThumbnailsProcess;
         private readonly Process _transcodeProcess;
+        private readonly List<HwAccelDeviceType> AvailableHwDevices = new List<HwAccelDeviceType>();
 
         private static readonly IReadOnlyList<string> AllowedVideoContainers = new List<string>
         {
@@ -77,9 +81,8 @@ namespace CastIt.Services
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = FileUtils.GetFFMpegPath(),
                 WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = false,
+                FileName = FileUtils.GetFFMpegPath(),
                 CreateNoWindow = true
             };
 
@@ -92,6 +95,8 @@ namespace CastIt.Services
             {
                 StartInfo = startInfo
             };
+
+            SetAvailableHwAccelDevices();
         }
 
         public string GetThumbnail(string mrl, int second)
@@ -110,27 +115,17 @@ namespace CastIt.Services
                 return thumbnailPath;
             }
 
-            //-i filename(the source video's file path)
-            //- deinterlace(converts interlaced video to non - interlaced form)
-            //- an(audio recording is disabled; we don't need it for thumbnails)
-            //- ss position(input video is decoded and dumped until the timestamp reaches position, 
-            //     our thumbnail's position in seconds)
-            //- t duration(the output file stops writing after duration seconds)
-            //-y(overwrites the output file if it already exists)
-            //-s widthxheight(size of the frame in pixels)
-            //https://stackoverflow.com/questions/48425905/cmd-exe-via-system-diagnostics-process-cannot-parse-an-argument-with-spaces
-            string cmd;
-
-            if (FileUtils.IsMusicFile(mrl))
+            var builder = new FFmpegArgsBuilder();
+            var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
+            var ouputArgs = builder.AddOutputFile(thumbnailPath).SetFilters("scale=200:150");
+            if (!FileUtils.IsMusicFile(mrl))
             {
-                cmd = $@"-y -i ""{mrl}"" -an -filter:v scale=200:150 ""{thumbnailPath}""";
-            }
-            else
-            {
-                cmd = $@"-ss {second} -an -y -i ""{mrl}"" -vframes 1 -s 200x150 ""{thumbnailPath}""";
+                inputArgs.Seek(second);
+                ouputArgs.SetVideoFrames(1);
             }
             try
             {
+                string cmd = builder.GetArgs();
                 _logger.Info($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {mrl}. Cmd = {cmd}");
                 _checkGenerateThumbnailProcess = true;
                 _generateThumbnailProcess.StartInfo.Arguments = cmd;
@@ -149,7 +144,7 @@ namespace CastIt.Services
             return thumbnailPath;
         }
 
-        public void GenerateThumbmnails(string mrl)
+        public async Task GenerateThumbmnails(string mrl)
         {
             if (!FileUtils.IsLocalFile(mrl))
             {
@@ -163,8 +158,24 @@ namespace CastIt.Services
                 _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
                 return;
             }
+            var fileInfo = await GetFileInfo(mrl, default);
             var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
-            var cmd = $@" -y -i ""{mrl}"" -an -vf fps=1/5 -s 200x150 ""{thumbnailPath}""";
+            var builder = new FFmpegArgsBuilder();
+            var inputArgs = builder.AddInputFile(mrl).Discard("nokey").SetAutoConfirmChanges().DisableAudio();
+            var outputArgs = builder.AddOutputFile(thumbnailPath);
+
+            if (fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
+                AvailableHwDevices.Contains(HwAccelDeviceType.Intel))
+            {
+                inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel);
+                outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters("fps=1/5,scale_qsv=200:150");
+            }
+            else
+            {
+                outputArgs.SetFilters("fps=1/5,scale=200:150");
+            }
+
+            var cmd = builder.GetArgs();
             try
             {
                 _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
@@ -243,7 +254,8 @@ namespace CastIt.Services
 
         public Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token)
         {
-            _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}");
+            string cmd = @$"-v quiet -print_format json -show_streams -show_format -i ""{filePath}""";
+            _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}. Cmd = {cmd}");
             try
             {
                 return Task.Run(() =>
@@ -262,7 +274,7 @@ namespace CastIt.Services
                             WindowStyle = ProcessWindowStyle.Hidden
                         }
                     };
-                    process.StartInfo.Arguments = @$"-v quiet -print_format json -show_streams -show_format -i ""{filePath}""";
+                    process.StartInfo.Arguments = cmd;
                     process.Start();
                     string json = process.StandardOutput.ReadToEnd();
                     return JsonConvert.DeserializeObject<FFProbeFileInfo>(json);
@@ -284,31 +296,7 @@ namespace CastIt.Services
             CancellationToken token)
         {
             var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
-            var videoInfo = ffprobeFileInfo.Streams.Find(f => f.IsVideo);
-            var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
-            string fileExt = Path.GetExtension(filePath);
-
-            bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
-            bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
-            bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
-
-            bool videoNeedsTranscode = !videoCodecIsValid ||
-                !videoProfileIsValid ||
-                !videoLevelIsValid ||
-                _settingsService.ForceVideoTranscode ||
-                _settingsService.VideoScale != VideoScaleType.Original;
-            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
-                !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
-                _settingsService.ForceAudioTranscode;
-            string scale = _settingsService.VideoScale == VideoScaleType.Original
-                ? string.Empty
-                : $"-vf scale='trunc(oh*a/2)*2:{(int)_settingsService.VideoScale}'";
-
-            string cmd = string.Format(
-                $@"-v quiet {{0}} -y -i ""{filePath}"" -map 0:{videoStreamIndex} -map 0:{audioStreamIndex} -preset ultrafast {{1}} {{2}} -movflags frag_keyframe+faststart -f mp4 -",
-                seconds <= 0 ? string.Empty : $"-ss {seconds}",
-                videoNeedsTranscode ? $"{scale} -c:v libx264 -profile:v high -level 4" : "-c:v copy",
-                audioNeedsTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+            string cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex);
 
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
@@ -325,11 +313,11 @@ namespace CastIt.Services
         {
             var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
-            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) || !audioInfo.AudioProfileIsValid(AllowedMusicProfiles);
-            //To generate an aac output you need to set adts
-            string cmd = string.Format(
-                $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -map 0:{audioStreamIndex} -preset ultrafast {{0}} -f adts -",
-                audioNeedsTranscode || _settingsService.ForceAudioTranscode ? "-acodec aac -b:a 128k" : "-c:a copy");
+            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
+                !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
+                _settingsService.ForceAudioTranscode;
+
+            string cmd = BuildAudioTranscodeCmd(filePath, seconds, audioStreamIndex, audioNeedsTranscode);
 
             _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file = {filePath} with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
@@ -366,7 +354,11 @@ namespace CastIt.Services
         {
             try
             {
-                string cmd = @$"-y -i ""{filePath}"" -ss {seconds} -map 0:{index} -f webvtt ""{subtitleFinalPath}""";
+                var builder = new FFmpegArgsBuilder();
+                builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges();
+                builder.AddOutputFile(subtitleFinalPath).Seek(seconds).SetMap(index).SetFormat("webvtt");
+
+                string cmd = builder.GetArgs();
                 _logger.Info($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
                 return Task.Run(() =>
                 {
@@ -391,6 +383,153 @@ namespace CastIt.Services
                 _logger.Error(e, $"{nameof(GenerateSubTitles)}: Unknown error");
                 return Task.FromResult<string>(null);
             }
+        }
+
+        private string BuildVideoTranscodeCmd(
+            FFProbeFileInfo fileInfo,
+            string filePath,
+            double seconds,
+            int videoStreamIndex,
+            int audioStreamIndex)
+        {
+            string fileExt = Path.GetExtension(filePath);
+            var videoInfo = fileInfo.Streams.Find(f => f.IsVideo);
+            var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
+            bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
+            bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
+            bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
+
+            bool videoNeedsTranscode = !videoCodecIsValid ||
+                !videoProfileIsValid ||
+                !videoLevelIsValid ||
+                _settingsService.ForceVideoTranscode ||
+                _settingsService.VideoScale != VideoScaleType.Original;
+            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
+                !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
+                _settingsService.ForceAudioTranscode;
+
+            var hwAccelType = GetHwAccelDeviceType();
+            if (!videoCodecIsValid)
+            {
+                hwAccelType = HwAccelDeviceType.None;
+            }
+
+            var builder = new FFmpegArgsBuilder();
+            var inputArgs = builder.AddInputFile(filePath)
+                .BeQuiet()
+                .SetVSync(0)
+                .SetAutoConfirmChanges()
+                .SetHwAccel(hwAccelType)
+                .SetVideoCodec(hwAccelType);
+            var outputArgs = builder.AddOutputPipe().SetMap(videoStreamIndex).SetMap(audioStreamIndex).SetPreset(hwAccelType);
+
+            if (seconds > 0)
+                inputArgs.Seek(seconds);
+
+            if (videoNeedsTranscode)
+            {
+                outputArgs.SetVideoCodec(hwAccelType).SetProfileVideo("main").SetLevel(4).SetPixelFormat(hwAccelType);
+                if (_settingsService.VideoScale != VideoScaleType.Original)
+                {
+                    int videoScale = (int)_settingsService.VideoScale;
+                    if (hwAccelType == HwAccelDeviceType.Intel)
+                    {
+                        outputArgs.AddArg("global_quality", 25);
+                        outputArgs.AddArg("look_ahead", 1);
+                        outputArgs.SetFilters($"scale_qsv=trunc(oh*a/2)*2:{videoScale}");
+                    }
+                    else if (hwAccelType == HwAccelDeviceType.Nvidia)
+                    {
+                        string scale = _settingsService.VideoScale == VideoScaleType.Hd ? "1280x720" : "1920x1080";
+                        if (scale != videoInfo.WidthAndHeightText)
+                            inputArgs.AddArg("resize", scale);
+                    }
+                    else if (hwAccelType == HwAccelDeviceType.None)
+                    {
+                        outputArgs.SetFilters($"scale=trunc(oh*a/2)*2:{videoScale}");
+                    }
+                }
+            }
+            else
+            {
+                outputArgs.CopyVideoCodec();
+            }
+
+            if (audioNeedsTranscode)
+            {
+                outputArgs.SetAudioCodec("aac").SetAudioBitrate(128).SetAudioChannels(2);
+            }
+            else
+            {
+                outputArgs.CopyAudioCodec();
+            }
+
+            outputArgs.SetMovFlagToTheStart().SetFormat("mp4");
+
+            return builder.GetArgs();
+        }
+
+        private string BuildAudioTranscodeCmd(string filePath, double seconds, int audioStreamIndex, bool audioNeedsTranscode)
+        {
+            var builder = new FFmpegArgsBuilder();
+            builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().Seek(seconds);
+            var outputArgs = builder.AddOutputPipe().SetMap(audioStreamIndex).SetPreset("ultrafast");
+
+            if (audioNeedsTranscode)
+            {
+                outputArgs.SetAudioCodec("aac").SetAudioBitrate(128);
+            }
+            else
+            {
+                outputArgs.SetAudioCodec("copy");
+            }
+            //To generate an aac output you need to set adts
+            outputArgs.SetAudioChannels(2).SetFormat("adts");
+
+            return builder.GetArgs();
+        }
+
+        private void SetAvailableHwAccelDevices()
+        {
+            //TODO: IMPROVE THIS
+            if (!_settingsService.EnableHardwareAcceleration)
+                return;
+
+            var objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
+            var adapters = new List<string>();
+            foreach (ManagementObject obj in objvide.Get())
+            {
+                adapters.Add(obj["AdapterCompatibility"].ToString());
+            }
+
+            if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
+            {
+                AvailableHwDevices.Add(HwAccelDeviceType.Nvidia);
+            }
+
+            if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.AMD), StringComparison.OrdinalIgnoreCase)))
+            {
+                AvailableHwDevices.Add(HwAccelDeviceType.AMD);
+            }
+
+            if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
+            {
+                AvailableHwDevices.Add(HwAccelDeviceType.Intel);
+            }
+        }
+
+        private HwAccelDeviceType GetHwAccelDeviceType()
+        {
+            if (AvailableHwDevices.Contains(HwAccelDeviceType.Nvidia))
+                return HwAccelDeviceType.Nvidia;
+
+            if (AvailableHwDevices.Contains(HwAccelDeviceType.AMD))
+                return HwAccelDeviceType.AMD;
+
+            if (AvailableHwDevices.Contains(HwAccelDeviceType.Intel))
+                return HwAccelDeviceType.Intel;
+
+            return HwAccelDeviceType.None;
         }
     }
 }

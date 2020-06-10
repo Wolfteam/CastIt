@@ -160,6 +160,24 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change the theme of the app.
+        /// </summary>
+        public static string ChangeAppTheme {
+            get {
+                return ResourceManager.GetString("ChangeAppTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change the language of the app.
+        /// </summary>
+        public static string ChangeLangMsg {
+            get {
+                return ResourceManager.GetString("ChangeLangMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click Cancel to close the app.
         /// </summary>
         public static string ClickCancelToCloseTheApp {
@@ -309,6 +327,24 @@ namespace CastIt.Resources {
         public static string DropFilesHere {
             get {
                 return ResourceManager.GetString("DropFilesHere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable hardware acceleration.
+        /// </summary>
+        public static string EnableHardwareAcceleration {
+            get {
+                return ResourceManager.GetString("EnableHardwareAcceleration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If enabled, the app will try to use the available hardware acceleration.
+        /// </summary>
+        public static string EnableHardwareAccelerationMsg {
+            get {
+                return ResourceManager.GetString("EnableHardwareAccelerationMsg", resourceCulture);
             }
         }
         
@@ -601,6 +637,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If selected, files will be played from the start, otherwise, they will be played from the last saved position.
+        /// </summary>
+        public static string PlayFilesFromTheStartMsg {
+            get {
+                return ResourceManager.GetString("PlayFilesFromTheStartMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Play from the begining.
         /// </summary>
         public static string PlayFromTheBegining {
@@ -624,6 +669,15 @@ namespace CastIt.Resources {
         public static string PlayNextFileAutomatically {
             get {
                 return ResourceManager.GetString("PlayNextFileAutomatically", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plays the next file in the playlist automatically.
+        /// </summary>
+        public static string PlayNextFileAutomaticallyMsg {
+            get {
+                return ResourceManager.GetString("PlayNextFileAutomaticallyMsg", resourceCulture);
             }
         }
         
@@ -727,6 +781,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show details like size, extension, etc.
+        /// </summary>
+        public static string ShowFileDetailsMsg {
+            get {
+                return ResourceManager.GetString("ShowFileDetailsMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shuffle.
         /// </summary>
         public static string Shuffle {
@@ -777,6 +840,15 @@ namespace CastIt.Resources {
         public static string Theme {
             get {
                 return ResourceManager.GetString("Theme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use this option if you have playback issues.
+        /// </summary>
+        public static string UseIfPlaybackIssues {
+            get {
+                return ResourceManager.GetString("UseIfPlaybackIssues", resourceCulture);
             }
         }
         

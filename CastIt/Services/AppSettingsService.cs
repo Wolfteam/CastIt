@@ -95,6 +95,12 @@ namespace CastIt.Services
             get => _appSettings.VideoScale;
             set => _appSettings.VideoScale = value;
         }
+
+        public bool EnableHardwareAcceleration
+        {
+            get => _appSettings.EnableHardwareAcceleration;
+            set => _appSettings.EnableHardwareAcceleration = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider)
@@ -115,7 +121,10 @@ namespace CastIt.Services
                 Language = AppLanguageType.English,
                 IsPlayListExpanded = false,
                 WindowHeight = AppConstants.MinWindowHeight,
-                WindowWidth = AppConstants.MinWindowWidth
+                WindowWidth = AppConstants.MinWindowWidth,
+                EnableHardwareAcceleration = true,
+                ShowFileDetails = true,
+                PlayNextFileAutomatically = true
             });
         }
 

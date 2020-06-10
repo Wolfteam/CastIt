@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,6 +11,12 @@ namespace CastIt.Views.UserControls
         public ButtonsBar()
         {
             InitializeComponent();
+        }
+
+        public void DisposeViewModels()
+        {
+            var devicesVm = DevicesUserControl.DataContext as DevicesViewModel;
+            devicesVm.CleanUp();
         }
 
         private void ToggleCollapse(object sender, RoutedEventArgs e)

@@ -360,4 +360,28 @@
   <data name="Shuffle" xml:space="preserve">
     <value>Shuffle</value>
   </data>
+  <data name="EnableHardwareAcceleration" xml:space="preserve">
+    <value>Enable hardware acceleration</value>
+  </data>
+  <data name="ShowFileDetailsMsg" xml:space="preserve">
+    <value>Show details like size, extension, etc</value>
+  </data>
+  <data name="UseIfPlaybackIssues" xml:space="preserve">
+    <value>Use this option if you have playback issues</value>
+  </data>
+  <data name="PlayFilesFromTheStartMsg" xml:space="preserve">
+    <value>If selected, files will be played from the start, otherwise, they will be played from the last saved position</value>
+  </data>
+  <data name="PlayNextFileAutomaticallyMsg" xml:space="preserve">
+    <value>Plays the next file in the playlist automatically</value>
+  </data>
+  <data name="EnableHardwareAccelerationMsg" xml:space="preserve">
+    <value>If enabled, the app will try to use the available hardware acceleration</value>
+  </data>
+  <data name="ChangeLangMsg" xml:space="preserve">
+    <value>Change the language of the app</value>
+  </data>
+  <data name="ChangeAppTheme" xml:space="preserve">
+    <value>Change the theme of the app</value>
+  </data>
 </root>

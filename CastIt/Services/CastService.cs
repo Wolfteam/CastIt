@@ -50,7 +50,7 @@ namespace CastIt.Services
             _logger = logProvider.GetLogFor<CastService>();
             _ffmpegService = ffmpegService;
             _webServer = webServer;
-            _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: false);
+            _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: true);
             _subtitle = new Track
             {
                 TrackId = SubTitleDefaultTrackId,
