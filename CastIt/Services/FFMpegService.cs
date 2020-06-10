@@ -421,7 +421,12 @@ namespace CastIt.Services
                 .SetAutoConfirmChanges()
                 .SetHwAccel(hwAccelType)
                 .SetVideoCodec(hwAccelType);
-            var outputArgs = builder.AddOutputPipe().SetMap(videoStreamIndex).SetMap(audioStreamIndex).SetPreset(hwAccelType);
+            var outputArgs = builder.AddOutputPipe()
+                .SetMap(videoStreamIndex)
+                .SetMap(audioStreamIndex)
+                .SetPreset(hwAccelType)
+                .AddArg("map_metadata", -1)
+                .AddArg("map_chapters", -1); //for some reason the chromecast doesnt like chapters o.o
 
             if (seconds > 0)
                 inputArgs.Seek(seconds);
