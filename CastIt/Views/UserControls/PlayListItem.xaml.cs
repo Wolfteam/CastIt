@@ -269,15 +269,7 @@ namespace CastIt.Views.UserControls
                 //    }
                 //}
                 ViewModel.Items.Move(_selectedItemIndex, newIndex);
-                for (int i = 0; i < ViewModel.Items.Count; i++)
-                {
-                    int newValue = i + 1;
-                    if (ViewModel.Items[i].Position != newValue)
-                    {
-                        ViewModel.Items[i].Position = newValue;
-                        ViewModel.Items[i].PositionChanged = true;
-                    }
-                }
+                ViewModel.SetPositionIfChanged();
             }
             _selectedItemIndex = -1;
         }

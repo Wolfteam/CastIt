@@ -256,6 +256,11 @@ namespace CastIt.ViewModels
                 playlist.Items.AddRange(files);
             }
 
+            foreach (var pl in PlayLists)
+            {
+                pl.SetPositionIfChanged();
+            }
+
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;

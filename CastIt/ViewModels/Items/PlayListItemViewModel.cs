@@ -156,6 +156,19 @@ namespace CastIt.ViewModels.Items
                 file.CleanUp();
         }
 
+        public void SetPositionIfChanged()
+        {
+            for (int i = 0; i < Items.Count; i++)
+            {
+                int newValue = i + 1;
+                if (Items[i].Position != newValue)
+                {
+                    Items[i].Position = newValue;
+                    Items[i].PositionChanged = true;
+                }
+            }
+        }
+
         private async Task OnFolderAdded(string[] folders)
         {
             foreach (var folder in folders)
@@ -218,6 +231,7 @@ namespace CastIt.ViewModels.Items
             var itemsToDelete = Items.Where(f => ids.Contains(f.Id)).ToList();
             Items.RemoveItems(itemsToDelete);
             SelectedItems.Clear();
+            SetPositionIfChanged();
         }
 
         private async Task RemoveAllMissing()
@@ -228,6 +242,7 @@ namespace CastIt.ViewModels.Items
 
             await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList());
             Items.RemoveItems(items);
+            SetPositionIfChanged();
         }
 
         private void SelectAll()
