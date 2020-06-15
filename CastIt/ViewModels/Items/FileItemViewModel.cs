@@ -178,7 +178,7 @@ namespace CastIt.ViewModels.Items
 
             FileInfo = await _ffmpegService.GetFileInfo(Path, token);
 
-            SetDuration(FileInfo.Format.Duration);
+            SetDuration(FileInfo?.Format?.Duration ?? -1);
         }
 
         public void SetDuration(double seconds)

@@ -161,7 +161,7 @@ namespace CastIt.Services
             var fileInfo = await GetFileInfo(mrl, default);
             var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
             var builder = new FFmpegArgsBuilder();
-            var inputArgs = builder.AddInputFile(mrl).Discard("nokey").SetAutoConfirmChanges().DisableAudio();
+            var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
             var outputArgs = builder.AddOutputFile(thumbnailPath);
 
             if (fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
@@ -258,6 +258,10 @@ namespace CastIt.Services
             _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}. Cmd = {cmd}");
             try
             {
+                if (!File.Exists(filePath))
+                {
+                    return Task.FromResult<FFProbeFileInfo>(null);
+                }
                 return Task.Run(() =>
                 {
                     var process = new Process
@@ -355,7 +359,7 @@ namespace CastIt.Services
             try
             {
                 var builder = new FFmpegArgsBuilder();
-                builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges();
+                builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().TrySetSubTitleEncoding();
                 builder.AddOutputFile(subtitleFinalPath).Seek(seconds).SetMap(index).SetFormat("webvtt");
 
                 string cmd = builder.GetArgs();
@@ -381,7 +385,7 @@ namespace CastIt.Services
             catch (Exception e)
             {
                 _logger.Error(e, $"{nameof(GenerateSubTitles)}: Unknown error");
-                return Task.FromResult<string>(null);
+                return Task.CompletedTask;
             }
         }
 

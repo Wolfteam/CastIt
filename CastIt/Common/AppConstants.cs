@@ -46,15 +46,25 @@ namespace CastIt.Common
             ".wav"
         };
 
+        public static IReadOnlyList<string> AllowedSubtitleFormats => new List<string>
+        {
+            ".srt",
+            ".ass",
+            ".webvtt"
+        };
+
         public static string AllowedFormatsString
             => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
+
+        public static string AllowedSubtitleFormatsString
+            => string.Join(";", AllowedSubtitleFormats.Select(ext => $"*{ext}"));
 
         public static string AppName
             => "CastIt";
 
 #if DEBUG
         public static string AppVersion
-            =>   FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion + " - DEBUG";
+            => FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion + " - DEBUG";
 #else
         public static string AppVersion
             => FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion;

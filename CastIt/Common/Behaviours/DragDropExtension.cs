@@ -73,7 +73,7 @@ namespace CastIt.Common.Behaviours
                 return;
             }
 
-            const double tolerance = 60;
+            const double tolerance = 30;
             const double offset = 3;
             double verticalPos = e.GetPosition(container).Y;
             if (verticalPos < tolerance) // Top of visible list? 

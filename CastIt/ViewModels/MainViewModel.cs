@@ -21,11 +21,13 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT FROM YOUR PHONE, THE ICONS ARE NOT UPDATED
-    //TODO: IF YOU PAUSE THE VIDEO, AND PLAY IT AGAIN, THE PLAYED TIME SYNC WILL BE LOST
     public class MainViewModel : BaseViewModel
     {
         #region Members
+        private const int NoStreamSelectedId = -1;
+        private const int DefaultSelectedStreamId = 0;
+        private const int DefaultQualitySelected = 360;
+
         private readonly ICastService _castService;
         private readonly IPlayListsService _playListsService;
         private readonly IAppSettingsService _settingsService;
@@ -54,6 +56,7 @@ namespace CastIt.ViewModels
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
+        private readonly MvxInteraction _openSubTitleFileDialog = new MvxInteraction();
         #endregion
 
         #region Properties
@@ -188,13 +191,13 @@ namespace CastIt.ViewModels
             = new MvxObservableCollection<FileItemOptionsViewModel>();
 
         public int CurrentFileVideoStreamIndex
-            => CurrentFileVideos.FirstOrDefault(f => f.IsSelected)?.Id ?? 0;
+            => CurrentFileVideos.FirstOrDefault(f => f.IsSelected)?.Id ?? DefaultSelectedStreamId;
         public int CurrentFileAudioStreamIndex
-            => CurrentFileAudios.FirstOrDefault(f => f.IsSelected)?.Id ?? 0;
+            => CurrentFileAudios.FirstOrDefault(f => f.IsSelected)?.Id ?? DefaultSelectedStreamId;
         public int CurrentFileSubTitleStreamIndex
-            => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Id ?? -1;
+            => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Id ?? NoStreamSelectedId;
         public int CurrentFileQuality
-            => CurrentFileQualities.FirstOrDefault(f => f.IsSelected)?.Id ?? 360;
+            => CurrentFileQualities.FirstOrDefault(f => f.IsSelected)?.Id ?? DefaultQualitySelected;
         #endregion
 
         #region Commands
@@ -215,6 +218,8 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand<long> GoToSecondsCommand { get; private set; }
         public IMvxAsyncCommand ShowDownloadDialogCommand { get; private set; }
         public IMvxAsyncCommand<FileItemOptionsViewModel> FileOptionsChangedCommand { get; private set; }
+        public IMvxCommand OpenSubTitleFileDialogCommand { get; private set; }
+        public IMvxAsyncCommand<string> SetSubTitlesCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -222,6 +227,8 @@ namespace CastIt.ViewModels
             => _closeApp;
         public IMvxInteraction<(double, double)> SetWindowWidthAndHeight
             => _setWindowWidthAndHeight;
+        public IMvxInteraction OpenSubTitleFileDialog
+            => _openSubTitleFileDialog;
         #endregion
 
         public MainViewModel(
@@ -268,6 +275,7 @@ namespace CastIt.ViewModels
             _castService.QualitiesChanged += OnQualitiesChanged;
             _castService.OnPaused += OnPaused;
             _castService.OnDisconnected += OnDisconnected;
+            _castService.GetSubTitles = () => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Path;
 
             Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
@@ -335,6 +343,10 @@ namespace CastIt.ViewModels
             });
 
             FileOptionsChangedCommand = new MvxAsyncCommand<FileItemOptionsViewModel>(FileOptionsChanged);
+
+            OpenSubTitleFileDialogCommand = new MvxCommand(() => _openSubTitleFileDialog.Raise());
+
+            SetSubTitlesCommand = new MvxAsyncCommand<string>(OnSubTitleFileSelected);
         }
 
         public override void RegisterMessages()
@@ -653,7 +665,7 @@ namespace CastIt.ViewModels
                 CurrentFileThumbnail = _castService.GetFirstThumbnail();
                 _castService.GenerateThumbmnails(file.Path);
 
-                Logger.Info($"{nameof(PlayFile)}: Playing...");
+                Logger.Info($"{nameof(PlayFile)}: File is being playing...");
 
                 return true;
             }
@@ -776,6 +788,8 @@ namespace CastIt.ViewModels
             }
 
             Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Setting available file videos, audios and subs streams");
+
+            //Videos
             bool isSelected = true;
             bool isEnabled = isEnabled = _currentlyPlayedFile.FileInfo.Videos.Count > 1;
             foreach (var video in _currentlyPlayedFile.FileInfo.Videos)
@@ -791,6 +805,7 @@ namespace CastIt.ViewModels
                 isSelected = false;
             }
 
+            //Audios
             isSelected = true;
             isEnabled = _currentlyPlayedFile.FileInfo.Audios.Count > 1;
             foreach (var audio in _currentlyPlayedFile.FileInfo.Audios)
@@ -806,16 +821,32 @@ namespace CastIt.ViewModels
                 isSelected = false;
             }
 
-            isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 1;
-            if (_currentlyPlayedFile.FileInfo.SubTitles.Count > 0)
+            //Subtitles
+            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path))
+                return;
+
+            string localSubsPath = TryGetSubTitlesLocalPath();
+            bool localSubExists = !string.IsNullOrEmpty(localSubsPath);
+            isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 1 || localSubExists;
+            CurrentFileSubTitles.Add(new FileItemOptionsViewModel
+            {
+                Id = NoStreamSelectedId,
+                IsSubTitle = true,
+                IsSelected = !localSubExists,
+                IsEnabled = isEnabled,
+                Text = GetText("None")
+            });
+
+            if (localSubExists)
             {
                 CurrentFileSubTitles.Add(new FileItemOptionsViewModel
                 {
-                    Id = -1,
+                    Id = NoStreamSelectedId - 1,
                     IsSubTitle = true,
                     IsSelected = true,
-                    IsEnabled = isEnabled,
-                    Text = GetText("None")
+                    IsEnabled = true,
+                    Text = Path.GetFileName(localSubsPath),
+                    Path = localSubsPath
                 });
             }
 
@@ -825,12 +856,38 @@ namespace CastIt.ViewModels
                 CurrentFileSubTitles.Add(new FileItemOptionsViewModel
                 {
                     Id = subtitle.Index,
-                    IsSelected = false,
                     IsEnabled = isEnabled,
                     IsSubTitle = true,
                     Text = subtitle.SubTitleText
                 });
             }
+        }
+
+        private string TryGetSubTitlesLocalPath()
+        {
+            if (!FileUtils.IsLocalFile(_currentlyPlayedFile.Path))
+            {
+                return null;
+            }
+
+            Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: Checking if subtitle exist in the same dir as file = {_currentlyPlayedFile.Path}");
+            string filename = Path.GetFileNameWithoutExtension(_currentlyPlayedFile.Path);
+            string dir = Path.GetDirectoryName(_currentlyPlayedFile.Path);
+
+            foreach (var format in AppConstants.AllowedSubtitleFormats)
+            {
+                string possibleSubTitlePath = Path.Combine(dir, filename + format);
+
+                if (!File.Exists(possibleSubTitlePath))
+                    continue;
+
+                Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: Found subtitles in path = {possibleSubTitlePath}");
+                return possibleSubTitlePath;
+            }
+
+            Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: No subtitles were found for file = {_currentlyPlayedFile.Path}");
+
+            return null;
         }
 
         private Task FileOptionsChanged(FileItemOptionsViewModel selectedItem)
@@ -864,8 +921,8 @@ namespace CastIt.ViewModels
                     item.IsSelected = false;
             }
 
-            selectedItem.IsSelected = true;
             Logger.Info($"{nameof(FileOptionsChanged)}: StreamId = {selectedItem.Id}  was selected. Text = {selectedItem.Text}");
+            selectedItem.IsSelected = true;
 
             return PlayFile(_currentlyPlayedFile, false, true);
         }
@@ -888,6 +945,36 @@ namespace CastIt.ViewModels
 
         private void OnDisconnected()
             => OnStoppedPlayBack();
+
+        private Task OnSubTitleFileSelected(string filePath)
+        {
+            string filename = Path.GetFileName(filePath);
+            if (!AppConstants.AllowedSubtitleFormats.Contains(Path.GetExtension(filePath).ToLower()) ||
+                CurrentFileSubTitles.Any(f => f.Text == filename))
+            {
+                Logger.Info($"{nameof(OnSubTitleFileSelected)}: Subtitle = {filePath} is not valid or is already in the current sub files");
+                return Task.CompletedTask;
+            }
+
+            foreach (var item in CurrentFileSubTitles)
+            {
+                if (item.Id == NoStreamSelectedId)
+                    item.IsEnabled = true;
+                item.IsSelected = false;
+            }
+
+            CurrentFileSubTitles.Add(new FileItemOptionsViewModel
+            {
+                Id = CurrentFileSubTitles.Min(f => f.Id) - 1,
+                IsSubTitle = true,
+                IsSelected = true,
+                Text = filename,
+                Path = filePath,
+                IsEnabled = true
+            });
+
+            return PlayFile(_currentlyPlayedFile, false, true);
+        }
         #endregion
     }
 }

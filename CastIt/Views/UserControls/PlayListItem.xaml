@@ -8,6 +8,7 @@
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:selectors="clr-namespace:CastIt.Common.Selectors"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vm="clr-namespace:CastIt.ViewModels"
@@ -55,8 +56,8 @@
             x:Key="FileOptionsItemContainerStyle"
             BasedOn="{StaticResource MaterialDesignMenuItem}"
             TargetType="{x:Type MenuItem}">
-            <Setter Property="Header" Value="{Binding Text}" />
             <Setter Property="IsCheckable" Value="True" />
+            <Setter Property="Header" Value="{Binding Text}" />
             <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
             <Setter Property="Command" Value="{Binding DataContext.FileOptionsChangedCommand, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" />
             <Setter Property="CommandParameter" Value="{Binding}" />
@@ -71,6 +72,8 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <CollectionViewSource x:Key="SubTitlesItems" Source="{Binding DataContext.CurrentFileSubTitles, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" />
     </UserControl.Resources>
 
     <Grid HorizontalAlignment="Stretch">
@@ -192,7 +195,7 @@
                     Background="{StaticResource DarkestColorBrush}"
                     IsMainMenu="True"
                     IsTabStop="False"
-                    ToolTip="Current file options">
+                    ToolTip="{Binding [FileOptions]}">
                     <Menu.Style>
                         <Style BasedOn="{StaticResource MaterialDesignMenu}" TargetType="{x:Type Menu}">
                             <Setter Property="Visibility" Value="Collapsed" />
@@ -228,7 +231,7 @@
                                 HorizontalContentAlignment="Center"
                                 Kind="Menu" />
                         </MenuItem.Icon>
-                        <MenuItem Header="Current file options" IsEnabled="False">
+                        <MenuItem Header="{Binding [FileOptions]}" IsEnabled="False">
                             <MenuItem.Icon>
                                 <materialDesign:PackIcon
                                     HorizontalAlignment="Center"
@@ -251,10 +254,25 @@
                                 <materialDesign:PackIcon Kind="Audio" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem
-                            Header="{Binding [Subtitles]}"
-                            ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
-                            ItemsSource="{Binding DataContext.CurrentFileSubTitles, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                        <MenuItem Header="{Binding [Subtitles]}">
+                            <MenuItem.ItemsSource>
+                                <CompositeCollection>
+                                    <!--  Remember, you cant use x:Reference if the target contains the child (the x:Reference one)  -->
+                                    <MenuItem
+                                        Command="{Binding Tag.OpenSubTitleFileDialogCommand, Source={x:Reference Name=PlaylistLv}}"
+                                        Header="{Binding [Search]}"
+                                        IsCheckable="False">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="Search" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <Separator />
+                                    <CollectionContainer Collection="{Binding Source={StaticResource SubTitlesItems}}" />
+                                </CompositeCollection>
+                            </MenuItem.ItemsSource>
+                            <MenuItem.ItemContainerStyleSelector>
+                                <selectors:FileOptionsItemContainerStyleSelector Dynamic="{StaticResource FileOptionsItemContainerStyle}" Normal="{StaticResource MaterialDesignMenuItem}" />
+                            </MenuItem.ItemContainerStyleSelector>
                             <MenuItem.IsEnabled>
                                 <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
                                     <Binding Path="DataContext.CurrentFileSubTitles.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
@@ -307,7 +325,8 @@
             PreviewMouseLeftButtonDown="PlaylistLv_PreviewMouseLeftButtonDown"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-            Style="{StaticResource PlayListLvStyle}">
+            Style="{StaticResource PlayListLvStyle}"
+            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
             <behaviours:Interaction.Behaviors>
                 <cb:MultiSelectionBehavior SelectedItems="{Binding SelectedItems}" />
             </behaviours:Interaction.Behaviors>

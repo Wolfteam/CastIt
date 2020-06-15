@@ -13,6 +13,7 @@ namespace CastIt.ViewModels.Items
         public bool IsAudio { get; set; }
         public bool IsSubTitle { get; set; }
         public bool IsQuality { get; set; }
+        public string Path { get; set; }
         public string Text
         {
             get => _text;

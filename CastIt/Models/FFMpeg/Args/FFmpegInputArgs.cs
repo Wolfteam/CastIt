@@ -1,4 +1,9 @@
-﻿using CastIt.Common.Enums;
+﻿using CastIt.Common;
+using CastIt.Common.Enums;
+using CastIt.Common.Utils;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace CastIt.Models.FFMpeg.Args
 {
@@ -72,5 +77,18 @@ namespace CastIt.Models.FFMpeg.Args
 
         public FFmpegInputArgs Discard(string input)
             => AddArg("discard", input);
+
+        //https://trac.ffmpeg.org/ticket/2431
+        public FFmpegInputArgs TrySetSubTitleEncoding()
+        {
+            string ext = Path.GetExtension(_input);
+            if (!AppConstants.AllowedSubtitleFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase))
+                return this;
+            var encoding = FileUtils.GetEncoding(_input);
+            if (encoding == null)
+                return this;
+
+            return AddArg("sub_charenc", encoding.BodyName);
+        }
     }
 }

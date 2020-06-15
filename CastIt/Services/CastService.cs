@@ -44,6 +44,7 @@ namespace CastIt.Services
         public OnQualitiesChanged QualitiesChanged { get; set; }
         public OnPaused OnPaused { get; set; }
         public OnDisconnected OnDisconnected { get; set; }
+        public Func<string> GetSubTitles { get; set; }
 
         public CastService(IMvxLogProvider logProvider, IFFMpegService ffmpegService, WebServer webServer)
         {
@@ -140,21 +141,33 @@ namespace CastIt.Services
             };
 
             var activeTrackIds = new List<int>();
+            bool useSubTitleStream = subtitleStreamIndex >= 0;
+            if (useSubTitleStream || !string.IsNullOrEmpty(GetSubTitles?.Invoke()))
+            {
+                _logger.Info($"{nameof(StartPlay)}: Subtitles were specified, generating a compatible one...");
+                string subtitleLocation = useSubTitleStream ? mrl : GetSubTitles.Invoke();
+                string subTitleFilePath = FileUtils.GetSubTitleFilePath();
+                await _ffmpegService.GenerateSubTitles(
+                    subtitleLocation,
+                    subTitleFilePath,
+                    seconds,
+                    useSubTitleStream ? subtitleStreamIndex : 0,
+                    default);
+
+                _subtitle.TrackContentId = AppWebServer.GetSubTitlePath(_webServer, subTitleFilePath);
+                _logger.Info($"{nameof(StartPlay)}: Subtitles were generated");
+                media.Tracks.Add(_subtitle);
+                media.TextTrackStyle = _subtitlesStyle;
+                activeTrackIds.Add(SubTitleDefaultTrackId);
+            }
+
             if (isLocal)
             {
+                _logger.Info($"{nameof(StartPlay)}: File is a local one, generating metadata...");
                 string imgUrl = AppWebServer.GetPreviewPath(_webServer, GetFirstThumbnail());
 
                 if (isVideoFile)
                     media.StreamType = StreamType.Live;
-                if (subtitleStreamIndex >= 0)
-                {
-                    string subTitleFilePath = FileUtils.GetSubTitleFilePath();
-                    await _ffmpegService.GenerateSubTitles(mrl, subTitleFilePath, seconds, subtitleStreamIndex, default);
-                    _subtitle.TrackContentId = AppWebServer.GetSubTitlePath(_webServer, subTitleFilePath);
-                    media.Tracks.Add(_subtitle);
-                    media.TextTrackStyle = _subtitlesStyle;
-                    activeTrackIds.Add(SubTitleDefaultTrackId);
-                }
 
                 var fileInfo = await _ffmpegService.GetFileInfo(mrl, default);
                 media.Duration = fileInfo.Format.Duration;
@@ -175,6 +188,7 @@ namespace CastIt.Services
             }
             else if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
             {
+                _logger.Info($"{nameof(StartPlay)}: File is a youtube link, parsing it...");
                 var youtubeMedia = await YoutubeUrlDecoder.Parse(_logger, media.ContentId, quality);
                 QualitiesChanged?.Invoke(youtubeMedia.SelectedQuality, youtubeMedia.Qualities);
                 media.ContentId = youtubeMedia.Url;
@@ -188,7 +202,7 @@ namespace CastIt.Services
 
             _logger.Info($"{nameof(StartPlay)}: Trying to load file = {mrl} on seconds = {seconds}");
             var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
-            _logger.Info($"{nameof(StartPlay)}: File loaded");
+            _logger.Info($"{nameof(StartPlay)}: File was succesfully loaded");
 
             return status;
         }
@@ -319,9 +333,9 @@ namespace CastIt.Services
 
         public string GetFileName(string mrl)
         {
-            if (FileUtils.IsLocalFile(mrl))
-                return Path.GetFileName(mrl);
-            return mrl;
+            if (FileUtils.IsUrlFile(mrl))
+                return mrl;
+            return Path.GetFileName(mrl);
         }
 
         public string GetExtension(string mrl)

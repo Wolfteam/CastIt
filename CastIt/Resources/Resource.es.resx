@@ -384,4 +384,16 @@
   <data name="ChangeAppTheme" xml:space="preserve">
     <value>Cambiar el tema de la aplicación</value>
   </data>
+  <data name="FileOptions" xml:space="preserve">
+    <value>Opciones del archivo</value>
+  </data>
+  <data name="AllFiles" xml:space="preserve">
+    <value>Todos los archivos</value>
+  </data>
+  <data name="VideoOrMusicFiles" xml:space="preserve">
+    <value>Archivos de video o música</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Buscar</value>
+  </data>
 </root>

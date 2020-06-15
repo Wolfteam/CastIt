@@ -1,6 +1,7 @@
 ﻿using CastIt.Common;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Media;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -18,6 +19,7 @@ namespace CastIt.Interfaces
         OnQualitiesChanged QualitiesChanged { get; set; }
         OnPaused OnPaused { get; set; }
         OnDisconnected OnDisconnected { get; set; }
+        Func<string> GetSubTitles { get; set; }
 
         void Init();
         void CleanThemAll();

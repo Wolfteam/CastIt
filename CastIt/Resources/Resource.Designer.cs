@@ -133,6 +133,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All files.
+        /// </summary>
+        public static string AllFiles {
+            get {
+                return ResourceManager.GetString("AllFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to App is ready to be used.
         /// </summary>
         public static string AppIsRdyToUse {
@@ -390,6 +399,15 @@ namespace CastIt.Resources {
         public static string FileIsNotReadyYet {
             get {
                 return ResourceManager.GetString("FileIsNotReadyYet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File options.
+        /// </summary>
+        public static string FileOptions {
+            get {
+                return ResourceManager.GetString("FileOptions", resourceCulture);
             }
         }
         
@@ -745,6 +763,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search.
+        /// </summary>
+        public static string Search {
+            get {
+                return ResourceManager.GetString("Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select.
         /// </summary>
         public static string Select {
@@ -849,6 +876,15 @@ namespace CastIt.Resources {
         public static string UseIfPlaybackIssues {
             get {
                 return ResourceManager.GetString("UseIfPlaybackIssues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Video or music files.
+        /// </summary>
+        public static string VideoOrMusicFiles {
+            get {
+                return ResourceManager.GetString("VideoOrMusicFiles", resourceCulture);
             }
         }
         

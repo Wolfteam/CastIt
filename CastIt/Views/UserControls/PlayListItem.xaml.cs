@@ -95,7 +95,7 @@ namespace CastIt.Views.UserControls
         private void OpenFileDialog()
         {
             var allowedFormats = AppConstants.AllowedFormatsString;
-            string filter = $"Video or Music files ({allowedFormats})|{allowedFormats}|All files (*.*)|*.*";
+            string filter = $"{ViewModel.GetText("VideoOrMusicFiles")} ({allowedFormats})|{allowedFormats}|{ViewModel.GetText("AllFiles")} (*.*)|*.*";
             var openFileDialog = new OpenFileDialog
             {
                 Filter = filter,
