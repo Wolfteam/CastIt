@@ -11,6 +11,7 @@ namespace CastIt.ConsoleApp
 {
     class Program
     {
+        private static Player _player;
         static void Main(string[] args)
         {
             TestPlayer().GetAwaiter().GetResult();
@@ -26,26 +27,60 @@ namespace CastIt.ConsoleApp
                 return;
             }
             var device = devices.First();
-            var player = new Player(device, logMsgs: false);
-            player.Disconnected += (e, sender) =>
+            _player = new Player(device, logMsgs: false);
+            _player.Disconnected += (e, sender) =>
             {
                 Console.WriteLine("DISCONNECTED");
             };
-            player.EndReached += (sender, e) =>
+            _player.EndReached += (sender, e) =>
             {
                 Console.WriteLine($"END REACHED");
             };
 
-            player.Init();
-            await player.ConnectAsync();
+            _player.Init();
+            await _player.ConnectAsync();
             bool canSeek = false;
 
-            //await player.LoadAsync(new MediaInformation
-            //{
-            //    ContentId = @"http://192.168.1.101:9696/videos?seconds=0&file=F:\Videos\Da Capo Opening 1.mp4",
-            //    Duration = 90
-            //});
+            await PlayFromLocal();
 
+            //await PlayFromLocalWithSubs();
+
+            Console.WriteLine("Tap to pause");
+            Console.ReadKey();
+            await _player.PauseAsync();
+
+            Console.WriteLine("Tap to play");
+            Console.ReadKey();
+            await _player.PlayAsync();
+
+            if (canSeek)
+            {
+                Console.WriteLine("Tap to seek 30 seconds");
+                Console.ReadKey();
+                await _player.SeekAsync(30);
+            }
+
+            Console.WriteLine("Type any key to disconnect");
+            Console.ReadKey();
+            await _player.StopPlaybackAsync();
+            _player.Dispose();
+
+            Console.WriteLine("Type any key to close this app");
+            Console.ReadKey();
+        }
+
+        private static  Task PlayFromLocal()
+        {
+            return _player.LoadAsync(new MediaInformation
+            {
+                ContentId = @"http://192.168.1.101:9696/videos?seconds=400&file=F:\Anime\Asobi%20Asobase\Asobi%20Asobase%201.mp4",
+                StreamType = StreamType.Live,
+                Duration = 1200
+            });
+        }
+
+        private static Task PlayFromLocalWithSubs()
+        {
             var mediaInfo = new MediaInformation
             {
                 ContentId = @"http://192.168.1.101:9696/videos?seconds=600&file=F:\Movies\John%20Wick\John%20Wick%203%20Parabellum.mkv",
@@ -79,30 +114,7 @@ namespace CastIt.ConsoleApp
                 }
             };
 
-            await player.LoadAsync(mediaInfo, true, 0, 360, 1);
-
-            Console.WriteLine("Tap to pause");
-            Console.ReadKey();
-            await player.PauseAsync();
-
-            Console.WriteLine("Tap to play");
-            Console.ReadKey();
-            await player.PlayAsync();
-
-            if (canSeek)
-            {
-                Console.WriteLine("Tap to seek 30 seconds");
-                Console.ReadKey();
-                await player.SeekAsync(30);
-            }
-
-            Console.WriteLine("Type any key to disconnect");
-            Console.ReadKey();
-            await player.StopPlaybackAsync();
-            player.Dispose();
-
-            Console.WriteLine("Type any key to close this app");
-            Console.ReadKey();
+            return _player.LoadAsync(mediaInfo, true, 0, 360, 1);
         }
     }
 }
