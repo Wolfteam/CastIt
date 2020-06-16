@@ -402,4 +402,7 @@
   <data name="DontLoopFile" xml:space="preserve">
     <value>Do not loop this file</value>
   </data>
+  <data name="CouldntParsePlayList" xml:space="preserve">
+    <value>Could not parse playlist</value>
+  </data>
 </root>

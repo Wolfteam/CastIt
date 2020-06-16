@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CastIt.Common;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Resources;
 using CastIt.Server;
@@ -32,6 +33,7 @@ namespace CastIt
 
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppSettingsService, AppSettingsService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, AppDataService>();
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<IYoutubeUrlDecoder, YoutubeUrlDecoder>();
 
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton(() =>
                 AppWebServer.CreateWebServer(Mvx.IoCProvider.Resolve<IMvxLogProvider>(), Mvx.IoCProvider.Resolve<IFFMpegService>())

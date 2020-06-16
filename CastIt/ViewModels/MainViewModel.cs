@@ -356,7 +356,9 @@ namespace CastIt.ViewModels
             {
                 Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force)),
                 Messenger.Subscribe<ManualDisconnectMessage>(_ => OnStoppedPlayBack()),
-                Messenger.Subscribe<LoopFileMessage>(msg => DisableLoopForAllFiles(msg.File.Id))
+                Messenger.Subscribe<LoopFileMessage>(msg => DisableLoopForAllFiles(msg.File.Id)),
+                Messenger.Subscribe<SnackbarMessage>(async msg => await ShowSnackbarMsg(msg.Message)),
+                Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy)
             });
         }
 

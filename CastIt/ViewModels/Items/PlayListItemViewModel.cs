@@ -3,10 +3,12 @@ using CastIt.Common.Comparers;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
+using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -18,6 +20,8 @@ namespace CastIt.ViewModels.Items
     {
         #region Members
         private readonly IPlayListsService _playListsService;
+        private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
+
         private string _name;
         private bool _showEditPopUp;
         private bool _showAddUrlPopUp;
@@ -211,14 +215,37 @@ namespace CastIt.ViewModels.Items
 
         private async Task OnUrlAdded(string url)
         {
-            //TODO: URL CAN BE A PLAYLIST, SO YOU WILL NEED TO PARSE IT
+            ShowAddUrlPopUp = false;
             bool isUrlFile = FileUtils.IsUrlFile(url);
             if (!isUrlFile)
                 return;
-            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
-            await vm.SetFileInfo(_setDurationTokenSource.Token);
-            Items.Add(vm);
-            ShowAddUrlPopUp = false;
+
+            Messenger.Publish(new IsBusyMessage(this, true));
+            if (_youtubeUrlDecoder.IsPlayList(url))
+            {
+                try
+                {
+                    var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url);
+                    foreach (var link in links)
+                    {
+                        var vm = await _playListsService.AddFile(Id, link, Items.Count + 1);
+                        await vm.SetFileInfo(_setDurationTokenSource.Token);
+                        Items.Add(vm);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Messenger.Publish(new SnackbarMessage(this, GetText("CouldntParsePlayList")));
+                    Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldnt parse youtube playlist");
+                }
+            }
+            else
+            {
+                var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
+                await vm.SetFileInfo(_setDurationTokenSource.Token);
+                Items.Add(vm);
+            }
+            Messenger.Publish(new IsBusyMessage(this, false));
         }
 
         private async Task RemoveSelectedFiles()

@@ -25,6 +25,7 @@ namespace CastIt.Services
 
         private readonly IMvxLog _logger;
         private readonly IFFMpegService _ffmpegService;
+        private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly WebServer _webServer;
         private readonly Player _player;
         private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
@@ -46,10 +47,15 @@ namespace CastIt.Services
         public OnDisconnected OnDisconnected { get; set; }
         public Func<string> GetSubTitles { get; set; }
 
-        public CastService(IMvxLogProvider logProvider, IFFMpegService ffmpegService, WebServer webServer)
+        public CastService(
+            IMvxLogProvider logProvider,
+            IFFMpegService ffmpegService,
+            IYoutubeUrlDecoder youtubeUrlDecoder,
+            WebServer webServer)
         {
             _logger = logProvider.GetLogFor<CastService>();
             _ffmpegService = ffmpegService;
+            _youtubeUrlDecoder = youtubeUrlDecoder;
             _webServer = webServer;
             _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: true);
             _subtitle = new Track
@@ -186,10 +192,10 @@ namespace CastIt.Services
                     Url = imgUrl
                 });
             }
-            else if (YoutubeUrlDecoder.IsYoutubeUrl(media.ContentId))
+            else if (_youtubeUrlDecoder.IsYoutubeUrl(media.ContentId))
             {
                 _logger.Info($"{nameof(StartPlay)}: File is a youtube link, parsing it...");
-                var youtubeMedia = await YoutubeUrlDecoder.Parse(_logger, media.ContentId, quality);
+                var youtubeMedia = await _youtubeUrlDecoder.Parse(media.ContentId, quality);
                 QualitiesChanged?.Invoke(youtubeMedia.SelectedQuality, youtubeMedia.Qualities);
                 media.ContentId = youtubeMedia.Url;
                 media.Metadata.Title = youtubeMedia.Title;
