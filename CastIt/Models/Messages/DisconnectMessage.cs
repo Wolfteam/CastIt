@@ -2,9 +2,9 @@
 
 namespace CastIt.Models.Messages
 {
-    public class DisconnectMessage : MvxMessage
+    public class ManualDisconnectMessage : MvxMessage
     {
-        public DisconnectMessage(object sender) : base(sender)
+        public ManualDisconnectMessage(object sender) : base(sender)
         {
         }
     }

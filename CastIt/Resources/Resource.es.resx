@@ -396,4 +396,10 @@
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
   </data>
+  <data name="LoopFile" xml:space="preserve">
+    <value>Repetir este archivo</value>
+  </data>
+  <data name="DontLoopFile" xml:space="preserve">
+    <value>No repetir este archivo</value>
+  </data>
 </root>

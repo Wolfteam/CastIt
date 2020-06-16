@@ -355,7 +355,8 @@ namespace CastIt.ViewModels
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
                 Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force)),
-                Messenger.Subscribe<DisconnectMessage>(_ => OnStoppedPlayBack())
+                Messenger.Subscribe<ManualDisconnectMessage>(_ => OnStoppedPlayBack()),
+                Messenger.Subscribe<LoopFileMessage>(msg => DisableLoopForAllFiles(msg.File.Id))
             });
         }
 
@@ -544,7 +545,7 @@ namespace CastIt.ViewModels
                 int nextPosition = _currentlyPlayedFile.Position + 1;
                 int closestPosition = playlist.Items
                     .Select(f => f.Position)
-                    .Aggregate((x, y) => Math.Abs(x - nextPosition) < Math.Abs(y - nextPosition) ? x : y);
+                    .GetClosest(nextPosition);
 
                 var f = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
                 f?.PlayCommand?.Execute();
@@ -561,7 +562,7 @@ namespace CastIt.ViewModels
             {
                 Logger.Info(
                     $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
-                    $"Probably an end of playlist");
+                    "Probably an end of playlist");
                 _castService.StopRunningProcess();
 
                 if (playlist.Loop)
@@ -577,13 +578,21 @@ namespace CastIt.ViewModels
 
         private async Task<bool> PlayFile(FileItemViewModel file, bool force, bool fileOptionsChanged = false)
         {
+            if (file is null)
+            {
+                Logger.Warn($"{nameof(PlayFile)}: Cant play file, it is null !!!");
+                return false;
+            }
+
+            DisableLoopForAllFiles(file.Id);
             if (!file.Exists)
             {
+                Logger.Info($"{nameof(PlayFile)}: Cant play file = {file.Path}. It doesnt exist");
                 await ShowSnackbarMsg(GetText("FileDoesntExist"));
                 return false;
             }
 
-            if (file == _currentlyPlayedFile && !force && !fileOptionsChanged)
+            if (file == _currentlyPlayedFile && !force && !fileOptionsChanged && !file.Loop)
             {
                 await ShowSnackbarMsg(GetText("FileIsAlreadyBeingPlayed"));
                 return false;
@@ -697,6 +706,7 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile = null;
             SetCurrentlyPlayingInfo(null, false);
             IsPaused = false;
+            DisableLoopForAllFiles();
         }
 
         private void SetCurrentlyPlayingInfo(
@@ -743,12 +753,23 @@ namespace CastIt.ViewModels
             SetCurrentlyPlayingInfo(null, false);
 
             IsPaused = false;
+
+            if (_currentlyPlayedFile?.Loop == true)
+            {
+                Logger.Info($"{nameof(OnFileEndReached)}: Looping file = {_currentlyPlayedFile?.Path}");
+                _currentlyPlayedFile.PlayedPercentage = 0;
+                _currentlyPlayedFile.PlayCommand.Execute();
+                return;
+            }
+
             if (_settingsService.PlayNextFileAutomatically)
             {
+                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is enabled. Playing the next file...");
                 GoTo(true);
             }
             else
             {
+                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is disabled. Next file wont be played");
                 _currentlyPlayedFile?.CleanUp();
                 _currentlyPlayedFile = null;
             }
@@ -974,6 +995,14 @@ namespace CastIt.ViewModels
             });
 
             return PlayFile(_currentlyPlayedFile, false, true);
+        }
+
+        private void DisableLoopForAllFiles(long exceptFileId = -1)
+        {
+            var files = PlayLists.SelectMany(pl => pl.Items).Where(f => f.Loop && f.Id != exceptFileId).ToList();
+
+            foreach (var file in files)
+                file.Loop = false;
         }
         #endregion
     }

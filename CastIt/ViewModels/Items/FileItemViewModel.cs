@@ -29,6 +29,7 @@ namespace CastIt.ViewModels.Items
         private string _path;
         private double _playedPercentage;
         private bool _isBeingPlayed;
+        private bool _loop;
         #endregion
 
         #region Properties
@@ -91,6 +92,12 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isSeparatorBottomLineVisible, value);
         }
 
+        public bool Loop
+        {
+            get => _loop;
+            set => SetProperty(ref _loop, value);
+        }
+
         public bool ShowFileDetails
             => _settingsService.ShowFileDetails;
         public bool IsLocalFile
@@ -115,6 +122,7 @@ namespace CastIt.ViewModels.Items
         public IMvxCommand PlayCommand { get; private set; }
         public IMvxCommand PlayFromTheBeginingCommand { get; private set; }
         public IMvxCommand OpenFileLocationCommand { get; private set; }
+        public IMvxCommand ToggleLoopCommand { get; private set; }
         #endregion
 
         public FileItemViewModel(
@@ -143,6 +151,12 @@ namespace CastIt.ViewModels.Items
             {
                 var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
                 Process.Start(psi);
+            });
+
+            ToggleLoopCommand = new MvxCommand(() =>
+            {
+                Loop = !Loop;
+                Messenger.Publish(new LoopFileMessage(this));
             });
         }
 

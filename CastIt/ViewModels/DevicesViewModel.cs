@@ -64,7 +64,7 @@ namespace CastIt.ViewModels
         {
             DeSelectAllDevices();
 
-            Messenger.Publish(new DisconnectMessage(this));
+            Messenger.Publish(new ManualDisconnectMessage(this));
             return _castService.SetCastRenderer(device?.Id);
         }
 

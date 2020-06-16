@@ -28,6 +28,30 @@
                         <materialDesign:PackIcon Kind="Refresh" />
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Command="{Binding ToggleLoopCommand}" Visibility="{Binding IsBeingPlayed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Loop}" Value="True">
+                                    <Setter Property="Header" Value="{Binding [DontLoopFile]}" />
+                                    <Setter Property="Icon">
+                                        <Setter.Value>
+                                            <materialDesign:PackIcon Kind="RepeatOff" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Loop}" Value="False">
+                                    <Setter Property="Header" Value="{Binding [LoopFile]}" />
+                                    <Setter Property="Icon">
+                                        <Setter.Value>
+                                            <materialDesign:PackIcon Kind="Repeat" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
+                </MenuItem>
                 <Separator />
                 <MenuItem Command="{Binding PlacementTarget.Tag.AddFolderCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddFolder]}">
                     <MenuItem.Icon>
@@ -131,6 +155,14 @@
             Style="{StaticResource FileItemSubTextStyleWithTriggers}"
             Text="{Binding Path}"
             Visibility="{Binding ShowFileDetails, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+        <materialDesign:PackIcon
+            Grid.Row="1"
+            Grid.Column="2"
+            HorizontalAlignment="Right"
+            Foreground="{DynamicResource FontColorBrush}"
+            Kind="Repeat"
+            Visibility="{Binding Loop, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
         <TextBlock
             Grid.RowSpan="5"

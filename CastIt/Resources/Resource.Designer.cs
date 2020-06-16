@@ -313,6 +313,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not loop this file.
+        /// </summary>
+        public static string DontLoopFile {
+            get {
+                return ResourceManager.GetString("DontLoopFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to For this app to work, it needs to download the FFMpeg binaries.
         /// </summary>
         public static string DownloadFFMpegMsg {
@@ -480,6 +489,15 @@ namespace CastIt.Resources {
         public static string Light {
             get {
                 return ResourceManager.GetString("Light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loop this file.
+        /// </summary>
+        public static string LoopFile {
+            get {
+                return ResourceManager.GetString("LoopFile", resourceCulture);
             }
         }
         
