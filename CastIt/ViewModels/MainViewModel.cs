@@ -259,7 +259,7 @@ namespace CastIt.ViewModels
             foreach (var playlist in playLists)
             {
                 var files = await _playListsService.GetAllFiles(playlist.Id);
-                playlist.Items.AddRange(files);
+                playlist.Items.AddRange(files.OrderBy(f => f.Position));
             }
 
             foreach (var pl in PlayLists)

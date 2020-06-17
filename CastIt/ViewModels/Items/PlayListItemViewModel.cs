@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Comparers;
+using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
@@ -98,6 +99,7 @@ namespace CastIt.ViewModels.Items
         public IMvxCommand SelectAllCommand { get; private set; }
         public IMvxAsyncCommand<string> RenameCommand { get; private set; }
         public IMvxCommand ScrollToSelectedFileCommand { get; set; }
+        public IMvxCommand<SortModeType> SortFilesCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -152,6 +154,8 @@ namespace CastIt.ViewModels.Items
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
 
             ScrollToSelectedFileCommand = new MvxCommand(ScrollToSelectedFile);
+
+            SortFilesCommand = new MvxCommand<SortModeType>(SortFiles);
         }
 
         public void CleanUp()
@@ -317,6 +321,34 @@ namespace CastIt.ViewModels.Items
             var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
             await vm.SetFileInfo(_setDurationTokenSource.Token);
             Items.Add(vm);
+        }
+
+        private void SortFiles(SortModeType sortBy)
+        {
+            if (Items.Any(f => string.IsNullOrEmpty(f.Duration)))
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("FileIsNotReadyYet")));
+                return;
+            }
+            var sortedItems = sortBy switch
+            {
+                SortModeType.AlphabeticalAsc => Items.OrderBy(f => f.Path, new WindowsExplorerComparer()).ToList(),
+                SortModeType.AlphabeticalDesc => Items.OrderByDescending(f => f.Path, new WindowsExplorerComparer()).ToList(),
+                SortModeType.DurationAsc => Items.OrderBy(f => f.TotalSeconds).ToList(),
+                SortModeType.DurationDesc => Items.OrderByDescending(f => f.TotalSeconds).ToList(),
+                _ => throw new ArgumentOutOfRangeException(nameof(sortBy), sortBy, "Invalid sort mode"),
+            };
+
+            SelectedItems.Clear();
+            SelectedItem = null;
+
+            foreach (var item in sortedItems)
+            {
+                int currentIndex = Items.IndexOf(item);
+                int newIndex = sortedItems.IndexOf(item);
+                Items.Move(currentIndex, newIndex);
+            }
+            SetPositionIfChanged();
         }
         #endregion
     }

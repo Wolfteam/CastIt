@@ -160,6 +160,42 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to By duration asc..
+        /// </summary>
+        public static string ByDurationAsc {
+            get {
+                return ResourceManager.GetString("ByDurationAsc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to By duration desc..
+        /// </summary>
+        public static string ByDurationDesc {
+            get {
+                return ResourceManager.GetString("ByDurationDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to By name asc..
+        /// </summary>
+        public static string ByNameAsc {
+            get {
+                return ResourceManager.GetString("ByNameAsc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to By name desc..
+        /// </summary>
+        public static string ByNameDesc {
+            get {
+                return ResourceManager.GetString("ByNameDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Cancel {
@@ -858,6 +894,15 @@ namespace CastIt.Resources {
         public static string Shuffle {
             get {
                 return ResourceManager.GetString("Shuffle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sort.
+        /// </summary>
+        public static string Sort {
+            get {
+                return ResourceManager.GetString("Sort", resourceCulture);
             }
         }
         

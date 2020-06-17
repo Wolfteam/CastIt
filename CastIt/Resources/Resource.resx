@@ -408,4 +408,19 @@
   <data name="OpenUrl" xml:space="preserve">
     <value>Open url</value>
   </data>
+  <data name="Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="ByNameAsc" xml:space="preserve">
+    <value>By name asc.</value>
+  </data>
+  <data name="ByNameDesc" xml:space="preserve">
+    <value>By name desc.</value>
+  </data>
+  <data name="ByDurationAsc" xml:space="preserve">
+    <value>By duration asc.</value>
+  </data>
+  <data name="ByDurationDesc" xml:space="preserve">
+    <value>By duration desc.</value>
+  </data>
 </root>
