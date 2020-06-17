@@ -405,4 +405,7 @@
   <data name="CouldntParsePlayList" xml:space="preserve">
     <value>Could not parse playlist</value>
   </data>
+  <data name="OpenUrl" xml:space="preserve">
+    <value>Open url</value>
+  </data>
 </root>

@@ -115,10 +115,12 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IPlayListsService playListsService)
+            IPlayListsService playListsService,
+            IYoutubeUrlDecoder youtubeUrlDecoder)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
+            _youtubeUrlDecoder = youtubeUrlDecoder;
         }
 
         #region Methods
@@ -220,17 +222,21 @@ namespace CastIt.ViewModels.Items
             if (!isUrlFile)
                 return;
 
-            Messenger.Publish(new IsBusyMessage(this, true));
             if (_youtubeUrlDecoder.IsPlayList(url))
             {
                 try
                 {
+                    Messenger.Publish(new IsBusyMessage(this, true));
+                    if (!NetworkUtils.IsInternetAvailable())
+                    {
+                        Messenger.Publish(new SnackbarMessage(this, GetText("NoInternetConnection")));
+                        return;
+                    }
+
                     var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url);
                     foreach (var link in links)
                     {
-                        var vm = await _playListsService.AddFile(Id, link, Items.Count + 1);
-                        await vm.SetFileInfo(_setDurationTokenSource.Token);
-                        Items.Add(vm);
+                        await AddUrl(link);
                     }
                 }
                 catch (Exception e)
@@ -238,14 +244,15 @@ namespace CastIt.ViewModels.Items
                     Messenger.Publish(new SnackbarMessage(this, GetText("CouldntParsePlayList")));
                     Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldnt parse youtube playlist");
                 }
+                finally
+                {
+                    Messenger.Publish(new IsBusyMessage(this, false));
+                }
             }
             else
             {
-                var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
-                await vm.SetFileInfo(_setDurationTokenSource.Token);
-                Items.Add(vm);
+                await AddUrl(url);
             }
-            Messenger.Publish(new IsBusyMessage(this, false));
         }
 
         private async Task RemoveSelectedFiles()
@@ -303,6 +310,13 @@ namespace CastIt.ViewModels.Items
                 SelectedItem = currentPlayedFile;
             }
             _scrollToSelectedItem.Raise(SelectedItem);
+        }
+
+        private async Task AddUrl(string url)
+        {
+            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
+            await vm.SetFileInfo(_setDurationTokenSource.Token);
+            Items.Add(vm);
         }
         #endregion
     }

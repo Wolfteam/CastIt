@@ -2,15 +2,12 @@
     x:Class="CastIt.Views.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:behaviours="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:cb="clr-namespace:CastIt.Common.Behaviours"
-    xmlns:converters="clr-namespace:CastIt.Common.Converters"
+    xmlns:common="clr-namespace:CastIt.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     xmlns:local="clr-namespace:CastIt.Views"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:mvx="clr-namespace:MvvmCross.Platforms.Wpf.Binding.MvxBinding;assembly=MvvmCross.Platforms.Wpf"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
@@ -78,10 +75,14 @@
         <Image
             Grid.Row="1"
             Grid.Column="0"
-            Height="150"
+            Width="{x:Static common:AppConstants.ThumbnailWidth}"
+            Height="{x:Static common:AppConstants.ThumbnailHeight}"
             HorizontalAlignment="Stretch"
+            VerticalAlignment="Top"
             Focusable="False"
-            Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}" />
+            RenderOptions.BitmapScalingMode="HighQuality"
+            Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}"
+            ToolTip="{Binding CurrentlyPlayingFilename}" />
 
         <uc:ButtonsBar
             x:Name="ButtonsBar"

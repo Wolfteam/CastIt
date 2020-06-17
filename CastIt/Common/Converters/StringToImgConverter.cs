@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CastIt.Common.Utils;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
@@ -13,14 +14,26 @@ namespace CastIt.Common.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var bm = LoadImage(value as string);
+            string path = value as string;
+            if (FileUtils.IsUrlFile(path))
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.DecodePixelWidth = (int)AppConstants.ThumbnailWidth;
+                bitmap.DecodePixelHeight = (int)AppConstants.ThumbnailHeight;
+                bitmap.UriSource = new Uri(path, UriKind.Absolute);
+                bitmap.EndInit();
+
+                return bitmap;
+            }
+
+            var bm = LoadImage(path);
             if (bm is null)
             {
                 var img = System.Windows.Application.Current.Resources["NoImgFound"] as ImageSource;
                 return img;
             }
             return ConvertBitmapToBitmapImage(bm);
-
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

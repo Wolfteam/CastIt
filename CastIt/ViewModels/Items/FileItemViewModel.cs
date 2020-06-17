@@ -147,11 +147,7 @@ namespace CastIt.ViewModels.Items
 
             PlayFromTheBeginingCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMessage(this, true)));
 
-            OpenFileLocationCommand = new MvxCommand(() =>
-            {
-                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
-                Process.Start(psi);
-            });
+            OpenFileLocationCommand = new MvxCommand(OpenFileLocation);
 
             ToggleLoopCommand = new MvxCommand(() =>
             {
@@ -237,5 +233,21 @@ namespace CastIt.ViewModels.Items
 
         private void OnEndReached()
             => OnPositionChanged(100);
+
+        private void OpenFileLocation()
+        {
+            if (IsLocalFile)
+            {
+                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
+                Process.Start(psi);
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(Path)
+                {
+                    UseShellExecute = true
+                });
+            }
+        }
     }
 }

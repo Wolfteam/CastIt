@@ -332,12 +332,12 @@ namespace CastIt.Common.Utils
                 string transName = transToApply.Substring(0, transToApply.IndexOf("("));
                 if (trans[transName] == "reverse")
                 {
-                    s = s.Reverse().ToString();
+                    s = new string(s.Reverse().ToArray());
                 }
                 else if (trans[transName] == "slice")
                 {
                     int value = int.Parse(transToApply.Split(commaSeparator).Last().Replace(")", ""));
-                    s = s.Substring(0, value);
+                    s = s.Substring(value);
                 }
                 else if (trans[transName] == "swap")
                 {

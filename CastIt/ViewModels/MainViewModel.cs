@@ -1,7 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Extensions;
 using CastIt.Common.Utils;
-using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Dialogs;
@@ -139,7 +138,7 @@ namespace CastIt.ViewModels
         public string CurrentFileThumbnail
         {
             get => _currentFileThumbnail;
-            set => SetProperty(ref _currentFileThumbnail, value);
+            set => this.RaiseAndSetIfChanged(ref _currentFileThumbnail, value);
         }
 
         public string PreviewThumbnailImg
@@ -269,6 +268,7 @@ namespace CastIt.ViewModels
             }
 
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
+            _castService.OnFileLoaded += OnFileLoaded;
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
@@ -404,7 +404,7 @@ namespace CastIt.ViewModels
 
             long tentativeSecond = GetMainProgressBarSeconds(sliderWidth, mouseX);
 
-            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path))
+            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path) || FileUtils.IsUrlFile(_currentlyPlayedFile.Path))
             {
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
@@ -510,6 +510,7 @@ namespace CastIt.ViewModels
             await StopPlayBack();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
+            _castService.OnFileLoaded -= OnFileLoaded;
             _castService.OnTimeChanged -= OnFileDurationChanged;
             _castService.OnPositionChanged -= OnFilePositionChanged;
             _castService.OnEndReached -= OnFileEndReached;
@@ -639,15 +640,13 @@ namespace CastIt.ViewModels
 
             try
             {
-                //TODO: CHECK IF WE SHOULD REMOVE THIS MEDIASTATUS
-                MediaStatus mediaStatus;
                 if (file.CanStartPlayingFromCurrentPercentage &&
                     !file.IsUrlFile &&
                     !force &&
                     !_settingsService.StartFilesFromTheStart)
                 {
                     Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
-                    mediaStatus = await _castService.GoToPosition(
+                    await _castService.GoToPosition(
                         file.Path,
                         CurrentFileVideoStreamIndex,
                         CurrentFileAudioStreamIndex,
@@ -659,7 +658,7 @@ namespace CastIt.ViewModels
                 else
                 {
                     Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
-                    mediaStatus = await _castService.StartPlay(
+                    await _castService.StartPlay(
                         file.Path,
                         CurrentFileVideoStreamIndex,
                         CurrentFileAudioStreamIndex,
@@ -667,13 +666,6 @@ namespace CastIt.ViewModels
                         CurrentFileQuality);
                 }
 
-                if (file.IsUrlFile)
-                {
-                    file.SetDuration(mediaStatus?.Media?.Duration ?? 0);
-                    await RaisePropertyChanged(() => CurrentFileDuration);
-                }
-
-                CurrentFileThumbnail = _castService.GetFirstThumbnail();
                 _castService.GenerateThumbmnails(file.Path);
 
                 Logger.Info($"{nameof(PlayFile)}: File is being playing...");
@@ -724,6 +716,17 @@ namespace CastIt.ViewModels
             IsCurrentlyPlaying = isPlaying;
             CurrentPlayedSeconds = playedSeconds;
             RaisePropertyChanged(() => CurrentFileDuration);
+        }
+
+        private void OnFileLoaded(string mrl, string title, string thumbPath, double duration)
+        {
+            CurrentFileThumbnail = thumbPath;
+            if (_currentlyPlayedFile?.IsUrlFile == true)
+            {
+                CurrentlyPlayingFilename = title;
+                _currentlyPlayedFile.SetDuration(duration);
+                RaisePropertyChanged(() => CurrentFileDuration);
+            }
         }
 
         private void OnFileDurationChanged(double seconds)

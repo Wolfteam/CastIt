@@ -39,6 +39,7 @@ namespace CastIt.Services
         public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
+        public OnFileLoaded OnFileLoaded { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
@@ -94,7 +95,7 @@ namespace CastIt.Services
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
-        public async Task<MediaStatus> StartPlay(
+        public async Task StartPlay(
             string mrl,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -111,13 +112,13 @@ namespace CastIt.Services
             if (!isLocal && !isUrlFile)
             {
                 _logger.Warn($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
-                return null;
+                return;
             }
 
             if (AvailableDevices.Count == 0)
             {
                 _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl}");
-                return null;
+                return;
             }
 
             if (!_renderWasSet && AvailableDevices.Count > 0)
@@ -131,7 +132,7 @@ namespace CastIt.Services
                 ? AppWebServer.GetMediaUrl(_webServer, mrl, videoStreamIndex, audioStreamIndex, seconds)
                 : mrl;
 
-            var metdata = isVideoFile ? new MovieMetadata
+            var metadata = isVideoFile ? new MovieMetadata
             {
                 Title = title,
             } : new GenericMediaMetadata
@@ -141,7 +142,7 @@ namespace CastIt.Services
             var media = new MediaInformation
             {
                 ContentId = url,
-                Metadata = metdata,
+                Metadata = metadata,
                 //You have to set the contenttype before hand, with that, the album art of a music file will be shown
                 ContentType = _ffmpegService.GetOutputTranscodeMimeType(mrl)
             };
@@ -167,10 +168,12 @@ namespace CastIt.Services
                 activeTrackIds.Add(SubTitleDefaultTrackId);
             }
 
+            string firstThumbnail = GetFirstThumbnail();
+            string imgUrl = string.Empty;
             if (isLocal)
             {
                 _logger.Info($"{nameof(StartPlay)}: File is a local one, generating metadata...");
-                string imgUrl = AppWebServer.GetPreviewPath(_webServer, GetFirstThumbnail());
+                imgUrl = AppWebServer.GetPreviewPath(_webServer, firstThumbnail);
 
                 if (isVideoFile)
                     media.StreamType = StreamType.Live;
@@ -186,31 +189,32 @@ namespace CastIt.Services
                         Artist = fileInfo.Format.Tag?.Artist,
                     };
                 }
-
-                media.Metadata.Images.Add(new GoogleCast.Models.Image
-                {
-                    Url = imgUrl
-                });
             }
             else if (_youtubeUrlDecoder.IsYoutubeUrl(media.ContentId))
             {
                 _logger.Info($"{nameof(StartPlay)}: File is a youtube link, parsing it...");
                 var youtubeMedia = await _youtubeUrlDecoder.Parse(media.ContentId, quality);
                 QualitiesChanged?.Invoke(youtubeMedia.SelectedQuality, youtubeMedia.Qualities);
+
+                imgUrl = youtubeMedia.ThumbnailUrl;
                 media.ContentId = youtubeMedia.Url;
                 media.Metadata.Title = youtubeMedia.Title;
                 media.Metadata.Subtitle = youtubeMedia.Description;
+            }
+
+            if (!string.IsNullOrEmpty(imgUrl))
+            {
                 media.Metadata.Images.Add(new GoogleCast.Models.Image
                 {
-                    Url = youtubeMedia.ThumbnailUrl
+                    Url = imgUrl
                 });
             }
 
             _logger.Info($"{nameof(StartPlay)}: Trying to load file = {mrl} on seconds = {seconds}");
-            var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
-            _logger.Info($"{nameof(StartPlay)}: File was succesfully loaded");
+            await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
 
-            return status;
+            _logger.Info($"{nameof(StartPlay)}: File was succesfully loaded");
+            OnFileLoaded?.Invoke(_currentFilePath, metadata.Title, isLocal ? firstThumbnail : imgUrl, _player.CurrentMediaDuration);
         }
 
         public string GetFirstThumbnail()
@@ -253,7 +257,7 @@ namespace CastIt.Services
             return _player.StopPlaybackAsync();
         }
 
-        public Task<MediaStatus> GoToPosition(
+        public Task GoToPosition(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -272,10 +276,10 @@ namespace CastIt.Services
             }
 
             _logger.Warn($"{nameof(GoToPosition)} Cant go to position = {position}");
-            return Task.FromResult<MediaStatus>(null);
+            return Task.CompletedTask;
         }
 
-        public Task<MediaStatus> GoToSeconds(
+        public Task GoToSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,
@@ -288,7 +292,7 @@ namespace CastIt.Services
             return _player.SeekAsync(seconds);
         }
 
-        public Task<MediaStatus> AddSeconds(
+        public Task AddSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,

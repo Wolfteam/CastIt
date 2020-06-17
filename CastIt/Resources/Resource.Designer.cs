@@ -232,6 +232,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not parse playlist.
+        /// </summary>
+        public static string CouldntParsePlayList {
+            get {
+                return ResourceManager.GetString("CouldntParsePlayList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not play file.
         /// </summary>
         public static string CouldntPlayFile {
@@ -615,6 +624,15 @@ namespace CastIt.Resources {
         public static string OpenFileLocation {
             get {
                 return ResourceManager.GetString("OpenFileLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open url.
+        /// </summary>
+        public static string OpenUrl {
+            get {
+                return ResourceManager.GetString("OpenUrl", resourceCulture);
             }
         }
         

@@ -1,4 +1,5 @@
-﻿using CastIt.Common.Enums;
+﻿using CastIt.Common;
+using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.FFMpeg;
@@ -54,6 +55,9 @@ namespace CastIt.Services
         {
             "HE-AAC", "LC-AAC", "LC", "HE"
         };
+
+        private static string ThumbnailScale
+            => $"{AppConstants.ThumbnailWidth}:{AppConstants.ThumbnailHeight}";
 
         private bool _checkGenerateThumbnailProcess;
         private bool _checkGenerateAllThumbnailsProcess;
@@ -117,7 +121,7 @@ namespace CastIt.Services
 
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
-            var ouputArgs = builder.AddOutputFile(thumbnailPath).SetFilters("scale=200:150");
+            var ouputArgs = builder.AddOutputFile(thumbnailPath).SetFilters($"scale={ThumbnailScale}");
             if (!FileUtils.IsMusicFile(mrl))
             {
                 inputArgs.Seek(second);
@@ -168,11 +172,11 @@ namespace CastIt.Services
                 AvailableHwDevices.Contains(HwAccelDeviceType.Intel))
             {
                 inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel);
-                outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters("fps=1/5,scale_qsv=200:150");
+                outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters($"fps=1/5,scale_qsv={ThumbnailScale}");
             }
             else
             {
-                outputArgs.SetFilters("fps=1/5,scale=200:150");
+                outputArgs.SetFilters($"fps=1/5,scale={ThumbnailScale}");
             }
 
             var cmd = builder.GetArgs();

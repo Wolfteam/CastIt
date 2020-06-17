@@ -82,10 +82,27 @@
                         <materialDesign:PackIcon Kind="SelectAll" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Command="{Binding OpenFileLocationCommand}" Header="{Binding [OpenFileLocation]}">
-                    <MenuItem.Icon>
-                        <materialDesign:PackIcon Kind="Folder" />
-                    </MenuItem.Icon>
+                <MenuItem Command="{Binding OpenFileLocationCommand}">
+                    <MenuItem.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Setter Property="Header" Value="{Binding [OpenFileLocation]}" />
+                            <Setter Property="Icon">
+                                <Setter.Value>
+                                    <materialDesign:PackIcon Kind="Folder" />
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsUrlFile}" Value="True">
+                                    <Setter Property="Header" Value="{Binding [OpenUrl]}" />
+                                    <Setter Property="Icon">
+                                        <Setter.Value>
+                                            <materialDesign:PackIcon Kind="Web" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
                 </MenuItem>
             </ContextMenu>
         </Grid.ContextMenu>
