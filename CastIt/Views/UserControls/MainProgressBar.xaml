@@ -56,7 +56,10 @@
             PlacementTarget="{Binding ElementName=MainSilder}"
             StaysOpen="True">
             <Grid Width="{x:Static common:AppConstants.ThumbnailWidth}" Height="{x:Static common:AppConstants.ThumbnailHeight}">
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}" />
+                <Image
+                    RenderOptions.BitmapScalingMode="HighQuality"
+                    Source="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}"
+                    Stretch="Fill" />
                 <TextBlock
                     x:Name="SliderPopupText"
                     Margin="0,0,5,10"

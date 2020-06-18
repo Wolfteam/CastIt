@@ -121,7 +121,7 @@ namespace CastIt.Services
 
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
-            var ouputArgs = builder.AddOutputFile(thumbnailPath).SetFilters($"scale={ThumbnailScale}");
+            var ouputArgs = builder.AddOutputFile(thumbnailPath);
             if (!FileUtils.IsMusicFile(mrl))
             {
                 inputArgs.Seek(second);

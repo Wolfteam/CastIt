@@ -423,4 +423,7 @@
   <data name="ByDurationDesc" xml:space="preserve">
     <value>Por duración desc.</value>
   </data>
+  <data name="UrlNotSupported" xml:space="preserve">
+    <value>La ruta es invalid o no es soportada</value>
+  </data>
 </root>

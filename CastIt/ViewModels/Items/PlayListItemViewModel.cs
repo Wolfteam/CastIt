@@ -223,8 +223,11 @@ namespace CastIt.ViewModels.Items
         {
             ShowAddUrlPopUp = false;
             bool isUrlFile = FileUtils.IsUrlFile(url);
-            if (!isUrlFile)
+            if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("UrlNotSupported")));
                 return;
+            }
 
             if (_youtubeUrlDecoder.IsPlayList(url))
             {

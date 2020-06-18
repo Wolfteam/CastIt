@@ -952,6 +952,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Url is not valid or not supported.
+        /// </summary>
+        public static string UrlNotSupported {
+            get {
+                return ResourceManager.GetString("UrlNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use this option if you have playback issues.
         /// </summary>
         public static string UseIfPlaybackIssues {

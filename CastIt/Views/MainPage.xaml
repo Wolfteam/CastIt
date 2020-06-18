@@ -82,6 +82,7 @@
             Focusable="False"
             RenderOptions.BitmapScalingMode="HighQuality"
             Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}"
+            Stretch="UniformToFill"
             ToolTip="{Binding CurrentlyPlayingFilename}" />
 
         <uc:ButtonsBar
