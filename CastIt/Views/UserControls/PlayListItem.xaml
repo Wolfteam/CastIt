@@ -254,7 +254,7 @@
                                 <materialDesign:PackIcon
                                     HorizontalAlignment="Center"
                                     HorizontalContentAlignment="Center"
-                                    Kind="SortNumericAscending" />
+                                    Kind="SortNumericDescending" />
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
