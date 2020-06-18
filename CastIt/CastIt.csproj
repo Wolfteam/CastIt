@@ -36,7 +36,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
     <PackageReference Include="System.Management" Version="4.7.0" />
-    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.0.0" />
+    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>
