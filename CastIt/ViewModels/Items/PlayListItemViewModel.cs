@@ -1,12 +1,15 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Comparers;
+using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
+using CastIt.Models.Messages;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -18,6 +21,8 @@ namespace CastIt.ViewModels.Items
     {
         #region Members
         private readonly IPlayListsService _playListsService;
+        private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
+
         private string _name;
         private bool _showEditPopUp;
         private bool _showAddUrlPopUp;
@@ -94,6 +99,7 @@ namespace CastIt.ViewModels.Items
         public IMvxCommand SelectAllCommand { get; private set; }
         public IMvxAsyncCommand<string> RenameCommand { get; private set; }
         public IMvxCommand ScrollToSelectedFileCommand { get; set; }
+        public IMvxCommand<SortModeType> SortFilesCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -111,10 +117,12 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IPlayListsService playListsService)
+            IPlayListsService playListsService,
+            IYoutubeUrlDecoder youtubeUrlDecoder)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
+            _youtubeUrlDecoder = youtubeUrlDecoder;
         }
 
         #region Methods
@@ -146,6 +154,8 @@ namespace CastIt.ViewModels.Items
             RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
 
             ScrollToSelectedFileCommand = new MvxCommand(ScrollToSelectedFile);
+
+            SortFilesCommand = new MvxCommand<SortModeType>(SortFiles);
         }
 
         public void CleanUp()
@@ -211,14 +221,45 @@ namespace CastIt.ViewModels.Items
 
         private async Task OnUrlAdded(string url)
         {
-            //TODO: URL CAN BE A PLAYLIST, SO YOU WILL NEED TO PARSE IT
-            bool isUrlFile = FileUtils.IsUrlFile(url);
-            if (!isUrlFile)
-                return;
-            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
-            await vm.SetFileInfo(_setDurationTokenSource.Token);
-            Items.Add(vm);
             ShowAddUrlPopUp = false;
+            bool isUrlFile = FileUtils.IsUrlFile(url);
+            if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("UrlNotSupported")));
+                return;
+            }
+
+            if (_youtubeUrlDecoder.IsPlayList(url))
+            {
+                try
+                {
+                    Messenger.Publish(new IsBusyMessage(this, true));
+                    if (!NetworkUtils.IsInternetAvailable())
+                    {
+                        Messenger.Publish(new SnackbarMessage(this, GetText("NoInternetConnection")));
+                        return;
+                    }
+
+                    var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url);
+                    foreach (var link in links)
+                    {
+                        await AddUrl(link);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Messenger.Publish(new SnackbarMessage(this, GetText("CouldntParsePlayList")));
+                    Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldnt parse youtube playlist");
+                }
+                finally
+                {
+                    Messenger.Publish(new IsBusyMessage(this, false));
+                }
+            }
+            else
+            {
+                await AddUrl(url);
+            }
         }
 
         private async Task RemoveSelectedFiles()
@@ -276,6 +317,41 @@ namespace CastIt.ViewModels.Items
                 SelectedItem = currentPlayedFile;
             }
             _scrollToSelectedItem.Raise(SelectedItem);
+        }
+
+        private async Task AddUrl(string url)
+        {
+            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
+            await vm.SetFileInfo(_setDurationTokenSource.Token);
+            Items.Add(vm);
+        }
+
+        private void SortFiles(SortModeType sortBy)
+        {
+            if (Items.Any(f => string.IsNullOrEmpty(f.Duration)))
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("FileIsNotReadyYet")));
+                return;
+            }
+            var sortedItems = sortBy switch
+            {
+                SortModeType.AlphabeticalAsc => Items.OrderBy(f => f.Path, new WindowsExplorerComparer()).ToList(),
+                SortModeType.AlphabeticalDesc => Items.OrderByDescending(f => f.Path, new WindowsExplorerComparer()).ToList(),
+                SortModeType.DurationAsc => Items.OrderBy(f => f.TotalSeconds).ToList(),
+                SortModeType.DurationDesc => Items.OrderByDescending(f => f.TotalSeconds).ToList(),
+                _ => throw new ArgumentOutOfRangeException(nameof(sortBy), sortBy, "Invalid sort mode"),
+            };
+
+            SelectedItems.Clear();
+            SelectedItem = null;
+
+            foreach (var item in sortedItems)
+            {
+                int currentIndex = Items.IndexOf(item);
+                int newIndex = sortedItems.IndexOf(item);
+                Items.Move(currentIndex, newIndex);
+            }
+            SetPositionIfChanged();
         }
         #endregion
     }

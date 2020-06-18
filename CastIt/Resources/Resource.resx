@@ -396,4 +396,34 @@
   <data name="Search" xml:space="preserve">
     <value>Search</value>
   </data>
+  <data name="LoopFile" xml:space="preserve">
+    <value>Loop this file</value>
+  </data>
+  <data name="DontLoopFile" xml:space="preserve">
+    <value>Do not loop this file</value>
+  </data>
+  <data name="CouldntParsePlayList" xml:space="preserve">
+    <value>Could not parse playlist</value>
+  </data>
+  <data name="OpenUrl" xml:space="preserve">
+    <value>Open url</value>
+  </data>
+  <data name="Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="ByNameAsc" xml:space="preserve">
+    <value>By name asc.</value>
+  </data>
+  <data name="ByNameDesc" xml:space="preserve">
+    <value>By name desc.</value>
+  </data>
+  <data name="ByDurationAsc" xml:space="preserve">
+    <value>By duration asc.</value>
+  </data>
+  <data name="ByDurationDesc" xml:space="preserve">
+    <value>By duration desc.</value>
+  </data>
+  <data name="UrlNotSupported" xml:space="preserve">
+    <value>Url is not valid or not supported</value>
+  </data>
 </root>

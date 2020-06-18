@@ -6,6 +6,7 @@
     xmlns:cb="clr-namespace:CastIt.Common.Behaviours"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
+    xmlns:enums="clr-namespace:CastIt.Common.Enums"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:selectors="clr-namespace:CastIt.Common.Selectors"
@@ -90,6 +91,7 @@
 
             <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -192,6 +194,74 @@
 
                 <Menu
                     Grid.Column="5"
+                    Background="{StaticResource DarkestColorBrush}"
+                    IsMainMenu="True"
+                    IsTabStop="False"
+                    ToolTip="{Binding [Sort]}">
+                    <MenuItem
+                        Height="40"
+                        IsTabStop="False"
+                        Style="{StaticResource CustomIconMenuItem}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon
+                                HorizontalAlignment="Center"
+                                HorizontalContentAlignment="Center"
+                                Kind="Sort" />
+                        </MenuItem.Icon>
+
+                        <MenuItem
+                            Command="{Binding SortFilesCommand}"
+                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalAsc}"
+                            Header="{Binding [ByNameAsc]}"
+                            IsCheckable="False">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="SortAlphabeticalAscending" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SortFilesCommand}"
+                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalDesc}"
+                            Header="{Binding [ByNameDesc]}"
+                            IsCheckable="False">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="SortAlphabeticalAscending" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SortFilesCommand}"
+                            CommandParameter="{x:Static enums:SortModeType.DurationAsc}"
+                            Header="{Binding [ByDurationAsc]}"
+                            IsCheckable="False">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="SortNumericAscending" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SortFilesCommand}"
+                            CommandParameter="{x:Static enums:SortModeType.DurationDesc}"
+                            Header="{Binding [ByDurationDesc]}"
+                            IsCheckable="False">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="SortNumericAscending" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                </Menu>
+
+                <Menu
+                    Grid.Column="6"
                     Background="{StaticResource DarkestColorBrush}"
                     IsMainMenu="True"
                     IsTabStop="False"

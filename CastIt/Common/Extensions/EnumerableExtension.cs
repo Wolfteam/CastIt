@@ -20,5 +20,10 @@ namespace CastIt.Common.Extensions
             }
             return source.ElementAtOrDefault(index);
         }
+
+        public static int GetClosest(this IEnumerable<int> source, int closestTo)
+        {
+            return source.Aggregate((x, y) => Math.Abs(x - closestTo) < Math.Abs(y - closestTo) ? x : y);
+        }
     }
 }

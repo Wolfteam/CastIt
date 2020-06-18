@@ -1,5 +1,7 @@
 ﻿using CastIt.Common.Extensions;
+using CastIt.Interfaces;
 using CastIt.Models.Youtube;
+using HtmlAgilityPack;
 using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
@@ -9,10 +11,11 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace CastIt.Common.Utils
 {
-    internal static class YoutubeUrlDecoder
+    internal class YoutubeUrlDecoder : IYoutubeUrlDecoder
     {
         private const string UrlEncodedStreamMap = "\"url_encoded_fmt_stream_map\":";
         private const string TitleKeyWord = "<meta name=\"title\"";
@@ -22,14 +25,26 @@ namespace CastIt.Common.Utils
         private const string YoutubeUrl = "https://www.youtube.com";
         private const string YoutubePlayerConfig = "ytplayer.config";
 
-        public static bool IsYoutubeUrl(string url)
+        private readonly IMvxLog _logger;
+
+        public YoutubeUrlDecoder(IMvxLogProvider logger)
         {
-            return url.StartsWith(YoutubeUrl);
+            _logger = logger.GetLogFor<YoutubeUrlDecoder>();
         }
 
-        public static async Task<YoutubeMedia> Parse(IMvxLog logger, string url, int quality)
+        public bool IsYoutubeUrl(string url)
         {
-            logger.Info($"{nameof(Parse)}: Trying to parse url = {url}");
+            return url.StartsWith(YoutubeUrl, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool IsPlayList(string url)
+        {
+            return IsYoutubeUrl(url) && url.StartsWith(YoutubeUrl + "/playlist", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public async Task<YoutubeMedia> Parse(string url, int quality)
+        {
+            _logger.Info($"{nameof(Parse)}: Trying to parse url = {url}");
             var media = new YoutubeMedia();
             using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(url);
@@ -122,32 +137,70 @@ namespace CastIt.Common.Utils
                 media.Qualities.AddRange(qualities.Select(q => q.Key));
                 media.SelectedQuality = closest;
 
-                logger.Info($"{nameof(Parse)}: Selected quality = {closest}");
+                _logger.Info($"{nameof(Parse)}: Selected quality = {closest}");
 
                 string pick = qualities.First(kvp => kvp.Key == closest).Value;
                 string cipherPattern = @"(?<=\\""signatureCipher\\"":).+";
                 string cipher = Regex.Match(pick, cipherPattern).Value;
                 if (string.IsNullOrEmpty(cipher))
                 {
-                    logger.Info($"{nameof(Parse)}: Url doesnt contain a cipher...");
+                    _logger.Info($"{nameof(Parse)}: Url doesnt contain a cipher...");
                     //Unscrambled signature, already included in ready-to-use URL
                     string urlPattern = @"(?<=url\\"":\\"").*?(?=\\"")";
                     media.Url = DecodeUrlString(Regex.Match(pick, urlPattern).Value);
                 }
                 else
                 {
-                    logger.Info($"{nameof(Parse)}: Url contains a cipher...");
+                    _logger.Info($"{nameof(Parse)}: Url contains a cipher...");
                     //Scrambled signature: some assembly required
                     media.Url = await GetUrlFromCipher(cipher, jsUrl);
                 }
             }
 
-            logger.Info($"{nameof(Parse)}: Url was parsed. Media = {JsonConvert.SerializeObject(media)}");
+            _logger.Info($"{nameof(Parse)}: Url was parsed. Media = {JsonConvert.SerializeObject(media)}");
 
             return media;
         }
 
-        private static string GetKeyContentValue(string str)
+        public async Task<List<string>> ParseYouTubePlayList(string url)
+        {
+            var links = new List<string>();
+            _logger.Info($"{nameof(ParseYouTubePlayList)}: Parsing url = {url}");
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.Warn($"{nameof(ParseYouTubePlayList)}: Response is not success status code. Code = {response.StatusCode}");
+                return links;
+            }
+
+            var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var html = new HtmlDocument();
+            html.LoadHtml(body);
+            var root = html.DocumentNode;
+            var table = root.Descendants().FirstOrDefault(f => f.Id == "pl-video-table");
+            //Sometimes the html returns a json, other times it returns a table
+            if (table != null)
+            {
+                _logger.Info($"{nameof(ParseYouTubePlayList)}: Body contains table, parsing it...");
+                links = table.Descendants("a")
+                    .Where(node => node.HasClass("pl-video-title-link"))
+                    .Select(node => RemoveNotNeededParams(YoutubeUrl + node.GetAttributeValue("href", string.Empty)))
+                    .ToList();
+            }
+            else
+            {
+                _logger.Info($"{nameof(ParseYouTubePlayList)}: Body contains pure javascript, parsing it...");
+                string pattern = @"(\/watch).*?(?="")";
+                body = body.Replace("\\u0026", "&").Replace("\\/", "/");
+                links = Regex.Matches(body, pattern).Select(match => RemoveNotNeededParams(YoutubeUrl + match.Value)).ToList();
+            }
+            _logger.Info($"{nameof(ParseYouTubePlayList)}: Got {links.Count} link(s)");
+
+            return links;
+        }
+
+        private string GetKeyContentValue(string str)
         {
             var contentStr = new StringBuilder();
             int contentStart = str.IndexOf(ContentValueKeyWord) + ContentValueKeyWord.Length;
@@ -165,7 +218,7 @@ namespace CastIt.Common.Utils
             return contentStr.ToString();
         }
 
-        private static string GetURLEncodedStream(string stream)
+        private string GetURLEncodedStream(string stream)
         {
             // replace all the \u0026 with &
             string str = DecodeUrlString(stream).Replace("\\u0026", "&");
@@ -182,7 +235,7 @@ namespace CastIt.Common.Utils
             return sb.ToString();
         }
 
-        private static async Task<string> GetUrlFromCipher(string cipher, string jsUrl)
+        private async Task<string> GetUrlFromCipher(string cipher, string jsUrl)
         {
             string urlPattern = @"(?<=url[^&]+).*?(?=\\"")";
             string url = DecodeUrlString(Regex.Match(cipher, urlPattern).Value.Replace("\\/", "/"));
@@ -204,7 +257,7 @@ namespace CastIt.Common.Utils
             return $"{url}&{sp}={Uri.EscapeDataString(s)}";
         }
 
-        private static async Task<string> JsDescramble(string s, string jsUrl)
+        private async Task<string> JsDescramble(string s, string jsUrl)
         {
             //Fetch javascript code
             using var httpClient = new HttpClient();
@@ -238,7 +291,7 @@ namespace CastIt.Common.Utils
 
             //Fetch the helper object code
             //var Fo ={ TR: function(a){ a.reverse()},TU: function(a, b){ var c = a[0]; a[0] = a[b % a.length]; a[b] = c},sH: function(a, b){ a.splice(0, b)} };
-            string transformationsPattern = helper + @"=(.*?)+\n.+\n.+(?=};)";
+            string transformationsPattern = "var " + helper + @"=(.*?)+\n.+\n.+(?=};)";
             string transfromations = Regex.Match(js, transformationsPattern).Value;
 
             //Parse the helper object to map available transformations
@@ -279,12 +332,12 @@ namespace CastIt.Common.Utils
                 string transName = transToApply.Substring(0, transToApply.IndexOf("("));
                 if (trans[transName] == "reverse")
                 {
-                    s = s.Reverse().ToString();
+                    s = new string(s.Reverse().ToArray());
                 }
                 else if (trans[transName] == "slice")
                 {
                     int value = int.Parse(transToApply.Split(commaSeparator).Last().Replace(")", ""));
-                    s = s.Substring(0, value);
+                    s = s.Substring(value);
                 }
                 else if (trans[transName] == "swap")
                 {
@@ -298,12 +351,28 @@ namespace CastIt.Common.Utils
             return s;
         }
 
-        private static string DecodeUrlString(string url)
+        private string DecodeUrlString(string url)
         {
             string newUrl;
             while ((newUrl = Uri.UnescapeDataString(url)) != url)
                 url = newUrl;
             return newUrl;
+        }
+
+        private string RemoveNotNeededParams(string url)
+        {
+            string videoId = GetVideoId(url);
+            return url.Substring(0, url.IndexOf("?") + 1) + $"v={videoId}";
+        }
+
+        private string GetVideoId(string url)
+        {
+            var uri = new Uri(url);
+
+            // you can check host here => uri.Host <= "www.youtube.com"
+            var query = HttpUtility.ParseQueryString(uri.Query);
+
+            return query.AllKeys.Contains("v") ? query["v"] : uri.Segments.Last();
         }
     }
 }

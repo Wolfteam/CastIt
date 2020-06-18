@@ -13,6 +13,7 @@ namespace CastIt.Interfaces
         OnCastRendererSetHandler OnCastRendererSet { get; set; }
         OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
+        OnFileLoaded OnFileLoaded { get; set; }
         OnEndReachedHandler OnEndReached { get; set; }
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
@@ -24,19 +25,19 @@ namespace CastIt.Interfaces
         void Init();
         void CleanThemAll();
         void StopRunningProcess();
-        Task<MediaStatus> AddSeconds(
+        Task AddSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
             double seconds);
-        Task<MediaStatus> GoToSeconds(
+        Task GoToSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
             double seconds);
-        Task<MediaStatus> GoToPosition(
+        Task GoToPosition(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -44,7 +45,7 @@ namespace CastIt.Interfaces
             int quality,
             double position,
             double totalSeconds);
-        Task<MediaStatus> StartPlay(
+        Task StartPlay(
             string mrl,
             int videoStreamIndex,
             int audioStreamIndex,

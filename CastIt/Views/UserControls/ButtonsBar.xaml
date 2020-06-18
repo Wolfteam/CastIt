@@ -88,12 +88,14 @@
                     Margin="0,0,5,0"
                     Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
                     Text="{Binding CurrentlyPlayingFilename}"
-                    TextTrimming="CharacterEllipsis" />
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding CurrentlyPlayingFilename}" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
                     Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
                     Text="{Binding ElapsedTimeString}"
+                    ToolTip="{Binding ElapsedTimeString}"
                     Visibility="{Binding IsCurrentlyPlaying, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Grid>
         </materialDesign:ColorZone>

@@ -29,6 +29,7 @@ namespace CastIt.ViewModels.Items
         private string _path;
         private double _playedPercentage;
         private bool _isBeingPlayed;
+        private bool _loop;
         #endregion
 
         #region Properties
@@ -91,6 +92,12 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isSeparatorBottomLineVisible, value);
         }
 
+        public bool Loop
+        {
+            get => _loop;
+            set => SetProperty(ref _loop, value);
+        }
+
         public bool ShowFileDetails
             => _settingsService.ShowFileDetails;
         public bool IsLocalFile
@@ -115,6 +122,7 @@ namespace CastIt.ViewModels.Items
         public IMvxCommand PlayCommand { get; private set; }
         public IMvxCommand PlayFromTheBeginingCommand { get; private set; }
         public IMvxCommand OpenFileLocationCommand { get; private set; }
+        public IMvxCommand ToggleLoopCommand { get; private set; }
         #endregion
 
         public FileItemViewModel(
@@ -139,10 +147,12 @@ namespace CastIt.ViewModels.Items
 
             PlayFromTheBeginingCommand = new MvxCommand(() => Messenger.Publish(new PlayFileMessage(this, true)));
 
-            OpenFileLocationCommand = new MvxCommand(() =>
+            OpenFileLocationCommand = new MvxCommand(OpenFileLocation);
+
+            ToggleLoopCommand = new MvxCommand(() =>
             {
-                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
-                Process.Start(psi);
+                Loop = !Loop;
+                Messenger.Publish(new LoopFileMessage(this));
             });
         }
 
@@ -223,5 +233,21 @@ namespace CastIt.ViewModels.Items
 
         private void OnEndReached()
             => OnPositionChanged(100);
+
+        private void OpenFileLocation()
+        {
+            if (IsLocalFile)
+            {
+                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
+                Process.Start(psi);
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(Path)
+                {
+                    UseShellExecute = true
+                });
+            }
+        }
     }
 }

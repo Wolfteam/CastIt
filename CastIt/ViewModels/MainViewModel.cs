@@ -1,7 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Extensions;
 using CastIt.Common.Utils;
-using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Dialogs;
@@ -139,7 +138,7 @@ namespace CastIt.ViewModels
         public string CurrentFileThumbnail
         {
             get => _currentFileThumbnail;
-            set => SetProperty(ref _currentFileThumbnail, value);
+            set => this.RaiseAndSetIfChanged(ref _currentFileThumbnail, value);
         }
 
         public string PreviewThumbnailImg
@@ -260,7 +259,7 @@ namespace CastIt.ViewModels
             foreach (var playlist in playLists)
             {
                 var files = await _playListsService.GetAllFiles(playlist.Id);
-                playlist.Items.AddRange(files);
+                playlist.Items.AddRange(files.OrderBy(f => f.Position));
             }
 
             foreach (var pl in PlayLists)
@@ -269,6 +268,7 @@ namespace CastIt.ViewModels
             }
 
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
+            _castService.OnFileLoaded += OnFileLoaded;
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
             _castService.OnEndReached += OnFileEndReached;
@@ -355,7 +355,10 @@ namespace CastIt.ViewModels
             SubscriptionTokens.AddRange(new List<MvxSubscriptionToken>
             {
                 Messenger.Subscribe<PlayFileMessage>(async(msg) => await PlayFile(msg.File, msg.Force)),
-                Messenger.Subscribe<DisconnectMessage>(_ => OnStoppedPlayBack())
+                Messenger.Subscribe<ManualDisconnectMessage>(_ => OnStoppedPlayBack()),
+                Messenger.Subscribe<LoopFileMessage>(msg => DisableLoopForAllFiles(msg.File.Id)),
+                Messenger.Subscribe<SnackbarMessage>(async msg => await ShowSnackbarMsg(msg.Message)),
+                Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy)
             });
         }
 
@@ -401,7 +404,7 @@ namespace CastIt.ViewModels
 
             long tentativeSecond = GetMainProgressBarSeconds(sliderWidth, mouseX);
 
-            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path))
+            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path) || FileUtils.IsUrlFile(_currentlyPlayedFile.Path))
             {
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
@@ -507,6 +510,7 @@ namespace CastIt.ViewModels
             await StopPlayBack();
             _castService.CleanThemAll();
             _currentlyPlayedFile?.CleanUp();
+            _castService.OnFileLoaded -= OnFileLoaded;
             _castService.OnTimeChanged -= OnFileDurationChanged;
             _castService.OnPositionChanged -= OnFilePositionChanged;
             _castService.OnEndReached -= OnFileEndReached;
@@ -544,7 +548,7 @@ namespace CastIt.ViewModels
                 int nextPosition = _currentlyPlayedFile.Position + 1;
                 int closestPosition = playlist.Items
                     .Select(f => f.Position)
-                    .Aggregate((x, y) => Math.Abs(x - nextPosition) < Math.Abs(y - nextPosition) ? x : y);
+                    .GetClosest(nextPosition);
 
                 var f = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
                 f?.PlayCommand?.Execute();
@@ -561,7 +565,7 @@ namespace CastIt.ViewModels
             {
                 Logger.Info(
                     $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
-                    $"Probably an end of playlist");
+                    "Probably an end of playlist");
                 _castService.StopRunningProcess();
 
                 if (playlist.Loop)
@@ -577,13 +581,21 @@ namespace CastIt.ViewModels
 
         private async Task<bool> PlayFile(FileItemViewModel file, bool force, bool fileOptionsChanged = false)
         {
+            if (file is null)
+            {
+                Logger.Warn($"{nameof(PlayFile)}: Cant play file, it is null !!!");
+                return false;
+            }
+
+            DisableLoopForAllFiles(file.Id);
             if (!file.Exists)
             {
+                Logger.Info($"{nameof(PlayFile)}: Cant play file = {file.Path}. It doesnt exist");
                 await ShowSnackbarMsg(GetText("FileDoesntExist"));
                 return false;
             }
 
-            if (file == _currentlyPlayedFile && !force && !fileOptionsChanged)
+            if (file == _currentlyPlayedFile && !force && !fileOptionsChanged && !file.Loop)
             {
                 await ShowSnackbarMsg(GetText("FileIsAlreadyBeingPlayed"));
                 return false;
@@ -628,15 +640,13 @@ namespace CastIt.ViewModels
 
             try
             {
-                //TODO: CHECK IF WE SHOULD REMOVE THIS MEDIASTATUS
-                MediaStatus mediaStatus;
                 if (file.CanStartPlayingFromCurrentPercentage &&
                     !file.IsUrlFile &&
                     !force &&
                     !_settingsService.StartFilesFromTheStart)
                 {
                     Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
-                    mediaStatus = await _castService.GoToPosition(
+                    await _castService.GoToPosition(
                         file.Path,
                         CurrentFileVideoStreamIndex,
                         CurrentFileAudioStreamIndex,
@@ -648,7 +658,7 @@ namespace CastIt.ViewModels
                 else
                 {
                     Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
-                    mediaStatus = await _castService.StartPlay(
+                    await _castService.StartPlay(
                         file.Path,
                         CurrentFileVideoStreamIndex,
                         CurrentFileAudioStreamIndex,
@@ -656,13 +666,6 @@ namespace CastIt.ViewModels
                         CurrentFileQuality);
                 }
 
-                if (file.IsUrlFile)
-                {
-                    file.SetDuration(mediaStatus?.Media?.Duration ?? 0);
-                    await RaisePropertyChanged(() => CurrentFileDuration);
-                }
-
-                CurrentFileThumbnail = _castService.GetFirstThumbnail();
                 _castService.GenerateThumbmnails(file.Path);
 
                 Logger.Info($"{nameof(PlayFile)}: File is being playing...");
@@ -697,6 +700,7 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile = null;
             SetCurrentlyPlayingInfo(null, false);
             IsPaused = false;
+            DisableLoopForAllFiles();
         }
 
         private void SetCurrentlyPlayingInfo(
@@ -712,6 +716,17 @@ namespace CastIt.ViewModels
             IsCurrentlyPlaying = isPlaying;
             CurrentPlayedSeconds = playedSeconds;
             RaisePropertyChanged(() => CurrentFileDuration);
+        }
+
+        private void OnFileLoaded(string mrl, string title, string thumbPath, double duration)
+        {
+            CurrentFileThumbnail = thumbPath;
+            if (_currentlyPlayedFile?.IsUrlFile == true)
+            {
+                CurrentlyPlayingFilename = title;
+                _currentlyPlayedFile.SetDuration(duration);
+                RaisePropertyChanged(() => CurrentFileDuration);
+            }
         }
 
         private void OnFileDurationChanged(double seconds)
@@ -743,12 +758,23 @@ namespace CastIt.ViewModels
             SetCurrentlyPlayingInfo(null, false);
 
             IsPaused = false;
+
+            if (_currentlyPlayedFile?.Loop == true)
+            {
+                Logger.Info($"{nameof(OnFileEndReached)}: Looping file = {_currentlyPlayedFile?.Path}");
+                _currentlyPlayedFile.PlayedPercentage = 0;
+                _currentlyPlayedFile.PlayCommand.Execute();
+                return;
+            }
+
             if (_settingsService.PlayNextFileAutomatically)
             {
+                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is enabled. Playing the next file...");
                 GoTo(true);
             }
             else
             {
+                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is disabled. Next file wont be played");
                 _currentlyPlayedFile?.CleanUp();
                 _currentlyPlayedFile = null;
             }
@@ -974,6 +1000,14 @@ namespace CastIt.ViewModels
             });
 
             return PlayFile(_currentlyPlayedFile, false, true);
+        }
+
+        private void DisableLoopForAllFiles(long exceptFileId = -1)
+        {
+            var files = PlayLists.SelectMany(pl => pl.Items).Where(f => f.Loop && f.Id != exceptFileId).ToList();
+
+            foreach (var file in files)
+                file.Loop = false;
         }
         #endregion
     }

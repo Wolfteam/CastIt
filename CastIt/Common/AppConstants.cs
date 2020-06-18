@@ -6,6 +6,13 @@ namespace CastIt.Common
 {
     public class AppConstants
     {
+        public const double MinWindowWidth = 650;
+        public const double MinWindowHeight = 208;
+
+        public const int ThumbnailsEachSeconds = 5;
+        public const double ThumbnailWidth = 200;
+        public const double ThumbnailHeight = 150;
+
         public const string AccentColorLightBlue = "#0077dd";
         public const string AccentColorLimeGreen = "#1be556";
         public const string AccentColorPink = "#ee0088";
@@ -79,10 +86,5 @@ namespace CastIt.Common
             AccentColorDarkGray, AccentColorOrange, AccentColorYellow,
             AccentColorDarkBlue, AccentColorViolet, AccentColorLightGrey
         };
-
-        public static double MinWindowWidth = 650;
-        public static double MinWindowHeight = 208;
-
-        public const int ThumbnailsEachSeconds = 5;
     }
 }
