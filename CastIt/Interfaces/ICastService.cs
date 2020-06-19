@@ -20,6 +20,7 @@ namespace CastIt.Interfaces
         OnQualitiesChanged QualitiesChanged { get; set; }
         OnPaused OnPaused { get; set; }
         OnDisconnected OnDisconnected { get; set; }
+        OnVolumeChanged OnVolumeChanged { get; set; }
         Func<string> GetSubTitles { get; set; }
 
         void Init();
@@ -45,6 +46,8 @@ namespace CastIt.Interfaces
             int quality,
             double position,
             double totalSeconds);
+        Task<double> SetVolume(double level);
+        Task<bool> SetIsMuted(bool isMuted);
         Task StartPlay(
             string mrl,
             int videoStreamIndex,
@@ -52,6 +55,7 @@ namespace CastIt.Interfaces
             int subtitleStreamIndex,
             int quality,
             double seconds = 0);
+
         string GetFirstThumbnail();
         string GetFirstThumbnail(string filePath);
         string GetThumbnail(int second);

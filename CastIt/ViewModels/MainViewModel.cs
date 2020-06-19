@@ -53,6 +53,8 @@ namespace CastIt.ViewModels
         private string _snackbarMsg;
         private string _snackBarActionMsg;
         private bool _isBusy;
+        private double _volumeLevel;
+        private bool _isMuted;
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
@@ -181,6 +183,18 @@ namespace CastIt.ViewModels
             set => SetProperty(ref _isBusy, value);
         }
 
+        public double VolumeLevel
+        {
+            get => _volumeLevel;
+            set => this.RaiseAndSetIfChanged(ref _volumeLevel, value);
+        }
+
+        public bool IsMuted
+        {
+            get => _isMuted;
+            set => this.RaiseAndSetIfChanged(ref _isMuted, value);
+        }
+
         public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileVideos { get; }
             = new MvxObservableCollection<FileItemOptionsViewModel>();
         public MvxObservableCollection<FileItemOptionsViewModel> CurrentFileAudios { get; }
@@ -220,6 +234,8 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand<FileItemOptionsViewModel> FileOptionsChangedCommand { get; private set; }
         public IMvxCommand OpenSubTitleFileDialogCommand { get; private set; }
         public IMvxAsyncCommand<string> SetSubTitlesCommand { get; private set; }
+        public IMvxAsyncCommand SetVolumeCommand { get; private set; }
+        public IMvxAsyncCommand ToggleMuteCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -279,6 +295,7 @@ namespace CastIt.ViewModels
             _castService.OnPaused += OnPaused;
             _castService.OnDisconnected += OnDisconnected;
             _castService.GetSubTitles = () => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Path;
+            _castService.OnVolumeChanged += OnVolumeChanged;
 
             Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
@@ -351,6 +368,10 @@ namespace CastIt.ViewModels
             OpenSubTitleFileDialogCommand = new MvxCommand(() => _openSubTitleFileDialog.Raise());
 
             SetSubTitlesCommand = new MvxAsyncCommand<string>(OnSubTitleFileSelected);
+
+            SetVolumeCommand = new MvxAsyncCommand(async () => VolumeLevel = await _castService.SetVolume(VolumeLevel));
+
+            ToggleMuteCommand = new MvxAsyncCommand(async () => IsMuted = await _castService.SetIsMuted(!IsMuted));
         }
 
         public override void RegisterMessages()
@@ -520,6 +541,7 @@ namespace CastIt.ViewModels
             _castService.OnEndReached -= OnFileEndReached;
             _castService.OnPaused -= OnPaused;
             _castService.OnDisconnected -= OnDisconnected;
+            _castService.OnVolumeChanged -= OnVolumeChanged;
             _closeApp.Raise();
         }
 
@@ -723,9 +745,17 @@ namespace CastIt.ViewModels
             RaisePropertyChanged(() => CurrentFileDuration);
         }
 
-        private void OnFileLoaded(string mrl, string title, string thumbPath, double duration)
+        private void OnFileLoaded(
+            string mrl,
+            string title,
+            string thumbPath,
+            double duration,
+            double volumeLevel,
+            bool isMuted)
         {
             CurrentFileThumbnail = thumbPath;
+            VolumeLevel = volumeLevel;
+            IsMuted = isMuted;
             if (_currentlyPlayedFile?.IsUrlFile == true)
             {
                 CurrentlyPlayingFilename = title;
@@ -976,6 +1006,12 @@ namespace CastIt.ViewModels
 
         private void OnDisconnected()
             => OnStoppedPlayBack();
+
+        private void OnVolumeChanged(double level, bool isMuted)
+        {
+            VolumeLevel = level;
+            IsMuted = isMuted;
+        }
 
         private Task OnSubTitleFileSelected(string filePath)
         {

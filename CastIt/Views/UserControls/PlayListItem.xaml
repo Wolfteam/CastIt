@@ -20,6 +20,74 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <ControlTemplate x:Key="VolumeMenuItemControlTemplate" TargetType="{x:Type MenuItem}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="VolumeHigh" />
+                    <TextBlock
+                        Margin="5,5"
+                        Text="Volumne"
+                        TextAlignment="Center" />
+                </StackPanel>
+                <Slider
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="10,5,10,5"
+                    VerticalAlignment="Center"
+                    IsSnapToTickEnabled="True"
+                    LargeChange="0.1"
+                    Maximum="1"
+                    Minimum="0"
+                    TickFrequency="0.1"
+                    Value="{Binding DataContext.VolumeLevel, Mode=TwoWay, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                    <behaviours:Interaction.Triggers>
+                        <behaviours:EventTrigger EventName="ValueChanged">
+                            <behaviours:InvokeCommandAction Command="{Binding DataContext.SetVolumeCommand, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" />
+                        </behaviours:EventTrigger>
+                    </behaviours:Interaction.Triggers>
+                </Slider>
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="24"
+                    Height="24"
+                    Margin="0,0,5,0"
+                    Command="{Binding DataContext.ToggleMuteCommand, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                    <Button.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignIconButton}" TargetType="{x:Type Button}">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <materialDesign:PackIcon Kind="VolumeHigh" />
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.IsMuted, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <materialDesign:PackIcon Kind="VolumeMute" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </ControlTemplate>
+
         <Style
             x:Key="PlayListLvStyle"
             BasedOn="{StaticResource MaterialDesignListView}"
@@ -367,6 +435,8 @@
                                 <materialDesign:PackIcon Kind="QualityHigh" />
                             </MenuItem.Icon>
                         </MenuItem>
+                        <Separator />
+                        <MenuItem Template="{StaticResource VolumeMenuItemControlTemplate}" />
                     </MenuItem>
                 </Menu>
             </Grid>
