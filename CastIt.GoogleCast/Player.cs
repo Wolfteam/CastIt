@@ -38,7 +38,7 @@ namespace CastIt.GoogleCast
         private readonly string _destinationId;
 
         private static readonly SupportedMessages _supportedMsgs = new SupportedMessages();
-        private CancellationTokenSource _mediaChangedToken;
+        private CancellationTokenSource _listenerToken;
         private double _seekedSeconds;
         #endregion
 
@@ -49,6 +49,8 @@ namespace CastIt.GoogleCast
         public event EventHandler<double> PositionChanged;
         public event EventHandler Paused;
         public event EventHandler EndReached;
+        public event EventHandler<double> VolumeLevelChanged;
+        public event EventHandler<bool> IsMutedChanged;
         #endregion
 
         #region Properties
@@ -66,6 +68,8 @@ namespace CastIt.GoogleCast
                 return 0;
             }
         }
+        public double CurrentVolumeLevel { get; private set; }
+        public bool IsMuted { get; private set; }
         #endregion
 
         #region Constructors
@@ -164,10 +168,12 @@ namespace CastIt.GoogleCast
 
             Disconnected = null;
             DeviceAdded = null;
-            PositionChanged = null;
             TimeChanged = null;
-            EndReached = null;
+            PositionChanged = null;
             Paused = null;
+            EndReached = null;
+            VolumeLevelChanged = null;
+            IsMutedChanged = null;
             DisconnectAsync().GetAwaiter().GetResult();
         }
 
@@ -217,12 +223,15 @@ namespace CastIt.GoogleCast
 
             CurrentContentId = media.ContentId;
             CurrentMediaDuration = media.Duration ?? status?.Media?.Duration ?? 0;
+            CurrentVolumeLevel = status.Volume?.Level ?? 0;
+            IsMuted = status.Volume?.IsMuted ?? false;
             ElapsedSeconds = 0;
             _seekedSeconds = seekedSeconds;
 
             TriggerTimeEvents();
             IsPlaying = true;
-            ListenForMediaChanges(_mediaChangedToken.Token);
+            ListenForMediaChanges(_listenerToken.Token);
+            ListenForReceiverChanges(_listenerToken.Token);
             return status;
         }
 
@@ -247,6 +256,7 @@ namespace CastIt.GoogleCast
         {
             CurrentContentId = null;
             IsPlaying = false;
+            CancelAndSetMediaToken(false);
             return _mediaChannel.StopAsync(_sender);
         }
 
@@ -331,14 +341,13 @@ namespace CastIt.GoogleCast
             return channels.FirstOrDefault(c => c.Namespace.Equals(ns, StringComparison.OrdinalIgnoreCase));
         }
 
-        private void CancelAndSetMediaToken()
+        private void CancelAndSetMediaToken(bool createNewToken = true)
         {
-            if (_mediaChangedToken?.IsCancellationRequested == false)
-            {
-                _mediaChangedToken.Cancel();
-            }
+            if (_listenerToken?.IsCancellationRequested == false)
+                _listenerToken.Cancel();
 
-            _mediaChangedToken = new CancellationTokenSource();
+            if (createNewToken)
+                _listenerToken = new CancellationTokenSource();
         }
 
         private async void ListenForMediaChanges(CancellationToken token)
@@ -366,8 +375,11 @@ namespace CastIt.GoogleCast
                                 $"CurrentContentId = {CurrentContentId}");
                             if (contentIsBeingPlayed)
                                 EndReached?.Invoke(this, EventArgs.Empty);
+
+                            CancelAndSetMediaToken(false);
                             break;
                         }
+
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
                         if (mediaStatus.PlayerState == PlayerState.Paused)
                         {
@@ -382,6 +394,7 @@ namespace CastIt.GoogleCast
                             _logger.LogInfo($"{nameof(ListenForMediaChanges)}: End reached because the ElapsedSeconds >= CurrentMediaDuration.");
                             IsPlaying = false;
                             EndReached?.Invoke(this, EventArgs.Empty);
+                            CancelAndSetMediaToken(false);
                             break;
                         }
                     }
@@ -395,10 +408,49 @@ namespace CastIt.GoogleCast
             }
         }
 
+        private async void ListenForReceiverChanges(CancellationToken token)
+        {
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        await Task.Delay(GetStatusDelay);
+                        if (token.IsCancellationRequested)
+                            break;
+                        var status = await _receiverChannel.GetStatusAsync(_sender);
+                        TriggerVolumeEvents(status.Volume?.Level ?? 0, status.Volume?.IsMuted ?? false);
+                    }
+                }, token).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                if (e is TaskCanceledException || e is TimeoutException)
+                    return;
+                _logger.LogError($"{nameof(ListenForReceiverChanges)}: Unknown error occurred", e);
+            }
+        }
+
         private void TriggerTimeEvents()
         {
             TimeChanged?.Invoke(this, ElapsedSeconds);
             PositionChanged?.Invoke(this, PlayedPercentage);
+        }
+
+        private void TriggerVolumeEvents(double newLevel, bool newIsMuted)
+        {
+            if (newLevel != CurrentVolumeLevel)
+            {
+                CurrentVolumeLevel = newLevel;
+                VolumeLevelChanged?.Invoke(this, CurrentVolumeLevel);
+            }
+
+            if (newIsMuted != IsMuted)
+            {
+                IsMuted = newIsMuted;
+                IsMutedChanged?.Invoke(this, IsMuted);
+            }
         }
 
         private void OnDisconnect(object sender, EventArgs e)
