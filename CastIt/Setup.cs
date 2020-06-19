@@ -46,7 +46,7 @@ namespace CastIt
                 {$"{typeof(AppSettingsService).FullName}",  "service_appsettings_.txt"},
                 {$"{typeof(FFMpegService).FullName}",  "service_ffmpeg_.txt"},
                 {$"{typeof(Player).FullName}",  "googlecast_player_.txt"},
-                {$"{typeof(VideoModule).FullName}",  "server_video_.txt"},
+                {$"{typeof(AppWebServer).FullName}",  "web_server_.txt"},
                 {$"{typeof(YoutubeUrlDecoder).FullName}",  "decoder_youtube_.txt"},
             };
 

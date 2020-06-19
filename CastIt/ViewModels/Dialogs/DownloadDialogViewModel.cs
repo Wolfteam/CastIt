@@ -14,6 +14,8 @@ namespace CastIt.ViewModels.Dialogs
     {
         #region Members
         private readonly IMvxNavigationService _navigationService;
+        private readonly ITelemetryService _telemetryService;
+
         private bool _isDownloading;
         #endregion
 
@@ -29,10 +31,12 @@ namespace CastIt.ViewModels.Dialogs
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IMvxNavigationService navigationService)
+            IMvxNavigationService navigationService,
+            ITelemetryService telemetryService)
             : base(textProvider, messenger, logger.GetLogFor<DownloadDialogViewModel>())
         {
             _navigationService = navigationService;
+            _telemetryService = telemetryService;
         }
 
         public override void Prepare()
@@ -63,6 +67,7 @@ namespace CastIt.ViewModels.Dialogs
             catch (Exception e)
             {
                 Logger.Error(e, $"{nameof(DownloadMissingFiles)}: An unknown error occurred");
+                _telemetryService.TrackError(e);
             }
             IsDownloading = false;
 

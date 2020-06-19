@@ -22,6 +22,7 @@ namespace CastIt.ViewModels.Items
         #region Members
         private readonly IPlayListsService _playListsService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
+        private readonly ITelemetryService _telemetryService;
 
         private string _name;
         private bool _showEditPopUp;
@@ -118,11 +119,13 @@ namespace CastIt.ViewModels.Items
             IMvxMessenger messenger,
             IMvxLogProvider logger,
             IPlayListsService playListsService,
-            IYoutubeUrlDecoder youtubeUrlDecoder)
+            IYoutubeUrlDecoder youtubeUrlDecoder,
+            ITelemetryService telemetryService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
+            _telemetryService = telemetryService;
         }
 
         #region Methods
@@ -249,6 +252,7 @@ namespace CastIt.ViewModels.Items
                 catch (Exception e)
                 {
                     Messenger.Publish(new SnackbarMessage(this, GetText("CouldntParsePlayList")));
+                    _telemetryService.TrackError(e);
                     Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldnt parse youtube playlist");
                 }
                 finally

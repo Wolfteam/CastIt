@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.Services;
 using MvvmCross.Core;
 using MvvmCross.Platforms.Wpf.Views;
 using System;
@@ -13,7 +14,7 @@ namespace CastIt
     public partial class App : MvxApplication
     {
         //https://stackoverflow.com/questions/14506406/wpf-single-instance-best-practices
-        private static readonly string UniqueEventName = $"{AppConstants.AppName}_UniqueEvent" ;
+        private static readonly string UniqueEventName = $"{AppConstants.AppName}_UniqueEvent";
         private static readonly string UniqueMutexName = $"{AppConstants.AppName}_UniqueMutex";
 
         private EventWaitHandle _eventWaitHandle;
@@ -31,6 +32,9 @@ namespace CastIt
 
         private void AppOnStartup(object sender, StartupEventArgs e)
         {
+            var telemetryService = new TelemetryService();
+            telemetryService.Init();
+
             _mutex = new Mutex(true, UniqueMutexName, out bool mutexCreated);
             _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
 

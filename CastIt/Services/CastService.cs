@@ -6,8 +6,6 @@ using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
-using CastIt.Server;
-using EmbedIO;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
@@ -24,9 +22,11 @@ namespace CastIt.Services
         private const int SubTitleDefaultTrackId = 1;
 
         private readonly IMvxLog _logger;
+        private readonly IAppWebServer _appWebServer;
         private readonly IFFMpegService _ffmpegService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
-        private readonly WebServer _webServer;
+        private readonly ITelemetryService _telemetryService;
+
         private readonly Player _player;
         private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
         private readonly Track _subtitle;
@@ -50,14 +50,16 @@ namespace CastIt.Services
 
         public CastService(
             IMvxLogProvider logProvider,
+            IAppWebServer appWebServer,
             IFFMpegService ffmpegService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
-            WebServer webServer)
+            ITelemetryService telemetryService)
         {
             _logger = logProvider.GetLogFor<CastService>();
+            _appWebServer = appWebServer;
             _ffmpegService = ffmpegService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
-            _webServer = webServer;
+            _telemetryService = telemetryService;
             _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: true);
             _subtitle = new Track
             {
@@ -91,7 +93,7 @@ namespace CastIt.Services
 
             _player.Init();
 
-            _webServer.Start(_webServerCancellationToken.Token);
+            _appWebServer.Init(_webServerCancellationToken.Token);
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
@@ -129,7 +131,7 @@ namespace CastIt.Services
             _currentFilePath = mrl;
             string title = isLocal ? Path.GetFileName(mrl) : mrl;
             string url = isLocal
-                ? AppWebServer.GetMediaUrl(_webServer, mrl, videoStreamIndex, audioStreamIndex, seconds)
+                ? _appWebServer.GetMediaUrl(mrl, videoStreamIndex, audioStreamIndex, seconds)
                 : mrl;
 
             var metadata = isVideoFile ? new MovieMetadata
@@ -161,7 +163,7 @@ namespace CastIt.Services
                     useSubTitleStream ? subtitleStreamIndex : 0,
                     default);
 
-                _subtitle.TrackContentId = AppWebServer.GetSubTitlePath(_webServer, subTitleFilePath);
+                _subtitle.TrackContentId = _appWebServer.GetSubTitlePath(subTitleFilePath);
                 _logger.Info($"{nameof(StartPlay)}: Subtitles were generated");
                 media.Tracks.Add(_subtitle);
                 media.TextTrackStyle = _subtitlesStyle;
@@ -173,7 +175,7 @@ namespace CastIt.Services
             if (isLocal)
             {
                 _logger.Info($"{nameof(StartPlay)}: File is a local one, generating metadata...");
-                imgUrl = AppWebServer.GetPreviewPath(_webServer, firstThumbnail);
+                imgUrl = _appWebServer.GetPreviewPath(firstThumbnail);
 
                 if (isVideoFile)
                     media.StreamType = StreamType.Live;
@@ -210,10 +212,10 @@ namespace CastIt.Services
                 });
             }
 
-            _logger.Info($"{nameof(StartPlay)}: Trying to load file = {mrl} on seconds = {seconds}");
+            _logger.Info($"{nameof(StartPlay)}: Trying to load url = {url}");
             await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
 
-            _logger.Info($"{nameof(StartPlay)}: File was succesfully loaded");
+            _logger.Info($"{nameof(StartPlay)}: Url was succesfully loaded");
             OnFileLoaded?.Invoke(_currentFilePath, metadata.Title, isLocal ? firstThumbnail : imgUrl, _player.CurrentMediaDuration);
         }
 
@@ -332,12 +334,13 @@ namespace CastIt.Services
                 _webServerCancellationToken.Cancel();
                 StopRunningProcess();
 
-                _webServer.Dispose();
+                _appWebServer.Dispose();
                 _player.Dispose();
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error ocurred");
+                _telemetryService.TrackError(ex);
             }
         }
 

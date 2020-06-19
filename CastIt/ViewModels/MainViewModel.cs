@@ -31,6 +31,7 @@ namespace CastIt.ViewModels
         private readonly IPlayListsService _playListsService;
         private readonly IAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
+        private readonly ITelemetryService _telemetryService;
 
         private FileItemViewModel _currentlyPlayedFile;
         private bool _isPaused;
@@ -237,13 +238,15 @@ namespace CastIt.ViewModels
             ICastService castService,
             IPlayListsService playListsService,
             IAppSettingsService settingsService,
-            IMvxNavigationService navigationService)
+            IMvxNavigationService navigationService,
+            ITelemetryService telemetryService)
             : base(textProvider, messenger, logger.GetLogFor<MainViewModel>())
         {
             _castService = castService;
             _playListsService = playListsService;
             _settingsService = settingsService;
             _navigationService = navigationService;
+            _telemetryService = telemetryService;
         }
 
         #region Methods
@@ -289,6 +292,7 @@ namespace CastIt.ViewModels
             catch (Exception e)
             {
                 Logger.Error(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
+                _telemetryService.TrackError(e);
             }
 
             Logger.Info($"{nameof(Initialize)}: Completed");
@@ -668,13 +672,14 @@ namespace CastIt.ViewModels
 
                 _castService.GenerateThumbmnails(file.Path);
 
-                Logger.Info($"{nameof(PlayFile)}: File is being playing...");
+                Logger.Info($"{nameof(PlayFile)}: File is being played...");
 
                 return true;
             }
             catch (Exception e)
             {
                 Logger.Error(e, $"{nameof(PlayFile)}: Unknown error occurred");
+                _telemetryService.TrackError(e);
                 playList.SelectedItem = null;
                 await StopPlayBack();
                 await ShowSnackbarMsg(GetText("CouldntPlayFile"));

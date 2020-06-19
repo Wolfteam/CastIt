@@ -9,7 +9,6 @@ using CastIt.ViewModels;
 using CastIt.ViewModels.Items;
 using MvvmCross;
 using MvvmCross.IoC;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 
@@ -35,9 +34,9 @@ namespace CastIt
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, AppDataService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IYoutubeUrlDecoder, YoutubeUrlDecoder>();
 
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton(() =>
-                AppWebServer.CreateWebServer(Mvx.IoCProvider.Resolve<IMvxLogProvider>(), Mvx.IoCProvider.Resolve<IFFMpegService>())
-            );
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<ITelemetryService, TelemetryService>();
+
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFMpegService, FFMpegService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
 

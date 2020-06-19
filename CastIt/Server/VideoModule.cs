@@ -14,6 +14,7 @@ namespace CastIt.Server
     {
         private readonly IMvxLog _logger;
         private readonly IFFMpegService _ffmpegService;
+        private readonly ITelemetryService _telemetryService;
 
         private CancellationTokenSource _tokenSource;
         private bool _checkTranscodeProcess;
@@ -21,12 +22,13 @@ namespace CastIt.Server
         public VideoModule(
             IMvxLog logger,
             IFFMpegService fFMpegService,
+            ITelemetryService telemetryService,
             string baseRoute)
             : base(baseRoute)
         {
             _logger = logger;
             _ffmpegService = fFMpegService;
-
+            _telemetryService = telemetryService;
             _tokenSource = new CancellationTokenSource();
         }
 
@@ -89,6 +91,7 @@ namespace CastIt.Server
             catch (Exception e)
             {
                 _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occcured");
+                _telemetryService.TrackError(e);
             }
             finally
             {

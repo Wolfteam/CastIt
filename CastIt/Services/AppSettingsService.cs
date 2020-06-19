@@ -14,6 +14,7 @@ namespace CastIt.Services
     {
         #region Members
         private readonly IMvxLog _logger;
+        private readonly ITelemetryService _telemetryService;
         private AppSettings _appSettings;
         #endregion
 
@@ -103,9 +104,10 @@ namespace CastIt.Services
         }
         #endregion
 
-        public AppSettingsService(IMvxLogProvider logProvider)
+        public AppSettingsService(IMvxLogProvider logProvider, ITelemetryService telemetryService)
         {
             _logger = logProvider.GetLogFor<AppSettingsService>();
+            _telemetryService = telemetryService;
             LoadSettings();
         }
 
@@ -152,6 +154,7 @@ namespace CastIt.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(LoadSettings)}: Unknown error occurred while trying to retrieve user settings");
+                _telemetryService.TrackError(ex);
             }
         }
 
@@ -175,6 +178,7 @@ namespace CastIt.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(SaveSettings)}: An unknown error occurred");
+                _telemetryService.TrackError(ex);
             }
         }
         #endregion

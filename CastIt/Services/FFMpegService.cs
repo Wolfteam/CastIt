@@ -22,6 +22,7 @@ namespace CastIt.Services
     {
         private readonly IMvxLog _logger;
         private readonly IAppSettingsService _settingsService;
+        private readonly ITelemetryService _telemetryService;
 
         private readonly Process _generateThumbnailProcess;
         private readonly Process _generateAllThumbnailsProcess;
@@ -62,11 +63,14 @@ namespace CastIt.Services
         private bool _checkGenerateThumbnailProcess;
         private bool _checkGenerateAllThumbnailsProcess;
 
-        public FFMpegService(IMvxLogProvider logProvider, IAppSettingsService settingsService)
+        public FFMpegService(
+            IMvxLogProvider logProvider,
+            IAppSettingsService settingsService,
+            ITelemetryService telemetryService)
         {
             _logger = logProvider.GetLogFor<FFMpegService>();
             _settingsService = settingsService;
-
+            _telemetryService = telemetryService;
             _transcodeProcess = new Process
             {
                 EnableRaisingEvents = true,
@@ -140,6 +144,7 @@ namespace CastIt.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+                _telemetryService.TrackError(ex);
             }
             finally
             {
@@ -192,6 +197,7 @@ namespace CastIt.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+                _telemetryService.TrackError(ex);
             }
             finally
             {
@@ -217,6 +223,7 @@ namespace CastIt.Services
                 if (ex is InvalidOperationException)
                     return;
                 _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate all thumbnails process");
+                _telemetryService.TrackError(ex);
             }
 
             try
@@ -234,6 +241,7 @@ namespace CastIt.Services
                 if (ex is InvalidOperationException)
                     return;
                 _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate thumbnail process");
+                _telemetryService.TrackError(ex);
             }
         }
 
@@ -253,6 +261,7 @@ namespace CastIt.Services
                 if (e is InvalidOperationException)
                     return;
                 _logger.Error(e, $"{nameof(KillTranscodeProcess)}: Unknown error occurred");
+                _telemetryService.TrackError(e);
             }
         }
 
@@ -291,6 +300,7 @@ namespace CastIt.Services
             catch (Exception e)
             {
                 _logger.Error(e, $"{nameof(GetFileInfo)}: Unknown error");
+                _telemetryService.TrackError(e);
                 return Task.FromResult<FFProbeFileInfo>(null);
             }
         }
@@ -389,6 +399,7 @@ namespace CastIt.Services
             catch (Exception e)
             {
                 _logger.Error(e, $"{nameof(GenerateSubTitles)}: Unknown error");
+                _telemetryService.TrackError(e);
                 return Task.CompletedTask;
             }
         }
@@ -507,27 +518,37 @@ namespace CastIt.Services
             //TODO: IMPROVE THIS
             if (!_settingsService.EnableHardwareAcceleration)
                 return;
-
-            var objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
-            var adapters = new List<string>();
-            foreach (ManagementObject obj in objvide.Get())
+            try
             {
-                adapters.Add(obj["AdapterCompatibility"].ToString());
+                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Getting available devices..");
+                var objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
+                var adapters = new List<string>();
+                foreach (ManagementObject obj in objvide.Get())
+                {
+                    adapters.Add(obj["AdapterCompatibility"].ToString());
+                }
+
+                if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
+                {
+                    AvailableHwDevices.Add(HwAccelDeviceType.Nvidia);
+                }
+
+                if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.AMD), StringComparison.OrdinalIgnoreCase)))
+                {
+                    AvailableHwDevices.Add(HwAccelDeviceType.AMD);
+                }
+
+                if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
+                {
+                    AvailableHwDevices.Add(HwAccelDeviceType.Intel);
+                }
+
+                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", AvailableHwDevices)}");
             }
-
-            if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
+            catch (Exception ex)
             {
-                AvailableHwDevices.Add(HwAccelDeviceType.Nvidia);
-            }
-
-            if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.AMD), StringComparison.OrdinalIgnoreCase)))
-            {
-                AvailableHwDevices.Add(HwAccelDeviceType.AMD);
-            }
-
-            if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
-            {
-                AvailableHwDevices.Add(HwAccelDeviceType.Intel);
+                _logger.Error(ex, $"{nameof(SetAvailableHwAccelDevices)}: Unknown error");
+                _telemetryService.TrackError(ex);
             }
         }
 
