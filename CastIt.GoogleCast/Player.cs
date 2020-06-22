@@ -24,7 +24,8 @@ namespace CastIt.GoogleCast
     {
         #region Members
         private const string ApplicationId = "CC1AD845";
-        private const int GetStatusDelay = 150;
+        private const int GetMediaStatusDelay = 150;
+        private const int GetReceiverStatusDelay = 1000;
 
         private readonly IMvxLog _logger;
         private readonly ISender _sender;
@@ -216,15 +217,15 @@ namespace CastIt.GoogleCast
             CurrentContentId = null;
             CancelAndSetMediaToken();
 
-            await Task.Delay(GetStatusDelay * 2);
+            await Task.Delay(GetMediaStatusDelay * 2);
 
             var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
             var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
 
             CurrentContentId = media.ContentId;
             CurrentMediaDuration = media.Duration ?? status?.Media?.Duration ?? 0;
-            CurrentVolumeLevel = status.Volume?.Level ?? 0;
-            IsMuted = status.Volume?.IsMuted ?? false;
+            CurrentVolumeLevel = status?.Volume?.Level ?? 0;
+            IsMuted = status?.Volume?.IsMuted ?? false;
             ElapsedSeconds = 0;
             _seekedSeconds = seekedSeconds;
 
@@ -360,7 +361,7 @@ namespace CastIt.GoogleCast
                     while (checkMediaStatus || !token.IsCancellationRequested)
                     {
                         bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
-                        await Task.Delay(GetStatusDelay);
+                        await Task.Delay(GetMediaStatusDelay, token);
 
                         var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
                         if (token.IsCancellationRequested)
@@ -416,10 +417,10 @@ namespace CastIt.GoogleCast
                 {
                     while (!token.IsCancellationRequested)
                     {
-                        await Task.Delay(GetStatusDelay);
+                        await Task.Delay(GetReceiverStatusDelay, token);
+                        var status = await _receiverChannel.GetStatusAsync(_sender);
                         if (token.IsCancellationRequested)
                             break;
-                        var status = await _receiverChannel.GetStatusAsync(_sender);
                         TriggerVolumeEvents(status.Volume?.Level ?? 0, status.Volume?.IsMuted ?? false);
                     }
                 }, token).ConfigureAwait(false);
