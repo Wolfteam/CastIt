@@ -426,4 +426,13 @@
   <data name="UrlNotSupported" xml:space="preserve">
     <value>Url is not valid or not supported</value>
   </data>
+  <data name="Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="ShowMainWindow" xml:space="preserve">
+    <value>Show main window</value>
+  </data>
+  <data name="MinimizeToTray" xml:space="preserve">
+    <value>Minimize to tray</value>
+  </data>
 </root>

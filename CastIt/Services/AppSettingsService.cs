@@ -102,6 +102,12 @@ namespace CastIt.Services
             get => _appSettings.EnableHardwareAcceleration;
             set => _appSettings.EnableHardwareAcceleration = value;
         }
+
+        public bool MinimizeToTray
+        {
+            get => _appSettings.MinimizeToTray;
+            set => _appSettings.MinimizeToTray = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider, ITelemetryService telemetryService)
@@ -110,7 +116,6 @@ namespace CastIt.Services
             _telemetryService = telemetryService;
             LoadSettings();
         }
-
 
         #region Methods
         public void SaveSettings()
@@ -126,7 +131,8 @@ namespace CastIt.Services
                 WindowWidth = AppConstants.MinWindowWidth,
                 EnableHardwareAcceleration = true,
                 ShowFileDetails = true,
-                PlayNextFileAutomatically = true
+                PlayNextFileAutomatically = true,
+                MinimizeToTray = true
             });
         }
 

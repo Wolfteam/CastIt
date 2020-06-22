@@ -328,11 +328,7 @@ namespace CastIt.ViewModels
 
             NextCommand = new MvxCommand(() => GoTo(true));
 
-            TogglePlayBackCommand = new MvxCommand(() =>
-            {
-                _castService.TogglePlayback();
-                IsPaused = !IsPaused;
-            });
+            TogglePlayBackCommand = new MvxCommand(TogglePlayBack);
 
             StopPlayBackCommand = new MvxAsyncCommand(StopPlayBack);
 
@@ -605,6 +601,15 @@ namespace CastIt.ViewModels
             file.PlayCommand.Execute();
         }
 
+        private void TogglePlayBack()
+        {
+            if (IsCurrentlyPlaying)
+            {
+                _castService.TogglePlayback();
+                IsPaused = !IsPaused;
+            }
+        }
+
         private async Task<bool> PlayFile(FileItemViewModel file, bool force, bool fileOptionsChanged = false)
         {
             if (file is null)
@@ -716,7 +721,10 @@ namespace CastIt.ViewModels
 
         private async Task StopPlayBack()
         {
-            await _castService.StopPlayback();
+            if (IsCurrentlyPlaying)
+            {
+                await _castService.StopPlayback();
+            }
             OnStoppedPlayBack();
         }
 

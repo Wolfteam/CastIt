@@ -372,6 +372,7 @@ namespace CastIt.Services
         {
             try
             {
+                FileUtils.DeleteFilesInDirectory(Path.GetDirectoryName(subtitleFinalPath));
                 var builder = new FFmpegArgsBuilder();
                 builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().TrySetSubTitleEncoding();
                 builder.AddOutputFile(subtitleFinalPath).Seek(seconds).SetMap(index).SetFormat("webvtt");

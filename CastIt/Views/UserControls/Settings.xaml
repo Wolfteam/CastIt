@@ -9,10 +9,10 @@
     xmlns:models="clr-namespace:CastIt.Models"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
-    Width="480"
-    Height="400"
-    d:DesignHeight="400"
-    d:DesignWidth="480"
+    Width="500"
+    Height="420"
+    d:DesignHeight="420"
+    d:DesignWidth="500"
     x:TypeArguments="vms:SettingsViewModel"
     mc:Ignorable="d">
 
@@ -21,7 +21,7 @@
             <Setter Property="Margin" Value="5,0" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
     </views:MvxWpfView.Resources>
 
@@ -51,6 +51,7 @@
             ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -241,8 +242,23 @@
                         Style="{StaticResource TogleButtonTextStyle}"
                         Text="{Binding [EnableHardwareAcceleration]}" />
                 </Grid>
-                <Button
+                <Grid
                     Grid.Row="6"
+                    Grid.Column="0"
+                    Margin="0,8"
+                    ToolTip="{Binding [MinimizeToTray]}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton IsChecked="{Binding MinimizeToTray}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Style="{StaticResource TogleButtonTextStyle}"
+                        Text="{Binding [MinimizeToTray]}" />
+                </Grid>
+                <Button
+                    Grid.Row="7"
                     Grid.ColumnSpan="2"
                     Width="150"
                     Margin="0,5"

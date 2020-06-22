@@ -421,6 +421,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exit.
+        /// </summary>
+        public static string Exit {
+            get {
+                return ResourceManager.GetString("Exit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expand.
         /// </summary>
         public static string Expand {
@@ -570,6 +579,15 @@ namespace CastIt.Resources {
         public static string Minimize {
             get {
                 return ResourceManager.GetString("Minimize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimize to tray.
+        /// </summary>
+        public static string MinimizeToTray {
+            get {
+                return ResourceManager.GetString("MinimizeToTray", resourceCulture);
             }
         }
         
@@ -885,6 +903,15 @@ namespace CastIt.Resources {
         public static string ShowFileDetailsMsg {
             get {
                 return ResourceManager.GetString("ShowFileDetailsMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show main window.
+        /// </summary>
+        public static string ShowMainWindow {
+            get {
+                return ResourceManager.GetString("ShowMainWindow", resourceCulture);
             }
         }
         

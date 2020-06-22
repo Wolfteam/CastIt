@@ -139,6 +139,16 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => EnableHardwareAcceleration);
             }
         }
+
+        public bool MinimizeToTray
+        {
+            get => _settingsService.MinimizeToTray;
+            set
+            {
+                _settingsService.MinimizeToTray = value;
+                RaisePropertyChanged(() => MinimizeToTray);
+            }
+        }
         #endregion
 
         #region Commands

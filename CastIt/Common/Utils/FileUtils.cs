@@ -146,6 +146,17 @@ namespace CastIt.Common.Utils
             }
         }
 
+        public static void DeleteFilesInDirectory(string dir)
+        {
+            var files = new DirectoryInfo(dir)
+                .GetFiles()
+                .ToList();
+            foreach (var file in files)
+            {
+                file.Delete();
+            }
+        }
+
         public static bool IsLocalFile(string mrl)
         {
             return File.Exists(mrl);

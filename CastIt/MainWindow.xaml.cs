@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Utils;
 using CastIt.Views;
 using MvvmCross.Platforms.Wpf.Views;
 using System.Linq;
@@ -19,6 +20,8 @@ namespace CastIt
         public MainWindow()
         {
             InitializeComponent();
+
+            MinimizeToTray.Enable(this);
         }
 
         public void BringToForeground()

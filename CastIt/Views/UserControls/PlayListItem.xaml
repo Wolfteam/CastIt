@@ -262,7 +262,7 @@
 
                 <Menu
                     Grid.Column="5"
-                    Background="{StaticResource DarkestColorBrush}"
+                    Background="{DynamicResource DarkestColorBrush}"
                     IsMainMenu="True"
                     IsTabStop="False"
                     ToolTip="{Binding [Sort]}">
@@ -330,7 +330,7 @@
 
                 <Menu
                     Grid.Column="6"
-                    Background="{StaticResource DarkestColorBrush}"
+                    Background="{DynamicResource DarkestColorBrush}"
                     IsMainMenu="True"
                     IsTabStop="False"
                     ToolTip="{Binding [FileOptions]}">
