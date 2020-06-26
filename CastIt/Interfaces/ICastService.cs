@@ -62,9 +62,6 @@ namespace CastIt.Interfaces
         string GetThumbnail(string filePath, int second);
         Task StopPlayback();
         Task TogglePlayback();
-        string GetFileName(string mrl);
-        string GetExtension(string mrl);
-        string GetFileSizeString(string mrl);
         void GenerateThumbmnails();
         void GenerateThumbmnails(string filePath);
         Task SetCastRenderer(string id);

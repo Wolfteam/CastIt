@@ -107,11 +107,11 @@ namespace CastIt.ViewModels.Items
         public bool Exists
             => IsLocalFile || IsUrlFile;
         public string Filename
-            => _castService.GetFileName(Path);
+            => FileUtils.GetFileName(Path);
         public string Size
-            => _castService.GetFileSizeString(Path);
+            => FileUtils.GetFileSizeString(Path);
         public string Extension
-            => _castService.GetExtension(Path);
+            => FileUtils.GetExtension(Path);
         public string SubTitle
             => $"{Extension}, {Size}";
 

@@ -375,30 +375,6 @@ namespace CastIt.Services
             }
         }
 
-        public string GetFileName(string mrl)
-        {
-            if (FileUtils.IsUrlFile(mrl))
-                return mrl;
-            return Path.GetFileName(mrl);
-        }
-
-        public string GetExtension(string mrl)
-        {
-            if (FileUtils.IsLocalFile(mrl))
-                return Path.GetExtension(mrl).ToUpper();
-            if (FileUtils.IsUrlFile(mrl))
-                return "WEB";
-            return "N/A";
-        }
-
-        public string GetFileSizeString(string mrl)
-        {
-            if (!FileUtils.IsLocalFile(mrl))
-                return "N/A";
-            var fileInfo = new FileInfo(mrl);
-            return GetBytesReadable(fileInfo.Length);
-        }
-
         public Task SetCastRenderer(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -479,53 +455,6 @@ namespace CastIt.Services
         {
             _renderWasSet = false;
             return _player.DisconnectAsync();
-        }
-
-        private string GetBytesReadable(long i)
-        {
-            // Get absolute value
-            long absolute_i = i < 0 ? -i : i;
-            // Determine the suffix and readable value
-            string suffix;
-            double readable;
-            if (absolute_i >= 0x1000000000000000) // Exabyte
-            {
-                suffix = "EB";
-                readable = i >> 50;
-            }
-            else if (absolute_i >= 0x4000000000000) // Petabyte
-            {
-                suffix = "PB";
-                readable = i >> 40;
-            }
-            else if (absolute_i >= 0x10000000000) // Terabyte
-            {
-                suffix = "TB";
-                readable = i >> 30;
-            }
-            else if (absolute_i >= 0x40000000) // Gigabyte
-            {
-                suffix = "GB";
-                readable = i >> 20;
-            }
-            else if (absolute_i >= 0x100000) // Megabyte
-            {
-                suffix = "MB";
-                readable = i >> 10;
-            }
-            else if (absolute_i >= 0x400) // Kilobyte
-            {
-                suffix = "KB";
-                readable = i;
-            }
-            else
-            {
-                return i.ToString("0 B"); // Byte
-            }
-            // Divide by 1024 to get fractional value
-            readable /= 1024;
-            // Return formatted number with suffix
-            return readable.ToString("0.## ") + suffix;
         }
     }
 }
