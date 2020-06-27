@@ -1,15 +1,19 @@
 part of 'settings_bloc.dart';
 
-abstract class SettingsEvent extends Equatable {
-  const SettingsEvent();
-}
+@freezed
+abstract class SettingsEvent implements _$SettingsEvent {
+  factory SettingsEvent.load() = SettingsLoadEvent;
+  factory SettingsEvent.themeChanged({
+    @required AppThemeType theme,
+  }) = SettingsThemeChangedEvent;
 
-class UrlChanged extends SettingsEvent {
-  final String url;
-  @override
-  List<Object> get props => [url];
+  factory SettingsEvent.accentColorChanged({
+    @required AppAccentColorType accentColor,
+  }) = SettingsAccentColorChangedEvent;
 
-  const UrlChanged({
-    @required this.url,
-  });
+  factory SettingsEvent.languageChanged({
+    @required AppLanguageType lang,
+  }) = SettingsLanguageChangedEvent;
+
+  const SettingsEvent._();
 }

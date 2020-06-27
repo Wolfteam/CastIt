@@ -1,3 +1,5 @@
+import 'package:castit/bloc/main/main_bloc.dart';
+import 'package:castit/bloc/playlist/playlist_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,7 +34,7 @@ class _MainPageState extends State<MainPage>
     super.didChangeDependencies();
 
     if (_didChangeDependencies) return;
-    context.bloc<PlaylistsBloc>().add(LoadPlayLists());
+    context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
     _didChangeDependencies = true;
   }
 
@@ -43,10 +45,12 @@ class _MainPageState extends State<MainPage>
       //   title: Text("CastIt"),
       // ),
       body: SafeArea(
-        child: TabBarView(
-          controller: _tabController,
-          physics: const NeverScrollableScrollPhysics(),
-          children: _pages,
+        child: BlocBuilder<MainBloc, MainState>(
+          builder: (ctx, state) => TabBarView(
+            controller: _tabController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: _pages,
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(

@@ -1,43 +1,17 @@
 part of 'playlist_bloc.dart';
 
-abstract class PlaylistState extends Equatable {
-  const PlaylistState();
-}
+@freezed
+abstract class PlayListState implements _$PlayListState {
+  factory PlayListState.loading() = PlayListLoadingState;
+  factory PlayListState.loaded({
+    @required int playlistId,
+    @required String name,
+    @required int position,
+    @required bool loop,
+    @required bool shuffle,
+    @required List<FileResponseDto> files,
+    @required bool loaded,
+  }) = PlayListLoadedState;
 
-class PlaylistLoadingState extends PlaylistState {
-  @override
-  List<Object> get props => [];
-}
-
-class PlayListLoadedState extends PlaylistState {
-  final int playlistId;
-  final String name;
-  final int position;
-  final bool loop;
-  final bool shuffle;
-  final List<FileResponseDto> files;
-  final bool loaded;
-
-  int get numberOfFiles => files.length;
-
-  @override
-  List<Object> get props => [
-        playlistId,
-        name,
-        position,
-        loop,
-        shuffle,
-        files,
-        loaded,
-      ];
-
-  const PlayListLoadedState({
-    @required this.playlistId,
-    @required this.name,
-    @required this.position,
-    @required this.loop,
-    @required this.shuffle,
-    @required this.files,
-    @required this.loaded,
-  });
+  const PlayListState._();
 }

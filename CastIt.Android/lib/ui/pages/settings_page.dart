@@ -1,22 +1,30 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../bloc/settings/settings_bloc.dart';
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
 import '../../common/extensions/app_theme_type_extensions.dart';
+import '../../common/extensions/i18n_extensions.dart';
 import '../../common/styles.dart';
+import '../../generated/i18n.dart';
 import '../../services/api/castit_api.dart';
+import '../widgets/page_header.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage>
+    with AutomaticKeepAliveClientMixin<SettingsPage> {
   TextEditingController _urlController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -28,70 +36,74 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Container(
-          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-          child: Text(
-            'Settings',
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: 28,
-            ),
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            children: _buildPage(context),
-          ),
-        ),
-      ],
+    super.build(context);
+    // StreamBuilder(
+    //   stream: _channel.stream,
+    //   builder: (context, snapshot) {
+    //     return Text(snapshot.hasData ? '${snapshot.data}' : '');
+    //   },
+    // ),
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (ctx, state) => ListView(
+        shrinkWrap: true,
+        children: _buildPage(ctx, state),
+      ),
     );
   }
 
   List<Widget> _buildPage(
     BuildContext context,
-    // SettingsState state,
+    SettingsState state,
   ) {
-    return [
-      _buildThemeSettings(context),
-      _buildAccentColorSettings(context),
-      _buildLanguageSettings(context),
-      _buildAboutSettings(context),
-    ];
-    // if (state is SettingsInitialState) {
-    // final i18n = I18n.of(context);
-    // }
-
-    // return [
-    //   const Center(
-    //     child: CircularProgressIndicator(),
-    //   )
-    // ];
+    final i18n = I18n.of(context);
+    final headerTitle = PageHeader(
+      title: i18n.settings,
+      icon: Icons.settings,
+    );
+    return state.when<List<Widget>>(
+      loading: () {
+        return [
+          headerTitle,
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
+        ];
+      },
+      loaded: (theme, _, accentColor, lang, castItUrl, appName, appVersion) {
+        return [
+          headerTitle,
+          _buildThemeSettings(context, i18n, theme),
+          _buildAccentColorSettings(context, i18n, accentColor),
+          _buildLanguageSettings(context, i18n, lang),
+          _buildAboutSettings(context, i18n, appName, appVersion),
+        ];
+      },
+    );
   }
 
   Widget _buildThemeSettings(
     BuildContext context,
-    // SettingsInitialState state,
-    // I18n i18n,
+    I18n i18n,
+    AppThemeType currentTheme,
   ) {
     final dropdown = DropdownButton<AppThemeType>(
       isExpanded: true,
-      hint: Text('i18n.settingsSelectAppTheme'),
-      value: AppThemeType.dark,
+      hint: Text(i18n.chooseBaseAppColor),
+      value: currentTheme,
       iconSize: 24,
       underline: Container(
         height: 0,
         color: Colors.transparent,
       ),
-      onChanged: (newValue) {},
+      onChanged: _appThemeChanged,
       items: AppThemeType.values
           .map<DropdownMenuItem<AppThemeType>>(
             (theme) => DropdownMenuItem<AppThemeType>(
               value: theme,
               child: Text(
-                'i18n.translateAppThemeType(theme)',
+                i18n.translateAppThemeType(theme),
               ),
             ),
           )
@@ -108,7 +120,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
-                'i18n.settingsTheme',
+                i18n.theme,
                 style: Theme.of(context).textTheme.headline6,
               ),
             ),
@@ -117,7 +129,7 @@ class _SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.only(top: 5),
           child: Text(
-            'i18n.settingsChooseAppTheme',
+            i18n.chooseBaseAppColor,
             style: TextStyle(
               color: Colors.grey,
             ),
@@ -130,12 +142,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           child: dropdown,
         ),
-        // SwitchListTile(
-        //   title: Text(i18n.settingsUseDarkAmoled),
-        //   // subtitle: Text("Usefull on amoled screens"),
-        //   value: true,
-        //   onChanged: (newValue) {},
-        // ),
       ],
     );
 
@@ -144,18 +150,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildAccentColorSettings(
     BuildContext context,
-    // SettingsInitialState state,
-    // I18n i18n,
+    I18n i18n,
+    AppAccentColorType currentAccentColor,
   ) {
     final accentColors = AppAccentColorType.values.map((accentColor) {
       final color = accentColor.getAccentColor();
 
       final widget = InkWell(
-        onTap: () => {},
+        onTap: () => _accentColorChanged(accentColor),
         child: Container(
           padding: const EdgeInsets.all(8),
           color: color,
-          child: true == true
+          child: currentAccentColor == accentColor
               ? Icon(
                   Icons.check,
                   color: Colors.white,
@@ -177,7 +183,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
-                'i18n.settingsAccentColor',
+                i18n.accentColor,
                 style: Theme.of(context).textTheme.headline6,
               ),
             ),
@@ -188,7 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
             top: 5,
           ),
           child: Text(
-            'i18n.settingsChooseAccentColor',
+            i18n.chooseAccentColor,
             style: TextStyle(
               color: Colors.grey,
             ),
@@ -211,15 +217,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildLanguageSettings(
     BuildContext context,
-    // SettingsInitialState state,
-    // I18n i18n,
+    I18n i18n,
+    AppLanguageType currentLang,
   ) {
     final dropdown = [AppLanguageType.english, AppLanguageType.spanish]
         .map<DropdownMenuItem<AppLanguageType>>(
           (lang) => DropdownMenuItem<AppLanguageType>(
             value: lang,
             child: Text(
-              'i18n.translateAppLanguageType(lang)',
+              i18n.translateAppLanguageType(lang),
             ),
           ),
         )
@@ -235,7 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
-                'i18n.settingsLanguage',
+                i18n.language,
                 style: Theme.of(context).textTheme.headline6,
               ),
             ),
@@ -244,7 +250,7 @@ class _SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.only(top: 5),
           child: Text(
-            'i18n.settingsChooseLanguage',
+            i18n.chooseLanguage,
             style: TextStyle(
               color: Colors.grey,
             ),
@@ -257,14 +263,14 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           child: DropdownButton<AppLanguageType>(
             isExpanded: true,
-            hint: Text('i18n.settingsSelectLanguage'),
-            value: AppLanguageType.english,
+            hint: Text(i18n.chooseLanguage),
+            value: currentLang,
             iconSize: 24,
             underline: Container(
               height: 0,
               color: Colors.transparent,
             ),
-            onChanged: (val) {},
+            onChanged: _languageChanged,
             items: dropdown,
           ),
         ),
@@ -276,8 +282,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildAboutSettings(
     BuildContext context,
-    // SettingsInitialState state,
-    // I18n i18n,
+    I18n i18n,
+    String appName,
+    String appVersion,
   ) {
     final textTheme = Theme.of(context).textTheme;
     final content = Column(
@@ -290,7 +297,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
-                'i18n.settingsAbout',
+                i18n.about,
                 style: textTheme.headline6,
               ),
             ),
@@ -301,7 +308,7 @@ class _SettingsPageState extends State<SettingsPage> {
             top: 5,
           ),
           child: Text(
-            'i18n.settingsAboutSubTitle',
+            i18n.appInfo,
             style: TextStyle(
               color: Colors.grey,
             ),
@@ -321,34 +328,34 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Text(
-                'i18n.appName',
+                i18n.appName,
                 textAlign: TextAlign.center,
                 style: textTheme.subtitle2,
               ),
               Text(
-                'i18n.appVersion(state.appVersion)',
+                i18n.appVersion(appVersion),
                 textAlign: TextAlign.center,
                 style: textTheme.subtitle2,
               ),
               Text(
-                'i18n.settingsAboutSummary',
+                i18n.aboutSummary,
                 textAlign: TextAlign.center,
               ),
               Container(
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
-                  'i18n.settingsDonations',
+                  i18n.donations,
                   style:
                       textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Text(
-                'i18n.settingsDonationSupport',
+                i18n.donationsMsg,
               ),
               Container(
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
-                  'i18n.settingsSupport',
+                  i18n.support,
                   style:
                       textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -356,7 +363,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Container(
                 margin: const EdgeInsets.only(top: 5),
                 child: Text(
-                  'i18n.settingsDonationSupport',
+                  i18n.donationSupport,
                   style: textTheme.subtitle2,
                 ),
               ),
@@ -375,8 +382,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            // _lauchUrl(
-                            //     'https://github.com/Wolfteam/MyExpenses/Issues');
+                            _lauchUrl(
+                              'https://github.com/Wolfteam/CastIt/Issues',
+                            );
                           },
                       ),
                     ],
@@ -405,8 +413,40 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _lauchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    }
+  }
+
+  void _appThemeChanged(AppThemeType newValue) {
+    final i18n = I18n.of(context);
+    context
+        .bloc<SettingsBloc>()
+        .add(SettingsEvent.themeChanged(theme: newValue));
+    // showInfoToast(i18n.restartTheAppToApplyChanges);
+    // context.bloc<app_bloc.AppBloc>().add(app_bloc.AppThemeChanged(newValue));
+  }
+
+  void _accentColorChanged(AppAccentColorType newValue) {
+    context
+        .bloc<SettingsBloc>()
+        .add(SettingsEvent.accentColorChanged(accentColor: newValue));
+    // context
+    //     .bloc<app_bloc.AppBloc>()
+    //     .add(app_bloc.AppAccentColorChanged(newValue));
+  }
+
+  void _languageChanged(AppLanguageType newValue) {
+    final i18n = I18n.of(context);
+    // showInfoToast(i18n.restartTheAppToApplyChanges);
+    context
+        .bloc<SettingsBloc>()
+        .add(SettingsEvent.languageChanged(lang: newValue));
+  }
+
   void _urlChanged() {
     final text = _urlController.text;
-    context.bloc<SettingsBloc>().add(UrlChanged(url: text));
+    // context.bloc<SettingsBloc>().add(UrlChanged(url: text));
   }
 }

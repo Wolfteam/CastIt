@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 
-class PlayPage extends StatelessWidget {
+class PlayPage extends StatefulWidget {
+  @override
+  _PlayPageState createState() => _PlayPageState();
+}
+
+class _PlayPageState extends State<PlayPage>
+    with AutomaticKeepAliveClientMixin<PlayPage> {
   var blueColor = Color(0xFF090e42);
+
   var pinkColor = Color(0xFFff6b80);
+
   var image =
       'https://i.scdn.co/image/db8382f6c33134111a26d4bf5a482a1caa5f151c';
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-import 'package:castit/bloc/playlist/playlist_bloc.dart';
-import 'package:castit/models/dtos/responses/playlist_response_dto.dart';
-
+import '../../bloc/playlist/playlist_bloc.dart';
+import '../../models/dtos/responses/file_response_dto.dart';
+import '../../models/dtos/responses/playlist_response_dto.dart';
 import '../widgets/file_item.dart';
 import '../widgets/item_counter.dart';
 
@@ -19,11 +19,14 @@ class PlayListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: BlocConsumer<PlaylistBloc, PlaylistState>(
+        child: BlocConsumer<PlayListBloc, PlayListState>(
           listener: (ctx, state) {
-            if (state is PlayListLoadedState) {
-              _refreshController.refreshCompleted();
-            }
+            state.maybeMap(
+              loaded: (_) {
+                _refreshController.refreshCompleted();
+              },
+              orElse: () {},
+            );
           },
           builder: (ctx, state) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,35 +52,42 @@ class PlayListPage extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildPage(BuildContext context, PlaylistState state) {
-    if (state is PlayListLoadedState) {
-      if (!state.loaded) {
+  List<Widget> _buildPage(BuildContext context, PlayListState state) {
+    return state.when<List<Widget>>(
+      loading: () {
         return [
-          Expanded(
+          const Expanded(
             child: Center(
-              child: Text('Something went wrong'),
+              child: CircularProgressIndicator(),
             ),
           ),
         ];
-      }
+      },
+      loaded: (playListId, name, position, loop, shuffle, files, loaded) {
+        if (!loaded) {
+          return [
+            Expanded(
+              child: Center(
+                child: Text('Something went wrong'),
+              ),
+            ),
+          ];
+        }
 
-      return [
-        _buildHeader(context, state),
-        _buildActionButtons(),
-        _buildItems(context, state),
-      ];
-    }
-
-    return [
-      const Expanded(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
-    ];
+        return [
+          _buildHeader(context, name, files.length),
+          _buildActionButtons(),
+          _buildItems(context, files),
+        ];
+      },
+    );
   }
 
-  Widget _buildHeader(BuildContext context, PlayListLoadedState state) {
+  Widget _buildHeader(
+    BuildContext context,
+    String playListName,
+    int itemLength,
+  ) {
     final theme = Theme.of(context);
     return Container(
       margin: EdgeInsets.only(top: 5, right: 10, left: 10),
@@ -91,12 +101,12 @@ class PlayListPage extends StatelessWidget {
                 size: 40,
               ),
               Text(
-                state.name,
+                playListName,
                 style: theme.textTheme.headline4,
               ),
             ],
           ),
-          ItemCounter(state.files.length),
+          ItemCounter(itemLength),
         ],
       ),
     );
@@ -122,20 +132,22 @@ class PlayListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildItems(BuildContext context, PlayListLoadedState state) {
+  Widget _buildItems(BuildContext context, List<FileResponseDto> files) {
     return Expanded(
       child: SmartRefresher(
         enablePullDown: true,
         header: const MaterialClassicHeader(),
         controller: _refreshController,
         onRefresh: () {
-          context.bloc<PlaylistBloc>().add(LoadPlayList(playlist: _playlist));
+          context
+              .bloc<PlayListBloc>()
+              .add(PlayListEvent.load(playList: _playlist));
         },
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: state.files.length,
+          itemCount: files.length,
           itemBuilder: (ctx, i) {
-            final file = state.files[i];
+            final file = files[i];
             return FileItem(
               file.position,
               file.filename,

@@ -1,0 +1,23 @@
+{
+    "appName": "CastIt",
+    "dark": "Oscuro",
+    "light": "Ligero",
+    "english": "Inglés",
+    "spanish": "Español",
+    "settings": "Ajustes",
+    "theme": "Tema",
+    "appVersion": "Versión: {version}",
+    "chooseBaseAppColor": "Escoge un color base para la app",
+    "accentColor": "Color de acento",
+    "chooseAccentColor": "Escoge un color de acento",
+    "language": "Idioma",
+    "chooseLanguage": "Escoge un idioma",
+    "about": "Acerca de",
+    "aboutSummary": "Una aplicación que te ayuda a mantener un registro de tus gastos.",
+    "donations": "Donaciones",
+    "support": "Soporte",
+    "appInfo": "Información de la aplicación",
+    "donationsMsg": "Espero que disfrutes al usar esta aplicación, si te gustaría comprarme un cafe o una cerveza, envíame un email.",
+    "donationSupport": "Hice esta aplicación en mi tiempo libre y también es de código abierto. Si desea ayudarme, informar un problema, tienes una idea, deseas que se implemente una función, etc., crea un issue aquí:",
+    "playlists": "Listas de Reproducción"
+}
