@@ -891,7 +891,7 @@ namespace CastIt.ViewModels
             }
 
             //Subtitles
-            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path))
+            if (!FileUtils.IsVideoFile(_currentlyPlayedFile.Path))
                 return;
 
             string localSubsPath = TryGetSubTitlesLocalPath();
@@ -901,7 +901,7 @@ namespace CastIt.ViewModels
             {
                 Id = NoStreamSelectedId,
                 IsSubTitle = true,
-                IsSelected = !localSubExists,
+                IsSelected = !localSubExists && _currentlyPlayedFile.FileInfo.SubTitles.Count == 0,
                 IsEnabled = isEnabled,
                 Text = GetText("None")
             });
@@ -920,6 +920,7 @@ namespace CastIt.ViewModels
             }
 
             isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 0;
+            isSelected = !localSubExists;
             foreach (var subtitle in _currentlyPlayedFile.FileInfo.SubTitles)
             {
                 CurrentFileSubTitles.Add(new FileItemOptionsViewModel
@@ -927,8 +928,11 @@ namespace CastIt.ViewModels
                     Id = subtitle.Index,
                     IsEnabled = isEnabled,
                     IsSubTitle = true,
+                    IsSelected = isSelected,
                     Text = subtitle.SubTitleText
                 });
+
+                isSelected = false;
             }
         }
 

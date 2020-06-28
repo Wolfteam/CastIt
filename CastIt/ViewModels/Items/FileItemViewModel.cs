@@ -238,7 +238,7 @@ namespace CastIt.ViewModels.Items
         {
             if (IsLocalFile)
             {
-                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
+                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + @$"""{Path}""");
                 Process.Start(psi);
             }
             else

@@ -17,14 +17,8 @@ namespace CastIt.Views.UserControls
             InitializeComponent();
 
             var window = System.Windows.Application.Current.MainWindow;
-            //TODO: THIS ALMOST FIXES THE POPUP PROBLEM
-            window.MouseMove += (sender, args) =>
-            {
-                if (SliderPopup.IsOpen)
-                {
-                    SliderPopup.IsOpen = false;
-                }
-            };
+            window.MouseMove += (sender, args) => ClosePopUpIfOpened();
+            window.Deactivated += (sender, args) => ClosePopUpIfOpened();
         }
 
         private void MainSilder_MouseLeave(object sender, MouseEventArgs e)
@@ -35,13 +29,8 @@ namespace CastIt.Views.UserControls
             bool intersect = sliderRect.IntersectsWith(mouseRect);
             if (!intersect)
             {
-                //System.Diagnostics.Debug.WriteLine(
-                //    $"rect does not intersect, closing this thing. " +
-                //    $"ismouseoverslider = {this.Slider_2.IsMouseOver}");
                 SliderPopup.IsOpen = false;
-                //SliderPopup.HorizontalOffset = 0;
             }
-
             e.Handled = true;
         }
 
@@ -60,13 +49,7 @@ namespace CastIt.Views.UserControls
             if (seconds >= 0)
                 SliderPopupText.Text = TimeSpan.FromSeconds(seconds).ToString(AppConstants.FullElapsedTimeFormat);
 
-            var offset = mousePosition.X - (SliderPopup.Child as FrameworkElement).ActualWidth / 2;
-
-            //System.Diagnostics.Debug.WriteLine($"Offset = {offset}");
-            //System.Diagnostics.Debug.WriteLine($"MousePosition = {mousePosition.X} - SliderWidth = {MainSilder.ActualWidth}");
-
-            SliderPopup.HorizontalOffset = offset;
-            //SliderPopup.VerticalOffset = mousePosition.Y;
+            SliderPopup.HorizontalOffset = mousePosition.X - (SliderPopup.Child as FrameworkElement).ActualWidth / 2;
             e.Handled = true;
         }
 
@@ -74,8 +57,15 @@ namespace CastIt.Views.UserControls
         {
             var mousePosition = e.GetPosition(this.MainSilder);
             var seconds = MainViewModel.GetMainProgressBarSeconds(MainSilder.ActualWidth, mousePosition.X);
-            System.Diagnostics.Debug.WriteLine($"Going to seconds = {seconds}");
             MainViewModel.GoToSecondsCommand.Execute(seconds);
+        }
+
+        private void ClosePopUpIfOpened()
+        {
+            if (SliderPopup.IsOpen)
+            {
+                SliderPopup.IsOpen = false;
+            }
         }
     }
 }

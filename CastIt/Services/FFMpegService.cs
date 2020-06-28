@@ -1,10 +1,10 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Enums;
+using CastIt.Common.Exceptions;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.FFMpeg;
 using CastIt.Models.FFMpeg.Args;
-using EmbedIO;
 using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
@@ -157,6 +157,7 @@ namespace CastIt.Services
         {
             if (!FileUtils.IsLocalFile(mrl))
             {
+                _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
                 return;
             }
             var filename = Path.GetFileName(mrl);
@@ -168,23 +169,12 @@ namespace CastIt.Services
                 return;
             }
             var fileInfo = await GetFileInfo(mrl, default);
-            var thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
-            var builder = new FFmpegArgsBuilder();
-            var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
-            var outputArgs = builder.AddOutputFile(thumbnailPath);
+            string thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
+            bool useHwAccel = fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
+                AvailableHwDevices.Contains(HwAccelDeviceType.Intel) &&
+                _settingsService.EnableHardwareAcceleration;
 
-            if (fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
-                AvailableHwDevices.Contains(HwAccelDeviceType.Intel))
-            {
-                inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel);
-                outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters($"fps=1/5,scale_qsv={ThumbnailScale}");
-            }
-            else
-            {
-                outputArgs.SetFilters($"fps=1/5,scale={ThumbnailScale}");
-            }
-
-            var cmd = builder.GetArgs();
+            string cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, useHwAccel);
             try
             {
                 _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
@@ -192,7 +182,31 @@ namespace CastIt.Services
                 _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateAllThumbnailsProcess.Start();
                 _generateAllThumbnailsProcess.WaitForExit();
-                _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {mrl}");
+                if (_generateAllThumbnailsProcess.ExitCode > 0 && useHwAccel)
+                {
+                    _logger.Warn(
+                        $"{nameof(GenerateThumbmnails)}: Could not generate thumbnails for file = {mrl} " +
+                        "using hw accel, falling back to sw.");
+                    cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, false);
+
+                    _generateThumbnailProcess.StartInfo.Arguments = cmd;
+                    _generateAllThumbnailsProcess.Start();
+                    _generateAllThumbnailsProcess.WaitForExit();
+                }
+
+                if (_generateAllThumbnailsProcess.ExitCode > 0)
+                {
+                    _logger.Error($"{nameof(GenerateThumbmnails)}: Could not generate thumbnails for file = {mrl}.");
+                    throw new FFMpegException("Couldnt generate thumbnails", cmd);
+                }
+                else if (_generateAllThumbnailsProcess.ExitCode < 0)
+                {
+                    _logger.Info($"{nameof(GenerateThumbmnails)}: Process was killed for file = {mrl}");
+                }
+                else
+                {
+                    _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {mrl}");
+                }
             }
             catch (Exception ex)
             {
@@ -327,7 +341,7 @@ namespace CastIt.Services
             _logger.Info($"{nameof(TranscodeVideo)}: Transcode completed for file = {filePath}");
         }
 
-        public async Task TranscodeMusic(IHttpContext context, string filePath, int audioStreamIndex, double seconds, CancellationToken token)
+        public async Task<MemoryStream> TranscodeMusic(string filePath, int audioStreamIndex, double seconds, CancellationToken token)
         {
             var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
@@ -340,14 +354,13 @@ namespace CastIt.Services
             _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file = {filePath} with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
-            using var memoryStream = new MemoryStream();
+            var memoryStream = new MemoryStream();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
             memoryStream.Position = 0;
-            //TODO: THIS LENGTH IS NOT WORKING PROPERLY
-            context.Response.ContentLength64 = memoryStream.Length;
-            await memoryStream.CopyToAsync(context.Response.OutputStream, token).ConfigureAwait(false);
             _logger.Info($"{nameof(TranscodeMusic)}: Transcode completed for file = {filePath}");
+
+            return memoryStream;
         }
 
         public string GetOutputTranscodeMimeType(string filepath)
@@ -395,6 +408,19 @@ namespace CastIt.Services
                     process.StartInfo.Arguments = cmd;
                     process.Start();
                     process.WaitForExit();
+
+                    if (process.ExitCode > 0)
+                    {
+                        _logger.Error($"{nameof(GenerateSubTitles)}: Could not generate subs for file = {filePath}.");
+                    }
+                    else if (process.ExitCode < 0)
+                    {
+                        _logger.Info($"{nameof(GenerateSubTitles)}: Process was killed for file = {filePath}");
+                    }
+                    else
+                    {
+                        _logger.Info($"{nameof(GenerateSubTitles)}: Subs where generated for file = {filePath}");
+                    }
                 }, token);
             }
             catch (Exception e)
@@ -565,6 +591,25 @@ namespace CastIt.Services
                 return HwAccelDeviceType.Intel;
 
             return HwAccelDeviceType.None;
+        }
+
+        private string GenerateCmdForThumbnails(string mrl, string thumbnailPath, bool useHwAccel)
+        {
+            var builder = new FFmpegArgsBuilder();
+            var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
+            var outputArgs = builder.AddOutputFile(thumbnailPath);
+
+            if (useHwAccel)
+            {
+                inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel);
+                outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters($"fps=1/5,scale_qsv={ThumbnailScale}");
+            }
+            else
+            {
+                outputArgs.SetFilters($"fps=1/5,scale={ThumbnailScale}");
+            }
+
+            return builder.GetArgs();
         }
     }
 }
