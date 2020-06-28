@@ -31,7 +31,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <!--This is the installer version, you should manually change it when creating a new installer-->
-    <InstallerVersion>1.0.0</InstallerVersion>
+    <InstallerVersion>1.0.1</InstallerVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="DesktopComponents.wxs" />
@@ -47,6 +47,16 @@
       <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
       <Name>WixUIExtension</Name>
     </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CastIt.Setup.CustomActions\CastIt.Setup.CustomActions.csproj">
+      <Name>CastIt.Setup.CustomActions</Name>
+      <Project>{9771d1a9-11ec-4104-b537-25bb9ec3baf5}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
