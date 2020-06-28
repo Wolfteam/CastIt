@@ -25,6 +25,7 @@
                 <ResourceDictionary Source="/XamlResources/ScrollBar.xaml" />
                 <ResourceDictionary Source="/XamlResources/Slider.xaml" />
                 <ResourceDictionary Source="/XamlResources/TabablzControl.xaml" />
+                <ResourceDictionary Source="/XamlResources/Generic.xaml" />
                 <ResourceDictionary>
                     <ResourceDictionary.MergedDictionaries>
                         <ResourceDictionary x:Name="Dark" Source="/XamlResources/DarkTheme.xaml" />
@@ -40,138 +41,6 @@
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.jpg" />
-
-            <Style x:Key="WindowStyle" TargetType="Window">
-                <Setter Property="Background" Value="{DynamicResource WindowBackground}" />
-                <!--<Setter Property="FontFamily" Value="{DynamicResource MaterialDesignFont}" />-->
-                <Setter Property="TextElement.FontSize" Value="14" />
-                <Setter Property="TextElement.FontWeight" Value="Medium" />
-                <Setter Property="TextElement.FontFamily" Value="{materialDesign:MaterialDesignFont}" />
-                <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}" />
-                <Setter Property="TextElement.Background" Value="{DynamicResource MaterialDesignBody}" />
-                <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
-                <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
-            </Style>
-
-            <Style
-                x:Key="FileItemSubTextStyle"
-                BasedOn="{StaticResource MaterialDesignCaptionTextBlock}"
-                TargetType="TextBlock">
-                <Setter Property="Padding" Value="0" />
-            </Style>
-
-            <Style
-                x:Key="FileItemSubTextStyleWithTriggers"
-                BasedOn="{StaticResource FileItemSubTextStyle}"
-                TargetType="{x:Type TextBlock}">
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="TextWrapping" Value="Wrap" />
-                <Style.Triggers>
-                    <MultiDataTrigger>
-                        <MultiDataTrigger.Conditions>
-                            <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="False" />
-                            <Condition Binding="{Binding IsBeingPlayed}" Value="True" />
-                        </MultiDataTrigger.Conditions>
-                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                    </MultiDataTrigger>
-                    <MultiDataTrigger>
-                        <MultiDataTrigger.Conditions>
-                            <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True" />
-                            <Condition Binding="{Binding IsBeingPlayed}" Value="True" />
-                        </MultiDataTrigger.Conditions>
-                        <Setter Property="Foreground" Value="{DynamicResource FontColorOnDarkBackgroundBrush}" />
-                    </MultiDataTrigger>
-                </Style.Triggers>
-            </Style>
-
-            <Style x:Key="FileItemTextStyleWithTriggers" TargetType="{x:Type TextBlock}">
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="TextWrapping" Value="Wrap" />
-                <Style.Triggers>
-                    <MultiDataTrigger>
-                        <MultiDataTrigger.Conditions>
-                            <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="False" />
-                            <Condition Binding="{Binding IsBeingPlayed}" Value="True" />
-                        </MultiDataTrigger.Conditions>
-                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                    </MultiDataTrigger>
-                    <MultiDataTrigger>
-                        <MultiDataTrigger.Conditions>
-                            <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True" />
-                            <Condition Binding="{Binding IsBeingPlayed}" Value="True" />
-                        </MultiDataTrigger.Conditions>
-                        <Setter Property="Foreground" Value="{DynamicResource FontColorOnDarkBackgroundBrush}" />
-                    </MultiDataTrigger>
-                </Style.Triggers>
-            </Style>
-
-            <Style x:Key="AppProgressBarStyle" TargetType="ProgressBar">
-                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                <Setter Property="Background" Value="{DynamicResource DarkestColorBrush}" />
-            </Style>
-
-            <Style
-                x:Key="MainButtonStyle"
-                BasedOn="{StaticResource MaterialDesignIconButton}"
-                TargetType="Button">
-                <Setter Property="IsTabStop" Value="False" />
-                <Setter Property="Focusable" Value="False" />
-                <Setter Property="Margin" Value="0" />
-                <Setter Property="Padding" Value="0" />
-                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
-            </Style>
-
-            <Style
-                x:Key="MainButtonStyleWithTriggers"
-                BasedOn="{StaticResource MainButtonStyle}"
-                TargetType="{x:Type Button}">
-                <Setter Property="IsEnabled" Value="False" />
-                <Style.Triggers>
-                    <MultiDataTrigger>
-                        <MultiDataTrigger.Conditions>
-                            <Condition Binding="{Binding IsCurrentlyPlaying}" Value="True" />
-                            <Condition Binding="{Binding IsBusy}" Value="False" />
-                        </MultiDataTrigger.Conditions>
-                        <MultiDataTrigger.Setters>
-                            <Setter Property="IsEnabled" Value="True" />
-                        </MultiDataTrigger.Setters>
-                    </MultiDataTrigger>
-                    <MultiDataTrigger>
-                        <MultiDataTrigger.Conditions>
-                            <Condition Binding="{Binding IsBusy}" Value="True" />
-                        </MultiDataTrigger.Conditions>
-                        <MultiDataTrigger.Setters>
-                            <Setter Property="IsEnabled" Value="False" />
-                        </MultiDataTrigger.Setters>
-                    </MultiDataTrigger>
-                </Style.Triggers>
-            </Style>
-
-            <Style x:Key="FileItemSeparatorStyle" TargetType="{x:Type Separator}">
-                <Setter Property="Margin" Value="20,0,20,10" />
-                <Setter Property="Background" Value="{DynamicResource FontColorBrush}" />
-                <Setter Property="RenderTransform">
-                    <Setter.Value>
-                        <ScaleTransform ScaleY="3" />
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <Style x:Key="ColorZoneIconStyle" TargetType="{x:Type materialDesign:PackIcon}">
-                <Setter Property="Width" Value="24" />
-                <Setter Property="Height" Value="24" />
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="Foreground" Value="{DynamicResource FontColorOnDarkBackgroundBrush}" />
-            </Style>
-
-            <Style x:Key="ColorZoneTextBlockWithIconStyle" TargetType="{x:Type TextBlock}">
-                <Setter Property="Margin" Value="5,0,0,0" />
-                <Setter Property="HorizontalAlignment" Value="Center" />
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="Foreground" Value="{DynamicResource FontColorOnDarkBackgroundBrush}" />
-            </Style>
         </ResourceDictionary>
     </Application.Resources>
 
