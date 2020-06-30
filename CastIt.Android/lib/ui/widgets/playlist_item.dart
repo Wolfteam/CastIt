@@ -24,6 +24,7 @@ class PlayListItem extends StatelessWidget {
       title: Text(
         playlist.name,
         style: theme.textTheme.headline6,
+        overflow: TextOverflow.ellipsis,
       ),
       trailing: ItemCounter(playlist.numberOfFiles),
       onTap: () {

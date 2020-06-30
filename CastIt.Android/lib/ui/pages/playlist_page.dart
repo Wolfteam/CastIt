@@ -7,6 +7,7 @@ import '../../models/dtos/responses/file_response_dto.dart';
 import '../../models/dtos/responses/playlist_response_dto.dart';
 import '../widgets/file_item.dart';
 import '../widgets/item_counter.dart';
+import '../widgets/page_header.dart';
 
 class PlayListPage extends StatelessWidget {
   final _refreshController = RefreshController(initialRefresh: false);
@@ -88,23 +89,15 @@ class PlayListPage extends StatelessWidget {
     String playListName,
     int itemLength,
   ) {
-    final theme = Theme.of(context);
     return Container(
-      margin: EdgeInsets.only(top: 5, right: 10, left: 10),
+      margin: EdgeInsets.only(right: 10, left: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(
-                Icons.list,
-                size: 40,
-              ),
-              Text(
-                playListName,
-                style: theme.textTheme.headline4,
-              ),
-            ],
+          PageHeader(
+            margin: EdgeInsets.all(0),
+            title: playListName,
+            icon: Icons.list,
           ),
           ItemCounter(itemLength),
         ],
@@ -139,9 +132,7 @@ class PlayListPage extends StatelessWidget {
         header: const MaterialClassicHeader(),
         controller: _refreshController,
         onRefresh: () {
-          context
-              .bloc<PlayListBloc>()
-              .add(PlayListEvent.load(playList: _playlist));
+          context.bloc<PlayListBloc>().add(PlayListEvent.load(playList: _playlist));
         },
         child: ListView.builder(
           shrinkWrap: true,

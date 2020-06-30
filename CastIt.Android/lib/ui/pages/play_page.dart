@@ -1,224 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../bloc/play/play_bloc.dart';
+import '../widgets/play/play_buttons.dart';
+import '../widgets/play/play_cover_img.dart';
+import '../widgets/play/play_progress_bar.dart';
+import '../widgets/play/play_progress_text.dart';
 
 class PlayPage extends StatefulWidget {
   @override
   _PlayPageState createState() => _PlayPageState();
 }
 
-class _PlayPageState extends State<PlayPage>
-    with AutomaticKeepAliveClientMixin<PlayPage> {
-  var blueColor = Color(0xFF090e42);
-
-  var pinkColor = Color(0xFFff6b80);
-
-  var image =
-      'https://i.scdn.co/image/db8382f6c33134111a26d4bf5a482a1caa5f151c';
-
+class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<PlayPage> {
   @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
-    var coverHeigth = size.height * 0.6;
+    super.build(context);
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Container(
-            height: coverHeigth,
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(image),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [blueColor.withOpacity(0.4), blueColor],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Column(
-                    children: <Widget>[
-                      SizedBox(height: 20.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(50.0),
-                            ),
-                            child: Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Column(
-                            children: <Widget>[
-                              Text(
-                                'PLAYLIST',
-                                style: TextStyle(
-                                    color: Colors.white.withOpacity(0.6)),
-                              ),
-                              Text('Best Vibes of the Week',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                          Icon(
-                            Icons.playlist_add,
-                            color: Colors.white,
-                          )
-                        ],
-                      ),
-                      Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Icon(
-                            Icons.shuffle,
-                            color: pinkColor,
-                          ),
-                          Column(
-                            children: <Widget>[
-                              Text("Titulo",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 32.0,
-                                  )),
-                              SizedBox(
-                                height: 6.0,
-                              ),
-                              Text(
-                                "Artista",
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 18.0,
-                                ),
-                              ),
-                              SizedBox(height: 16.0),
-                            ],
-                          ),
-                          Icon(
-                            Icons.repeat,
-                            color: pinkColor,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-          SizedBox(height: 20.0),
-          Slider(
-            onChanged: (double value) {},
-            value: 0.2,
-            activeColor: pinkColor,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  '2:10',
-                  style: TextStyle(color: Colors.green.withOpacity(0.7)),
-                ),
-                Text('-03:56',
-                    style: TextStyle(color: Colors.green.withOpacity(0.7)))
-              ],
-            ),
-          ),
-          SizedBox(height: 10),
-          Container(
-            margin: EdgeInsets.only(bottom: 50),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                IconButton(
-                  iconSize: 42,
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.fast_rewind,
-                    color: Colors.black,
-                  ),
-                ),
-                IconButton(
-                  iconSize: 42,
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.skip_previous,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(width: 10.0),
-                Container(
-                  decoration: BoxDecoration(
-                    color: pinkColor,
-                    borderRadius: BorderRadius.circular(50.0),
-                  ),
-                  child: IconButton(
-                    iconSize: 60,
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10.0),
-                IconButton(
-                  iconSize: 42,
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.skip_next,
-                    color: Colors.black,
-                  ),
-                ),
-                IconButton(
-                  iconSize: 42,
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.fast_forward,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
+      body: BlocBuilder<PlayBloc, PlayState>(
+        builder: (ctx, state) => Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            ..._buildPage(state),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          //   children: <Widget>[
-          //     Icon(
-          //       Icons.bookmark_border,
-          //       color: pinkColor,
-          //     ),
-          //     Icon(
-          //       Icons.shuffle,
-          //       color: pinkColor,
-          //     ),
-          //     Icon(
-          //       Icons.repeat,
-          //       color: pinkColor,
-          //     ),
-          //   ],
-          // ),
-        ],
+  List<Widget> _buildPage(PlayState state) {
+    final widgets = [
+      _buildCoverImg(state),
+      const SizedBox(height: 20.0),
+      const PlayProgressBar(),
+      const PlayProgressText(),
+      const SizedBox(height: 10),
+      PlayButtons(areDisabled: state is! PlayingState),
+    ];
+    return widgets;
+  }
+
+  Widget _buildCoverImg(PlayState state) {
+    final size = MediaQuery.of(context).size;
+    final coverHeigth = size.height * 0.6;
+    return state.map(
+      connecting: (state) {
+        return Container(
+          height: coverHeigth,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      },
+      connected: (state) => const PlayCoverImg(),
+      fileLoading: (state) => const PlayCoverImg(showLoading: true),
+      //TODO: SHOW ERROR MSG HERE
+      fileLoadingFailed: (state) => const PlayCoverImg(),
+      playing: (state) => PlayCoverImg(
+        fileName: state.filename,
+        playListName: state.playlistName,
+        thumbUrl: state.thumbPath,
       ),
     );
   }

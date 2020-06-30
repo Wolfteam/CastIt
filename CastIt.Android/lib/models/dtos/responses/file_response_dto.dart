@@ -69,4 +69,18 @@ class FileResponseDto extends Equatable {
 
   factory FileResponseDto.fromJson(Map<String, dynamic> json) =>
       _$FileResponseDtoFromJson(json);
+
+  static List<String> get jsonKeys => [
+        'Id',
+        'Position',
+        'Path',
+        'PlayedPercentage',
+        'PlayListId',
+        'IsLocalFile',
+        'IsUrlFile',
+        'Exists',
+        'Filename',
+        'Size',
+        'Extension',
+      ];
 }

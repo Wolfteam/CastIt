@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'bloc/main/main_bloc.dart';
+import 'bloc/play/play_bloc.dart';
 import 'bloc/playlist/playlist_bloc.dart';
 import 'bloc/playlists/playlists_bloc.dart';
 import 'bloc/settings/settings_bloc.dart';
@@ -15,6 +16,7 @@ import 'services/logging_service.dart';
 import 'services/settings_service.dart';
 import 'ui/pages/main_page.dart';
 
+//TODO: IF THE SCREEN GOES OFF, THE WIFI MAY GO DOWN
 Future main() async {
   await setupLogging();
   initInjection();
@@ -51,6 +53,14 @@ class _MyAppState extends State<MyApp> {
       providers: [
         BlocProvider(
           create: (ctx) {
+            final logger = getIt<LoggingService>();
+            final settings = getIt<SettingsService>();
+
+            return MainBloc(logger, settings)..add(MainEvent.init());
+          },
+        ),
+        BlocProvider(
+          create: (ctx) {
             final castitService = getIt<CastItService>();
             return PlayListsBloc(castitService);
           },
@@ -63,32 +73,52 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (ctx) {
-            final logger = getIt<LoggingService>();
-            final settings = getIt<SettingsService>();
-            return SettingsBloc(logger, settings)..add(SettingsEvent.load());
+            final mainBloc = ctx.bloc<MainBloc>();
+            return PlayBloc(mainBloc);
           },
         ),
         BlocProvider(
           create: (ctx) {
             final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
-            return MainBloc(logger, settings)..add(MainEvent.init());
+            final mainBloc = ctx.bloc<MainBloc>();
+            return SettingsBloc(logger, settings, mainBloc);
           },
-        )
+        ),
       ],
-      child: MaterialApp(
-        title: 'CastIt',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        home: MainPage(),
-        localizationsDelegates: delegates,
-        supportedLocales: i18n.supportedLocales,
-        localeResolutionCallback: i18n.resolution(
-          fallback: i18n.supportedLocales.first,
-        ),
+      child: BlocBuilder<MainBloc, MainState>(
+        builder: (ctx, state) => _buildApp(state),
       ),
+    );
+  }
+
+  Widget _buildApp(MainState state) {
+    final delegates = <LocalizationsDelegate>[
+      // A class which loads the translations from JSON files
+      i18n,
+      // Built-in localization of basic text for Material widgets
+      GlobalMaterialLocalizations.delegate,
+      // Built-in localization for text direction LTR/RTL
+      GlobalWidgetsLocalizations.delegate,
+      // Built-in localization of basic text for Cupertino widgets
+      GlobalCupertinoLocalizations.delegate,
+    ];
+    return state.when<Widget>(
+      loading: () {
+        return CircularProgressIndicator();
+      },
+      loaded: (appTitle, themeData, _) {
+        return MaterialApp(
+          title: appTitle,
+          theme: themeData,
+          home: MainPage(),
+          localizationsDelegates: delegates,
+          supportedLocales: i18n.supportedLocales,
+          localeResolutionCallback: i18n.resolution(
+            fallback: i18n.supportedLocales.first,
+          ),
+        );
+      },
     );
   }
 

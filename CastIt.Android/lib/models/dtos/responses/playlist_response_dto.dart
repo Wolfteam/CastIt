@@ -44,4 +44,13 @@ class PlayListResponseDto extends Equatable {
 
   factory PlayListResponseDto.fromJson(Map<String, dynamic> json) =>
       _$PlayListResponseDtoFromJson(json);
+
+  static List<String> get jsonKeys => [
+        'Id',
+        'Name',
+        'Position',
+        'Loop',
+        'Shuffle',
+        'NumberOfFiles',
+      ];
 }

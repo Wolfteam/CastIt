@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../common/utils/json_generic_converter.dart';
 import 'app_response_dto.dart';
-import 'json_generic_converter.dart';
 
 part 'app_list_response_dto.g.dart';
 

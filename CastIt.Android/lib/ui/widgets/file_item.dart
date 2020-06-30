@@ -1,5 +1,6 @@
-import 'package:castit/ui/widgets/item_counter.dart';
 import 'package:flutter/material.dart';
+
+import 'item_counter.dart';
 
 class FileItem extends StatelessWidget {
   final int _index;

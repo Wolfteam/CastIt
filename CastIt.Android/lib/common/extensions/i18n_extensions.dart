@@ -1,6 +1,7 @@
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
 import '../../generated/i18n.dart';
+import '../enums/video_scale_type.dart';
 
 extension I18nExtensions on I18n {
   String translateAppThemeType(AppThemeType theme) {
@@ -22,6 +23,19 @@ extension I18nExtensions on I18n {
         return spanish;
       default:
         throw Exception('The provided app lang = $lang is not valid');
+    }
+  }
+
+  String translateVideoScaleType(VideoScaleType scale) {
+    switch (scale) {
+      case VideoScaleType.fullHd:
+        return fullHd;
+      case VideoScaleType.hd:
+        return hd;
+      case VideoScaleType.original:
+        return original;
+      default:
+        throw Exception('The provided video scale = $scale is not valid');
     }
   }
 }

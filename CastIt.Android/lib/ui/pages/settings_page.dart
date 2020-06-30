@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../bloc/main/main_bloc.dart';
 import '../../bloc/settings/settings_bloc.dart';
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
+import '../../common/enums/video_scale_type.dart';
 import '../../common/extensions/app_theme_type_extensions.dart';
 import '../../common/extensions/i18n_extensions.dart';
 import '../../common/styles.dart';
@@ -19,8 +21,7 @@ class SettingsPage extends StatefulWidget {
   _SettingsPageState createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage>
-    with AutomaticKeepAliveClientMixin<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClientMixin<SettingsPage> {
   TextEditingController _urlController;
 
   @override
@@ -37,12 +38,6 @@ class _SettingsPageState extends State<SettingsPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // StreamBuilder(
-    //   stream: _channel.stream,
-    //   builder: (context, snapshot) {
-    //     return Text(snapshot.hasData ? '${snapshot.data}' : '');
-    //   },
-    // ),
     return BlocBuilder<SettingsBloc, SettingsState>(
       builder: (ctx, state) => ListView(
         shrinkWrap: true,
@@ -60,24 +55,34 @@ class _SettingsPageState extends State<SettingsPage>
       title: i18n.settings,
       icon: Icons.settings,
     );
-    return state.when<List<Widget>>(
-      loading: () {
+    return state.map<List<Widget>>(
+      loading: (state) {
         return [
           headerTitle,
-          const Expanded(
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+          const Center(
+            child: CircularProgressIndicator(),
           )
         ];
       },
-      loaded: (theme, _, accentColor, lang, castItUrl, appName, appVersion) {
+      loaded: (state) {
         return [
           headerTitle,
-          _buildThemeSettings(context, i18n, theme),
-          _buildAccentColorSettings(context, i18n, accentColor),
-          _buildLanguageSettings(context, i18n, lang),
-          _buildAboutSettings(context, i18n, appName, appVersion),
+          _buildThemeSettings(context, i18n, state.appTheme),
+          _buildAccentColorSettings(context, i18n, state.accentColor),
+          _buildLanguageSettings(context, i18n, state.appLanguage),
+          if (state.isConected)
+            _buildOtherSettings(
+              context,
+              i18n,
+              state.castItUrl,
+              state.videoScale,
+              state.playFromTheStart,
+              state.playNextFileAutomatically,
+              state.forceVideoTranscode,
+              state.forceAudioTranscode,
+              state.enableHwAccel,
+            ),
+          _buildAboutSettings(context, i18n, state.appName, state.appVersion),
         ];
       },
     );
@@ -280,6 +285,119 @@ class _SettingsPageState extends State<SettingsPage>
     return _buildCard(content);
   }
 
+  Widget _buildOtherSettings(
+    BuildContext context,
+    I18n i18n,
+    String castItUrl,
+    VideoScaleType videoScale,
+    bool playFromTheStart,
+    bool playNextFileAutomatically,
+    bool forceVideoTranscode,
+    bool forceAudioTranscode,
+    bool enableHwAccel,
+  ) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
+    final videoScaleDropdown = DropdownButton<VideoScaleType>(
+      isExpanded: true,
+      hint: Text(i18n.videoScale),
+      value: videoScale,
+      iconSize: 24,
+      underline: Container(
+        height: 0,
+        color: Colors.transparent,
+      ),
+      onChanged: (newValue) {},
+      items: VideoScaleType.values
+          .map<DropdownMenuItem<VideoScaleType>>(
+            (type) => DropdownMenuItem<VideoScaleType>(
+              value: type,
+              child: Text(
+                i18n.translateVideoScaleType(type),
+              ),
+            ),
+          )
+          .toList(),
+    );
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Icon(Icons.queue_play_next),
+            Container(
+              margin: const EdgeInsets.only(left: 5),
+              child: Text(
+                i18n.playerSettings,
+                style: textTheme.headline6,
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(
+            top: 5,
+          ),
+          child: Text(
+            i18n.changeAppBehaviour,
+            style: TextStyle(
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        ListTile(
+          title: Text(
+            'CastIt web server url',
+          ),
+          subtitle: Text(castItUrl),
+          onTap: () {},
+        ),
+        Padding(
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+          ),
+          child: videoScaleDropdown,
+        ),
+        SwitchListTile(
+          activeColor: theme.accentColor,
+          value: playFromTheStart,
+          title: Text(i18n.playFromTheStart),
+          onChanged: (newValue) {},
+        ),
+        SwitchListTile(
+          activeColor: theme.accentColor,
+          value: playNextFileAutomatically,
+          title: Text(i18n.playNextFileAutomatically),
+          onChanged: (newValue) {},
+        ),
+        SwitchListTile(
+          activeColor: theme.accentColor,
+          value: forceVideoTranscode,
+          title: Text(i18n.forceVideoTranscode),
+          onChanged: (newValue) {},
+        ),
+        SwitchListTile(
+          activeColor: theme.accentColor,
+          value: forceAudioTranscode,
+          title: Text(i18n.forceAudioTranscode),
+          onChanged: (newValue) {},
+        ),
+        SwitchListTile(
+          activeColor: theme.accentColor,
+          value: enableHwAccel,
+          title: Text(i18n.enableHwAccel),
+          onChanged: (newValue) {},
+        ),
+      ],
+    );
+
+    return _buildCard(content);
+  }
+
   Widget _buildAboutSettings(
     BuildContext context,
     I18n i18n,
@@ -345,8 +463,7 @@ class _SettingsPageState extends State<SettingsPage>
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
                   i18n.donations,
-                  style:
-                      textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Text(
@@ -356,15 +473,13 @@ class _SettingsPageState extends State<SettingsPage>
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
                   i18n.support,
-                  style:
-                      textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
                 margin: const EdgeInsets.only(top: 5),
                 child: Text(
                   i18n.donationSupport,
-                  style: textTheme.subtitle2,
                 ),
               ),
               Container(
@@ -383,7 +498,7 @@ class _SettingsPageState extends State<SettingsPage>
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
                             _lauchUrl(
-                              'https://github.com/Wolfteam/CastIt/Issues',
+                              'https://github.com/Wolfteam/CastIt/issues',
                             );
                           },
                       ),
@@ -421,28 +536,20 @@ class _SettingsPageState extends State<SettingsPage>
 
   void _appThemeChanged(AppThemeType newValue) {
     final i18n = I18n.of(context);
-    context
-        .bloc<SettingsBloc>()
-        .add(SettingsEvent.themeChanged(theme: newValue));
+    context.bloc<SettingsBloc>().add(SettingsEvent.themeChanged(theme: newValue));
     // showInfoToast(i18n.restartTheAppToApplyChanges);
-    // context.bloc<app_bloc.AppBloc>().add(app_bloc.AppThemeChanged(newValue));
+    context.bloc<MainBloc>().add(MainEvent.themeChanged(theme: newValue));
   }
 
   void _accentColorChanged(AppAccentColorType newValue) {
-    context
-        .bloc<SettingsBloc>()
-        .add(SettingsEvent.accentColorChanged(accentColor: newValue));
-    // context
-    //     .bloc<app_bloc.AppBloc>()
-    //     .add(app_bloc.AppAccentColorChanged(newValue));
+    context.bloc<SettingsBloc>().add(SettingsEvent.accentColorChanged(accentColor: newValue));
+    context.bloc<MainBloc>().add(MainEvent.accentColorChanged(accentColor: newValue));
   }
 
   void _languageChanged(AppLanguageType newValue) {
     final i18n = I18n.of(context);
     // showInfoToast(i18n.restartTheAppToApplyChanges);
-    context
-        .bloc<SettingsBloc>()
-        .add(SettingsEvent.languageChanged(lang: newValue));
+    context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue));
   }
 
   void _urlChanged() {

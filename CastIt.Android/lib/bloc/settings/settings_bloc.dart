@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:castit/generated/i18n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -10,8 +9,12 @@ import 'package:package_info/package_info.dart';
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
+import '../../common/enums/video_scale_type.dart';
+import '../../generated/i18n.dart';
+import '../../models/dtos/responses/app_settings_response_dto.dart';
 import '../../services/logging_service.dart';
 import '../../services/settings_service.dart';
+import '../main/main_bloc.dart';
 
 part 'settings_bloc.freezed.dart';
 part 'settings_event.dart';
@@ -21,7 +24,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final LoggingService _logger;
   final SettingsService _settings;
 
-  SettingsBloc(this._logger, this._settings);
+  final MainBloc _mainBloc;
+
+  SettingsBloc(this._logger, this._settings, this._mainBloc) {
+    _mainBloc.settingsChanged.stream.listen((settings) {
+      add(SettingsEvent.connected(settings: settings));
+    });
+
+    _mainBloc.disconnected.stream.listen((_) {
+      add(SettingsEvent.disconnected());
+    });
+  }
 
   @override
   SettingsState get initialState => SettingsState.loading();
@@ -32,36 +45,56 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Stream<SettingsState> mapEventToState(
     SettingsEvent event,
   ) async* {
-    if (event is SettingsLoadEvent) {
-      await _settings.init();
-      final packageInfo = await PackageInfo.fromPlatform();
-      final settings = _settings.appSettings;
-      yield SettingsState.loaded(
-        appTheme: settings.appTheme,
-        useDarkAmoled: settings.useDarkAmoled,
-        accentColor: settings.accentColor,
-        appLanguage: settings.appLanguage,
-        castItUrl: settings.castItUrl,
-        appName: packageInfo.appName,
-        appVersion: packageInfo.version,
-      );
-    }
+    final s = await event.map(
+      load: (event) async {
+        await _settings.init();
+        final packageInfo = await PackageInfo.fromPlatform();
+        final settings = _settings.appSettings;
+        return SettingsState.loaded(
+          appTheme: settings.appTheme,
+          useDarkAmoled: settings.useDarkAmoled,
+          accentColor: settings.accentColor,
+          appLanguage: settings.appLanguage,
+          castItUrl: settings.castItUrl,
+          videoScale: VideoScaleType.original,
+          enableHwAccel: false,
+          forceAudioTranscode: false,
+          forceVideoTranscode: false,
+          isConected: false,
+          playFromTheStart: false,
+          playNextFileAutomatically: false,
+          appName: packageInfo.appName,
+          appVersion: packageInfo.version,
+        );
+      },
+      connected: (event) async {
+        return currentState.copyWith(
+          isConected: true,
+          videoScale: event.settings.videoScaleType,
+          enableHwAccel: event.settings.enableHwAccel,
+          forceAudioTranscode: event.settings.forceAudioTranscode,
+          forceVideoTranscode: event.settings.forceVideoTranscode,
+          playFromTheStart: event.settings.playFromTheStart,
+          playNextFileAutomatically: event.settings.playNextFileAutomatically,
+        );
+      },
+      disconnected: (event) async => currentState.copyWith(isConected: false),
+      themeChanged: (event) async {
+        _settings.appTheme = event.theme;
+        return currentState.copyWith(appTheme: event.theme);
+      },
+      accentColorChanged: (event) async {
+        _settings.accentColor = event.accentColor;
+        return currentState.copyWith(accentColor: event.accentColor);
+      },
+      languageChanged: (event) async {
+        _settings.language = event.lang;
+        final locale = I18n.delegate.supportedLocales[event.lang.index];
+        I18n.onLocaleChanged(locale);
+        return currentState.copyWith(appLanguage: event.lang);
+      },
+    );
 
-    if (event is SettingsThemeChangedEvent) {
-      _settings.appTheme = event.theme;
-      yield currentState.copyWith(appTheme: event.theme);
-    }
-
-    if (event is SettingsAccentColorChangedEvent) {
-      _settings.accentColor = event.accentColor;
-      yield currentState.copyWith(accentColor: event.accentColor);
-    }
-
-    if (event is SettingsLanguageChangedEvent) {
-      _settings.language = event.lang;
-      final locale = I18n.delegate.supportedLocales[event.lang.index];
-      I18n.onLocaleChanged(locale);
-      yield currentState.copyWith(appLanguage: event.lang);
-    }
+    yield s;
   }
 }

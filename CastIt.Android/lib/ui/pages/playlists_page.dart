@@ -1,19 +1,19 @@
-import 'package:castit/generated/i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../../bloc/playlists/playlists_bloc.dart';
-import '../widgets/playlist_item.dart';
+import '../../generated/i18n.dart';
 import '../widgets/page_header.dart';
+import '../widgets/playlist_item.dart';
+import '../widgets/something_went_wrong.dart';
 
 class PlayListsPage extends StatefulWidget {
   @override
   _PlayListsPageState createState() => _PlayListsPageState();
 }
 
-class _PlayListsPageState extends State<PlayListsPage>
-    with AutomaticKeepAliveClientMixin<PlayListsPage> {
+class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveClientMixin<PlayListsPage> {
   final _refreshController = RefreshController(initialRefresh: false);
 
   @override
@@ -64,18 +64,17 @@ class _PlayListsPageState extends State<PlayListsPage>
       },
       loaded: (loaded, playlists, _) {
         if (!loaded) {
-          return Container(
-            child: Text(
-              'Something went wrong!',
-            ),
-          );
+          return const SomethingWentWrong();
         }
 
         return ListView.builder(
           itemCount: playlists.length,
           itemBuilder: (ctx, i) {
             final playlist = playlists[i];
-            return Card(child: PlayListItem(playlist: playlist));
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              child: PlayListItem(playlist: playlist),
+            );
           },
         );
       },

@@ -47,6 +47,7 @@ extension AppThemeTypeExtensions on AppAccentColorType {
     switch (theme) {
       case AppThemeType.dark:
         return ThemeData(
+          visualDensity: VisualDensity.adaptivePlatformDensity,
           brightness: Brightness.dark,
           accentColor: color,
           primaryColor: color,
@@ -57,6 +58,7 @@ extension AppThemeTypeExtensions on AppAccentColorType {
         break;
       case AppThemeType.light:
         return ThemeData(
+          visualDensity: VisualDensity.adaptivePlatformDensity,
           brightness: Brightness.light,
           accentColor: color,
           primaryColor: color,
