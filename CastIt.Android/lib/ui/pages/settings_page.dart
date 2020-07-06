@@ -1,3 +1,4 @@
+import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -308,7 +309,14 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         height: 0,
         color: Colors.transparent,
       ),
-      onChanged: (newValue) {},
+      onChanged: (newValue) => _updateSettings(
+        newValue,
+        playFromTheStart,
+        playNextFileAutomatically,
+        forceVideoTranscode,
+        forceAudioTranscode,
+        enableHwAccel,
+      ),
       items: VideoScaleType.values
           .map<DropdownMenuItem<VideoScaleType>>(
             (type) => DropdownMenuItem<VideoScaleType>(
@@ -366,31 +374,66 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           activeColor: theme.accentColor,
           value: playFromTheStart,
           title: Text(i18n.playFromTheStart),
-          onChanged: (newValue) {},
+          onChanged: (newValue) => _updateSettings(
+            videoScale,
+            newValue,
+            playNextFileAutomatically,
+            forceVideoTranscode,
+            forceAudioTranscode,
+            enableHwAccel,
+          ),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
           value: playNextFileAutomatically,
           title: Text(i18n.playNextFileAutomatically),
-          onChanged: (newValue) {},
+          onChanged: (newValue) => _updateSettings(
+            videoScale,
+            playFromTheStart,
+            newValue,
+            forceVideoTranscode,
+            forceAudioTranscode,
+            enableHwAccel,
+          ),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
           value: forceVideoTranscode,
           title: Text(i18n.forceVideoTranscode),
-          onChanged: (newValue) {},
+          onChanged: (newValue) => _updateSettings(
+            videoScale,
+            playFromTheStart,
+            playNextFileAutomatically,
+            newValue,
+            forceAudioTranscode,
+            enableHwAccel,
+          ),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
           value: forceAudioTranscode,
           title: Text(i18n.forceAudioTranscode),
-          onChanged: (newValue) {},
+          onChanged: (newValue) => _updateSettings(
+            videoScale,
+            playFromTheStart,
+            playNextFileAutomatically,
+            forceVideoTranscode,
+            newValue,
+            enableHwAccel,
+          ),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
           value: enableHwAccel,
           title: Text(i18n.enableHwAccel),
-          onChanged: (newValue) {},
+          onChanged: (newValue) => _updateSettings(
+            videoScale,
+            playFromTheStart,
+            playNextFileAutomatically,
+            forceVideoTranscode,
+            forceAudioTranscode,
+            newValue,
+          ),
         ),
       ],
     );
@@ -555,5 +598,25 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   void _urlChanged() {
     final text = _urlController.text;
     // context.bloc<SettingsBloc>().add(UrlChanged(url: text));
+  }
+
+//TODO: SOMETIMES SETTINGS ARE NOT UPDATING
+  void _updateSettings(
+    VideoScaleType videoScale,
+    bool playFromTheStart,
+    bool playNextFileAutomatically,
+    bool forceVideoTranscode,
+    bool forceAudioTranscode,
+    bool enableHwAccel,
+  ) {
+    final bloc = context.bloc<ServerWsBloc>();
+    bloc.updateSettings(
+      enableHwAccel: enableHwAccel,
+      forceAudioTranscode: forceAudioTranscode,
+      forceVideoTranscode: forceVideoTranscode,
+      playFromTheStart: playFromTheStart,
+      playNextFileAutomatically: playNextFileAutomatically,
+      videoScale: videoScale,
+    );
   }
 }

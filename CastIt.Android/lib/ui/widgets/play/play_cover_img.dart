@@ -6,13 +6,17 @@ import '../../../common/extensions/string_extensions.dart';
 import '../../../generated/i18n.dart';
 
 class PlayCoverImg extends StatelessWidget {
+  final int fileId;
   final String thumbUrl;
+  final int playListId;
   final String playListName;
   final String fileName;
   final bool showLoading;
 
   const PlayCoverImg({
     Key key,
+    this.fileId,
+    this.playListId,
     this.playListName,
     this.fileName,
     this.thumbUrl,
@@ -75,9 +79,12 @@ class PlayCoverImg extends StatelessWidget {
                         color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(50.0),
                       ),
-                      child: Icon(
-                        Icons.arrow_drop_down,
-                        color: Colors.white,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.playlist_play,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
                       ),
                     ),
                     Column(
@@ -96,9 +103,12 @@ class PlayCoverImg extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Icon(
-                      Icons.playlist_add,
-                      color: Colors.white,
+                    IconButton(
+                      icon: Icon(
+                        Icons.settings,
+                        color: Colors.white,
+                      ),
+                      onPressed: _goToPlayList,
                     )
                   ],
                 ),
@@ -143,5 +153,9 @@ class PlayCoverImg extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _goToPlayList() {
+    if (playListId == null) return;
   }
 }

@@ -35,5 +35,11 @@
     "original": "Original",
     "somethingWentWrong": "Algo salió mal!",
     "pleaseTryAgainLater": "Porfavor intente mas tarde",
-    "makeSureYouAreConnected":"Asegurate de que estás conectado a la misma red wifi que la aplicación de escritorio y de que la misma esta abierta"
+    "makeSureYouAreConnected": "Asegurate de que estás conectado a la misma red wifi que la aplicación de escritorio y de que la misma esta abierta",
+    "url": "Url",
+    "invalidUrl": "Url no válida",
+    "cancel": "Cancelar",
+    "ok": "Ok",
+    "noConnectionToDesktopApp": "No hay conexión con la aplicación de escritorio",
+    "verifyCastItUrl": "Verifica que la url concuerde con la de la aplicación de escritorio"
 }

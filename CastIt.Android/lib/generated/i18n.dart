@@ -106,6 +106,18 @@ class I18n implements WidgetsLocalizations {
   String get pleaseTryAgainLater => "Please try again later";
   /// "Make sure you are connected to the same wifi network of the desktop app and that the desktop app is opened"
   String get makeSureYouAreConnected => "Make sure you are connected to the same wifi network of the desktop app and that the desktop app is opened";
+  /// "Url"
+  String get url => "Url";
+  /// "Invalid Url"
+  String get invalidUrl => "Invalid Url";
+  /// "Cancel"
+  String get cancel => "Cancel";
+  /// "Ok"
+  String get ok => "Ok";
+  /// "No connection to the desktop app"
+  String get noConnectionToDesktopApp => "No connection to the desktop app";
+  /// "Verify that the url matches the one in the desktop app"
+  String get verifyCastItUrl => "Verify that the url matches the one in the desktop app";
 }
 
 class _I18n_en_US extends I18n {
@@ -229,6 +241,24 @@ class _I18n_es_VE extends I18n {
   /// "Asegurate de que estás conectado a la misma red wifi que la aplicación de escritorio y de que la misma esta abierta"
   @override
   String get makeSureYouAreConnected => "Asegurate de que estás conectado a la misma red wifi que la aplicación de escritorio y de que la misma esta abierta";
+  /// "Url"
+  @override
+  String get url => "Url";
+  /// "Url no válida"
+  @override
+  String get invalidUrl => "Url no válida";
+  /// "Cancelar"
+  @override
+  String get cancel => "Cancelar";
+  /// "Ok"
+  @override
+  String get ok => "Ok";
+  /// "No hay conexión con la aplicación de escritorio"
+  @override
+  String get noConnectionToDesktopApp => "No hay conexión con la aplicación de escritorio";
+  /// "Verifica que la url concuerde con la de la aplicación de escritorio"
+  @override
+  String get verifyCastItUrl => "Verifica que la url concuerde con la de la aplicación de escritorio";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;

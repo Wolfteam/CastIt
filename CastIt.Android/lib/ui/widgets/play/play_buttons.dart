@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../bloc/play/play_bloc.dart';
+import '../../../bloc/server_ws/server_ws_bloc.dart';
 
 class PlayButtons extends StatelessWidget {
+  static const double _iconSize = 42;
+
   final bool areDisabled;
 
   const PlayButtons({
@@ -15,26 +18,21 @@ class PlayButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
+    final iconColor = isDarkTheme ? Colors.white : Colors.black;
     return Container(
       margin: const EdgeInsets.only(bottom: 50),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           IconButton(
-            iconSize: 42,
-            onPressed: areDisabled ? null : () {},
-            icon: Icon(
-              Icons.fast_rewind,
-              color: isDarkTheme ? Colors.white : Colors.black,
-            ),
+            iconSize: _iconSize,
+            onPressed: areDisabled ? null : () => _skipThirtySeconds(context, false),
+            icon: Icon(Icons.fast_rewind, color: iconColor),
           ),
           IconButton(
-            iconSize: 42,
-            onPressed: areDisabled ? null : () {},
-            icon: Icon(
-              Icons.skip_previous,
-              color: isDarkTheme ? Colors.white : Colors.black,
-            ),
+            iconSize: _iconSize,
+            onPressed: areDisabled ? null : () => _goTo(context, false, true),
+            icon: Icon(Icons.skip_previous, color: iconColor),
           ),
           const SizedBox(width: 10.0),
           Container(
@@ -45,42 +43,52 @@ class PlayButtons extends StatelessWidget {
             child: BlocBuilder<PlayBloc, PlayState>(
               builder: (ctx, state) {
                 if (state is PlayingState) {
-                  return _buildPlayBackButton(state.isPaused);
+                  return _buildPlayBackButton(context, state.isPaused);
                 }
-                return _buildPlayBackButton(false);
+                return _buildPlayBackButton(context, false);
               },
             ),
           ),
           const SizedBox(width: 10.0),
           IconButton(
-            iconSize: 42,
-            onPressed: areDisabled ? null : () {},
-            icon: Icon(
-              Icons.skip_next,
-              color: isDarkTheme ? Colors.white : Colors.black,
-            ),
+            iconSize: _iconSize,
+            onPressed: areDisabled ? null : () => _goTo(context, true, false),
+            icon: Icon(Icons.skip_next, color: iconColor),
           ),
           IconButton(
-            iconSize: 42,
-            onPressed: areDisabled ? null : () {},
-            icon: Icon(
-              Icons.fast_forward,
-              color: isDarkTheme ? Colors.white : Colors.black,
-            ),
+            iconSize: _iconSize,
+            onPressed: areDisabled ? null : () => _skipThirtySeconds(context, true),
+            icon: Icon(Icons.fast_forward, color: iconColor),
           ),
         ],
       ),
     );
   }
 
-  IconButton _buildPlayBackButton(bool isPaused) {
+  IconButton _buildPlayBackButton(BuildContext ctx, bool isPaused) {
     return IconButton(
       iconSize: 60,
-      onPressed: areDisabled ? null : () {},
+      onPressed: areDisabled ? null : () => _togglePlayBack(ctx),
       icon: Icon(
         isPaused ? Icons.pause : Icons.play_arrow,
         color: Colors.white,
       ),
     );
+  }
+
+  void _togglePlayBack(BuildContext ctx) {
+    final bloc = ctx.bloc<ServerWsBloc>();
+    bloc.togglePlayBack();
+  }
+
+  void _goTo(BuildContext ctx, bool next, bool previous) {
+    final bloc = ctx.bloc<ServerWsBloc>();
+    bloc.goTo(next: next, previous: previous);
+  }
+
+  void _skipThirtySeconds(BuildContext ctx, bool forward) {
+    final seconds = 30.0 * (forward ? 1 : -1);
+    final bloc = ctx.bloc<ServerWsBloc>();
+    bloc.gotoSeconds(seconds);
   }
 }

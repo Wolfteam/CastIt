@@ -4,29 +4,30 @@ import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:meta/meta.dart';
 
-import 'package:castit/bloc/main/main_bloc.dart';
+import '../server_ws/server_ws_bloc.dart';
 
 part 'play_bloc.freezed.dart';
 part 'play_event.dart';
 part 'play_state.dart';
 
 class PlayBloc extends Bloc<PlayEvent, PlayState> {
-  final MainBloc _mainBloc;
-  PlayBloc(this._mainBloc) {
-    _mainBloc.connected.stream.listen((_) {
+  final ServerWsBloc _serverWsBloc;
+  PlayBloc(this._serverWsBloc) {
+    _serverWsBloc.connected.stream.listen((_) {
       add(PlayEvent.connected());
     });
 
-    _mainBloc.fileLoading.stream.listen((_) {
+    _serverWsBloc.fileLoading.stream.listen((_) {
       add(PlayEvent.fileLoading());
     });
 
-    _mainBloc.fileLoadingError.stream.listen((msg) {
+    _serverWsBloc.fileLoadingError.stream.listen((msg) {
       add(PlayEvent.fileLoadingError(msg: msg));
     });
 
-    _mainBloc.fileLoaded.stream.listen((file) {
+    _serverWsBloc.fileLoaded.stream.listen((file) {
       add(PlayEvent.fileLoaded(
+        id: file.id,
         filename: file.filename,
         thumbPath: file.thumbnailUrl,
         duration: file.duration,
@@ -35,24 +36,25 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         isPaused: file.isPaused,
         volumeLevel: file.volumeLevel,
         isMuted: file.isMuted,
+        playListId: file.playListId,
         playlistName: file.playListName,
         shufflePlayList: file.shufflePlayList,
       ));
     });
 
-    _mainBloc.filePaused.stream.listen((_) {
+    _serverWsBloc.filePaused.stream.listen((_) {
       add(PlayEvent.paused());
     });
 
-    _mainBloc.fileEndReached.stream.listen((_) {
+    _serverWsBloc.fileEndReached.stream.listen((_) {
       add(PlayEvent.stopped());
     });
 
-    _mainBloc.fileTimeChanged.stream.listen((seconds) {
+    _serverWsBloc.fileTimeChanged.stream.listen((seconds) {
       add(PlayEvent.timeChanged(seconds: seconds));
     });
 
-    _mainBloc.disconnected.stream.listen((_) {
+    _serverWsBloc.disconnected.stream.listen((_) {
       add(PlayEvent.disconnected());
     });
   }
@@ -72,6 +74,7 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       fileLoading: () => PlayState.fileLoading(),
       fileLoadingError: (msg) => PlayState.fileLoadingFailed(msg: msg),
       fileLoaded: (
+        id,
         title,
         thumbPath,
         duration,
@@ -80,10 +83,13 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         isPaused,
         volumeLvl,
         isMuted,
+        playListId,
         playlistName,
         shuffle,
       ) {
         return PlayState.playing(
+          id: id,
+          playListId: playListId,
           filename: title,
           thumbPath: thumbPath,
           duration: duration,
@@ -97,11 +103,11 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       timeChanged: (seconds) {
         if (!isPlaying) return null;
         final s = seconds >= currentState.duration ? currentState.duration : seconds;
-        return currentState.copyWith.call(currentSeconds: s);
+        return currentState.copyWith.call(currentSeconds: s, isPaused: false);
       },
       paused: () {
         if (!isPlaying) return null;
-        return currentState.copyWith.call(isPaused: !currentState.isPaused);
+        return currentState.copyWith.call(isPaused: true);
       },
       stopped: () {
         if (!isPlaying) return null;

@@ -9,6 +9,7 @@ abstract class PlayEvent implements _$PlayEvent {
   factory PlayEvent.fileLoadingError({@required String msg}) = FileLoadingError;
 
   factory PlayEvent.fileLoaded({
+    @required int id,
     @required String filename,
     String thumbPath,
     @required double duration,
@@ -17,8 +18,9 @@ abstract class PlayEvent implements _$PlayEvent {
     @required bool isPaused,
     @required double volumeLevel,
     @required bool isMuted,
-    String playlistName,
-    bool shufflePlayList,
+    @required int playListId,
+    @required String playlistName,
+    @required bool shufflePlayList,
   }) = Playing;
 
   factory PlayEvent.timeChanged({

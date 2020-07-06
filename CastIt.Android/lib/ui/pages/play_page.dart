@@ -15,7 +15,7 @@ class PlayPage extends StatefulWidget {
 class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<PlayPage> {
   @override
   bool get wantKeepAlive => true;
-
+//TODO: CUANDO SE MUESTRA EL DIALOGO DE CONEXION HAY UN ERROR ACA
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -59,6 +59,8 @@ class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<
       //TODO: SHOW ERROR MSG HERE
       fileLoadingFailed: (state) => const PlayCoverImg(),
       playing: (state) => PlayCoverImg(
+        fileId: state.id,
+        playListId: state.playListId,
         fileName: state.filename,
         playListName: state.playlistName,
         thumbUrl: state.thumbPath,

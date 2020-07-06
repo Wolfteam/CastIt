@@ -15,27 +15,31 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Icon(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          margin: margin,
+          child: Icon(
             icon,
             size: iconSize,
           ),
-          Container(
-            margin: const EdgeInsets.only(left: 5),
+        ),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.only(left: 5),
             child: Text(
               title,
               textAlign: TextAlign.start,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 28,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

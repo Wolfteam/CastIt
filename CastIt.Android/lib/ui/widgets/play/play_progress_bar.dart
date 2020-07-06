@@ -1,3 +1,4 @@
+import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,7 +25,7 @@ class PlayProgressBar extends StatelessWidget {
           fileLoadingFailed: (state) => dummySlider,
           playing: (state) {
             return Slider(
-              onChanged: (double value) {},
+              onChanged: (double value) => _goToSeconds(context, value),
               value: state.currentSeconds,
               max: state.duration,
               activeColor: theme.accentColor,
@@ -33,5 +34,10 @@ class PlayProgressBar extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _goToSeconds(BuildContext ctx, double seconds) {
+    final bloc = ctx.bloc<ServerWsBloc>();
+    bloc.gotoSeconds(seconds);
   }
 }

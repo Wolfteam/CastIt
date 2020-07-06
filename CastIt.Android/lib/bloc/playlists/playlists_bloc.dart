@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -15,7 +16,9 @@ part 'playlists_state.dart';
 class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
   final CastItService _castItService;
 
-  PlayListsBloc(this._castItService);
+  final ServerWsBloc _serverWsBloc;
+
+  PlayListsBloc(this._castItService, this._serverWsBloc);
 
   @override
   PlayListsState get initialState => PlayListsState.loading();

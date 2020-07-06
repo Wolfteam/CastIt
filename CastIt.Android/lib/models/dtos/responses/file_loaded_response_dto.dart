@@ -6,6 +6,7 @@ part 'file_loaded_response_dto.g.dart';
 @freezed
 abstract class FileLoadedResponseDto implements _$FileLoadedResponseDto {
   factory FileLoadedResponseDto({
+    @required @JsonKey(name: 'Id') int id,
     @required @JsonKey(name: 'Filename') String filename,
     @required @JsonKey(name: 'Duration') double duration,
     @required @JsonKey(name: 'LoopFile') bool loopFile,
@@ -13,6 +14,7 @@ abstract class FileLoadedResponseDto implements _$FileLoadedResponseDto {
     @required @JsonKey(name: 'IsPaused') bool isPaused,
     @required @JsonKey(name: 'VolumeLevel') double volumeLevel,
     @required @JsonKey(name: 'IsMuted') bool isMuted,
+    @JsonKey(name: 'PlayListId') int playListId,
     @JsonKey(name: 'PlayListName') String playListName,
     @JsonKey(name: 'ShufflePlayList') bool shufflePlayList,
     @JsonKey(name: 'ThumbnailUrl') String thumbnailUrl,
@@ -21,6 +23,7 @@ abstract class FileLoadedResponseDto implements _$FileLoadedResponseDto {
   factory FileLoadedResponseDto.fromJson(Map<String, dynamic> json) => _$FileLoadedResponseDtoFromJson(json);
 
   static List<String> get jsonKeys => [
+        'Id',
         'Filename',
         'ThumbnailUrl',
         'Duration',
@@ -29,6 +32,7 @@ abstract class FileLoadedResponseDto implements _$FileLoadedResponseDto {
         'IsPaused',
         'VolumeLevel',
         'IsMuted',
+        'PlayListId',
         'PlayListName',
         'ShufflePlayList'
       ];

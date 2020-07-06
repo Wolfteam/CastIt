@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:package_info/package_info.dart';
 
@@ -10,11 +9,12 @@ import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
 import '../../common/enums/video_scale_type.dart';
+import '../../common/extensions/string_extensions.dart';
 import '../../generated/i18n.dart';
 import '../../models/dtos/responses/app_settings_response_dto.dart';
 import '../../services/logging_service.dart';
 import '../../services/settings_service.dart';
-import '../main/main_bloc.dart';
+import '../server_ws/server_ws_bloc.dart';
 
 part 'settings_bloc.freezed.dart';
 part 'settings_event.dart';
@@ -24,14 +24,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final LoggingService _logger;
   final SettingsService _settings;
 
-  final MainBloc _mainBloc;
+  final ServerWsBloc _serverWsBloc;
 
-  SettingsBloc(this._logger, this._settings, this._mainBloc) {
-    _mainBloc.settingsChanged.stream.listen((settings) {
+  SettingsBloc(this._logger, this._settings, this._serverWsBloc) {
+    _serverWsBloc.settingsChanged.stream.listen((settings) {
       add(SettingsEvent.connected(settings: settings));
     });
 
-    _mainBloc.disconnected.stream.listen((_) {
+    _serverWsBloc.disconnected.stream.listen((_) {
       add(SettingsEvent.disconnected());
     });
   }
@@ -56,6 +56,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           accentColor: settings.accentColor,
           appLanguage: settings.appLanguage,
           castItUrl: settings.castItUrl,
+          isCastItUrlValid: true,
           videoScale: VideoScaleType.original,
           enableHwAccel: false,
           forceAudioTranscode: false,
@@ -93,8 +94,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         I18n.onLocaleChanged(locale);
         return currentState.copyWith(appLanguage: event.lang);
       },
+      castItUrlChanged: (event) async {
+        final isValid = _isCastItUrlValid(event.castItUrl);
+        if (isValid) _settings.castItUrl = event.castItUrl;
+        return currentState.copyWith(isCastItUrlValid: isValid, castItUrl: event.castItUrl);
+      },
     );
 
     yield s;
+  }
+
+  bool _isCastItUrlValid(String url) {
+    return !url.isNullEmptyOrWhitespace && Uri.parse(url).isAbsolute;
   }
 }

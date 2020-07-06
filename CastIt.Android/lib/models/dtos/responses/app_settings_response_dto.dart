@@ -7,10 +7,8 @@ part 'app_settings_response_dto.g.dart';
 
 @freezed
 abstract class AppSettingsResponseDto implements _$AppSettingsResponseDto {
-  VideoScaleType get videoScaleType =>
-      videoScale == 720 ? VideoScaleType.hd : videoScale == 1080 ? VideoScaleType.fullHd : VideoScaleType.original;
+  VideoScaleType get videoScaleType => getVideoScaleType(videoScale);
 
-  AppSettingsResponseDto._();
   factory AppSettingsResponseDto({
     @required @JsonKey(name: 'StartFilesFromTheStart') bool playFromTheStart,
     @required @JsonKey(name: 'PlayNextFileAutomatically') bool playNextFileAutomatically,
@@ -21,6 +19,8 @@ abstract class AppSettingsResponseDto implements _$AppSettingsResponseDto {
   }) = _AppSettingsResponseDto;
 
   factory AppSettingsResponseDto.fromJson(Map<String, dynamic> json) => _$AppSettingsResponseDtoFromJson(json);
+
+  AppSettingsResponseDto._();
 
   static List<String> get jsonKeys => [
         'StartFilesFromTheStart',

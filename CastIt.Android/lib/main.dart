@@ -7,6 +7,7 @@ import 'bloc/main/main_bloc.dart';
 import 'bloc/play/play_bloc.dart';
 import 'bloc/playlist/playlist_bloc.dart';
 import 'bloc/playlists/playlists_bloc.dart';
+import 'bloc/server_ws/server_ws_bloc.dart';
 import 'bloc/settings/settings_bloc.dart';
 import 'generated/i18n.dart';
 import 'injection.dart';
@@ -49,20 +50,21 @@ class _MyAppState extends State<MyApp> {
       // Built-in localization of basic text for Cupertino widgets
       GlobalCupertinoLocalizations.delegate,
     ];
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (ctx) {
             final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
-
             return MainBloc(logger, settings)..add(MainEvent.init());
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final castitService = getIt<CastItService>();
-            return PlayListsBloc(castitService);
+            final logger = getIt<LoggingService>();
+            final settings = getIt<SettingsService>();
+            return ServerWsBloc(logger, settings);
           },
         ),
         BlocProvider(
@@ -73,16 +75,23 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (ctx) {
-            final mainBloc = ctx.bloc<MainBloc>();
-            return PlayBloc(mainBloc);
+            final castitService = getIt<CastItService>();
+            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            return PlayListsBloc(castitService, serverWsBloc);
+          },
+        ),
+        BlocProvider(
+          create: (ctx) {
+            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            return PlayBloc(serverWsBloc);
           },
         ),
         BlocProvider(
           create: (ctx) {
             final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
-            final mainBloc = ctx.bloc<MainBloc>();
-            return SettingsBloc(logger, settings, mainBloc);
+            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            return SettingsBloc(logger, settings, serverWsBloc);
           },
         ),
       ],
@@ -103,14 +112,14 @@ class _MyAppState extends State<MyApp> {
       // Built-in localization of basic text for Cupertino widgets
       GlobalCupertinoLocalizations.delegate,
     ];
-    return state.when<Widget>(
-      loading: () {
-        return CircularProgressIndicator();
+    return state.map<Widget>(
+      loading: (state) {
+        return const CircularProgressIndicator();
       },
-      loaded: (appTitle, themeData, _) {
+      loaded: (state) {
         return MaterialApp(
-          title: appTitle,
-          theme: themeData,
+          title: state.appTitle,
+          theme: state.theme,
           home: MainPage(),
           localizationsDelegates: delegates,
           supportedLocales: i18n.supportedLocales,

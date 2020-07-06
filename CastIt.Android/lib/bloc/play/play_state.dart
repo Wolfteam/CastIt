@@ -9,6 +9,8 @@ abstract class PlayState implements _$PlayState {
     @required String msg,
   }) = FileLoadingFailedState;
   factory PlayState.playing({
+    int id,
+    int playListId,
     String filename,
     String playlistName,
     bool loopFile,

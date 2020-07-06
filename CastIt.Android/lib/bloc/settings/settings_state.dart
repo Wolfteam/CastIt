@@ -10,6 +10,7 @@ abstract class SettingsState implements _$SettingsState {
     @required AppLanguageType appLanguage,
     @required bool isConected,
     @required String castItUrl,
+    @required bool isCastItUrlValid,
     @required VideoScaleType videoScale,
     @required bool playFromTheStart,
     @required bool playNextFileAutomatically,

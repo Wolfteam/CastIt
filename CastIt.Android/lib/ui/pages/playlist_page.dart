@@ -1,3 +1,5 @@
+import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
+import 'package:castit/generated/i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -32,19 +34,6 @@ class PlayListPage extends StatelessWidget {
           builder: (ctx, state) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Container(
-                margin: EdgeInsets.only(top: 10, left: 10),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: OutlineButton.icon(
-                    icon: Icon(Icons.arrow_back),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    label: Text("PlayLists"),
-                  ),
-                ),
-              ),
               ..._buildPage(ctx, state),
             ],
           ),
@@ -54,9 +43,27 @@ class PlayListPage extends StatelessWidget {
   }
 
   List<Widget> _buildPage(BuildContext context, PlayListState state) {
+    final i18n = I18n.of(context);
+    final goBack = Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FlatButton.icon(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          label: Text(
+            i18n.playlists,
+            style: const TextStyle(fontSize: 24),
+          ),
+        ),
+      ),
+    );
     return state.when<List<Widget>>(
       loading: () {
         return [
+          goBack,
           const Expanded(
             child: Center(
               child: CircularProgressIndicator(),
@@ -67,15 +74,17 @@ class PlayListPage extends StatelessWidget {
       loaded: (playListId, name, position, loop, shuffle, files, loaded) {
         if (!loaded) {
           return [
+            goBack,
             Expanded(
               child: Center(
-                child: Text('Something went wrong'),
+                child: Text(i18n.somethingWentWrong),
               ),
             ),
           ];
         }
 
         return [
+          goBack,
           _buildHeader(context, name, files.length),
           _buildActionButtons(),
           _buildItems(context, files),
@@ -89,19 +98,22 @@ class PlayListPage extends StatelessWidget {
     String playListName,
     int itemLength,
   ) {
-    return Container(
-      margin: EdgeInsets.only(right: 10, left: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          PageHeader(
-            margin: EdgeInsets.all(0),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Flexible(
+          child: PageHeader(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
             title: playListName,
             icon: Icons.list,
           ),
-          ItemCounter(itemLength),
-        ],
-      ),
+        ),
+        Container(
+          alignment: Alignment.centerRight,
+          margin: const EdgeInsets.only(right: 10),
+          child: ItemCounter(itemLength),
+        ),
+      ],
     );
   }
 
@@ -141,6 +153,8 @@ class PlayListPage extends StatelessWidget {
             final file = files[i];
             return FileItem(
               file.position,
+              file.id,
+              file.playListId,
               file.filename,
               file.path,
               file.size,
@@ -150,5 +164,10 @@ class PlayListPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _setPlayListOptions(BuildContext ctx, bool loop, bool shuffle) {
+    final bloc = ctx.bloc<ServerWsBloc>();
+    bloc.setPlayListOptions(_playlist.id, loop: loop, shuffle: shuffle);
   }
 }

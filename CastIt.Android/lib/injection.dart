@@ -23,7 +23,7 @@ void initInjection() {
 //TODO: FIGURE OUT HOW TO CHANGE THIS URL
 void registerApiClient({String baseUrl = 'http://192.168.1.101:9696/api'}) {
   final dio = Dio();
-  dio.options.connectTimeout = 5000;
+  dio.options.connectTimeout = 3000;
 
   final client = CastItApi(dio, baseUrl: baseUrl);
   getIt.registerSingleton(client);

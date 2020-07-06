@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../../bloc/playlists/playlists_bloc.dart';
+import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../generated/i18n.dart';
 import '../widgets/page_header.dart';
 import '../widgets/playlist_item.dart';
@@ -64,9 +65,10 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
       },
       loaded: (loaded, playlists, _) {
         if (!loaded) {
+          context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
           return const SomethingWentWrong();
         }
-
+        context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
         return ListView.builder(
           itemCount: playlists.length,
           itemBuilder: (ctx, i) {
