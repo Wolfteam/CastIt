@@ -52,5 +52,6 @@
     "subtitles": "Subtítulos",
     "quality": "Calidad",
     "volume": "Volumen",
-    "na": "N/A"
+    "na": "N/A",
+    "webServerUrl": "Ruta del servidor web"
 }

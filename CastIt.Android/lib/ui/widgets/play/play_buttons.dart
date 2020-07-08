@@ -87,6 +87,6 @@ class PlayButtons extends StatelessWidget {
   void _skipThirtySeconds(BuildContext ctx, bool forward) {
     final seconds = 30.0 * (forward ? 1 : -1);
     final bloc = ctx.bloc<ServerWsBloc>();
-    bloc.gotoSeconds(seconds);
+    bloc.skipSeconds(seconds);
   }
 }

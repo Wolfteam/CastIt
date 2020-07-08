@@ -70,7 +70,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
               state2.maybeMap(
                 loaded: (s) async {
                   if (!s.msgToShow.isNullEmptyOrWhitespace) {
-                    _showServerMsg(s.msgToShow);
+                    _showServerMsg(ctx2, s.msgToShow);
                   }
                   await _showConnectionDialog(s.isConnectedToWs, s.castItUrl);
                 },
@@ -157,8 +157,29 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     }
   }
 
-  void _showServerMsg(String msg) {
-    final snackBar = SnackBar(content: Text(msg));
-    Scaffold.of(context).showSnackBar(snackBar);
+  void _showServerMsg(BuildContext ctx, String msg) {
+    final theme = Theme.of(ctx);
+    final color = theme.accentColor.withOpacity(0.8);
+
+    final snackBar = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: color,
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.info_outline, color: Colors.white),
+          Container(
+            margin: const EdgeInsets.only(left: 10),
+            child: Text(
+              msg,
+              style: TextStyle(color: Colors.white),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      duration: const Duration(seconds: 3),
+    );
+    Scaffold.of(ctx).showSnackBar(snackBar);
   }
 }

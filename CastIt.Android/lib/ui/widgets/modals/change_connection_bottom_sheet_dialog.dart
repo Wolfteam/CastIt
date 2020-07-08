@@ -10,10 +10,14 @@ import 'modal_sheet_separator.dart';
 
 class ChangeConnectionBottomSheetDialog extends StatefulWidget {
   final String currentUrl;
+  final String title;
+  final IconData icon;
 
   const ChangeConnectionBottomSheetDialog({
     Key key,
     @required this.currentUrl,
+    this.title,
+    this.icon,
   }) : super(key: key);
 
   @override
@@ -45,7 +49,10 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               ModalSheetSeparator(),
-              BottomSheetTitle(title: i18n.noConnectionToDesktopApp, icon: Icons.warning),
+              BottomSheetTitle(
+                title: widget.title ?? i18n.noConnectionToDesktopApp,
+                icon: widget.icon ?? Icons.warning,
+              ),
               TextFormField(
                 maxLines: 1,
                 minLines: 1,
@@ -57,6 +64,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
                     alignment: Alignment.bottomCenter,
+                    autofocus: false,
                     icon: Icon(Icons.sync),
                     onPressed: !(state as SettingsLoadedState).isCastItUrlValid ? null : _onRefreshClick,
                   ),

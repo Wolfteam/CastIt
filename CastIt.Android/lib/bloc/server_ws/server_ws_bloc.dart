@@ -40,6 +40,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   static const String _getPlayListMsgType = 'CLIENT_PLAYLIST_ONE';
   static const String _playMsgType = 'CLIENT_PLAYBLACK_PLAY';
   static const String _goToSecondsMsgType = 'CLIENT_PLAYBLACK_GOTO_SECONDS';
+  static const String _skipSecondsMsgType = 'CLIENT_PLAYBLACK_SKIP_SECONDS';
   static const String _goToMsgType = 'CLIENT_PLAYBLACK_GOTO';
   static const String _togglePlayBackMsgType = 'CLIENT_PLAYBLACK_TOGGLE';
   static const String _stopPlaybackMsgType = 'CLIENT_PLAYBACK_STOP';
@@ -79,7 +80,6 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   final StreamController<void> disconnected = StreamController.broadcast();
   final StreamController<void> appClosing = StreamController.broadcast();
   final StreamController<AppSettingsResponseDto> settingsChanged = StreamController.broadcast();
-  final StreamController<String> infoMsg = StreamController.broadcast();
   final StreamController<List<GetAllPlayListResponseDto>> playlistsLoaded = StreamController.broadcast();
   final StreamController<PlayListItemResponseDto> playlistLoaded = StreamController.broadcast();
   final StreamController<List<FileItemOptionsResponseDto>> fileOptionsLoaded = StreamController.broadcast();
@@ -146,7 +146,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         return currentState.copyWith(msgToShow: msg);
       },
     );
+
     yield s;
+    if (currentState.msgToShow != null) {
+      yield currentState.copyWith(msgToShow: null);
+    }
   }
 
   //TODO: CLOSE THIS SUBSCRIPTION AND ALL THE STREAMS
@@ -279,8 +283,8 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         break;
       case _infoMsg:
         final msg = response.result as String;
-        _logger.info(runtimeType, '_handleSocketMsg: Msg received = $msg');
-        infoMsg.add(msg);
+        _logger.info(runtimeType, '_handleSocketMsg: Server msg received = $msg');
+        add(ServerWsEvent.showMsg(msg: msg));
         break;
       case _gotPlayListsMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Playlists loaded');
@@ -341,6 +345,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     return _sendMsg(dto);
   }
 
+  Future<void> skipSeconds(double seconds) {
+    final dto = GoToSecondsRequestDto(msgType: _skipSecondsMsgType, seconds: seconds);
+    return _sendMsg(dto);
+  }
+
   Future<void> goTo({bool next = false, bool previous = false}) {
     final dto = GoToRequestDto(msgType: _goToMsgType, next: next, previous: previous);
     return _sendMsg(dto);
@@ -376,8 +385,12 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     return _sendMsg(dto);
   }
 
-  Future<void> setFileOptions(int streamIndex,
-      {bool isAudio = false, bool isSubtitle = false, bool isQuality = false}) {
+  Future<void> setFileOptions(
+    int streamIndex, {
+    bool isAudio = false,
+    bool isSubtitle = false,
+    bool isQuality = false,
+  }) {
     final dto = SetFileOptionsRequestDto(
       msgType: _setFileOptionsMsgType,
       streamIndex: streamIndex,

@@ -9,4 +9,11 @@ abstract class PlayedFileOptionsEvent implements _$PlayedFileOptionsEvent {
   factory PlayedFileOptionsEvent.loaded({
     @required List<FileItemOptionsResponseDto> options,
   }) = PlayedFileOptionsLoadedEvent;
+
+  factory PlayedFileOptionsEvent.set({
+    @required int streamIndex,
+    @required bool isAudio,
+    @required bool isSubtitle,
+    @required bool isQuality,
+  }) = PlayedFileOptionsSetEvent;
 }

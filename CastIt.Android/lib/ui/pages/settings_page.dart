@@ -15,6 +15,7 @@ import '../../common/extensions/app_theme_type_extensions.dart';
 import '../../common/extensions/i18n_extensions.dart';
 import '../../common/styles.dart';
 import '../../generated/i18n.dart';
+import '../widgets/modals/change_connection_bottom_sheet_dialog.dart';
 import '../widgets/page_header.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -357,11 +358,9 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           ),
         ),
         ListTile(
-          title: Text(
-            'CastIt web server url',
-          ),
+          title: Text(i18n.webServerUrl),
           subtitle: Text(castItUrl),
-          onTap: () {},
+          onTap: () => _showConnectionDialog(i18n.webServerUrl, castItUrl),
         ),
         Padding(
           padding: const EdgeInsets.only(
@@ -617,6 +616,20 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       playFromTheStart: playFromTheStart,
       playNextFileAutomatically: playNextFileAutomatically,
       videoScale: videoScale,
+    );
+  }
+
+  Future<void> _showConnectionDialog(String title, String currentCastIt) async {
+    await showModalBottomSheet(
+      context: context,
+      shape: Styles.modalBottomSheetShape,
+      isDismissible: true,
+      isScrollControlled: true,
+      builder: (_) => ChangeConnectionBottomSheetDialog(
+        currentUrl: currentCastIt,
+        title: title,
+        icon: Icons.link,
+      ),
     );
   }
 }

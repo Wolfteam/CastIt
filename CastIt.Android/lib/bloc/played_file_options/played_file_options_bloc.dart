@@ -31,6 +31,15 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
         return initialState;
       },
       loaded: (e) async => PlayedFileOptionsState.loaded(options: e.options),
+      set: (e) async {
+        await _serverWsBloc.setFileOptions(
+          e.streamIndex,
+          isAudio: e.isAudio,
+          isQuality: e.isQuality,
+          isSubtitle: e.isSubtitle,
+        );
+        return initialState;
+      },
     );
 
     yield await s;

@@ -52,5 +52,6 @@
     "subtitles": "Subtitles",
     "quality": "Quality",
     "volume": "Volume",
-    "na":"N/A"
+    "na": "N/A",
+    "webServerUrl": "Web server url"
 }

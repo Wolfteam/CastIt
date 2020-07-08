@@ -79,6 +79,8 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
                 id: playlist.id,
                 name: playlist.name,
                 numberOfFiles: playlist.numberOfFiles,
+                loop: playlist.loop,
+                shuffle: playlist.shuffle,
               ),
             );
           },

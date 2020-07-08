@@ -11,11 +11,15 @@ class PlayListItem extends StatelessWidget {
   final int id;
   final String name;
   final int numberOfFiles;
+  final bool loop;
+  final bool shuffle;
 
   const PlayListItem({
     @required this.id,
     @required this.name,
     @required this.numberOfFiles,
+    @required this.loop,
+    @required this.shuffle,
   });
 
   @override
@@ -33,13 +37,7 @@ class PlayListItem extends StatelessWidget {
       ),
       trailing: ItemCounter(numberOfFiles),
       onLongPress: () => _showPlayListOptionsModal(context),
-      onTap: () {
-        context.bloc<PlayListBloc>().add(PlayListEvent.load(id: id));
-        final route = MaterialPageRoute(
-          builder: (ctx) => PlayListPage(id: id),
-        );
-        Navigator.push(context, route);
-      },
+      onTap: () => _goToPlayListPage(context),
     );
   }
 
@@ -51,5 +49,13 @@ class PlayListItem extends StatelessWidget {
       isScrollControlled: true,
       builder: (_) => const PlayListOptionsBottomSheetDialog(),
     );
+  }
+
+  void _goToPlayListPage(BuildContext context) {
+    context.bloc<PlayListBloc>().add(PlayListEvent.load(id: id));
+    final route = MaterialPageRoute(
+      builder: (ctx) => PlayListPage(id: id),
+    );
+    Navigator.push(context, route);
   }
 }

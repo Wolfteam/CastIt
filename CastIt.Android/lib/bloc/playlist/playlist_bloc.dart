@@ -29,6 +29,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   Stream<PlayListState> mapEventToState(
     PlayListEvent event,
   ) async* {
+    yield initialState;
     final s = event.map(
       load: (e) async {
         await _serverWsBloc.loadPlayList(e.id);

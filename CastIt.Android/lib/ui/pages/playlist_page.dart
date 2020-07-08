@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
@@ -12,9 +13,14 @@ import '../widgets/page_header.dart';
 
 class PlayListPage extends StatelessWidget {
   final _refreshController = RefreshController(initialRefresh: false);
+  final _listViewScrollController = ScrollController();
+  final _itemHeight = 75.0;
+
   final int id;
+  final int scrollToFileId;
   PlayListPage({
     @required this.id,
+    this.scrollToFileId,
   });
 
   @override
@@ -81,7 +87,12 @@ class PlayListPage extends StatelessWidget {
             ),
           ];
         }
-
+        if (scrollToFileId != null) {
+          final id = files.firstWhere((element) => element.id == scrollToFileId, orElse: () => null)?.id;
+          if (id != null) {
+            SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(id));
+          }
+        }
         return [
           goBack,
           _buildHeader(context, name, files.length),
@@ -161,11 +172,14 @@ class PlayListPage extends StatelessWidget {
           context.bloc<PlayListBloc>().add(PlayListEvent.load(id: id));
         },
         child: ListView.builder(
+          controller: _listViewScrollController,
           shrinkWrap: true,
           itemCount: files.length,
           itemBuilder: (ctx, i) {
             final file = files[i];
             return FileItem(
+              key: _getKeyForFileItem(file.id),
+              itemHeight: _itemHeight,
               id: file.id,
               position: file.position,
               playListId: file.playListId,
@@ -191,4 +205,14 @@ class PlayListPage extends StatelessWidget {
     final bloc = ctx.bloc<ServerWsBloc>();
     bloc.setPlayListOptions(id, loop: loop, shuffle: shuffle);
   }
+
+//TODO: UPDATE THE PROGRESS
+//TODO: IF THE PLAYED FILE CHANGES, AND THIS PAGE IS OPEN, SCROLL TO THE NEW PLAYED FILE
+  void _animateToIndex(int i) => _listViewScrollController.animateTo(
+        (_itemHeight * i) - _itemHeight,
+        duration: const Duration(seconds: 2),
+        curve: Curves.fastOutSlowIn,
+      );
+
+  Key _getKeyForFileItem(int id) => Key('file_item_$id');
 }

@@ -101,11 +101,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         height: 0,
         color: Colors.transparent,
       ),
-      onChanged: options.length <= 1
-          ? null
-          : (newValue) {
-              debugPrint(newValue.toString());
-            },
+      onChanged: options.length <= 1 ? null : (newValue) => _setOption(context, newValue),
       items: options
           .map<DropdownMenuItem<FileItemOptionsResponseDto>>(
             (fo) => DropdownMenuItem<FileItemOptionsResponseDto>(
@@ -139,5 +135,16 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _setOption(BuildContext context, FileItemOptionsResponseDto option) {
+    final event = PlayedFileOptionsEvent.set(
+      streamIndex: option.id,
+      isAudio: option.isAudio,
+      isSubtitle: option.isSubTitle,
+      isQuality: option.isQuality,
+    );
+    context.bloc<PlayedFileOptionsBloc>().add(event);
+    Navigator.of(context).pop();
   }
 }
