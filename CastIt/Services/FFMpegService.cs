@@ -139,6 +139,11 @@ namespace CastIt.Services
                 _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateThumbnailProcess.Start();
                 _generateThumbnailProcess.WaitForExit();
+                if (_generateThumbnailProcess.ExitCode != 0)
+                {
+                    _logger.Info($"{nameof(GetThumbnail)}: Couldnt retrieve the first thumbnail for file = {mrl}");
+                    return null;
+                }
                 _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was succesfully generated for file = {mrl}");
             }
             catch (Exception ex)
@@ -388,7 +393,7 @@ namespace CastIt.Services
                 FileUtils.DeleteFilesInDirectory(Path.GetDirectoryName(subtitleFinalPath));
                 var builder = new FFmpegArgsBuilder();
                 builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().TrySetSubTitleEncoding();
-                builder.AddOutputFile(subtitleFinalPath).Seek(seconds).SetMap(index).SetFormat("webvtt");
+                builder.AddOutputFile(subtitleFinalPath).Seek(Math.Floor(seconds)).SetMap(index).AddArg("-muxdelay", 0).SetFormat("webvtt");
 
                 string cmd = builder.GetArgs();
                 _logger.Info($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
