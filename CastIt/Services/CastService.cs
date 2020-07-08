@@ -28,7 +28,6 @@ namespace CastIt.Services
         private readonly ITelemetryService _telemetryService;
 
         private readonly Player _player;
-        private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
         private readonly Track _subtitle;
         private readonly TextTrackStyle _subtitlesStyle;
 
@@ -72,12 +71,13 @@ namespace CastIt.Services
             };
             _subtitlesStyle = new TextTrackStyle
             {
+                ForegroundColor = Color.WhiteSmoke,
                 BackgroundColor = Color.Transparent,
                 EdgeColor = Color.Black,
-                FontScale = 1.2F,
+                FontScale = 1.4F,
                 WindowType = TextTrackWindowType.Normal,
-                EdgeType = TextTrackEdgeType.None,
-                FontStyle = TextTrackFontStyleType.Normal,
+                EdgeType = TextTrackEdgeType.Raised,
+                FontStyle = TextTrackFontStyleType.Bold,
                 FontGenericFamily = TextTrackFontGenericFamilyType.Casual,
             };
         }
@@ -95,7 +95,6 @@ namespace CastIt.Services
             _player.IsMutedChanged += IsMutedChanged;
             _player.Init();
 
-            _appWebServer.Init(_webServerCancellationToken.Token);
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
@@ -218,14 +217,7 @@ namespace CastIt.Services
             var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
             _logger.Info($"{nameof(StartPlay)}: Url was succesfully loaded");
 
-            double volumeLevel = (status.Volume?.Level ?? 0);
-            OnFileLoaded?.Invoke(
-                _currentFilePath,
-                metadata.Title,
-                isLocal ? firstThumbnail : imgUrl,
-                _player.CurrentMediaDuration,
-                volumeLevel,
-                status.Volume?.IsMuted ?? false);
+            FileLoaded(metadata.Title, imgUrl, _player.CurrentMediaDuration, _player.CurrentVolumeLevel, _player.IsMuted);
         }
 
         public string GetFirstThumbnail()
@@ -362,7 +354,6 @@ namespace CastIt.Services
                 _player.VolumeLevelChanged -= VolumeLevelChanged;
                 _player.IsMutedChanged -= IsMutedChanged;
 
-                _webServerCancellationToken.Cancel();
                 StopRunningProcess();
 
                 _appWebServer.Dispose();
@@ -390,8 +381,21 @@ namespace CastIt.Services
             return SetCastRenderer(renderer);
         }
 
+        private void FileLoaded(
+            string title,
+            string thumbUrl,
+            double duration,
+            double volumeLevel,
+            bool isMuted)
+        {
+            OnFileLoaded?.Invoke(title, thumbUrl, duration, volumeLevel, isMuted);
+        }
+
         private void EndReached(object sender, EventArgs e)
-          => OnEndReached?.Invoke();
+        {
+            OnEndReached?.Invoke();
+            _appWebServer.OnEndReached?.Invoke();
+        }
 
         private void PositionChanged(object sender, double position)
         {
@@ -400,25 +404,39 @@ namespace CastIt.Services
                 position = 100;
             }
             OnPositionChanged?.Invoke(position);
+            _appWebServer.OnPositionChanged?.Invoke(position);
         }
 
         private void TimeChanged(object sender, double seconds)
-          => OnTimeChanged?.Invoke(seconds);
+        {
+            OnTimeChanged?.Invoke(seconds);
+            _appWebServer.OnTimeChanged?.Invoke(seconds);
+        }
 
         private void Paused(object sender, EventArgs e)
-            => OnPaused?.Invoke();
+        {
+            OnPaused?.Invoke();
+            _appWebServer.OnPaused?.Invoke();
+        }
 
         private void Disconnected(object sender, EventArgs e)
         {
             _renderWasSet = false;
             OnDisconnected?.Invoke();
+            _appWebServer.OnDisconnected?.Invoke();
         }
 
         private void VolumeLevelChanged(object sender, double e)
-            => OnVolumeChanged?.Invoke(e, _player.IsMuted);
+        {
+            OnVolumeChanged?.Invoke(e, _player.IsMuted);
+            _appWebServer.OnVolumeChanged?.Invoke(e, _player.IsMuted);
+        }
 
         private void IsMutedChanged(object sender, bool e)
-            => OnVolumeChanged?.Invoke(_player.CurrentVolumeLevel, e);
+        {
+            OnVolumeChanged?.Invoke(_player.CurrentVolumeLevel, e);
+            _appWebServer.OnVolumeChanged?.Invoke(_player.CurrentVolumeLevel, e);
+        }
 
         private void RendererDiscovererItemAdded(object sender, DeviceAddedArgs e)
         {

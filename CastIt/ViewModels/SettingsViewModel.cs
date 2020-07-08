@@ -21,6 +21,7 @@ namespace CastIt.ViewModels
         #region Members
         private readonly IAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
+        private readonly IAppWebServer _appWebServer;
 
         private readonly MvxInteraction<string> _changeSelectedAccentColor = new MvxInteraction<string>();
         #endregion     
@@ -82,6 +83,7 @@ namespace CastIt.ViewModels
             {
                 _settingsService.StartFilesFromTheStart = value;
                 RaisePropertyChanged(() => StartFilesFromTheStart);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
             }
         }
 
@@ -92,6 +94,7 @@ namespace CastIt.ViewModels
             {
                 _settingsService.PlayNextFileAutomatically = value;
                 RaisePropertyChanged(() => PlayNextFileAutomatically);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
             }
         }
 
@@ -102,6 +105,7 @@ namespace CastIt.ViewModels
             {
                 _settingsService.ForceVideoTranscode = value;
                 RaisePropertyChanged(() => ForceVideoTranscode);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
             }
         }
 
@@ -112,6 +116,7 @@ namespace CastIt.ViewModels
             {
                 _settingsService.ForceAudioTranscode = value;
                 RaisePropertyChanged(() => ForceAudioTranscode);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
             }
         }
 
@@ -127,6 +132,7 @@ namespace CastIt.ViewModels
                     return;
                 _settingsService.VideoScale = (VideoScaleType)Enum.Parse(typeof(VideoScaleType), value.Id, true);
                 RaisePropertyChanged(() => CurrentVideoScale);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
             }
         }
 
@@ -137,6 +143,7 @@ namespace CastIt.ViewModels
             {
                 _settingsService.EnableHardwareAcceleration = value;
                 RaisePropertyChanged(() => EnableHardwareAcceleration);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
             }
         }
 
@@ -166,11 +173,13 @@ namespace CastIt.ViewModels
             IMvxMessenger messenger,
             IMvxLogProvider logger,
             IAppSettingsService settingsService,
-            IMvxNavigationService navigationService)
+            IMvxNavigationService navigationService,
+            IAppWebServer appWebServer)
             : base(textProvider, messenger, logger.GetLogFor<SettingsViewModel>())
         {
             _settingsService = settingsService;
             _navigationService = navigationService;
+            _appWebServer = appWebServer;
         }
 
         public override void SetCommands()
@@ -185,6 +194,16 @@ namespace CastIt.ViewModels
 
             OpenAboutDialogCommand = new MvxAsyncCommand(
                 async () => await _navigationService.Navigate<AboutDialogViewModel>());
+        }
+
+        public override void RegisterMessages()
+        {
+            base.RegisterMessages();
+
+            SubscriptionTokens.AddRange(new[]
+            {
+                Messenger.Subscribe<SettingsExternallyUpdatedMessage>(SettingsExternallyUpdated)
+            });
         }
 
         private MvxObservableCollection<Item> GetThemes()
@@ -233,6 +252,16 @@ namespace CastIt.ViewModels
             };
 
             return new MvxObservableCollection<Item>(scales);
+        }
+
+        private void SettingsExternallyUpdated(SettingsExternallyUpdatedMessage msg)
+        {
+            StartFilesFromTheStart = msg.StartFilesFromTheStart;
+            PlayNextFileAutomatically = msg.PlayNextFileAutomatically;
+            ForceVideoTranscode = msg.ForceVideoTranscode;
+            ForceAudioTranscode = msg.ForceAudioTranscode;
+            CurrentVideoScale = VideoScales.FirstOrDefault(v => v.Id == msg.VideoScale.ToString());
+            EnableHardwareAcceleration = msg.EnableHardwareAcceleration;
         }
     }
 }

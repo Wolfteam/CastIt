@@ -102,6 +102,7 @@ namespace CastIt.Server
                         audioStreamIndex,
                         seconds,
                         _tokenSource.Token).ConfigureAwait(false);
+                    //TODO: THIS LENGTH IS NOT WORKING PROPERLY
                     context.Response.ContentLength64 = memoryStream.Length;
                     await memoryStream.CopyToAsync(context.Response.OutputStream, _tokenSource.Token)
                         .ConfigureAwait(false);
@@ -110,6 +111,8 @@ namespace CastIt.Server
             }
             catch (Exception e)
             {
+                if (e is IOException || e is TaskCanceledException)
+                    return;
                 _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occcured");
                 _telemetryService.TrackError(e);
             }

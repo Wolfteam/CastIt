@@ -1,5 +1,7 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Common;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
+using CastIt.Interfaces.ViewModels;
 using EmbedIO;
 using EmbedIO.Actions;
 using MvvmCross.Logging;
@@ -16,6 +18,7 @@ namespace CastIt.Server
 {
     public class AppWebServer : IAppWebServer
     {
+        #region Members
         private const string MediaPath = "/media";
         private const string ImagesPath = "/images";
         private const string SubTitlesPath = "/subtitles";
@@ -30,9 +33,33 @@ namespace CastIt.Server
         private readonly IMvxLog _logger;
         private readonly ITelemetryService _telemetryService;
         private readonly IFFMpegService _ffmpegService;
+        private readonly IPlayListsService _playListsService;
+        private readonly IAppSettingsService _appSettings;
 
         private WebServer _webServer;
         private bool _disposed;
+        #endregion
+
+        #region Events
+        //public OnCastRendererSetHandler OnCastRendererSet { get; set; }
+        //public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
+        //public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
+        public OnFileLoading OnFileLoading { get; set; }
+        public OnFileLoadedWs OnFileLoaded { get; set; }
+        public OnFileLoadingError OnFileLoadingError { get; set; }
+        public OnPositionChangedHandler OnPositionChanged { get; set; }
+        public OnTimeChangedHandler OnTimeChanged { get; set; }
+        public OnEndReachedHandler OnEndReached { get; set; }
+        //public OnQualitiesChanged QualitiesChanged { get; set; }
+        public OnPaused OnPaused { get; set; }
+        public OnDisconnected OnDisconnected { get; set; }
+        public OnVolumeChanged OnVolumeChanged { get; set; }
+        public OnAppClosing OnAppClosing { get; set; }
+        public OnAppSettingsChanged OnAppSettingsChanged { get; set; }
+        public OnPlayListsChanged OnPlayListsChanged { get; set; }
+        public OnFilesChanged OnFilesChanged { get; set; }
+        public OnServerMsg OnServerMsg { get; set; }
+        #endregion
 
         public static IReadOnlyList<string> AllowedQueryParameters => new List<string>
         {
@@ -45,14 +72,19 @@ namespace CastIt.Server
         public AppWebServer(
             IMvxLogProvider logger,
             ITelemetryService telemetryService,
-            IFFMpegService ffmpegService)
+            IFFMpegService ffmpegService,
+            IPlayListsService playListsService,
+            IAppSettingsService appSettings)
         {
             _logger = logger.GetLogFor<AppWebServer>();
             _telemetryService = telemetryService;
             _ffmpegService = ffmpegService;
+            _playListsService = playListsService;
+            _appSettings = appSettings;
         }
-
-        public void Init(CancellationToken cancellationToken)
+        //TODO: EXPOSE THE URL OF THE SOCKET IN THE ABOUT 
+        #region Methods
+        public void Init(IMainViewModel mainViewModel, CancellationToken cancellationToken)
         {
             try
             {
@@ -61,6 +93,7 @@ namespace CastIt.Server
                 string subtitlesPath = FileUtils.GetSubTitleFolder();
 
                 _logger.Info($"{nameof(Init)}: Starting server on url = {url}");
+
                 var server = new WebServer(o => o
                     .WithUrlPrefix(url)
                     .WithMode(HttpListenerMode.EmbedIO))
@@ -68,7 +101,8 @@ namespace CastIt.Server
                     .WithCors()
                     .WithStaticFolder(ImagesPath, previewPath, false)
                     .WithStaticFolder(SubTitlesPath, subtitlesPath, false)
-                    .WithModule(new VideoModule(_logger, _ffmpegService, _telemetryService, MediaPath))
+                    .WithModule(new WebSocketsCastItServer(_logger, this, _appSettings, mainViewModel, "/socket"))
+                    .WithModule(new MediaModule(_logger, _ffmpegService, _telemetryService, MediaPath))
                     .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));
                 //if a clients is disconected this throws an exception
                 server.Listener.IgnoreWriteExceptions = false;
@@ -115,6 +149,8 @@ namespace CastIt.Server
 
         public string GetPreviewPath(string filepath)
         {
+            if (string.IsNullOrEmpty(filepath))
+                return null;
             var baseUrl = GetBaseUrl();
             string filename = Path.GetFileName(filepath);
             return $"{baseUrl}{ImagesPath}/{Uri.EscapeDataString(filename)}";
@@ -167,5 +203,6 @@ namespace CastIt.Server
 
             return Enumerable.Range(startPort, 99).FirstOrDefault(port => !usedPorts.Contains(port));
         }
+        #endregion
     }
 }

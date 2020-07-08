@@ -182,6 +182,21 @@ namespace CastIt.ViewModels.Items
             }
         }
 
+        public async Task RemoveFile(long id)
+        {
+            var file = Items.FirstOrDefault(f => f.Id == id);
+            if (file == null)
+            {
+                Logger.Warn($"{nameof(RemoveFile)}: FileId = {id} not found");
+                return;
+            }
+
+            await _playListsService.DeleteFile(id);
+            Items.Remove(file);
+            SelectedItems.Clear();
+            SetPositionIfChanged();
+        }
+
         private async Task OnFolderAdded(string[] folders)
         {
             foreach (var folder in folders)
