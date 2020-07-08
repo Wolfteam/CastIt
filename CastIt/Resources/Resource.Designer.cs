@@ -268,6 +268,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy to clipboard.
+        /// </summary>
+        public static string CopyToClipboard {
+            get {
+                return ResourceManager.GetString("CopyToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not parse playlist.
         /// </summary>
         public static string CouldntParsePlayList {
@@ -772,6 +781,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PlayList does not exist.
+        /// </summary>
+        public static string PlayListDoesntExist {
+            get {
+                return ResourceManager.GetString("PlayListDoesntExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Play next file automatically.
         /// </summary>
         public static string PlayNextFileAutomatically {
@@ -876,6 +894,15 @@ namespace CastIt.Resources {
         public static string SelectAll {
             get {
                 return ResourceManager.GetString("SelectAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server: {0}.
+        /// </summary>
+        public static string ServerUrl {
+            get {
+                return ResourceManager.GetString("ServerUrl", resourceCulture);
             }
         }
         

@@ -529,7 +529,7 @@ namespace CastIt.ViewModels
             if (pl == null)
             {
                 Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because playlistId = {playlistId} doesnt exists");
-                //TODO: SEND WEBSERVER MSG
+                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return Task.CompletedTask;
             }
 
@@ -537,6 +537,7 @@ namespace CastIt.ViewModels
             if (file == null)
             {
                 Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because it doesnt exists");
+                _appWebServer.OnServerMsg?.Invoke(GetText("FileDoesntExist"));
                 return Task.CompletedTask;
             }
 
@@ -549,7 +550,7 @@ namespace CastIt.ViewModels
             if (pl == null)
             {
                 Logger.Warn($"{nameof(SetPlayListOptions)}: PlaylistId = {id} doesnt exists");
-                //TODO: SEND WEBSERVER MSG
+                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return;
             }
 
@@ -564,7 +565,7 @@ namespace CastIt.ViewModels
             if (pl == null)
             {
                 Logger.Warn($"{nameof(DeletePlayList)}: Cant delete playlistId = {id} because it doesnt exists");
-                //TODO: SEND WEBSERVER MSG
+                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return;
             }
             await DeletePlayList(pl);
@@ -576,11 +577,11 @@ namespace CastIt.ViewModels
             var pl = PlayLists.FirstOrDefault(pl => pl.Id == playListId);
             if (pl == null)
             {
-                Logger.Warn($"{nameof(DeleteFile)}: Couldnt play fileId = {id} because playlistId = {playListId} doesnt exists");
-                //TODO: SEND WEBSERVER MSG
+                Logger.Warn($"{nameof(DeleteFile)}: Couldnt delete fileId = {id} because playlistId = {playListId} doesnt exists");
+                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return Task.CompletedTask;
             }
-            //TODO: SEND FILES CHANGED
+            _appWebServer.OnFilesChanged?.Invoke();
             return pl.RemoveFile(id);
         }
 
@@ -589,8 +590,8 @@ namespace CastIt.ViewModels
             var pl = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
             if (pl == null)
             {
-                Logger.Warn($"{nameof(DeleteFile)}: Couldnt play fileId = {id} because playlistId = {playlistId} doesnt exists");
-                //TODO: SEND WEBSERVER MSG
+                Logger.Warn($"{nameof(SetFileLoop)}: Couldnt update fileId = {id} because playlistId = {playlistId} doesnt exists");
+                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return;
             }
 
@@ -598,12 +599,13 @@ namespace CastIt.ViewModels
             var file = pl.Items.FirstOrDefault(f => f.Id == id);
             if (file == null)
             {
-                Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because it doesnt exists");
+                Logger.Warn($"{nameof(SetFileLoop)}: Couldnt update fileId = {id} because it doesnt exists");
+                _appWebServer.OnServerMsg?.Invoke(GetText("FileDoesntExist"));
                 return;
             }
 
             file.Loop = loop;
-            //TODO: SEND FILES CHANGED
+            _appWebServer.OnFilesChanged?.Invoke();
         }
 
         public List<FileItemOptionsResponseDto> GetFileOptions(long id)
@@ -664,6 +666,7 @@ namespace CastIt.ViewModels
 
         private async Task GoToSeconds(long seconds)
         {
+            Logger.Info($"{nameof(GoToSeconds)}: Trying to go to seconds = {seconds}");
             IsBusy = true;
             await _castService.GoToSeconds(
                 CurrentFileVideoStreamIndex,
@@ -676,6 +679,7 @@ namespace CastIt.ViewModels
 
         private async Task SkipSeconds(int seconds)
         {
+            Logger.Info($"{nameof(GoToSeconds)}: Trying to skip {seconds} seconds");
             IsBusy = true;
             await _castService.AddSeconds(
                 CurrentFileVideoStreamIndex,
@@ -1066,7 +1070,7 @@ namespace CastIt.ViewModels
             {
                 actionContent = GetText("Dismiss");
             }
-
+            _appWebServer.OnServerMsg?.Invoke(msg);
             ShowSnackbar = true;
             SnackbarMsg = msg;
             SnackBarActionMsg = actionContent;

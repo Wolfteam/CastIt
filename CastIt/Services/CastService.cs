@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.Services
@@ -85,6 +84,7 @@ namespace CastIt.Services
         public void Init()
         {
             _logger.Info($"{nameof(Init)}: Initializing all...");
+            _player.FileLoading += FileLoading;
             _player.DeviceAdded += RendererDiscovererItemAdded;
             _player.EndReached += EndReached;
             _player.TimeChanged += TimeChanged;
@@ -289,6 +289,19 @@ namespace CastIt.Services
             int quality,
             double seconds)
         {
+            if (seconds >= _player.CurrentMediaDuration)
+            {
+                _logger.Warn(
+                    $"{nameof(GoToSeconds)}: Cant go to = {seconds} because is bigger than " +
+                    $"the media duration = {_player.CurrentMediaDuration}");
+                return Task.CompletedTask;
+            }
+            if (seconds < 0)
+            {
+                _logger.Warn($"{nameof(GoToSeconds)}: Wont go to = {seconds}, instead we will go to 0");
+                seconds = 0;
+            }
+
             if (FileUtils.IsLocalFile(_currentFilePath))
                 return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
 
@@ -345,6 +358,7 @@ namespace CastIt.Services
         {
             try
             {
+                _player.FileLoading -= FileLoading;
                 _player.DeviceAdded -= RendererDiscovererItemAdded;
                 _player.EndReached -= EndReached;
                 _player.TimeChanged -= TimeChanged;
@@ -379,6 +393,12 @@ namespace CastIt.Services
             }
 
             return SetCastRenderer(renderer);
+        }
+
+        #region Events handlers
+        private void FileLoading(object sender, EventArgs e)
+        {
+            _appWebServer.OnFileLoading?.Invoke();
         }
 
         private void FileLoaded(
@@ -447,6 +467,7 @@ namespace CastIt.Services
 
             OnCastableDeviceAdded?.Invoke(e.Receiver);
         }
+        #endregion
 
         //TODO: CHECK IF WE CAN KNOW WHEN A DEVICE IS REMOVED
         //private void RendererDiscovererItemDeleted(object sender, RendererDiscovererItemDeletedEventArgs e)

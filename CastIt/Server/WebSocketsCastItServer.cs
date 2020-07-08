@@ -20,6 +20,7 @@ namespace CastIt.Server
 
         private const string PlayMsgType = "CLIENT_PLAYBLACK_PLAY";
         private const string GoToSecondsMsgType = "CLIENT_PLAYBLACK_GOTO_SECONDS";
+        private const string SkipSecondsMsgType = "CLIENT_PLAYBLACK_SKIP_SECONDS";
         private const string GotoMsgType = "CLIENT_PLAYBLACK_GOTO";
         private const string TogglePlayBackMsgType = "CLIENT_PLAYBLACK_TOGGLE";
         private const string StopMsgType = "CLIENT_PLAYBACK_STOP";
@@ -55,7 +56,7 @@ namespace CastIt.Server
         private const string ChromeCastDisconectedMsgType = "SERVER_CHROMECAST_DISCONNECTED";
         private const string VolumeChangedMsgType = "SERVER_VOLUME_LEVEL_CHANGED";
         private const string AppClosedMsgType = "SERVER_APP_CLOSING";
-        private const string InfoMsgType = "INFO_MSG";
+        private const string InfoMsgType = "SERVER_INFO_MSG";
         #endregion
 
         private readonly IMvxLog _logger;
@@ -127,6 +128,9 @@ namespace CastIt.Server
                     case GoToSecondsMsgType:
                         var gotoSecondsRequest = JsonConvert.DeserializeObject<GoToSecondsRequestDto>(msg);
                         return _mainViewModel.GoToSecondsCommand.ExecuteAsync(Convert.ToInt64(gotoSecondsRequest.Seconds));
+                    case SkipSecondsMsgType:
+                        var skipSecondsRequest = JsonConvert.DeserializeObject<GoToSecondsRequestDto>(msg);
+                        return _mainViewModel.SkipCommand.ExecuteAsync(Convert.ToInt32(skipSecondsRequest.Seconds));
                     case GotoMsgType:
                         var gotoRequest = JsonConvert.DeserializeObject<GoToRequestDto>(msg);
                         if (gotoRequest.Next)

@@ -27,7 +27,7 @@ namespace CastIt.Interfaces
         OnFilesChanged OnFilesChanged { get; set; }
         OnServerMsg OnServerMsg { get; set; }
 
-
+        public string BaseUrl { get; }
         static IReadOnlyList<string> AllowedQueryParameters { get; }
 
         void Init(IMainViewModel mainViewModel, CancellationToken cancellationToken);

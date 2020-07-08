@@ -435,4 +435,13 @@
   <data name="MinimizeToTray" xml:space="preserve">
     <value>Minimizar a la bandeja</value>
   </data>
+  <data name="PlayListDoesntExist" xml:space="preserve">
+    <value>La lista de reproducción no existe</value>
+  </data>
+  <data name="ServerUrl" xml:space="preserve">
+    <value>Servidor: {0}</value>
+  </data>
+  <data name="CopyToClipboard" xml:space="preserve">
+    <value>Copiar al portapapeles</value>
+  </data>
 </root>

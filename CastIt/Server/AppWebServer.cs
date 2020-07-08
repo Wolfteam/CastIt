@@ -69,6 +69,9 @@ namespace CastIt.Server
             AudioStreamIndexParameter
         };
 
+        public string BaseUrl
+            => GetBaseUrl();
+
         public AppWebServer(
             IMvxLogProvider logger,
             ITelemetryService telemetryService,

@@ -393,7 +393,7 @@ namespace CastIt.Services
                 FileUtils.DeleteFilesInDirectory(Path.GetDirectoryName(subtitleFinalPath));
                 var builder = new FFmpegArgsBuilder();
                 builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().TrySetSubTitleEncoding();
-                builder.AddOutputFile(subtitleFinalPath).Seek(Math.Floor(seconds)).SetMap(index).AddArg("-muxdelay", 0).SetFormat("webvtt");
+                builder.AddOutputFile(subtitleFinalPath).Seek(Math.Floor(seconds)).SetMap(index).AddArg("muxdelay", 0).SetFormat("webvtt");
 
                 string cmd = builder.GetArgs();
                 _logger.Info($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
