@@ -5,8 +5,8 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../bloc/playlists/playlists_bloc.dart';
 import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../generated/i18n.dart';
+import '../widgets/items/playlist_item.dart';
 import '../widgets/page_header.dart';
-import '../widgets/playlist_item.dart';
 import '../widgets/something_went_wrong.dart';
 
 class PlayListsPage extends StatefulWidget {
@@ -38,6 +38,9 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
                 loaded: (_) {
                   _refreshController.refreshCompleted();
                 },
+                disconnected: (_) {
+                  _refreshController.refreshCompleted();
+                },
                 orElse: () {},
               );
             },
@@ -63,22 +66,27 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
           child: CircularProgressIndicator(),
         );
       },
-      loaded: (loaded, playlists, _) {
-        if (!loaded) {
-          context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
-          return const SomethingWentWrong();
-        }
-        context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+      loaded: (playlists, _) {
+        //TODO: CREATE A WAY TO FORCE A RECONNECT
+        // context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
         return ListView.builder(
           itemCount: playlists.length,
           itemBuilder: (ctx, i) {
             final playlist = playlists[i];
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: PlayListItem(playlist: playlist),
+              child: PlayListItem(
+                id: playlist.id,
+                name: playlist.name,
+                numberOfFiles: playlist.numberOfFiles,
+              ),
             );
           },
         );
+      },
+      disconnected: () {
+        context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
+        return const SomethingWentWrong();
       },
     );
   }

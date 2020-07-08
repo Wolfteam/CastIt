@@ -33,15 +33,20 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   Stream<MainState> mapEventToState(
     MainEvent event,
   ) async* {
-    final s = await event.when(init: () async {
-      return _init();
-    }, themeChanged: (theme) async {
-      return _loadThemeData(currentState.appTitle, theme, _settings.accentColor, _settings.language);
-    }, accentColorChanged: (accentColor) async {
-      return _loadThemeData(currentState.appTitle, _settings.appTheme, accentColor, _settings.language);
-    }, goToTab: (index) async {
-      return currentState.copyWith(currentSelectedTab: index);
-    });
+    final s = await event.when(
+      init: () async {
+        return _init();
+      },
+      themeChanged: (theme) async {
+        return _loadThemeData(currentState.appTitle, theme, _settings.accentColor, _settings.language);
+      },
+      accentColorChanged: (accentColor) async {
+        return _loadThemeData(currentState.appTitle, _settings.appTheme, accentColor, _settings.language);
+      },
+      goToTab: (index) async {
+        return currentState.copyWith(currentSelectedTab: index);
+      },
+    );
 
     yield s;
   }

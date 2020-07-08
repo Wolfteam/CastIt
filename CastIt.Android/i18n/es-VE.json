@@ -41,5 +41,16 @@
     "cancel": "Cancelar",
     "ok": "Ok",
     "noConnectionToDesktopApp": "No hay conexión con la aplicación de escritorio",
-    "verifyCastItUrl": "Verifica que la url concuerde con la de la aplicación de escritorio"
+    "verifyCastItUrl": "Verifica que la url concuerde con la de la aplicación de escritorio",
+    "playFile": "Reproducir archivo",
+    "playFileFromTheBeginning": "Reproducir archivo desde el inicio",
+    "deleteFile": "Borrar archivo",
+    "rename": "Renombrar",
+    "delete": "Borrar",
+    "fileOptions": "Opciones del archivo",
+    "audio": "Audio",
+    "subtitles": "Subtítulos",
+    "quality": "Calidad",
+    "volume": "Volumen",
+    "na": "N/A"
 }

@@ -17,12 +17,12 @@ class ItemCounter extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.0),
       ),
       child: Align(
-        alignment: Alignment.center,
         child: Text(
           '$_items',
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: TextStyle(
+            color: Colors.white,
             fontSize: 20,
           ),
         ),

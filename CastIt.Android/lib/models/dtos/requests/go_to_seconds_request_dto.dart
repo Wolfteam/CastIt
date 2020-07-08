@@ -15,5 +15,6 @@ class GoToSecondsRequestDto extends BaseSocketRequestDto {
   }) : super(messageType: msgType);
 
   factory GoToSecondsRequestDto.fromJson(Map<String, dynamic> json) => _$GoToSecondsRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$GoToSecondsRequestDtoToJson(this);
 }

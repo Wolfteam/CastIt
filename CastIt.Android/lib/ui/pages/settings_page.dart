@@ -1,11 +1,12 @@
-import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../bloc/main/main_bloc.dart';
+import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../bloc/settings/settings_bloc.dart';
+import '../../common/app_constants.dart';
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
@@ -14,7 +15,6 @@ import '../../common/extensions/app_theme_type_extensions.dart';
 import '../../common/extensions/i18n_extensions.dart';
 import '../../common/styles.dart';
 import '../../generated/i18n.dart';
-import '../../services/api/castit_api.dart';
 import '../widgets/page_header.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -31,7 +31,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   @override
   void initState() {
     super.initState();
-    _urlController = TextEditingController(text: CastItApi.instance.baseUrl);
+    _urlController = TextEditingController(text: AppConstants.baseCastItUrl);
 
     _urlController.addListener(_urlChanged);
   }

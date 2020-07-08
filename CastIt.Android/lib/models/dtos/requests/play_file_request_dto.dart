@@ -20,5 +20,6 @@ class PlayFileRequestDto extends BaseSocketRequestDto {
   }) : super(messageType: msgType);
 
   factory PlayFileRequestDto.fromJson(Map<String, dynamic> json) => _$PlayFileRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$PlayFileRequestDtoToJson(this);
 }

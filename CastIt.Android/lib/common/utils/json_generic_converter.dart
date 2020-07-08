@@ -1,9 +1,11 @@
+import 'package:castit/models/dtos/responses/file_item_options_response_dto.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../models/dtos/responses/app_settings_response_dto.dart';
+import '../../models/dtos/responses/file_item_response_dto.dart';
 import '../../models/dtos/responses/file_loaded_response_dto.dart';
-import '../../models/dtos/responses/file_response_dto.dart';
-import '../../models/dtos/responses/playlist_response_dto.dart';
+import '../../models/dtos/responses/get_all_playlist_response_dto.dart';
+import '../../models/dtos/responses/playlist_item_response_dto.dart';
 import '../../models/dtos/responses/volume_level_changed_response_dto.dart';
 
 class JsonGenericConverter<T> implements JsonConverter<T, Object> {
@@ -11,11 +13,16 @@ class JsonGenericConverter<T> implements JsonConverter<T, Object> {
 
   @override
   T fromJson(Object json) {
-    if (json is Map<String, dynamic> && _allKeysArePresent(FileResponseDto.jsonKeys, json.keys)) {
-      return FileResponseDto.fromJson(json) as T;
+    if (json is Map<String, dynamic> && _allKeysArePresent(FileItemResponseDto.jsonKeys, json.keys)) {
+      return FileItemResponseDto.fromJson(json) as T;
     }
-    if (json is Map<String, dynamic> && _allKeysArePresent(PlayListResponseDto.jsonKeys, json.keys)) {
-      return PlayListResponseDto.fromJson(json) as T;
+
+    if (json is Map<String, dynamic> && _allKeysArePresent(PlayListItemResponseDto.jsonKeys, json.keys)) {
+      return PlayListItemResponseDto.fromJson(json) as T;
+    }
+
+    if (json is Map<String, dynamic> && _allKeysArePresent(GetAllPlayListResponseDto.jsonKeys, json.keys)) {
+      return GetAllPlayListResponseDto.fromJson(json) as T;
     }
 
     if (json is Map<String, dynamic> && _allKeysArePresent(FileLoadedResponseDto.jsonKeys, json.keys)) {
@@ -28,6 +35,16 @@ class JsonGenericConverter<T> implements JsonConverter<T, Object> {
 
     if (json is Map<String, dynamic> && _allKeysArePresent(AppSettingsResponseDto.jsonKeys, json.keys)) {
       return AppSettingsResponseDto.fromJson(json) as T;
+    }
+
+    if (json is Map<String, dynamic> && _allKeysArePresent(FileItemOptionsResponseDto.jsonKeys, json.keys)) {
+      return FileItemOptionsResponseDto.fromJson(json) as T;
+    }
+
+    if (json is List<dynamic>) {
+      final items = json.map(fromJson).toList();
+
+      return items as T;
     }
 
     // This will only work if `json` is a native JSON type:

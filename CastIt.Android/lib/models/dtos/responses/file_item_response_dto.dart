@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'file_response_dto.g.dart';
+part 'file_item_response_dto.g.dart';
 
 @JsonSerializable()
-class FileResponseDto extends Equatable {
+class FileItemResponseDto extends Equatable {
   @JsonKey(name: 'Id')
   final int id;
 
@@ -14,8 +14,14 @@ class FileResponseDto extends Equatable {
   @JsonKey(name: 'Path')
   final String path;
 
+  @JsonKey(name: 'TotalSeconds')
+  final double totalSeconds;
+
   @JsonKey(name: 'PlayedPercentage')
   final double playedPercentage;
+
+  @JsonKey(name: 'IsBeingPlayed')
+  final bool isBeingPlayed;
 
   @JsonKey(name: 'PlayListId')
   final int playListId;
@@ -38,26 +44,34 @@ class FileResponseDto extends Equatable {
   @JsonKey(name: 'Extension')
   final String ext;
 
+  @JsonKey(name: 'Loop')
+  final bool loop;
+
   @override
   List<Object> get props => [
         id,
         position,
         path,
+        totalSeconds,
         playedPercentage,
+        isBeingPlayed,
         playListId,
         isLocalFile,
         isUrlFile,
         exists,
         filename,
         size,
-        ext
+        ext,
+        loop,
       ];
 
-  const FileResponseDto({
+  const FileItemResponseDto({
     this.id,
     this.position,
     this.path,
+    this.totalSeconds,
     this.playedPercentage,
+    this.isBeingPlayed,
     this.playListId,
     this.isLocalFile,
     this.isUrlFile,
@@ -65,16 +79,18 @@ class FileResponseDto extends Equatable {
     this.filename,
     this.size,
     this.ext,
+    this.loop,
   });
 
-  factory FileResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$FileResponseDtoFromJson(json);
+  factory FileItemResponseDto.fromJson(Map<String, dynamic> json) => _$FileItemResponseDtoFromJson(json);
 
   static List<String> get jsonKeys => [
         'Id',
         'Position',
         'Path',
+        'TotalSeconds',
         'PlayedPercentage',
+        'IsBeingPlayed',
         'PlayListId',
         'IsLocalFile',
         'IsUrlFile',
@@ -82,5 +98,6 @@ class FileResponseDto extends Equatable {
         'Filename',
         'Size',
         'Extension',
+        'Loop'
       ];
 }

@@ -20,5 +20,6 @@ class DeleteFileRequestDto extends BaseSocketRequestDto {
   }) : super(messageType: msgType);
 
   factory DeleteFileRequestDto.fromJson(Map<String, dynamic> json) => _$DeleteFileRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$DeleteFileRequestDtoToJson(this);
 }

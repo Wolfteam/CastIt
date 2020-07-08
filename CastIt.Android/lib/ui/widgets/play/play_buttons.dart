@@ -20,9 +20,9 @@ class PlayButtons extends StatelessWidget {
     final isDarkTheme = theme.brightness == Brightness.dark;
     final iconColor = isDarkTheme ? Colors.white : Colors.black;
     return Container(
-      margin: const EdgeInsets.only(bottom: 50),
+      margin: const EdgeInsets.only(bottom: 50, left: 10, right: 10),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           IconButton(
             iconSize: _iconSize,
@@ -34,7 +34,6 @@ class PlayButtons extends StatelessWidget {
             onPressed: areDisabled ? null : () => _goTo(context, false, true),
             icon: Icon(Icons.skip_previous, color: iconColor),
           ),
-          const SizedBox(width: 10.0),
           Container(
             decoration: BoxDecoration(
               color: theme.accentColor,
@@ -49,7 +48,6 @@ class PlayButtons extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: 10.0),
           IconButton(
             iconSize: _iconSize,
             onPressed: areDisabled ? null : () => _goTo(context, true, false),

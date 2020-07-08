@@ -118,6 +118,28 @@ class I18n implements WidgetsLocalizations {
   String get noConnectionToDesktopApp => "No connection to the desktop app";
   /// "Verify that the url matches the one in the desktop app"
   String get verifyCastItUrl => "Verify that the url matches the one in the desktop app";
+  /// "Play file"
+  String get playFile => "Play file";
+  /// "Play file from the beginning"
+  String get playFileFromTheBeginning => "Play file from the beginning";
+  /// "Delete file"
+  String get deleteFile => "Delete file";
+  /// "Rename"
+  String get rename => "Rename";
+  /// "Delete"
+  String get delete => "Delete";
+  /// "File options"
+  String get fileOptions => "File options";
+  /// "Audio"
+  String get audio => "Audio";
+  /// "Subtitles"
+  String get subtitles => "Subtitles";
+  /// "Quality"
+  String get quality => "Quality";
+  /// "Volume"
+  String get volume => "Volume";
+  /// "N/A"
+  String get na => "N/A";
 }
 
 class _I18n_en_US extends I18n {
@@ -259,6 +281,36 @@ class _I18n_es_VE extends I18n {
   /// "Verifica que la url concuerde con la de la aplicación de escritorio"
   @override
   String get verifyCastItUrl => "Verifica que la url concuerde con la de la aplicación de escritorio";
+  /// "Reproducir archivo"
+  @override
+  String get playFile => "Reproducir archivo";
+  /// "Reproducir archivo desde el inicio"
+  @override
+  String get playFileFromTheBeginning => "Reproducir archivo desde el inicio";
+  /// "Borrar archivo"
+  @override
+  String get deleteFile => "Borrar archivo";
+  /// "Renombrar"
+  @override
+  String get rename => "Renombrar";
+  /// "Borrar"
+  @override
+  String get delete => "Borrar";
+  /// "Opciones del archivo"
+  @override
+  String get fileOptions => "Opciones del archivo";
+  /// "Audio"
+  @override
+  String get audio => "Audio";
+  /// "Subtítulos"
+  @override
+  String get subtitles => "Subtítulos";
+  /// "Calidad"
+  @override
+  String get quality => "Calidad";
+  /// "Volumen"
+  @override
+  String get volume => "Volumen";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;

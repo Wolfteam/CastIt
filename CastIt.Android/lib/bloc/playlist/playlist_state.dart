@@ -9,7 +9,7 @@ abstract class PlayListState implements _$PlayListState {
     @required int position,
     @required bool loop,
     @required bool shuffle,
-    @required List<FileResponseDto> files,
+    @required List<FileItemResponseDto> files,
     @required bool loaded,
   }) = PlayListLoadedState;
 

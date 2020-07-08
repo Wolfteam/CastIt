@@ -38,5 +38,6 @@ class AppSettingsRequestDto extends BaseSocketRequestDto {
   }
 
   factory AppSettingsRequestDto.fromJson(Map<String, dynamic> json) => _$AppSettingsRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$AppSettingsRequestDtoToJson(this);
 }

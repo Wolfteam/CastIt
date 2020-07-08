@@ -1,9 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../bloc/played_file_options/played_file_options_bloc.dart';
+import '../../../bloc/playlist/playlist_bloc.dart';
 import '../../../common/extensions/string_extensions.dart';
-
+import '../../../common/styles.dart';
 import '../../../generated/i18n.dart';
+import '../../pages/playlist_page.dart';
+import '../modals/played_file_options_bottom_sheet_dialog.dart';
 
 class PlayCoverImg extends StatelessWidget {
   final int fileId;
@@ -74,18 +79,12 @@ class PlayCoverImg extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(50.0),
+                    IconButton(
+                      icon: Icon(
+                        Icons.playlist_play,
+                        color: Colors.white,
                       ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.playlist_play,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      ),
+                      onPressed: fileId == null ? null : () => _goToPlayList(context),
                     ),
                     Column(
                       children: <Widget>[
@@ -108,7 +107,7 @@ class PlayCoverImg extends StatelessWidget {
                         Icons.settings,
                         color: Colors.white,
                       ),
-                      onPressed: _goToPlayList,
+                      onPressed: fileId == null ? null : () => _showFileOptionsModal(context),
                     )
                   ],
                 ),
@@ -123,7 +122,7 @@ class PlayCoverImg extends StatelessWidget {
                           Icons.shuffle,
                           color: Colors.white,
                         ),
-                        onPressed: () {},
+                        onPressed: fileId == null ? null : () => {},
                       ),
                       Flexible(
                         child: Text(
@@ -142,7 +141,7 @@ class PlayCoverImg extends StatelessWidget {
                           Icons.repeat,
                           color: Colors.white,
                         ),
-                        onPressed: () {},
+                        onPressed: fileId == null ? null : () => {},
                       ),
                     ],
                   ),
@@ -155,7 +154,21 @@ class PlayCoverImg extends StatelessWidget {
     );
   }
 
-  void _goToPlayList() {
-    if (playListId == null) return;
+  void _goToPlayList(BuildContext context) {
+    //TODO: SCROLL TO SELECTED ITEM
+    context.bloc<PlayListBloc>().add(PlayListEvent.load(id: playListId));
+    final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId));
+    Navigator.of(context).push(route);
+  }
+
+  void _showFileOptionsModal(BuildContext context) {
+    context.bloc<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.load(id: fileId));
+    showModalBottomSheet(
+      context: context,
+      shape: Styles.modalBottomSheetShape,
+      isDismissible: true,
+      isScrollControlled: true,
+      builder: (_) => PlayedFileOptionsBottomSheetDialog(),
+    );
   }
 }

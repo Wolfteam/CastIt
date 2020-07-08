@@ -6,8 +6,9 @@ import '../../bloc/playlists/playlists_bloc.dart';
 import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../bloc/settings/settings_bloc.dart';
 import '../../common/extensions/string_extensions.dart';
+import '../../common/styles.dart';
 import '../../generated/i18n.dart';
-import '../widgets/change_connection_bottom_sheet_dialog.dart';
+import '../widgets/modals/change_connection_bottom_sheet_dialog.dart';
 import 'play_page.dart';
 import 'playlists_page.dart';
 import 'settings_page.dart';
@@ -38,15 +39,15 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_didChangeDependencies) return;
+    context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
     context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
     context.bloc<SettingsBloc>().add(SettingsEvent.load());
-    context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
     _didChangeDependencies = true;
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('State = $state');
+    debugPrint('State = $state');
     if (state == AppLifecycleState.inactive) {
       context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectFromWs());
     } else if (state == AppLifecycleState.resumed) {
@@ -66,10 +67,15 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           },
           builder: (ctx, state) => BlocConsumer<ServerWsBloc, ServerWsState>(
             listener: (ctx2, state2) async {
-              if (state2 is ServerLoadedState) {
-                if (!state2.msgToShow.isNullEmptyOrWhitespace) _showServerMsg(state2.msgToShow);
-                await _showConnectionDialog(state2.isConnectedToWs, state2.castItUrl);
-              }
+              state2.maybeMap(
+                loaded: (s) async {
+                  if (!s.msgToShow.isNullEmptyOrWhitespace) {
+                    _showServerMsg(s.msgToShow);
+                  }
+                  await _showConnectionDialog(s.isConnectedToWs, s.castItUrl);
+                },
+                orElse: () {},
+              );
             },
             builder: (ctx2, state2) => TabBarView(
               controller: _tabController,
@@ -137,25 +143,18 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       _isShowingConnectionModal = true;
       await showModalBottomSheet(
         context: context,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(35),
-            topLeft: Radius.circular(35),
-          ),
-        ),
+        shape: Styles.modalBottomSheetShape,
         isDismissible: true,
         isScrollControlled: true,
-        builder: (ctx2) => SingleChildScrollView(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: ChangeConnectionBottomSheetDialog(
-            currentUrl: currentCastIt,
-          ),
+        builder: (_) => ChangeConnectionBottomSheetDialog(
+          currentUrl: currentCastIt,
         ),
       );
+      _isShowingConnectionModal = false;
     } else if (isConnected && _isShowingConnectionModal) {
       Navigator.of(context).pop();
+      _isShowingConnectionModal = false;
     }
-    _isShowingConnectionModal = false;
   }
 
   void _showServerMsg(String msg) {

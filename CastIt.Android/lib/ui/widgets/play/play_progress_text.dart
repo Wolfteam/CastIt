@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../bloc/play/play_bloc.dart';
+import '../../../common/extensions/duration_extensions.dart';
 
 class PlayProgressText extends StatelessWidget {
   const PlayProgressText();
@@ -21,13 +22,8 @@ class PlayProgressText extends StatelessWidget {
           fileLoading: (state) => dummy,
           fileLoadingFailed: (state) => dummy,
           playing: (state) {
-            final current = _formatDuration(Duration(
-              seconds: (state.currentSeconds ?? 0).round(),
-            ));
-
-            final total = _formatDuration(Duration(
-              seconds: state.duration.round(),
-            ));
+            final current = Duration(seconds: (state.currentSeconds ?? 0).round()).formatDuration();
+            final total = Duration(seconds: state.duration.round()).formatDuration();
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
@@ -52,13 +48,5 @@ class PlayProgressText extends StatelessWidget {
         );
       },
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(num n) => n.toString().padLeft(2, '0');
-    final twoDigitHour = twoDigits(duration.inHours);
-    final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$twoDigitHour:$twoDigitMinutes:$twoDigitSeconds';
   }
 }

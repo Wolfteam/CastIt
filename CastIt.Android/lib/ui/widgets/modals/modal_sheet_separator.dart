@@ -6,7 +6,7 @@ class ModalSheetSeparator extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
+        margin: const EdgeInsets.only(bottom: 5),
         child: SizedBox(
           width: 100,
           height: 10,

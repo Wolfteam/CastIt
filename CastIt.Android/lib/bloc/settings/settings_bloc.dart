@@ -27,6 +27,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final ServerWsBloc _serverWsBloc;
 
   SettingsBloc(this._logger, this._settings, this._serverWsBloc) {
+    _serverWsBloc.connected.stream.listen((event) {
+      add(SettingsEvent.load());
+    });
+
     _serverWsBloc.settingsChanged.stream.listen((settings) {
       add(SettingsEvent.connected(settings: settings));
     });

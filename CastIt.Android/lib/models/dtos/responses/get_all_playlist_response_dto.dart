@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'playlist_response_dto.g.dart';
+part 'get_all_playlist_response_dto.g.dart';
 
 @JsonSerializable()
-class PlayListResponseDto extends Equatable {
+class GetAllPlayListResponseDto extends Equatable {
   @JsonKey(name: 'Id')
   final int id;
 
@@ -33,7 +33,7 @@ class PlayListResponseDto extends Equatable {
         numberOfFiles,
       ];
 
-  const PlayListResponseDto({
+  const GetAllPlayListResponseDto({
     this.id,
     this.name,
     this.position,
@@ -42,8 +42,7 @@ class PlayListResponseDto extends Equatable {
     this.numberOfFiles,
   });
 
-  factory PlayListResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$PlayListResponseDtoFromJson(json);
+  factory GetAllPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$GetAllPlayListResponseDtoFromJson(json);
 
   static List<String> get jsonKeys => [
         'Id',

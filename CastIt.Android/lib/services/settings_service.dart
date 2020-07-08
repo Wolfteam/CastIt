@@ -1,3 +1,4 @@
+import 'package:castit/common/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/enums/app_accent_color_type.dart';
@@ -36,24 +37,19 @@ class SettingsServiceImpl extends SettingsService {
   final LoggingService _logger;
 
   @override
-  AppThemeType get appTheme =>
-      AppThemeType.values[(_prefs.getInt(_appThemeKey))];
+  AppThemeType get appTheme => AppThemeType.values[(_prefs.getInt(_appThemeKey))];
   @override
   set appTheme(AppThemeType theme) => _prefs.setInt(_appThemeKey, theme.index);
 
   @override
-  AppAccentColorType get accentColor =>
-      AppAccentColorType.values[_prefs.getInt(_accentColorKey)];
+  AppAccentColorType get accentColor => AppAccentColorType.values[_prefs.getInt(_accentColorKey)];
   @override
-  set accentColor(AppAccentColorType accentColor) =>
-      _prefs.setInt(_accentColorKey, accentColor.index);
+  set accentColor(AppAccentColorType accentColor) => _prefs.setInt(_accentColorKey, accentColor.index);
 
   @override
-  AppLanguageType get language =>
-      AppLanguageType.values[_prefs.getInt(_appLanguageKey)];
+  AppLanguageType get language => AppLanguageType.values[_prefs.getInt(_appLanguageKey)];
   @override
-  set language(AppLanguageType lang) =>
-      _prefs.setInt(_appLanguageKey, lang.index);
+  set language(AppLanguageType lang) => _prefs.setInt(_appLanguageKey, lang.index);
 
   @override
   String get castItUrl => _prefs.getString(_castItUrlKey);
@@ -99,9 +95,8 @@ class SettingsServiceImpl extends SettingsService {
 
     if (_prefs.get(_castItUrlKey) == null) {
       _logger.info(runtimeType, 'Setting url to the default one');
-      _prefs.setString(_castItUrlKey, 'ws://192.168.1.101:9696/socket');
+      _prefs.setString(_castItUrlKey, AppConstants.baseCastItUrl);
     }
-
     _initialized = true;
     _logger.info(runtimeType, 'Settings were initialized successfully');
   }

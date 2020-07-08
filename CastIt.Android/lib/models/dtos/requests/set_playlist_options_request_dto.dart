@@ -25,5 +25,6 @@ class SetPlayListOptionsRequestDto extends BaseSocketRequestDto {
 
   factory SetPlayListOptionsRequestDto.fromJson(Map<String, dynamic> json) =>
       _$SetPlayListOptionsRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$SetPlayListOptionsRequestDtoToJson(this);
 }

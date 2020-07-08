@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'bloc/main/main_bloc.dart';
 import 'bloc/play/play_bloc.dart';
+import 'bloc/played_file_options/played_file_options_bloc.dart';
 import 'bloc/playlist/playlist_bloc.dart';
 import 'bloc/playlists/playlists_bloc.dart';
 import 'bloc/server_ws/server_ws_bloc.dart';
@@ -12,7 +13,6 @@ import 'bloc/settings/settings_bloc.dart';
 import 'generated/i18n.dart';
 import 'injection.dart';
 import 'logger.dart';
-import 'services/castit_service.dart';
 import 'services/logging_service.dart';
 import 'services/settings_service.dart';
 import 'ui/pages/main_page.dart';
@@ -40,17 +40,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final delegates = <LocalizationsDelegate>[
-      // A class which loads the translations from JSON files
-      i18n,
-      // Built-in localization of basic text for Material widgets
-      GlobalMaterialLocalizations.delegate,
-      // Built-in localization for text direction LTR/RTL
-      GlobalWidgetsLocalizations.delegate,
-      // Built-in localization of basic text for Cupertino widgets
-      GlobalCupertinoLocalizations.delegate,
-    ];
-
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -69,15 +58,14 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (ctx) {
-            final castitService = getIt<CastItService>();
-            return PlayListBloc(castitService);
+            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            return PlayListBloc(serverWsBloc);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final castitService = getIt<CastItService>();
             final serverWsBloc = ctx.bloc<ServerWsBloc>();
-            return PlayListsBloc(castitService, serverWsBloc);
+            return PlayListsBloc(serverWsBloc);
           },
         ),
         BlocProvider(
@@ -94,6 +82,10 @@ class _MyAppState extends State<MyApp> {
             return SettingsBloc(logger, settings, serverWsBloc);
           },
         ),
+        BlocProvider(create: (ctx) {
+          final serverWsBloc = ctx.bloc<ServerWsBloc>();
+          return PlayedFileOptionsBloc(serverWsBloc);
+        }),
       ],
       child: BlocBuilder<MainBloc, MainState>(
         builder: (ctx, state) => _buildApp(state),

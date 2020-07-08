@@ -16,5 +16,6 @@ class DeletePlayListRequestDto extends BaseSocketRequestDto {
   }) : super(messageType: msgType);
 
   factory DeletePlayListRequestDto.fromJson(Map<String, dynamic> json) => _$DeletePlayListRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$DeletePlayListRequestDtoToJson(this);
 }

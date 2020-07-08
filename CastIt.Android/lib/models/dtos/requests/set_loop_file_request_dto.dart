@@ -24,5 +24,6 @@ class SetLoopFileRequestDto extends BaseSocketRequestDto {
   }) : super(messageType: msgType);
 
   factory SetLoopFileRequestDto.fromJson(Map<String, dynamic> json) => _$SetLoopFileRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$SetLoopFileRequestDtoToJson(this);
 }

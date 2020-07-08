@@ -41,5 +41,16 @@
     "cancel": "Cancel",
     "ok": "Ok",
     "noConnectionToDesktopApp": "No connection to the desktop app",
-    "verifyCastItUrl": "Verify that the url matches the one in the desktop app"
+    "verifyCastItUrl": "Verify that the url matches the one in the desktop app",
+    "playFile": "Play file",
+    "playFileFromTheBeginning": "Play file from the beginning",
+    "deleteFile": "Delete file",
+    "rename": "Rename",
+    "delete": "Delete",
+    "fileOptions": "File options",
+    "audio": "Audio",
+    "subtitles": "Subtitles",
+    "quality": "Quality",
+    "volume": "Volume",
+    "na":"N/A"
 }

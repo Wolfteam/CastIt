@@ -28,5 +28,6 @@ class SetFileOptionsRequestDto extends BaseSocketRequestDto {
   }) : super(messageType: msgType);
 
   factory SetFileOptionsRequestDto.fromJson(Map<String, dynamic> json) => _$SetFileOptionsRequestDtoFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$SetFileOptionsRequestDtoToJson(this);
 }

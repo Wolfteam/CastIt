@@ -5,42 +5,46 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../models/dtos/responses/file_response_dto.dart';
-import '../../models/dtos/responses/playlist_response_dto.dart';
-import '../../services/castit_service.dart';
+import '../../models/dtos/responses/file_item_response_dto.dart';
+import '../../models/dtos/responses/playlist_item_response_dto.dart';
+import '../server_ws/server_ws_bloc.dart';
 
 part 'playlist_bloc.freezed.dart';
 part 'playlist_event.dart';
 part 'playlist_state.dart';
 
 class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
-  final CastItService _castItService;
+  final ServerWsBloc _serverWsBloc;
 
   @override
   PlayListState get initialState => PlayListState.loading();
 
-  PlayListBloc(this._castItService);
+  PlayListBloc(this._serverWsBloc) {
+    _serverWsBloc.playlistLoaded.stream.listen((event) {
+      add(PlayListEvent.loaded(playlist: event));
+    });
+  }
 
   @override
   Stream<PlayListState> mapEventToState(
     PlayListEvent event,
   ) async* {
-    if (event is PlayListLoadEvent) {
-      yield initialState;
-      yield* _loadPlayList(event.playList);
-    }
-  }
-
-  Stream<PlayListState> _loadPlayList(PlayListResponseDto playlist) async* {
-    final response = await _castItService.getAllFiles(playlist.id);
-    yield PlayListState.loaded(
-      playlistId: playlist.id,
-      name: playlist.name,
-      loop: playlist.loop,
-      position: playlist.position,
-      shuffle: playlist.shuffle,
-      files: response.result,
-      loaded: response.succeed,
+    final s = event.map(
+      load: (e) async {
+        await _serverWsBloc.loadPlayList(e.id);
+        return initialState;
+      },
+      loaded: (e) async => PlayListState.loaded(
+        playlistId: e.playlist.id,
+        name: e.playlist.name,
+        loop: e.playlist.loop,
+        position: e.playlist.position,
+        shuffle: e.playlist.shuffle,
+        files: e.playlist.files,
+        loaded: true,
+      ),
     );
+
+    yield await s;
   }
 }
