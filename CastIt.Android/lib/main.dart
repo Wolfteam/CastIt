@@ -18,7 +18,6 @@ import 'services/logging_service.dart';
 import 'services/settings_service.dart';
 import 'ui/pages/main_page.dart';
 
-//TODO: IF THE SCREEN GOES OFF, THE WIFI MAY GO DOWN
 Future main() async {
   await setupLogging();
   initInjection();

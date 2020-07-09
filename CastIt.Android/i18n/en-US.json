@@ -53,5 +53,6 @@
     "quality": "Quality",
     "volume": "Volume",
     "na": "N/A",
-    "webServerUrl": "Web server url"
+    "webServerUrl": "Web server url",
+    "search": "Search"
 }

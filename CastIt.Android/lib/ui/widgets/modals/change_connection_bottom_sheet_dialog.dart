@@ -111,6 +111,12 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
     );
   }
 
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
   void _urlChanged() {
     context.bloc<SettingsBloc>().add(SettingsEvent.castItUrlChanged(castItUrl: _urlController.text));
   }

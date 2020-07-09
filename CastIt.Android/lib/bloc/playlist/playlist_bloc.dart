@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../common/extensions/string_extensions.dart';
 import '../../models/dtos/responses/file_item_response_dto.dart';
 import '../../models/dtos/responses/playlist_item_response_dto.dart';
 import '../server_ws/server_ws_bloc.dart';
@@ -19,9 +20,15 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   @override
   PlayListState get initialState => PlayListState.loading();
 
+  PlayListLoadedState get currentState => state as PlayListLoadedState;
+
   PlayListBloc(this._serverWsBloc) {
     _serverWsBloc.playlistLoaded.stream.listen((event) {
       add(PlayListEvent.loaded(playlist: event));
+    });
+
+    _serverWsBloc.disconnected.stream.listen((event) {
+      add(const PlayListEvent.disconnected());
     });
   }
 
@@ -29,8 +36,13 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   Stream<PlayListState> mapEventToState(
     PlayListEvent event,
   ) async* {
-    yield initialState;
+    if (event is PlayListLoadEvent || event is PlayListLoadedEvent) {
+      //If there were playlists loaded, hide them all!
+      yield initialState;
+    }
+
     final s = event.map(
+      disconnected: (e) async => PlayListState.disconnected(),
       load: (e) async {
         await _serverWsBloc.loadPlayList(e.id);
         return initialState;
@@ -44,6 +56,20 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
         files: e.playlist.files,
         loaded: true,
       ),
+      playListOptionsChanged: (e) async => currentState.copyWith(loop: e.loop, shuffle: e.shuffle),
+      toggleSearchBoxVisibility: (e) async => currentState.copyWith(
+        searchBoxIsVisible: !currentState.searchBoxIsVisible,
+      ),
+      searchBoxTextChanged: (e) async {
+        final isFiltering = !e.text.isNullEmptyOrWhitespace;
+        final filteredFiles = !isFiltering
+            ? <FileItemResponseDto>[]
+            : currentState.files
+                .where((element) => element.filename.toLowerCase().contains(e.text.toLowerCase()))
+                .toList();
+
+        return currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
+      },
     );
 
     yield await s;

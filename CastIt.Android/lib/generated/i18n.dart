@@ -142,6 +142,8 @@ class I18n implements WidgetsLocalizations {
   String get na => "N/A";
   /// "Web server url"
   String get webServerUrl => "Web server url";
+  /// "Search"
+  String get search => "Search";
 }
 
 class _I18n_en_US extends I18n {
@@ -319,6 +321,9 @@ class _I18n_es_VE extends I18n {
   /// "Ruta del servidor web"
   @override
   String get webServerUrl => "Ruta del servidor web";
+  /// "Buscar"
+  @override
+  String get search => "Buscar";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;

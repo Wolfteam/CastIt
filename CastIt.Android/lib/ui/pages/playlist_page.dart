@@ -1,74 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../../bloc/playlist/playlist_bloc.dart';
 import '../../bloc/server_ws/server_ws_bloc.dart';
+import '../../common/styles.dart';
 import '../../generated/i18n.dart';
 import '../../models/dtos/responses/file_item_response_dto.dart';
 import '../widgets/items/file_item.dart';
 import '../widgets/items/item_counter.dart';
-import '../widgets/page_header.dart';
+import '../widgets/something_went_wrong.dart';
 
-class PlayListPage extends StatelessWidget {
-  final _refreshController = RefreshController(initialRefresh: false);
-  final _listViewScrollController = ScrollController();
-  final _itemHeight = 75.0;
-
+class PlayListPage extends StatefulWidget {
   final int id;
   final int scrollToFileId;
-  PlayListPage({
+  const PlayListPage({
     @required this.id,
     this.scrollToFileId,
   });
 
   @override
+  _PlayListPageState createState() => _PlayListPageState();
+}
+
+class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderStateMixin {
+  final _refreshController = RefreshController(initialRefresh: false);
+
+  final _listViewScrollController = ScrollController();
+
+  final _itemHeight = 75.0;
+
+  final _searchFocusNode = FocusNode();
+
+  TextEditingController _searchBoxTextController;
+
+  AnimationController _hideFabAnimController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _searchBoxTextController = TextEditingController(text: '');
+    _hideFabAnimController = AnimationController(
+      vsync: this,
+      duration: kThemeAnimationDuration,
+      value: 1, // initially visible
+    );
+    _searchBoxTextController.addListener(_onSearchTextChanged);
+    _listViewScrollController.addListener(_onListViewScroll);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: BlocConsumer<PlayListBloc, PlayListState>(
-          listener: (ctx, state) {
-            state.maybeMap(
-              loaded: (_) {
-                _refreshController.refreshCompleted();
-              },
-              orElse: () {},
-            );
-          },
-          builder: (ctx, state) => Column(
+    return BlocConsumer<PlayListBloc, PlayListState>(
+      listener: (ctx, state) {
+        state.maybeMap(
+          loaded: (_) => _refreshController.refreshCompleted(),
+          disconnected: (_) => _refreshController.refreshCompleted(),
+          orElse: () {},
+        );
+      },
+      builder: (_, state) => Scaffold(
+        body: SafeArea(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              ..._buildPage(ctx, state),
+              ..._buildPage(state),
             ],
           ),
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: _buildFloatingActionBar(state),
       ),
     );
   }
 
-  List<Widget> _buildPage(BuildContext context, PlayListState state) {
+  @override
+  void dispose() {
+    _hideFabAnimController.dispose();
+    _searchBoxTextController.dispose();
+    _listViewScrollController.dispose();
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  List<Widget> _buildPage(PlayListState state) {
     final i18n = I18n.of(context);
-    final goBack = Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: FlatButton.icon(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          label: Text(
-            i18n.playlists,
-            style: const TextStyle(fontSize: 24),
-          ),
-        ),
-      ),
-    );
-    return state.when<List<Widget>>(
-      loading: () {
+    return state.map<List<Widget>>(
+      disconnected: (_) {
         return [
-          goBack,
+          _buildHeader(),
+          const SomethingWentWrong(),
+        ];
+      },
+      loading: (_) {
+        return [
+          _buildHeader(),
           const Expanded(
             child: Center(
               child: CircularProgressIndicator(),
@@ -76,10 +105,10 @@ class PlayListPage extends StatelessWidget {
           ),
         ];
       },
-      loaded: (playListId, name, position, loop, shuffle, files, loaded) {
-        if (!loaded) {
+      loaded: (s) {
+        if (!s.loaded) {
           return [
-            goBack,
+            _buildHeader(),
             Expanded(
               child: Center(
                 child: Text(i18n.somethingWentWrong),
@@ -87,132 +116,223 @@ class PlayListPage extends StatelessWidget {
             ),
           ];
         }
-        if (scrollToFileId != null) {
-          final id = files.firstWhere((element) => element.id == scrollToFileId, orElse: () => null)?.id;
+        if (widget.scrollToFileId != null) {
+          final id = s.files.firstWhere((element) => element.id == widget.scrollToFileId, orElse: () => null)?.id;
           if (id != null) {
             SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(id));
           }
         }
+        final filesToUse = s.isFiltering ? s.filteredFiles : s.files;
         return [
-          goBack,
-          _buildHeader(context, name, files.length),
-          _buildActionButtons(context, shuffle, loop),
-          _buildItems(context, files),
+          _buildHeader(itemCount: filesToUse.length, showSearch: s.searchBoxIsVisible),
+          _buildItems(filesToUse),
         ];
       },
     );
   }
 
-  Widget _buildHeader(
-    BuildContext context,
-    String playListName,
-    int itemLength,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        Flexible(
-          child: PageHeader(
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            title: playListName,
-            icon: Icons.list,
+  Widget _buildHeader({int itemCount, bool showSearch = false}) {
+    final i18n = I18n.of(context);
+    if (showSearch) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        _searchFocusNode.requestFocus();
+      });
+    }
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FlatButton.icon(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  label: Text(
+                    i18n.playlists,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                ),
+              ),
+              if (itemCount != null)
+                Container(
+                  margin: const EdgeInsets.only(right: 20),
+                  child: ItemCounter(itemCount),
+                ),
+            ],
           ),
-        ),
-        Container(
-          alignment: Alignment.centerRight,
-          margin: const EdgeInsets.only(right: 10),
-          child: ItemCounter(itemLength),
-        ),
-      ],
+          if (showSearch) _buildSearchBox(),
+        ],
+      ),
     );
   }
 
-  Widget _buildActionButtons(BuildContext ctx, bool shuffle, bool loop) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        ToggleButtons(
-          borderColor: Colors.transparent,
-          fillColor: Colors.transparent,
-          selectedBorderColor: Colors.transparent,
-          onPressed: (int index) {
-            final s = index == 0 ? !shuffle : shuffle;
-            final l = index == 1 ? !loop : loop;
-            _setPlayListOptions(ctx, l, s);
-          },
-          isSelected: [shuffle, loop],
-          children: <Widget>[
-            Icon(Icons.shuffle),
-            Icon(Icons.loop),
-          ],
-        ),
-        // IconButton(
-        //   icon: Icon(Icons.shuffle),
-        //   onPressed: () => _setPlayListOptions(ctx, shuffle, loop),
-        // ),
-        // IconButton(
-        //   icon: Icon(Icons.loop,),
-        //   onPressed: () => _setPlayListOptions(ctx, shuffle, loop),
-        // ),
-        IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {},
-        )
-      ],
-    );
-  }
-
-  Widget _buildItems(BuildContext context, List<FileItemResponseDto> files) {
-    return Expanded(
-      child: SmartRefresher(
-        enablePullDown: true,
-        header: const MaterialClassicHeader(),
-        controller: _refreshController,
-        onRefresh: () {
-          context.bloc<PlayListBloc>().add(PlayListEvent.load(id: id));
+  Widget _buildItems(List<FileItemResponseDto> files) {
+    final listView = SmartRefresher(
+      enablePullDown: true,
+      header: const MaterialClassicHeader(),
+      controller: _refreshController,
+      onRefresh: () {
+        context.bloc<PlayListBloc>().add(PlayListEvent.load(id: widget.id));
+      },
+      child: ListView.builder(
+        controller: _listViewScrollController,
+        shrinkWrap: true,
+        itemCount: files.length,
+        itemBuilder: (ctx, i) {
+          final file = files[i];
+          return FileItem(
+            key: _getKeyForFileItem(file.id),
+            itemHeight: _itemHeight,
+            id: file.id,
+            position: file.position,
+            playListId: file.playListId,
+            isBeingPlayed: file.isBeingPlayed,
+            totalSeconds: file.totalSeconds,
+            name: file.filename,
+            path: file.path,
+            size: file.size,
+            ext: file.ext,
+            exists: file.exists,
+            isLocalFile: file.isLocalFile,
+            isUrlFile: file.isUrlFile,
+            playedPercentage: file.playedPercentage,
+            loop: file.loop,
+          );
         },
-        child: ListView.builder(
-          controller: _listViewScrollController,
-          shrinkWrap: true,
-          itemCount: files.length,
-          itemBuilder: (ctx, i) {
-            final file = files[i];
-            return FileItem(
-              key: _getKeyForFileItem(file.id),
-              itemHeight: _itemHeight,
-              id: file.id,
-              position: file.position,
-              playListId: file.playListId,
-              isBeingPlayed: file.isBeingPlayed,
-              totalSeconds: file.totalSeconds,
-              name: file.filename,
-              path: file.path,
-              size: file.size,
-              ext: file.ext,
-              exists: file.exists,
-              isLocalFile: file.isLocalFile,
-              isUrlFile: file.isUrlFile,
-              playedPercentage: file.playedPercentage,
-              loop: file.loop,
-            );
-          },
+      ),
+    );
+
+    return Expanded(child: listView);
+  }
+
+  Widget _buildSearchBox() {
+    final theme = Theme.of(context);
+    final i18n = I18n.of(context);
+    return Card(
+      elevation: 10,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      shape: Styles.floatingCardShape,
+      child: Row(
+        children: <Widget>[
+          Container(
+            margin: const EdgeInsets.only(left: 10),
+            child: Icon(Icons.search, size: 30),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _searchBoxTextController,
+              focusNode: _searchFocusNode,
+              cursorColor: theme.accentColor,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.go,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+                hintText: '${i18n.search}...',
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close),
+            onPressed: _cleanSearchText,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionBar(PlayListState state) {
+    final theme = Theme.of(context);
+    const iconSize = 30.0;
+    return state.map(
+      disconnected: (s) => null,
+      loading: (s) => null,
+      loaded: (s) => FadeTransition(
+        opacity: _hideFabAnimController,
+        child: Card(
+          elevation: 10,
+          shape: Styles.floatingCardShape,
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              ButtonBar(
+                buttonPadding: const EdgeInsets.all(0),
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.loop, color: s.loop ? theme.accentColor : null, size: iconSize),
+                    onPressed: () => _setPlayListOptions(!s.loop, s.shuffle),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.shuffle, color: s.shuffle ? theme.accentColor : null, size: iconSize),
+                    onPressed: () => _setPlayListOptions(s.loop, !s.shuffle),
+                  ),
+                ],
+              ),
+              Text(s.name, overflow: TextOverflow.ellipsis),
+              ButtonBar(
+                buttonPadding: const EdgeInsets.all(0),
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.search, size: iconSize),
+                    onPressed: _toggleSearchBoxVisibility,
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.arrow_upward, size: iconSize),
+                    onPressed: () => _animateToIndex(1),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _setPlayListOptions(BuildContext ctx, bool loop, bool shuffle) {
-    final bloc = ctx.bloc<ServerWsBloc>();
-    bloc.setPlayListOptions(id, loop: loop, shuffle: shuffle);
+  void _setPlayListOptions(bool loop, bool shuffle) {
+    final bloc = context.bloc<ServerWsBloc>();
+    bloc.setPlayListOptions(widget.id, loop: loop, shuffle: shuffle);
+    context.bloc<PlayListBloc>().add(PlayListEvent.playListOptionsChanged(loop: loop, shuffle: shuffle));
   }
 
-//TODO: UPDATE THE PROGRESS
-//TODO: IF THE PLAYED FILE CHANGES, AND THIS PAGE IS OPEN, SCROLL TO THE NEW PLAYED FILE
   void _animateToIndex(int i) => _listViewScrollController.animateTo(
         (_itemHeight * i) - _itemHeight,
         duration: const Duration(seconds: 2),
         curve: Curves.fastOutSlowIn,
       );
+
+  void _onListViewScroll() {
+    switch (_listViewScrollController.position.userScrollDirection) {
+      case ScrollDirection.idle:
+        break;
+      case ScrollDirection.forward:
+        _hideFabAnimController.forward();
+        break;
+      case ScrollDirection.reverse:
+        _hideFabAnimController.reverse();
+        break;
+    }
+  }
+
+  void _toggleSearchBoxVisibility() =>
+      context.bloc<PlayListBloc>().add(const PlayListEvent.toggleSearchBoxVisibility());
+
+  void _onSearchTextChanged() =>
+      context.bloc<PlayListBloc>().add(PlayListEvent.searchBoxTextChanged(text: _searchBoxTextController.text));
+
+  void _cleanSearchText() {
+    if (_searchBoxTextController.text.isEmpty) {
+      _toggleSearchBoxVisibility();
+      return;
+    }
+    _searchBoxTextController.text = '';
+  }
 
   Key _getKeyForFileItem(int id) => Key('file_item_$id');
 }

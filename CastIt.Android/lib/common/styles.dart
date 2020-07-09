@@ -5,6 +5,8 @@ class Styles {
   static const String appIconPath = 'assets/icon/icon.png';
   static final RoundedRectangleBorder cardSettingsShape =
       RoundedRectangleBorder(borderRadius: BorderRadius.circular(10));
+  static final RoundedRectangleBorder floatingCardShape =
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(20));
 
   static const cardSettingsMargin = EdgeInsets.all(10);
   static const double cardSettingsElevation = 3;

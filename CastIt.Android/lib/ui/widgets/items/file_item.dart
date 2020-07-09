@@ -48,7 +48,34 @@ class FileItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final extraInfo = '$ext | $size';
-
+    final title = !loop
+        ? Text(
+            name,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.headline6,
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                flex: 90,
+                fit: FlexFit.tight,
+                child: Text(
+                  name,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.headline6,
+                ),
+              ),
+              Flexible(
+                flex: 10,
+                fit: FlexFit.tight,
+                child: Icon(
+                  Icons.loop,
+                  size: 20,
+                ),
+              ),
+            ],
+          );
     return Container(
       color: isBeingPlayed ? Colors.red.withOpacity(0.5) : null,
       height: itemHeight,
@@ -57,11 +84,7 @@ class FileItem extends StatelessWidget {
         selected: loop,
         leading: ItemCounter(position),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        title: Text(
-          name,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.headline6,
-        ),
+        title: title,
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[

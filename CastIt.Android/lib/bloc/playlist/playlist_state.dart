@@ -11,7 +11,12 @@ abstract class PlayListState implements _$PlayListState {
     @required bool shuffle,
     @required List<FileItemResponseDto> files,
     @required bool loaded,
+    @Default([]) List<FileItemResponseDto> filteredFiles,
+    @Default(false) bool searchBoxIsVisible,
+    @Default(false) bool isFiltering,
   }) = PlayListLoadedState;
+
+  factory PlayListState.disconnected() = PlayListDisconnectedState;
 
   const PlayListState._();
 }
