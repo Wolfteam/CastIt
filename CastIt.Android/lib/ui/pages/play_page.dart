@@ -34,29 +34,23 @@ class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<
 
   List<Widget> _buildPage(PlayState state) {
     final widgets = [
-      _buildCoverImg(state),
-      const SizedBox(height: 20.0),
-      const PlayProgressBar(),
-      const PlayProgressText(),
-      const SizedBox(height: 10),
-      PlayButtons(areDisabled: state is! PlayingState),
+      Flexible(
+        fit: FlexFit.tight,
+        flex: 70,
+        child: _buildCoverImg(state),
+      ),
+      const Flexible(flex: 8, fit: FlexFit.tight, child: PlayProgressBar()),
+      const Flexible(flex: 3, fit: FlexFit.tight, child: PlayProgressText()),
+      Flexible(flex: 19, fit: FlexFit.tight, child: PlayButtons(areDisabled: state is! PlayingState)),
     ];
     return widgets;
   }
 
   Widget _buildCoverImg(PlayState state) {
-    final size = MediaQuery.of(context).size;
-    final coverHeigth = size.height * 0.6;
     return state.map(
-      connecting: (state) {
-        return Container(
-          height: coverHeigth,
-          child: const Center(child: CircularProgressIndicator()),
-        );
-      },
+      connecting: (state) => const PlayCoverImg(showLoading: true),
       connected: (state) => const PlayCoverImg(),
       fileLoading: (state) => const PlayCoverImg(showLoading: true),
-      //TODO: SHOW ERROR MSG HERE
       fileLoadingFailed: (state) => const PlayCoverImg(),
       playing: (state) => PlayCoverImg(
         fileId: state.id,

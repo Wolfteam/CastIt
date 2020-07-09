@@ -92,7 +92,7 @@ class SettingsServiceImpl extends SettingsService {
       _logger.info(runtimeType, 'Setting english as the default lang');
       _prefs.setInt(_appLanguageKey, AppLanguageType.english.index);
     }
-
+//TODO: RETRIEVE THE URL FROM SOMEWHERE
     if (_prefs.get(_castItUrlKey) == null) {
       _logger.info(runtimeType, 'Setting url to the default one');
       _prefs.setString(_castItUrlKey, AppConstants.baseCastItUrl);

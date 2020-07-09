@@ -31,126 +31,122 @@ class PlayCoverImg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final i18n = I18n.of(context);
-    final size = MediaQuery.of(context).size;
-    final coverHeigth = size.height * 0.6;
-    return Container(
-      height: coverHeigth,
-      child: Stack(
-        children: <Widget>[
-          if (!thumbUrl.isNullEmptyOrWhitespace && !showLoading)
-            CachedNetworkImage(
-              imageUrl: thumbUrl,
-              imageBuilder: (ctx, imageProvider) => Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.fill,
-                  ),
+    const dummyIndicator = Center(child: CircularProgressIndicator());
+    return Stack(
+      children: <Widget>[
+        if (!thumbUrl.isNullEmptyOrWhitespace && !showLoading)
+          CachedNetworkImage(
+            imageUrl: thumbUrl,
+            imageBuilder: (ctx, imageProvider) => Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: imageProvider,
+                  fit: BoxFit.fill,
                 ),
               ),
-              placeholder: (ctx, url) => const CircularProgressIndicator(),
-              errorWidget: (ctx, url, error) => Container(),
             ),
-          if (showLoading) const Center(child: CircularProgressIndicator()),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.5)],
-                begin: Alignment.center,
-                end: Alignment.topCenter,
-              ),
+            placeholder: (ctx, url) => dummyIndicator,
+            errorWidget: (ctx, url, error) => Container(),
+          ),
+        if (showLoading) dummyIndicator,
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.5)],
+              begin: Alignment.center,
+              end: Alignment.topCenter,
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.8)],
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-              ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.8)],
+              begin: Alignment.center,
+              end: Alignment.bottomCenter,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const SizedBox(height: 20.0),
-                Row(
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const SizedBox(height: 20.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(
+                      Icons.playlist_play,
+                      color: Colors.white,
+                    ),
+                    onPressed: fileId == null ? null : () => _goToPlayList(context),
+                  ),
+                  Column(
+                    children: <Widget>[
+                      Text(
+                        i18n.playlist,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                        ),
+                      ),
+                      Text(
+                        playListName.isNullEmptyOrWhitespace ? '' : playListName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                    ),
+                    onPressed: fileId == null ? null : () => _showFileOptionsModal(context),
+                  )
+                ],
+              ),
+              const Spacer(),
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     IconButton(
                       icon: Icon(
-                        Icons.playlist_play,
+                        Icons.shuffle,
                         color: Colors.white,
                       ),
-                      onPressed: fileId == null ? null : () => _goToPlayList(context),
+                      onPressed: fileId == null ? null : () => {},
                     ),
-                    Column(
-                      children: <Widget>[
-                        Text(
-                          i18n.playlist,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                          ),
+                    Flexible(
+                      child: Text(
+                        fileName.isNullEmptyOrWhitespace ? '' : fileName,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 28.0,
                         ),
-                        Text(
-                          playListName.isNullEmptyOrWhitespace ? '' : playListName,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
+                      ),
                     ),
                     IconButton(
                       icon: Icon(
-                        Icons.settings,
+                        Icons.repeat,
                         color: Colors.white,
                       ),
-                      onPressed: fileId == null ? null : () => _showFileOptionsModal(context),
-                    )
+                      onPressed: fileId == null ? null : () => {},
+                    ),
                   ],
                 ),
-                const Spacer(),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      IconButton(
-                        icon: Icon(
-                          Icons.shuffle,
-                          color: Colors.white,
-                        ),
-                        onPressed: fileId == null ? null : () => {},
-                      ),
-                      Flexible(
-                        child: Text(
-                          fileName.isNullEmptyOrWhitespace ? '' : fileName,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28.0,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.repeat,
-                          color: Colors.white,
-                        ),
-                        onPressed: fileId == null ? null : () => {},
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
+              ),
+            ],
+          ),
+        )
+      ],
     );
   }
 
