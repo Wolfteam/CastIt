@@ -13,14 +13,14 @@ namespace CastIt.Interfaces
         OnCastRendererSetHandler OnCastRendererSet { get; set; }
         OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        OnFileLoaded OnFileLoaded { get; set; }
+        OnFileLoadedHandler OnFileLoaded { get; set; }
         OnEndReachedHandler OnEndReached { get; set; }
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
-        OnQualitiesChanged QualitiesChanged { get; set; }
-        OnPaused OnPaused { get; set; }
-        OnDisconnected OnDisconnected { get; set; }
-        OnVolumeChanged OnVolumeChanged { get; set; }
+        OnQualitiesChangedHandler QualitiesChanged { get; set; }
+        OnPausedHandler OnPaused { get; set; }
+        OnDisconnectedHandler OnDisconnected { get; set; }
+        OnVolumeChangedHandler OnVolumeChanged { get; set; }
         Func<string> GetSubTitles { get; set; }
 
         void Init();

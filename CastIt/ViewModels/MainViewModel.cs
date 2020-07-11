@@ -519,6 +519,7 @@ namespace CastIt.ViewModels
             var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
             response.PlayListId = playlist?.Id ?? 0;
             response.PlayListName = playlist?.Name ?? "N/A";
+            response.LoopPlayList = playlist?.Loop ?? false;
             response.ShufflePlayList = playlist?.Shuffle ?? false;
             return response;
         }
@@ -556,20 +557,17 @@ namespace CastIt.ViewModels
 
             pl.Loop = loop;
             pl.Shuffle = shuffle;
-            _appWebServer.OnPlayListsChanged?.Invoke();
         }
 
-        public async Task DeletePlayList(long id)
+        public Task DeletePlayList(long id)
         {
             var pl = PlayLists.FirstOrDefault(pl => pl.Id == id);
             if (pl == null)
             {
                 Logger.Warn($"{nameof(DeletePlayList)}: Cant delete playlistId = {id} because it doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
-                return;
+                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
             }
-            await DeletePlayList(pl);
-            _appWebServer.OnPlayListsChanged?.Invoke();
+            return DeletePlayList(pl);
         }
 
         public Task DeleteFile(long id, long playListId)
@@ -578,21 +576,18 @@ namespace CastIt.ViewModels
             if (pl == null)
             {
                 Logger.Warn($"{nameof(DeleteFile)}: Couldnt delete fileId = {id} because playlistId = {playListId} doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
-                return Task.CompletedTask;
+                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
             }
-            _appWebServer.OnFilesChanged?.Invoke();
             return pl.RemoveFile(id);
         }
 
-        public void SetFileLoop(long id, long playlistId, bool loop)
+        public Task SetFileLoop(long id, long playlistId, bool loop)
         {
             var pl = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
             if (pl == null)
             {
                 Logger.Warn($"{nameof(SetFileLoop)}: Couldnt update fileId = {id} because playlistId = {playlistId} doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
-                return;
+                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
             }
 
 
@@ -600,12 +595,11 @@ namespace CastIt.ViewModels
             if (file == null)
             {
                 Logger.Warn($"{nameof(SetFileLoop)}: Couldnt update fileId = {id} because it doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("FileDoesntExist"));
-                return;
+                return ShowSnackbarMsg(GetText("FileDoesntExist"));
             }
 
             file.Loop = loop;
-            _appWebServer.OnFilesChanged?.Invoke();
+            return Task.CompletedTask;
         }
 
         public List<FileItemOptionsResponseDto> GetFileOptions(long id)
@@ -715,17 +709,19 @@ namespace CastIt.ViewModels
 
             PlayLists.Add(vm);
             SelectedPlayListIndex = PlayLists.Count - 1;
+
+            _appWebServer.OnPlayListAdded?.Invoke(vm.Id);
         }
 
         private async Task DeletePlayList(PlayListItemViewModel playlist)
         {
             if (playlist == null)
                 return;
-
-            await _playListsService.DeletePlayList(playlist.Id);
+            long id = playlist.Id;
+            await _playListsService.DeletePlayList(id);
             playlist.CleanUp();
             PlayLists.Remove(playlist);
-            _appWebServer.OnPlayListsChanged?.Invoke();
+            _appWebServer.OnPlayListDeleted?.Invoke(id);
         }
 
         private async Task DeleteAllPlayLists(PlayListItemViewModel except)
@@ -742,14 +738,18 @@ namespace CastIt.ViewModels
                 items.Add(PlayLists[i]);
             }
 
-            await _playListsService.DeletePlayLists(items.Select(pl => pl.Id).ToList());
+            var ids = items.Select(pl => pl.Id).ToList();
+            await _playListsService.DeletePlayLists(ids);
             foreach (var playlist in items)
             {
                 playlist.CleanUp();
             }
 
             PlayLists.RemoveItems(items);
-            _appWebServer.OnPlayListsChanged?.Invoke();
+            foreach (var id in ids)
+            {
+                _appWebServer.OnPlayListDeleted?.Invoke(id);
+            }
         }
 
         private async Task HandleCloseApp()

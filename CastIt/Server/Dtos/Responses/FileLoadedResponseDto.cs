@@ -15,6 +15,7 @@
 
         public long PlayListId { get; set; }
         public string PlayListName { get; set; }
+        public bool LoopPlayList { get; set; }
         public bool ShufflePlayList { get; set; }
     }
 }

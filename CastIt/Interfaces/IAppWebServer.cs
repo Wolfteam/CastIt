@@ -8,24 +8,27 @@ namespace CastIt.Interfaces
 {
     public interface IAppWebServer : IDisposable
     {
-        //OnCastRendererSetHandler OnCastRendererSet { get; set; }
-        //OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
-        //OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        public OnFileLoading OnFileLoading { get; set; }
-        public OnFileLoadedWs OnFileLoaded { get; set; }
-        public OnFileLoadingError OnFileLoadingError { get; set; }
+        public OnFileLoadingHandler OnFileLoading { get; set; }
+        public OnFileLoadedWsHandler OnFileLoaded { get; set; }
+        public OnFileLoadingErrorHandler OnFileLoadingError { get; set; }
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
         OnEndReachedHandler OnEndReached { get; set; }
-        //OnQualitiesChanged QualitiesChanged { get; set; }
-        OnPaused OnPaused { get; set; }
-        OnDisconnected OnDisconnected { get; set; }
-        OnVolumeChanged OnVolumeChanged { get; set; }
-        OnAppClosing OnAppClosing { get; set; }
-        OnAppSettingsChanged OnAppSettingsChanged { get; set; }
-        OnPlayListsChanged OnPlayListsChanged { get; set; }
-        OnFilesChanged OnFilesChanged { get; set; }
-        OnServerMsg OnServerMsg { get; set; }
+        OnPausedHandler OnPaused { get; set; }
+        OnDisconnectedHandler OnDisconnected { get; set; }
+        OnVolumeChangedHandler OnVolumeChanged { get; set; }
+        OnAppClosingHandler OnAppClosing { get; set; }
+        OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
+
+        OnPlayListAddedHandler OnPlayListAdded { get; set; }
+        OnPlayListChangedHandler OnPlayListChanged { get; set; }
+        OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
+
+        OnFileAddedHandlder OnFileAdded { get; set; }
+        OnFileChangedHandler OnFileChanged { get; set; }
+        OnFileDeletedHandler OnFileDeleted { get; set; }
+
+        OnServerMsgHandler OnServerMsg { get; set; }
 
         public string BaseUrl { get; }
         static IReadOnlyList<string> AllowedQueryParameters { get; }

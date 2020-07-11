@@ -41,8 +41,7 @@ namespace CastIt.Server
         #region Server Constants
         private const string PlayListsLoadedMsgType = "SERVER_PLAYLISTS_ALL";
         private const string PlayListLoadedMsgType = "SERVER_PLAYLISTS_ONE";
-        private const string PlayListsChangedMsgType = "SERVER_PLAYLISTS_CHANGED";
-        private const string FilesChangedMsgType = "SERVER_FILES_CHANGED";
+        private const string RefreshPlayListMsgType = "SERVER_PLAYLIST_REFRESH";
 
         private const string FileLoadingMsgType = "SERVER_FILE_LOADING";
         private const string FileLoadedMsgType = "SERVER_FILE_LOADED";
@@ -89,8 +88,12 @@ namespace CastIt.Server
             _server.OnVolumeChanged += VolumeLevelChanged;
             _server.OnAppClosing += AppClosing;
             _server.OnAppSettingsChanged += AppSettingsChanged;
-            _server.OnPlayListsChanged += PlayListsChanged;
-            _server.OnFilesChanged += FilesChanged;
+            _server.OnPlayListAdded += PlayListAdded;
+            _server.OnPlayListChanged += PlayListChanged;
+            _server.OnPlayListDeleted += PlayListDeleted;
+            _server.OnFileAdded += FileAdded;
+            _server.OnFileChanged += FileChanged;
+            _server.OnFileDeleted += FilesDeleted;
             _server.OnServerMsg += SendInfoMessage;
         }
 
@@ -157,8 +160,7 @@ namespace CastIt.Server
                         return _mainViewModel.DeleteFile(deleteFileRequest.Id, deleteFileRequest.PlayListId);
                     case LoopFileMsgType:
                         var loopRequest = JsonConvert.DeserializeObject<SetLoopFileRequestDto>(msg);
-                        _mainViewModel.SetFileLoop(loopRequest.Id, loopRequest.PlayListId, loopRequest.Loop);
-                        break;
+                        return _mainViewModel.SetFileLoop(loopRequest.Id, loopRequest.PlayListId, loopRequest.Loop);
                     case SetFileOptionsMsgType:
                         var request = JsonConvert.DeserializeObject<SetFileOptionsRequestDto>(msg);
                         return _mainViewModel.SetFileOptions(request.StreamIndex, request.IsAudio, request.IsSubTitle, request.IsQuality);
@@ -261,7 +263,6 @@ namespace CastIt.Server
             await SendMsg(response).ConfigureAwait(false);
         }
 
-        //THIS ONE SHOULD INDICATE IF THE FILE IS PAUSED OR NOT
         private async void Paused()
         {
             await SendMsg(FilePausedMsgType).ConfigureAwait(false);
@@ -301,14 +302,65 @@ namespace CastIt.Server
             await SendMsg(settings, SettingsChangedMsgType).ConfigureAwait(false);
         }
 
-        private async void PlayListsChanged()
+        private async void PlayListAdded(long id)
         {
-            await SendMsg(PlayListsChangedMsgType).ConfigureAwait(false);
+            await SendPlayLists().ConfigureAwait(false);
         }
 
-        private async void FilesChanged()
+        private async void PlayListChanged(long id)
         {
-            await SendMsg(FilesChangedMsgType).ConfigureAwait(false);
+            await SendPlayLists().ConfigureAwait(false);
+            await SendPlayList(id).ConfigureAwait(false);
+            if (_mainViewModel.IsCurrentlyPlaying)
+            {
+                FileLoaded();
+            }
+        }
+
+        private async void PlayListDeleted(long id)
+        {
+            await SendPlayLists().ConfigureAwait(false);
+            await RefreshPlayList(id, true).ConfigureAwait(false);
+            if (_mainViewModel.IsCurrentlyPlaying)
+            {
+                FileLoaded();
+            }
+        }
+
+        private Task RefreshPlayList(long id, bool wasDeleted = false)
+        {
+            var dto = new RefreshPlayListResponseDto
+            {
+                Id = id,
+                WasDeleted = wasDeleted
+            };
+
+            return SendMsg(dto, RefreshPlayListMsgType);
+        }
+
+        private async void FileAdded(long onPlayListId)
+        {
+            await SendPlayLists().ConfigureAwait(false);
+            await SendPlayList(onPlayListId).ConfigureAwait(false);
+        }
+
+        private async void FileChanged(long onPlayListId)
+        {
+            await SendPlayList(onPlayListId).ConfigureAwait(false);
+            if (_mainViewModel.IsCurrentlyPlaying)
+            {
+                FileLoaded();
+            }
+        }
+
+        private async void FilesDeleted(long onPlayListId)
+        {
+            await SendPlayLists().ConfigureAwait(false);
+            await SendPlayList(onPlayListId).ConfigureAwait(false);
+            if (_mainViewModel.IsCurrentlyPlaying)
+            {
+                FileLoaded();
+            }
         }
 
         private async void SendInfoMessage(string msg)

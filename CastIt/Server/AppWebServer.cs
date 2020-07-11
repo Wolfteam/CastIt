@@ -41,24 +41,27 @@ namespace CastIt.Server
         #endregion
 
         #region Events
-        //public OnCastRendererSetHandler OnCastRendererSet { get; set; }
-        //public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
-        //public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        public OnFileLoading OnFileLoading { get; set; }
-        public OnFileLoadedWs OnFileLoaded { get; set; }
-        public OnFileLoadingError OnFileLoadingError { get; set; }
+        public OnFileLoadingHandler OnFileLoading { get; set; }
+        public OnFileLoadedWsHandler OnFileLoaded { get; set; }
+        public OnFileLoadingErrorHandler OnFileLoadingError { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
-        //public OnQualitiesChanged QualitiesChanged { get; set; }
-        public OnPaused OnPaused { get; set; }
-        public OnDisconnected OnDisconnected { get; set; }
-        public OnVolumeChanged OnVolumeChanged { get; set; }
-        public OnAppClosing OnAppClosing { get; set; }
-        public OnAppSettingsChanged OnAppSettingsChanged { get; set; }
-        public OnPlayListsChanged OnPlayListsChanged { get; set; }
-        public OnFilesChanged OnFilesChanged { get; set; }
-        public OnServerMsg OnServerMsg { get; set; }
+        public OnPausedHandler OnPaused { get; set; }
+        public OnDisconnectedHandler OnDisconnected { get; set; }
+        public OnVolumeChangedHandler OnVolumeChanged { get; set; }
+        public OnAppClosingHandler OnAppClosing { get; set; }
+        public OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
+
+        public OnPlayListAddedHandler OnPlayListAdded { get; set; }
+        public OnPlayListChangedHandler OnPlayListChanged { get; set; }
+        public OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
+
+        public OnFileAddedHandlder OnFileAdded { get; set; }
+        public OnFileChangedHandler OnFileChanged { get; set; }
+        public OnFileDeletedHandler OnFileDeleted { get; set; }
+
+        public OnServerMsgHandler OnServerMsg { get; set; }
         #endregion
 
         public static IReadOnlyList<string> AllowedQueryParameters => new List<string>

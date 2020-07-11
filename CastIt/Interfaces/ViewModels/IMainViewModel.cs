@@ -43,7 +43,7 @@ namespace CastIt.Interfaces.ViewModels
         void SetPlayListOptions(long id, bool loop, bool shuffle);
         Task DeletePlayList(long id);
         Task DeleteFile(long id, long playListId);
-        void SetFileLoop(long id, long playlistId, bool loop);
+        Task SetFileLoop(long id, long playlistId, bool loop);
         Task SetFileOptions(int streamIndex, bool isAudio, bool isSubtitle, bool isQuality);
         void UpdateSettings(
             bool startFilesFromTheStart,

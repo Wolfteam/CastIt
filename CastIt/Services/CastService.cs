@@ -37,14 +37,14 @@ namespace CastIt.Services
         public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        public OnFileLoaded OnFileLoaded { get; set; }
+        public OnFileLoadedHandler OnFileLoaded { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
-        public OnQualitiesChanged QualitiesChanged { get; set; }
-        public OnPaused OnPaused { get; set; }
-        public OnDisconnected OnDisconnected { get; set; }
-        public OnVolumeChanged OnVolumeChanged { get; set; }
+        public OnQualitiesChangedHandler QualitiesChanged { get; set; }
+        public OnPausedHandler OnPaused { get; set; }
+        public OnDisconnectedHandler OnDisconnected { get; set; }
+        public OnVolumeChangedHandler OnVolumeChanged { get; set; }
         public Func<string> GetSubTitles { get; set; }
 
         public CastService(
