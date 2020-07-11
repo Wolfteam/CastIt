@@ -26,7 +26,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   final ServerWsBloc _serverWsBloc;
 
-  SettingsBloc(this._logger, this._settings, this._serverWsBloc) {
+  SettingsState get initialState => SettingsState.loading();
+
+  SettingsBloc(this._logger, this._settings, this._serverWsBloc) : super(SettingsState.loading()) {
     _serverWsBloc.connected.stream.listen((event) {
       add(SettingsEvent.load());
     });
@@ -39,9 +41,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       add(SettingsEvent.disconnected());
     });
   }
-
-  @override
-  SettingsState get initialState => SettingsState.loading();
 
   SettingsLoadedState get currentState => state as SettingsLoadedState;
 

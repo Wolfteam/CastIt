@@ -91,12 +91,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   IOWebSocketChannel _channel;
 
-  ServerWsBloc(this._logger, this._settings);
-
-  @override
   ServerWsState get initialState => ServerWsState.loading();
 
   ServerLoadedState get currentState => state as ServerLoadedState;
+
+  ServerWsBloc(this._logger, this._settings) : super(ServerWsState.loading());
 
   @override
   Stream<ServerWsState> mapEventToState(

@@ -12,7 +12,8 @@ part 'play_state.dart';
 
 class PlayBloc extends Bloc<PlayEvent, PlayState> {
   final ServerWsBloc _serverWsBloc;
-  PlayBloc(this._serverWsBloc) {
+
+  PlayBloc(this._serverWsBloc) : super(PlayState.connected()) {
     _serverWsBloc.connected.stream.listen((_) {
       add(PlayEvent.connected());
     });
@@ -58,9 +59,6 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       add(PlayEvent.disconnected());
     });
   }
-
-  @override
-  PlayState get initialState => PlayState.connected();
 
   bool get isPlaying => state is PlayingState;
   PlayingState get currentState => state as PlayingState;
@@ -125,7 +123,7 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
     if (s != null) {
       yield s;
     } else {
-      yield initialState;
+      yield PlayState.connected();
     }
   }
 }

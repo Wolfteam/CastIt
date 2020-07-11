@@ -13,14 +13,15 @@ part 'played_file_options_state.dart';
 
 class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptionsState> {
   final ServerWsBloc _serverWsBloc;
-  PlayedFileOptionsBloc(this._serverWsBloc) {
+
+  PlayedFileOptionsState get initialState => PlayedFileOptionsState.loading();
+
+  PlayedFileOptionsBloc(this._serverWsBloc) : super(PlayedFileOptionsState.loading()) {
     _serverWsBloc.fileOptionsLoaded.stream.listen((event) {
       add(PlayedFileOptionsEvent.loaded(options: event));
     });
   }
 
-  @override
-  PlayedFileOptionsState get initialState => PlayedFileOptionsState.loading();
   @override
   Stream<PlayedFileOptionsState> mapEventToState(
     PlayedFileOptionsEvent event,

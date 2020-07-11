@@ -22,12 +22,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   final LoggingService _logger;
   final SettingsService _settings;
 
-  @override
-  MainState get initialState => MainState.loading();
-
   MainLoadedState get currentState => state as MainLoadedState;
 
-  MainBloc(this._logger, this._settings);
+  MainBloc(this._logger, this._settings) : super(MainState.loading());
 
   @override
   Stream<MainState> mapEventToState(

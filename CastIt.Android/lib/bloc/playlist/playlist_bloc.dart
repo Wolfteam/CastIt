@@ -17,12 +17,11 @@ part 'playlist_state.dart';
 class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   final ServerWsBloc _serverWsBloc;
 
-  @override
   PlayListState get initialState => PlayListState.loading();
 
   PlayListLoadedState get currentState => state as PlayListLoadedState;
 
-  PlayListBloc(this._serverWsBloc) {
+  PlayListBloc(this._serverWsBloc) : super(PlayListState.loading()) {
     _serverWsBloc.playlistLoaded.stream.listen((event) {
       add(PlayListEvent.loaded(playlist: event));
     });

@@ -258,37 +258,42 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
           elevation: 10,
           shape: Styles.floatingCardShape,
           margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              ButtonBar(
-                buttonPadding: const EdgeInsets.all(0),
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.loop, color: s.loop ? theme.accentColor : null, size: iconSize),
-                    onPressed: () => _setPlayListOptions(!s.loop, s.shuffle),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.shuffle, color: s.shuffle ? theme.accentColor : null, size: iconSize),
-                    onPressed: () => _setPlayListOptions(s.loop, !s.shuffle),
-                  ),
-                ],
-              ),
-              Text(s.name, overflow: TextOverflow.ellipsis),
-              ButtonBar(
-                buttonPadding: const EdgeInsets.all(0),
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.search, size: iconSize),
-                    onPressed: _toggleSearchBoxVisibility,
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.arrow_upward, size: iconSize),
-                    onPressed: () => _animateToIndex(1),
-                  ),
-                ],
-              )
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                ButtonBar(
+                  buttonPadding: const EdgeInsets.all(0),
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(Icons.loop, color: s.loop ? theme.accentColor : null, size: iconSize),
+                      onPressed: () => _setPlayListOptions(!s.loop, s.shuffle),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.shuffle, color: s.shuffle ? theme.accentColor : null, size: iconSize),
+                      onPressed: () => _setPlayListOptions(s.loop, !s.shuffle),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Text(s.name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+                ),
+                ButtonBar(
+                  buttonPadding: const EdgeInsets.all(0),
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(Icons.search, size: iconSize),
+                      onPressed: _toggleSearchBoxVisibility,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.arrow_upward, size: iconSize),
+                      onPressed: () => _animateToIndex(1),
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
         ),
       ),
