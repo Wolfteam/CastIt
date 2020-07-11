@@ -59,6 +59,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
         state.maybeMap(
           loaded: (_) => _refreshController.refreshCompleted(),
           disconnected: (_) => _refreshController.refreshCompleted(),
+          close: (_) => Navigator.of(ctx).pop(),
           orElse: () {},
         );
       },
@@ -129,6 +130,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
           _buildItems(filesToUse),
         ];
       },
+      close: (_) => [],
     );
   }
 
@@ -298,6 +300,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
           ),
         ),
       ),
+      close: (s) => null,
     );
   }
 

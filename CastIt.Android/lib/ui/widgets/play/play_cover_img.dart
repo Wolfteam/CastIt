@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../bloc/played_file_options/played_file_options_bloc.dart';
 import '../../../bloc/playlist/playlist_bloc.dart';
+import '../../../bloc/server_ws/server_ws_bloc.dart';
 import '../../../common/extensions/string_extensions.dart';
 import '../../../common/styles.dart';
 import '../../../generated/i18n.dart';
@@ -17,6 +18,12 @@ class PlayCoverImg extends StatelessWidget {
   final String playListName;
   final String fileName;
   final bool showLoading;
+  final bool loopFile;
+  final bool loopPlayList;
+  final bool shufflePlayList;
+
+  bool get fileIdIsValid => fileId != null && fileId > 0;
+  bool get playListIsValid => playListId != null && playListId > 0;
 
   const PlayCoverImg({
     Key key,
@@ -25,12 +32,14 @@ class PlayCoverImg extends StatelessWidget {
     this.playListName,
     this.fileName,
     this.thumbUrl,
+    this.loopFile = false,
+    this.loopPlayList = false,
+    this.shufflePlayList = false,
     this.showLoading = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final i18n = I18n.of(context);
     const dummyIndicator = Center(child: CircularProgressIndicator());
     return Stack(
       children: <Widget>[
@@ -73,80 +82,83 @@ class PlayCoverImg extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const SizedBox(height: 20.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(
-                      Icons.playlist_play,
-                      color: Colors.white,
-                    ),
-                    onPressed: fileId == null ? null : () => _goToPlayList(context),
-                  ),
-                  Column(
-                    children: <Widget>[
-                      Text(
-                        i18n.playlist,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                        ),
-                      ),
-                      Text(
-                        playListName.isNullEmptyOrWhitespace ? '' : playListName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                    ),
-                    onPressed: fileId == null ? null : () => _showFileOptionsModal(context),
-                  )
-                ],
-              ),
+              _buildTop(context),
               const Spacer(),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    IconButton(
-                      icon: Icon(
-                        Icons.shuffle,
-                        color: Colors.white,
-                      ),
-                      onPressed: fileId == null ? null : () => {},
-                    ),
-                    Flexible(
-                      child: Text(
-                        fileName.isNullEmptyOrWhitespace ? '' : fileName,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 28.0,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.repeat,
-                        color: Colors.white,
-                      ),
-                      onPressed: fileId == null ? null : () => {},
-                    ),
-                  ],
-                ),
-              ),
+              _buildBottom(context),
             ],
           ),
         )
       ],
+    );
+  }
+
+  Widget _buildTop(BuildContext context) {
+    final i18n = I18n.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        IconButton(
+          icon: Icon(
+            Icons.playlist_play,
+            color: Colors.white,
+          ),
+          onPressed: !fileIdIsValid && !playListIsValid ? null : () => _goToPlayList(context),
+        ),
+        Column(
+          children: <Widget>[
+            Text(
+              i18n.playlist,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+              ),
+            ),
+            Text(
+              playListName.isNullEmptyOrWhitespace ? '' : playListName,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.settings,
+            color: Colors.white,
+          ),
+          onPressed: !fileIdIsValid ? null : () => _showFileOptionsModal(context),
+        )
+      ],
+    );
+  }
+
+  Widget _buildBottom(BuildContext context) {
+    final theme = Theme.of(context);
+    final i18n = I18n.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          IconButton(
+            tooltip: i18n.shufflePlayList,
+            icon: Icon(Icons.shuffle, color: shufflePlayList ? theme.accentColor : Colors.white),
+            onPressed: !playListIsValid ? null : () => _togglePlayListShuffle(context),
+          ),
+          Flexible(
+            child: Text(
+              fileName.isNullEmptyOrWhitespace ? '' : fileName,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28.0),
+            ),
+          ),
+          IconButton(
+            tooltip: i18n.loopFile,
+            icon: Icon(Icons.repeat, color: loopFile ? theme.accentColor : Colors.white),
+            onPressed: !fileIdIsValid ? null : () => _toggleFileLoop(context),
+          ),
+        ],
+      ),
     );
   }
 
@@ -166,4 +178,10 @@ class PlayCoverImg extends StatelessWidget {
       builder: (_) => PlayedFileOptionsBottomSheetDialog(),
     );
   }
+
+  Future<void> _togglePlayListShuffle(BuildContext context) =>
+      context.bloc<ServerWsBloc>().setPlayListOptions(playListId, loop: loopPlayList, shuffle: !shufflePlayList);
+
+  Future<void> _toggleFileLoop(BuildContext context) =>
+      context.bloc<ServerWsBloc>().setFileOptions(fileId, playListId, loop: !loopFile);
 }

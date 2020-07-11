@@ -16,6 +16,7 @@ abstract class FileLoadedResponseDto implements _$FileLoadedResponseDto {
     @required @JsonKey(name: 'IsMuted') bool isMuted,
     @JsonKey(name: 'PlayListId') int playListId,
     @JsonKey(name: 'PlayListName') String playListName,
+    @JsonKey(name: 'LoopPlayList') bool loopPlayList,
     @JsonKey(name: 'ShufflePlayList') bool shufflePlayList,
     @JsonKey(name: 'ThumbnailUrl') String thumbnailUrl,
   }) = _FileLoadedResponseDto;
@@ -34,6 +35,7 @@ abstract class FileLoadedResponseDto implements _$FileLoadedResponseDto {
         'IsMuted',
         'PlayListId',
         'PlayListName',
+        'LoopPlayList',
         'ShufflePlayList'
       ];
 }

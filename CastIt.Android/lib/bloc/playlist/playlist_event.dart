@@ -22,4 +22,6 @@ abstract class PlayListEvent implements _$PlayListEvent {
   const factory PlayListEvent.searchBoxTextChanged({
     @required String text,
   }) = PlayListSearchBoxTextChangedEvent;
+
+  const factory PlayListEvent.closePage() = PlayListClosePageEvent;
 }

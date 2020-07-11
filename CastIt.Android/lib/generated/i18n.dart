@@ -144,6 +144,10 @@ class I18n implements WidgetsLocalizations {
   String get webServerUrl => "Web server url";
   /// "Search"
   String get search => "Search";
+  /// "Shuffle playlist"
+  String get shufflePlayList => "Shuffle playlist";
+  /// "Loop file"
+  String get loopFile => "Loop file";
 }
 
 class _I18n_en_US extends I18n {
@@ -324,6 +328,12 @@ class _I18n_es_VE extends I18n {
   /// "Buscar"
   @override
   String get search => "Buscar";
+  /// "Lista de reproducción aleatoria"
+  @override
+  String get shufflePlayList => "Lista de reproducción aleatoria";
+  /// "Repetir archivo"
+  @override
+  String get loopFile => "Repetir archivo";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;

@@ -18,5 +18,7 @@ abstract class PlayListState implements _$PlayListState {
 
   factory PlayListState.disconnected() = PlayListDisconnectedState;
 
+  factory PlayListState.close() = PlayListCloseState;
+
   const PlayListState._();
 }

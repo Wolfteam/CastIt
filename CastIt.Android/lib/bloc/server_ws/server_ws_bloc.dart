@@ -9,26 +9,8 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status_codes;
 
 import '../../common/enums/video_scale_type.dart';
-import '../../models/dtos/base_socket_request_dto.dart';
-import '../../models/dtos/requests/app_settings_request_dto.dart';
-import '../../models/dtos/requests/base_item_request_dto.dart';
-import '../../models/dtos/requests/delete_file_request_dto.dart';
-import '../../models/dtos/requests/delete_playlist_request_dto.dart';
-import '../../models/dtos/requests/go_to_request_dto.dart';
-import '../../models/dtos/requests/go_to_seconds_request_dto.dart';
-import '../../models/dtos/requests/play_file_request_dto.dart';
-import '../../models/dtos/requests/set_file_options_request_dto.dart';
-import '../../models/dtos/requests/set_loop_file_request_dto.dart';
-import '../../models/dtos/requests/set_playlist_options_request_dto.dart';
-import '../../models/dtos/responses/app_settings_response_dto.dart';
-import '../../models/dtos/responses/file_item_options_response_dto.dart';
-import '../../models/dtos/responses/file_loaded_response_dto.dart';
-import '../../models/dtos/responses/get_all_playlist_response_dto.dart';
-import '../../models/dtos/responses/playlist_item_response_dto.dart';
-import '../../models/dtos/responses/volume_level_changed_response_dto.dart';
-import '../../models/dtos/socket_response_dto.dart';
+import '../../models/dtos/dtos.dart';
 import '../../services/logging_service.dart';
-import '../../models/dtos/requests/set_volume_request_dto.dart';
 import '../../services/settings_service.dart';
 
 part 'server_ws_bloc.freezed.dart';
@@ -58,6 +40,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   //Server Msg
   static const String _gotPlayListsMsgType = 'SERVER_PLAYLISTS_ALL';
   static const String _gotPlayListMsgType = 'SERVER_PLAYLISTS_ONE';
+  static const String _refreshPlayListMsgType = 'SERVER_PLAYLIST_REFRESH';
   static const String _clientConnectedMsgType = 'SERVER_CLIENT_CONNECTED';
   static const String _fileLoadingMsgType = 'SERVER_FILE_LOADING';
   static const String _fileLoadedMsgType = 'SERVER_FILE_LOADED';
@@ -87,6 +70,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   final StreamController<PlayListItemResponseDto> playlistLoaded = StreamController.broadcast();
   final StreamController<List<FileItemOptionsResponseDto>> fileOptionsLoaded = StreamController.broadcast();
   final StreamController<VolumeLevelChangedResponseDto> volumeLevelChanged = StreamController.broadcast();
+  final StreamController<RefreshPlayListResponseDto> refreshPlayList = StreamController.broadcast();
 
   final SettingsService _settings;
   final LoggingService _logger;
@@ -266,7 +250,6 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         fileEndReached.add(null);
         break;
       case _filePausedMsgType:
-        _logger.info(runtimeType, '_handleSocketMsg: File is paused');
         filePaused.add(null);
         break;
       case _chromeCastDisconectedMsgType:
@@ -304,6 +287,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         _logger.info(runtimeType, '_handleSocketMsg: File options loaded');
         final fo = response.result as List<dynamic>;
         fileOptionsLoaded.add(fo.map((e) => e as FileItemOptionsResponseDto).toList());
+        break;
+      case _refreshPlayListMsgType:
+        final refreshDto = response.result as RefreshPlayListResponseDto;
+        _logger.info(runtimeType, '_handleSocketMsg: Refreshing playlistId = ${refreshDto.id}');
+        refreshPlayList.add(refreshDto);
         break;
       default:
         _logger.warning(

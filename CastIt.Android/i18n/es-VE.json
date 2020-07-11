@@ -54,5 +54,7 @@
     "volume": "Volumen",
     "na": "N/A",
     "webServerUrl": "Ruta del servidor web",
-    "search": "Buscar"
+    "search": "Buscar",
+    "shufflePlayList": "Lista de reproducción aleatoria",
+    "loopFile": "Repetir archivo"
 }

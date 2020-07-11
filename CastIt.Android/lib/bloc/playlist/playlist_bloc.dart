@@ -23,11 +23,25 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
 
   PlayListBloc(this._serverWsBloc) : super(PlayListState.loading()) {
     _serverWsBloc.playlistLoaded.stream.listen((event) {
-      add(PlayListEvent.loaded(playlist: event));
+      if (state is! PlayListLoadedState || currentState.playlistId == event.id) {
+        add(PlayListEvent.loaded(playlist: event));
+        return;
+      }
     });
 
     _serverWsBloc.disconnected.stream.listen((event) {
       add(const PlayListEvent.disconnected());
+    });
+
+    _serverWsBloc.refreshPlayList.stream.listen((event) {
+      if (state is! PlayListLoadedState || currentState.playlistId != event.id) {
+        return;
+      }
+      if (!event.wasDeleted) {
+        add(PlayListEvent.load(id: event.id));
+      } else {
+        add(const PlayListEvent.closePage());
+      }
     });
   }
 
@@ -69,6 +83,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
 
         return currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
       },
+      closePage: (e) async => PlayListState.close(),
     );
 
     yield await s;

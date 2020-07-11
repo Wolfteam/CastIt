@@ -1,12 +1,6 @@
-import 'package:castit/models/dtos/responses/file_item_options_response_dto.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../models/dtos/responses/app_settings_response_dto.dart';
-import '../../models/dtos/responses/file_item_response_dto.dart';
-import '../../models/dtos/responses/file_loaded_response_dto.dart';
-import '../../models/dtos/responses/get_all_playlist_response_dto.dart';
-import '../../models/dtos/responses/playlist_item_response_dto.dart';
-import '../../models/dtos/responses/volume_level_changed_response_dto.dart';
+import '../../models/dtos/dtos.dart';
 
 class JsonGenericConverter<T> implements JsonConverter<T, Object> {
   const JsonGenericConverter();
@@ -39,6 +33,10 @@ class JsonGenericConverter<T> implements JsonConverter<T, Object> {
 
     if (json is Map<String, dynamic> && _allKeysArePresent(FileItemOptionsResponseDto.jsonKeys, json.keys)) {
       return FileItemOptionsResponseDto.fromJson(json) as T;
+    }
+
+    if (json is Map<String, dynamic> && _allKeysArePresent(RefreshPlayListResponseDto.jsonKeys, json.keys)) {
+      return RefreshPlayListResponseDto.fromJson(json) as T;
     }
 
     if (json is List<dynamic>) {

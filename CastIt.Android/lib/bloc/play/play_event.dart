@@ -20,6 +20,7 @@ abstract class PlayEvent implements _$PlayEvent {
     @required bool isMuted,
     @required int playListId,
     @required String playlistName,
+    @required bool loopPlayList,
     @required bool shufflePlayList,
   }) = Playing;
 
@@ -30,11 +31,6 @@ abstract class PlayEvent implements _$PlayEvent {
   factory PlayEvent.paused() = Paused;
 
   factory PlayEvent.stopped() = Stopped;
-
-  factory PlayEvent.volumeLvlChanged({
-    @required double newLvl,
-    @required bool isMuted,
-  }) = VolumeLevelChanged;
 
   factory PlayEvent.disconnected() = Disconnected;
 }

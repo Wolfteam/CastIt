@@ -39,12 +39,15 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         isMuted: file.isMuted,
         playListId: file.playListId,
         playlistName: file.playListName,
+        loopPlayList: file.loopPlayList,
         shufflePlayList: file.shufflePlayList,
       ));
     });
 
     _serverWsBloc.filePaused.stream.listen((_) {
-      add(PlayEvent.paused());
+      if (state is PlayingState && !currentState.isPaused) {
+        add(PlayEvent.paused());
+      }
     });
 
     _serverWsBloc.fileEndReached.stream.listen((_) {
@@ -67,54 +70,39 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
   Stream<PlayState> mapEventToState(
     PlayEvent event,
   ) async* {
-    final s = event.when(
-      connected: () => PlayState.connected(),
-      fileLoading: () => PlayState.fileLoading(),
-      fileLoadingError: (msg) => PlayState.fileLoadingFailed(msg: msg),
-      fileLoaded: (
-        id,
-        title,
-        thumbPath,
-        duration,
-        loop,
-        currentSeconds,
-        isPaused,
-        volumeLvl,
-        isMuted,
-        playListId,
-        playlistName,
-        shuffle,
-      ) {
+    final s = event.map(
+      connected: (_) => PlayState.connected(),
+      fileLoading: (_) => PlayState.fileLoading(),
+      fileLoadingError: (e) => PlayState.fileLoadingFailed(msg: e.msg),
+      fileLoaded: (e) {
         return PlayState.playing(
-          id: id,
-          playListId: playListId,
-          filename: title,
-          thumbPath: thumbPath,
-          duration: duration,
-          isPaused: isPaused,
-          currentSeconds: currentSeconds,
-          playlistName: playlistName,
-          loopFile: loop,
-          shufflePlayList: shuffle,
+          id: e.id,
+          playListId: e.playListId,
+          filename: e.filename,
+          thumbPath: e.thumbPath,
+          duration: e.duration,
+          isPaused: e.isPaused,
+          currentSeconds: e.currentSeconds,
+          playlistName: e.playlistName,
+          loopFile: e.loopFile,
+          loopPlayList: e.loopPlayList,
+          shufflePlayList: e.shufflePlayList,
         );
       },
-      timeChanged: (seconds) {
+      timeChanged: (e) {
         if (!isPlaying) return null;
-        final s = seconds >= currentState.duration ? currentState.duration : seconds;
+        final s = e.seconds >= currentState.duration ? currentState.duration : e.seconds;
         return currentState.copyWith.call(currentSeconds: s, isPaused: false);
       },
-      paused: () {
+      paused: (_) {
         if (!isPlaying) return null;
         return currentState.copyWith.call(isPaused: true);
       },
-      stopped: () {
+      stopped: (_) {
         if (!isPlaying) return null;
         return PlayState.connected();
       },
-      volumeLvlChanged: (volumeLvl, isPaused) {
-        return null;
-      },
-      disconnected: () {
+      disconnected: (_) {
         if (!isPlaying) return null;
         return PlayState.connected();
       },

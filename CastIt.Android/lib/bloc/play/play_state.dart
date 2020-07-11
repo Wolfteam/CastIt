@@ -14,6 +14,7 @@ abstract class PlayState implements _$PlayState {
     String filename,
     String playlistName,
     bool loopFile,
+    bool loopPlayList,
     bool shufflePlayList,
     double duration,
     double currentSeconds,
