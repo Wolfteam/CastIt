@@ -7,6 +7,7 @@ using EmbedIO.WebSockets;
 using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -34,6 +35,7 @@ namespace CastIt.Server
         private const string GetFileOptionsMsgType = "CLIENT_GET_FILE_OPTIONS";
 
         private const string UpdateSettingsMsgType = "CLIENT_SETTINGS_UPDATE";
+        private const string SetVolumeMsgType = "CLIENT_SET_VOLUME";
         #endregion
 
         #region Server Constants
@@ -173,6 +175,18 @@ namespace CastIt.Server
                     case GetFileOptionsMsgType:
                         var getFileOptionsRequest = JsonConvert.DeserializeObject<BaseItemRequestDto>(msg);
                         return SendFileOptions(getFileOptionsRequest.Id);
+                    case SetVolumeMsgType:
+                        var setVolumeRequest = JsonConvert.DeserializeObject<SetVolumeRequestDto>(msg);
+                        _mainViewModel.VolumeLevel = setVolumeRequest.VolumeLevel;
+                        var tasks = new List<Task>
+                        {
+                            _mainViewModel.SetVolumeCommand.ExecuteAsync()
+                        };
+                        if (_mainViewModel.IsMuted != setVolumeRequest.IsMuted)
+                        {
+                            tasks.Add(_mainViewModel.ToggleMuteCommand.ExecuteAsync());
+                        }
+                        return Task.WhenAll(tasks);
                 }
             }
             catch (Exception e)
@@ -302,10 +316,11 @@ namespace CastIt.Server
             await SendMsg(msg, InfoMsgType).ConfigureAwait(false);
         }
 
-        private Task SendFileOptions(long id)
+        private async Task SendFileOptions(long id)
         {
             var options = _mainViewModel.GetFileOptions(id);
-            return SendMsg(options, SendFileOptionsMsgType);
+            await SendMsg(options, SendFileOptionsMsgType).ConfigureAwait(false);
+            VolumeLevelChanged(_mainViewModel.VolumeLevel, _mainViewModel.IsMuted);
         }
 
         private Task SendMsg(string msgType, bool succed = true)
