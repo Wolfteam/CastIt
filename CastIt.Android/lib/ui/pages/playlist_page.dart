@@ -117,9 +117,10 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
           ];
         }
         if (widget.scrollToFileId != null) {
-          final id = s.files.firstWhere((element) => element.id == widget.scrollToFileId, orElse: () => null)?.id;
-          if (id != null) {
-            SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(id));
+          final position =
+              s.files.firstWhere((element) => element.id == widget.scrollToFileId, orElse: () => null)?.position;
+          if (position != null) {
+            SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(position));
           }
         }
         final filesToUse = s.isFiltering ? s.filteredFiles : s.files;
@@ -306,11 +307,10 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
     context.bloc<PlayListBloc>().add(PlayListEvent.playListOptionsChanged(loop: loop, shuffle: shuffle));
   }
 
-  void _animateToIndex(int i) => _listViewScrollController.animateTo(
-        (_itemHeight * i) - _itemHeight,
-        duration: const Duration(seconds: 2),
-        curve: Curves.fastOutSlowIn,
-      );
+  void _animateToIndex(int i) {
+    final offset = (_itemHeight * i) - _itemHeight;
+    _listViewScrollController.animateTo(offset, duration: const Duration(seconds: 2), curve: Curves.fastOutSlowIn);
+  }
 
   void _onListViewScroll() {
     switch (_listViewScrollController.position.userScrollDirection) {

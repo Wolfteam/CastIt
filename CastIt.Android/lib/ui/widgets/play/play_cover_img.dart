@@ -151,7 +151,6 @@ class PlayCoverImg extends StatelessWidget {
   }
 
   void _goToPlayList(BuildContext context) {
-    //TODO: SCROLL TO SELECTED ITEM
     context.bloc<PlayListBloc>().add(PlayListEvent.load(id: playListId));
     final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId, scrollToFileId: fileId));
     Navigator.of(context).push(route);

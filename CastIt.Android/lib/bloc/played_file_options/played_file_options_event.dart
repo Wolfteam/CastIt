@@ -10,10 +10,22 @@ abstract class PlayedFileOptionsEvent implements _$PlayedFileOptionsEvent {
     @required List<FileItemOptionsResponseDto> options,
   }) = PlayedFileOptionsLoadedEvent;
 
-  factory PlayedFileOptionsEvent.set({
+  factory PlayedFileOptionsEvent.setFileOption({
     @required int streamIndex,
     @required bool isAudio,
     @required bool isSubtitle,
     @required bool isQuality,
   }) = PlayedFileOptionsSetEvent;
+
+  factory PlayedFileOptionsEvent.volumeChanged({
+    @required double volumeLvl,
+    @required bool isMuted,
+  }) = PlayedFileOptionsVolumeLevelChangedEvent;
+
+  factory PlayedFileOptionsEvent.setVolume({
+    @required double volumeLvl,
+    @required bool isMuted,
+  }) = PlayedFileOptionsSetVolumeEvent;
+
+  factory PlayedFileOptionsEvent.closeModal() = PlayedFileOptionsCloseModalEvent;
 }

@@ -16,7 +16,13 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
-        child: BlocBuilder<PlayedFileOptionsBloc, PlayedFileOptionsState>(
+        child: BlocConsumer<PlayedFileOptionsBloc, PlayedFileOptionsState>(
+          listener: (ctx, state) {
+            state.maybeWhen(
+              closed: () => Navigator.of(ctx).pop(),
+              orElse: () {},
+            );
+          },
           builder: (ctx, state) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -45,7 +51,14 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           title,
           _buildAudioOptions(context, i18n, s.options),
           _buildSubtitleOptions(context, i18n, s.options),
-          _buildQualitiesOptions(context, i18n, s.options)
+          _buildQualitiesOptions(context, i18n, s.options),
+          _buildVolumeOptions(context, i18n, s.volumeLvl, s.isMuted),
+        ];
+      },
+      closed: (s) {
+        return [
+          separator,
+          title,
         ];
       },
     );
@@ -74,7 +87,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     IconData icon,
     List<FileItemOptionsResponseDto> options,
   ) {
-    final i18n = I18n.of(context);
     final theme = Theme.of(context);
     final dummy = FileItemOptionsResponseDto(
       id: -1,
@@ -137,8 +149,50 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     );
   }
 
+  Widget _buildVolumeOptions(BuildContext context, I18n i18n, double volumeLevel, bool isMuted) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Icon(Icons.volume_up),
+              Container(
+                margin: const EdgeInsets.only(left: 10),
+                child: Text(
+                  i18n.volume,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.subtitle1,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Slider(
+                  min: 0,
+                  max: 1,
+                  value: volumeLevel,
+                  onChanged: (newValue) => _setVolume(context, newValue, isMuted),
+                ),
+              ),
+              IconButton(
+                icon: Icon(isMuted ? Icons.volume_off : Icons.volume_up),
+                onPressed: () => _setVolume(context, volumeLevel, !isMuted),
+              )
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
   void _setOption(BuildContext context, FileItemOptionsResponseDto option) {
-    final event = PlayedFileOptionsEvent.set(
+    final event = PlayedFileOptionsEvent.setFileOption(
       streamIndex: option.id,
       isAudio: option.isAudio,
       isSubtitle: option.isSubTitle,
@@ -147,4 +201,8 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     context.bloc<PlayedFileOptionsBloc>().add(event);
     Navigator.of(context).pop();
   }
+
+  void _setVolume(BuildContext context, double volumeLevel, bool isMuted) => context
+      .bloc<PlayedFileOptionsBloc>()
+      .add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
 }

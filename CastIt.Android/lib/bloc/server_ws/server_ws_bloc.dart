@@ -25,8 +25,10 @@ import '../../models/dtos/responses/file_item_options_response_dto.dart';
 import '../../models/dtos/responses/file_loaded_response_dto.dart';
 import '../../models/dtos/responses/get_all_playlist_response_dto.dart';
 import '../../models/dtos/responses/playlist_item_response_dto.dart';
+import '../../models/dtos/responses/volume_level_changed_response_dto.dart';
 import '../../models/dtos/socket_response_dto.dart';
 import '../../services/logging_service.dart';
+import '../../models/dtos/requests/set_volume_request_dto.dart';
 import '../../services/settings_service.dart';
 
 part 'server_ws_bloc.freezed.dart';
@@ -51,6 +53,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   static const String _setFileOptionsMsgType = 'CLIENT_FILE_SET_OPTIONS';
   static const String _getFileOptionsMsgType = 'CLIENT_GET_FILE_OPTIONS';
   static const String _updateSettingsMsgType = 'CLIENT_SETTINGS_UPDATE';
+  static const String _setVolumeMsgType = 'CLIENT_SET_VOLUME';
 
   //Server Msg
   static const String _gotPlayListsMsgType = 'SERVER_PLAYLISTS_ALL';
@@ -83,6 +86,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   final StreamController<List<GetAllPlayListResponseDto>> playlistsLoaded = StreamController.broadcast();
   final StreamController<PlayListItemResponseDto> playlistLoaded = StreamController.broadcast();
   final StreamController<List<FileItemOptionsResponseDto>> fileOptionsLoaded = StreamController.broadcast();
+  final StreamController<VolumeLevelChangedResponseDto> volumeLevelChanged = StreamController.broadcast();
 
   final SettingsService _settings;
   final LoggingService _logger;
@@ -254,7 +258,8 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         fileTimeChanged.add(response.result as double);
         break;
       case _volumeChangedMsgType:
-        // final volumeChanged = SocketResponseDto.fromJson(json);
+        final volumeChanged = response.result as VolumeLevelChangedResponseDto;
+        volumeLevelChanged.add(volumeChanged);
         break;
       case _fileEndReachedMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: File end reached');
@@ -432,6 +437,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   Future<void> loadFileOptions(int id) {
     final dto = BaseItemRequestDto(id: id, msgType: _getFileOptionsMsgType);
+    return _sendMsg(dto);
+  }
+
+  Future<void> setVolume(double volumeLvl, bool isMuted) {
+    final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted, msgType: _setVolumeMsgType);
     return _sendMsg(dto);
   }
 }
