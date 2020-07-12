@@ -183,5 +183,5 @@ class PlayCoverImg extends StatelessWidget {
       context.bloc<ServerWsBloc>().setPlayListOptions(playListId, loop: loopPlayList, shuffle: !shufflePlayList);
 
   Future<void> _toggleFileLoop(BuildContext context) =>
-      context.bloc<ServerWsBloc>().setFileOptions(fileId, playListId, loop: !loopFile);
+      context.bloc<ServerWsBloc>().loopFile(fileId, playListId, loop: !loopFile);
 }
