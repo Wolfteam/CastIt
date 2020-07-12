@@ -331,8 +331,9 @@ namespace CastIt.ViewModels.Items
             }
         }
 
-        private async Task SavePlayList(string newName)
+        public async Task SavePlayList(string newName)
         {
+            newName = newName.Trim();
             bool added = Id <= 0;
             if (!added)
             {

@@ -28,6 +28,7 @@ namespace CastIt.Server
 
         private const string SetPlayListOptionsMsgType = "CLIENT_PLAYLIST_OPTIONS";
         private const string DeletePlayListMsgType = "CLIENT_PLAYLIST_DELETE";
+        private const string RenamePlayListMsgType = "CLIENT_PLAYLIST_RENAME";
 
         private const string DeleteFileMsgType = "CLIENT_FILE_DELETE";
         private const string LoopFileMsgType = "CLIENT_FILE_LOOP";
@@ -129,7 +130,7 @@ namespace CastIt.Server
                         return SendPlayList(getPlayListRequest.Id);
                     case PlayMsgType:
                         var playRequest = JsonConvert.DeserializeObject<PlayFileRequestDto>(msg);
-                        return _mainViewModel.PlayFile(playRequest.Id, playRequest.PlayListId);
+                        return _mainViewModel.PlayFile(playRequest.Id, playRequest.PlayListId, playRequest.Force);
                     case GoToSecondsMsgType:
                         var gotoSecondsRequest = JsonConvert.DeserializeObject<GoToSecondsRequestDto>(msg);
                         return _mainViewModel.GoToSecondsCommand.ExecuteAsync(Convert.ToInt64(gotoSecondsRequest.Seconds));
@@ -189,6 +190,9 @@ namespace CastIt.Server
                             tasks.Add(_mainViewModel.ToggleMuteCommand.ExecuteAsync());
                         }
                         return Task.WhenAll(tasks);
+                    case RenamePlayListMsgType:
+                        var renameRequest = JsonConvert.DeserializeObject<RenamePlayListRequestDto>(msg);
+                        return _mainViewModel.RenamePlayList(renameRequest.Id, renameRequest.Name);
                 }
             }
             catch (Exception e)

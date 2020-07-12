@@ -39,7 +39,7 @@ namespace CastIt.Interfaces.ViewModels
         List<GetAllPlayListResponseDto> GetAllPlayLists();
         PlayListItemResponseDto GetPlayList(long playlistId);
         FileLoadedResponseDto GetCurrentFileLoaded();
-        Task PlayFile(long id, long playlistId);
+        Task PlayFile(long id, long playlistId, bool force);
         void SetPlayListOptions(long id, bool loop, bool shuffle);
         Task DeletePlayList(long id);
         Task DeleteFile(long id, long playListId);
@@ -53,5 +53,6 @@ namespace CastIt.Interfaces.ViewModels
             VideoScaleType videoScale,
             bool enableHardwareAcceleration);
         List<FileItemOptionsResponseDto> GetFileOptions(long id);
+        Task RenamePlayList(long id, string newName);
     }
 }

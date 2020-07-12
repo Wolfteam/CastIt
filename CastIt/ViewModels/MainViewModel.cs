@@ -524,7 +524,7 @@ namespace CastIt.ViewModels
             return response;
         }
 
-        public Task PlayFile(long id, long playlistId)
+        public Task PlayFile(long id, long playlistId, bool force)
         {
             var pl = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
             if (pl == null)
@@ -542,7 +542,7 @@ namespace CastIt.ViewModels
                 return Task.CompletedTask;
             }
 
-            return PlayFile(file, true);
+            return PlayFile(file, force);
         }
 
         public void SetPlayListOptions(long id, bool loop, bool shuffle)
@@ -655,6 +655,17 @@ namespace CastIt.ViewModels
             _settingsService.VideoScale = videoScale;
             _settingsService.EnableHardwareAcceleration = enableHardwareAcceleration;
             _appWebServer.OnAppSettingsChanged?.Invoke();
+        }
+
+        public Task RenamePlayList(long id, string newName)
+        {
+            var pl = PlayLists.FirstOrDefault(pl => pl.Id == id);
+            if (pl == null)
+            {
+                Logger.Warn($"{nameof(DeletePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
+                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
+            }
+            return pl.SavePlayList(newName);
         }
         #endregion
 
