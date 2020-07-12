@@ -3,10 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../common/styles.dart';
 import '../../../generated/i18n.dart';
 import 'bottom_sheet_title.dart';
+import 'delete_playlist_bottom_sheet.dart';
 import 'modal_sheet_separator.dart';
+import 'rename_playlist_bottom_sheet.dart';
 
 class PlayListOptionsBottomSheetDialog extends StatelessWidget {
-  const PlayListOptionsBottomSheetDialog();
+  final int playListId;
+  final String playListName;
+
+  const PlayListOptionsBottomSheetDialog({
+    @required this.playListId,
+    @required this.playListName,
+  });
+
   @override
   Widget build(BuildContext context) {
     final i18n = I18n.of(context);
@@ -20,9 +29,9 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             ModalSheetSeparator(),
-            BottomSheetTitle(icon: Icons.playlist_play, title: 'PlayList Options'),
+            BottomSheetTitle(icon: Icons.playlist_play, title: i18n.playlistOptions),
             FlatButton(
-              onPressed: () {},
+              onPressed: () => _showRenameModal(context),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -33,7 +42,7 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
               ),
             ),
             FlatButton(
-              onPressed: () {},
+              onPressed: () => _showDeleteModal(context),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -46,6 +55,28 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showRenameModal(BuildContext context) {
+    Navigator.of(context).pop();
+    showModalBottomSheet(
+      context: context,
+      shape: Styles.modalBottomSheetShape,
+      isDismissible: true,
+      isScrollControlled: true,
+      builder: (_) => RenamePlayListBottomSheet(id: playListId, currentName: playListName),
+    );
+  }
+
+  void _showDeleteModal(BuildContext context) {
+    Navigator.of(context).pop();
+    showModalBottomSheet(
+      context: context,
+      shape: Styles.modalBottomSheetShape,
+      isDismissible: true,
+      isScrollControlled: true,
+      builder: (_) => DeletePlayListBottomSheet(playListId: playListId, playListName: playListName),
     );
   }
 }

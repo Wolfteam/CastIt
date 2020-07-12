@@ -47,7 +47,7 @@ class PlayListItem extends StatelessWidget {
       shape: Styles.modalBottomSheetShape,
       isDismissible: true,
       isScrollControlled: true,
-      builder: (_) => const PlayListOptionsBottomSheetDialog(),
+      builder: (_) => PlayListOptionsBottomSheetDialog(playListId: id, playListName: name),
     );
   }
 

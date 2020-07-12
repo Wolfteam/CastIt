@@ -57,6 +57,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     final s = event.map(
       disconnected: (e) async => PlayListState.disconnected(),
       load: (e) async {
+        //TODO: IF YOU CANT LOAD THE PLAYLIST, SHOW A MSG (THIS MAY HAPPEN WHEN THE PLAYLIST DOES NOT EXISTS)
         await _serverWsBloc.loadPlayList(e.id);
         return initialState;
       },

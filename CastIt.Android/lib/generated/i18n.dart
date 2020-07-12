@@ -148,6 +148,18 @@ class I18n implements WidgetsLocalizations {
   String get shufflePlayList => "Shuffle playlist";
   /// "Loop file"
   String get loopFile => "Loop file";
+  /// "PlayList Options"
+  String get playlistOptions => "PlayList Options";
+  /// "Delete playlist ${playlist}?"
+  String deletePlayListConfirm(String playlist) => "Delete playlist ${playlist}?";
+  /// "Delete file ${file} ?"
+  String deleteFileConfirm(String file) => "Delete file ${file} ?";
+  /// "Clear"
+  String get clear => "Clear";
+  /// "Name is not valid"
+  String get invalidName => "Name is not valid";
+  /// "Name"
+  String get name => "Name";
 }
 
 class _I18n_en_US extends I18n {
@@ -334,6 +346,24 @@ class _I18n_es_VE extends I18n {
   /// "Repetir archivo"
   @override
   String get loopFile => "Repetir archivo";
+  /// "Opciones de la lista de reproducción"
+  @override
+  String get playlistOptions => "Opciones de la lista de reproducción";
+  /// "¿ Borrar la lista de reproducción ${playlist}?"
+  @override
+  String deletePlayListConfirm(String playlist) => "¿ Borrar la lista de reproducción ${playlist}?";
+  /// "¿ Borrar el archivo ${file} ?"
+  @override
+  String deleteFileConfirm(String file) => "¿ Borrar el archivo ${file} ?";
+  /// "Limpiar"
+  @override
+  String get clear => "Limpiar";
+  /// "Nombre inválido"
+  @override
+  String get invalidName => "Nombre inválido";
+  /// "Nombre"
+  @override
+  String get name => "Nombre";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;

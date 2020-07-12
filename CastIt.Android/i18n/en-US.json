@@ -56,5 +56,11 @@
     "webServerUrl": "Web server url",
     "search": "Search",
     "shufflePlayList": "Shuffle playlist",
-    "loopFile": "Loop file"
+    "loopFile": "Loop file",
+    "playlistOptions": "PlayList Options",
+    "deletePlayListConfirm": "Delete playlist {playlist}?",
+    "deleteFileConfirm": "Delete file {file} ?",
+    "clear": "Clear",
+    "invalidName": "Name is not valid",
+    "name": "Name"
 }

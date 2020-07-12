@@ -6,6 +6,7 @@ export './requests/delete_playlist_request_dto.dart';
 export './requests/go_to_request_dto.dart';
 export './requests/go_to_seconds_request_dto.dart';
 export './requests/play_file_request_dto.dart';
+export './requests/rename_playlist_request_dto.dart';
 export './requests/set_file_options_request_dto.dart';
 export './requests/set_loop_file_request_dto.dart';
 export './requests/set_playlist_options_request_dto.dart';

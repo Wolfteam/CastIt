@@ -56,5 +56,11 @@
     "webServerUrl": "Ruta del servidor web",
     "search": "Buscar",
     "shufflePlayList": "Lista de reproducción aleatoria",
-    "loopFile": "Repetir archivo"
+    "loopFile": "Repetir archivo",
+    "playlistOptions": "Opciones de la lista de reproducción",
+    "deletePlayListConfirm": "¿ Borrar la lista de reproducción {playlist}?",
+    "deleteFileConfirm": "¿ Borrar el archivo {file} ?",
+    "clear": "Limpiar",
+    "invalidName": "Nombre inválido",
+    "name": "Nombre"
 }

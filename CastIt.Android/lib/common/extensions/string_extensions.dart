@@ -7,6 +7,6 @@ extension StringExtensions on String {
   /// Characters considered "whitespace" are listed [here](https://stackoverflow.com/a/59826129/10830091).
   bool get isNullEmptyOrWhitespace => this == null || isEmpty || trim().isEmpty;
 
-  bool isNullOrEmpty({int minLength = 0, int maxLength = 255}) =>
+  bool isLengthValid({int minLength = 0, int maxLength = 255}) =>
       this == null || trim().isEmpty || length > maxLength || length < minLength;
 }

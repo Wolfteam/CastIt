@@ -13,10 +13,14 @@ class PlayFileRequestDto extends BaseSocketRequestDto {
   @JsonKey(name: 'PlayListId')
   final int playListId;
 
+  @JsonKey(name: 'Force')
+  final bool force;
+
   PlayFileRequestDto({
     @required String msgType,
     @required this.id,
     @required this.playListId,
+    @required this.force,
   }) : super(messageType: msgType);
 
   factory PlayFileRequestDto.fromJson(Map<String, dynamic> json) => _$PlayFileRequestDtoFromJson(json);

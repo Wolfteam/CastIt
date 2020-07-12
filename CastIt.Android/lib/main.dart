@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'bloc/main/main_bloc.dart';
+import 'bloc/playlist_rename/playlist_rename_bloc.dart';
 import 'bloc/play/play_bloc.dart';
 import 'bloc/played_file_options/played_file_options_bloc.dart';
 import 'bloc/playlist/playlist_bloc.dart';
@@ -87,6 +88,9 @@ class _MyAppState extends State<MyApp> {
           final serverWsBloc = ctx.bloc<ServerWsBloc>();
           return PlayedFileOptionsBloc(serverWsBloc);
         }),
+        BlocProvider(
+          create: (ctx) => PlayListRenameBloc(),
+        )
       ],
       child: BlocBuilder<MainBloc, MainState>(
         builder: (ctx, state) => _buildApp(state),

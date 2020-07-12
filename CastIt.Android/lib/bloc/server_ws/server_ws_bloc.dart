@@ -30,6 +30,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   static const String _stopPlaybackMsgType = 'CLIENT_PLAYBACK_STOP';
   static const String _setPlayListOptionsMsgType = 'CLIENT_PLAYLIST_OPTIONS';
   static const String _deletePlayListMsgType = 'CLIENT_PLAYLIST_DELETE';
+  static const String _renamePlayListMsgType = 'CLIENT_PLAYLIST_RENAME';
   static const String _deleteFileMsgType = 'CLIENT_FILE_DELETE';
   static const String _loopFileMsgType = 'CLIENT_FILE_LOOP';
   static const String _setFileOptionsMsgType = 'CLIENT_FILE_SET_OPTIONS';
@@ -327,8 +328,8 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     }
   }
 
-  Future<void> playFile(int id, int playListId) {
-    final dto = PlayFileRequestDto(msgType: _playMsgType, id: id, playListId: playListId);
+  Future<void> playFile(int id, int playListId, {bool force = false}) {
+    final dto = PlayFileRequestDto(msgType: _playMsgType, id: id, playListId: playListId, force: force);
     return _sendMsg(dto);
   }
 
@@ -430,6 +431,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   Future<void> setVolume(double volumeLvl, bool isMuted) {
     final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted, msgType: _setVolumeMsgType);
+    return _sendMsg(dto);
+  }
+
+  Future<void> renamePlayList(int id, String name) {
+    final dto = RenamePlayListRequestDto(id: id, name: name, msgType: _renamePlayListMsgType);
     return _sendMsg(dto);
   }
 }

@@ -138,17 +138,25 @@ class FileItem extends StatelessWidget {
   void _playFile(BuildContext ctx) {
     final bloc = ctx.bloc<ServerWsBloc>();
     bloc.playFile(id, playListId);
+    _goToMainPage(ctx);
+  }
+
+  void _goToMainPage(BuildContext ctx) {
     ctx.bloc<MainBloc>().add(MainEvent.goToTab(index: 0));
     Navigator.of(ctx).pop();
   }
 
-  void _showFileOptionsModal(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _showFileOptionsModal(BuildContext context) async {
+    final closePage = await showModalBottomSheet<bool>(
       context: context,
       shape: Styles.modalBottomSheetShape,
       isDismissible: true,
       isScrollControlled: true,
-      builder: (_) => const FileOptionsBottomSheetDialog(),
+      builder: (_) => FileOptionsBottomSheetDialog(id: id, playListId: playListId, fileName: name),
     );
+
+    if (closePage == true) {
+      _goToMainPage(context);
+    }
   }
 }
