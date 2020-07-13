@@ -5,10 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'bloc/main/main_bloc.dart';
-import 'bloc/playlist_rename/playlist_rename_bloc.dart';
 import 'bloc/play/play_bloc.dart';
 import 'bloc/played_file_options/played_file_options_bloc.dart';
 import 'bloc/playlist/playlist_bloc.dart';
+import 'bloc/playlist_rename/playlist_rename_bloc.dart';
 import 'bloc/playlists/playlists_bloc.dart';
 import 'bloc/server_ws/server_ws_bloc.dart';
 import 'bloc/settings/settings_bloc.dart';
@@ -32,7 +32,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final i18n = I18n.delegate;
+  final GeneratedLocalizationsDelegate i18n = I18n.delegate;
 
   @override
   void initState() {

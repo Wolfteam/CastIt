@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../bloc/main/main_bloc.dart';
 import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../bloc/settings/settings_bloc.dart';
-import '../../common/app_constants.dart';
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
@@ -24,18 +23,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClientMixin<SettingsPage> {
-  TextEditingController _urlController;
-
   @override
   bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    _urlController = TextEditingController(text: AppConstants.baseCastItUrl);
-
-    _urlController.addListener(_urlChanged);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -577,9 +566,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   }
 
   void _appThemeChanged(AppThemeType newValue) {
-    final i18n = I18n.of(context);
     context.bloc<SettingsBloc>().add(SettingsEvent.themeChanged(theme: newValue));
-    // showInfoToast(i18n.restartTheAppToApplyChanges);
     context.bloc<MainBloc>().add(MainEvent.themeChanged(theme: newValue));
   }
 
@@ -589,18 +576,11 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   }
 
   void _languageChanged(AppLanguageType newValue) {
-    final i18n = I18n.of(context);
-    // showInfoToast(i18n.restartTheAppToApplyChanges);
     context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue));
   }
 
-  void _urlChanged() {
-    final text = _urlController.text;
-    // context.bloc<SettingsBloc>().add(UrlChanged(url: text));
-  }
-
 //TODO: SOMETIMES SETTINGS ARE NOT UPDATING
-  void _updateSettings(
+  Future<void> _updateSettings(
     VideoScaleType videoScale,
     bool playFromTheStart,
     bool playNextFileAutomatically,
@@ -609,7 +589,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     bool enableHwAccel,
   ) {
     final bloc = context.bloc<ServerWsBloc>();
-    bloc.updateSettings(
+    return bloc.updateSettings(
       enableHwAccel: enableHwAccel,
       forceAudioTranscode: forceAudioTranscode,
       forceVideoTranscode: forceVideoTranscode,

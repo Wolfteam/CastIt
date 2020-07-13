@@ -67,14 +67,18 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           },
           builder: (ctx, state) => BlocConsumer<ServerWsBloc, ServerWsState>(
             listener: (ctx2, state2) async {
-              state2.maybeMap(
+              state2.map(
                 loaded: (s) async {
                   if (!s.msgToShow.isNullEmptyOrWhitespace) {
                     _showServerMsg(ctx2, s.msgToShow);
                   }
                   await _showConnectionDialog(s.isConnectedToWs, s.castItUrl);
                 },
-                orElse: () {},
+                loading: (s) {
+                  if (_isShowingConnectionModal) {
+                    Navigator.pop(context);
+                  }
+                },
               );
             },
             builder: (ctx2, state2) => TabBarView(
@@ -139,6 +143,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   }
 
   Future<void> _showConnectionDialog(bool isConnected, String currentCastIt) async {
+    debugPrint('IsConnected = $isConnected - ShowingModal = $_isShowingConnectionModal');
     if (!isConnected && !_isShowingConnectionModal) {
       _isShowingConnectionModal = true;
       await showModalBottomSheet(

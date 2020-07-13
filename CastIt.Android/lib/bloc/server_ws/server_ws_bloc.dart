@@ -17,7 +17,6 @@ part 'server_ws_bloc.freezed.dart';
 part 'server_ws_event.dart';
 part 'server_ws_state.dart';
 
-//TODO: MOVE ALL THE WS LOGIC HERE
 class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   //Client Msg
   static const String _getPlayListsMsgType = 'CLIENT_PLAYLISTS_ALL';
@@ -92,6 +91,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   ) async* {
     await _isServerRunning();
 
+    if (event is ServerDisconnectedFromWsEvent && isServerRunning) {
+      _logger.info(runtimeType, 'A server disconnected from ws event was raised but the server is running');
+      return;
+    }
+
     final s = event.when(
       connectToWs: () {
         if (isServerRunning) {
@@ -141,11 +145,28 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     }
   }
 
-  //TODO: CLOSE THIS SUBSCRIPTION AND ALL THE STREAMS
   @override
-  Future<void> close() {
+  Future<void> close() async {
     _disconnectFromWs();
-    return super.close();
+    await Future.wait([
+      connected.close(),
+      fileLoading.close(),
+      fileLoaded.close(),
+      fileLoadingError.close(),
+      fileTimeChanged.close(),
+      filePaused.close(),
+      fileEndReached.close(),
+      disconnected.close(),
+      appClosing.close(),
+      settingsChanged.close(),
+      playlistsLoaded.close(),
+      playlistLoaded.close(),
+      fileOptionsLoaded.close(),
+      volumeLevelChanged.close(),
+      refreshPlayList.close(),
+    ]);
+
+    await super.close();
   }
 
   String _getWsUrl() {
@@ -189,13 +210,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         final jsonMap = json.decode(event as String) as Map<String, dynamic>;
         _handleSocketMsg(jsonMap);
       }, onError: (e, StackTrace s) async {
-        //TODO: I SHOULD ENABLE THE LINE BELOW, BUT NEED TO THINK THIS CAREFULLY
         await _onWsErrorDone(true);
         _logger.error(runtimeType, '_connectToWs: Error while listening in channel', e, s);
       }, onDone: () async {
-        //TODO: I SHOULD ENABLE THE LINE BELOW, BUT NEED TO THINK THIS CAREFULLY
         await _onWsErrorDone(false);
-        _logger.info(runtimeType, '_connectToWs: Disconnected from ws');
+        _logger.info(runtimeType, '_connectToWs: Channel done method was called');
       });
     } catch (e, s) {
       _disconnectFromWs();
