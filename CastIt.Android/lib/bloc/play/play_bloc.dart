@@ -87,10 +87,14 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
           loopFile: e.loopFile,
           loopPlayList: e.loopPlayList,
           shufflePlayList: e.shufflePlayList,
+          isDraggingSlider: false,
         );
       },
       timeChanged: (e) {
         if (!isPlaying) return null;
+        if (currentState.isDraggingSlider) {
+          return currentState.copyWith.call(isPaused: false);
+        }
         final s = e.seconds >= currentState.duration ? currentState.duration : e.seconds;
         return currentState.copyWith.call(currentSeconds: s, isPaused: false);
       },
@@ -105,6 +109,19 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       disconnected: (_) {
         if (!isPlaying) return null;
         return PlayState.connected();
+      },
+      sliderDragChanged: (e) {
+        if (!isPlaying) return null;
+        return currentState.copyWith.call(isDraggingSlider: e.isSliding);
+      },
+      sliderValueChanged: (e) {
+        if (!isPlaying) return null;
+
+        if (e.triggerGoToSeconds) {
+          _serverWsBloc.gotoSeconds(e.newValue);
+        }
+
+        return currentState.copyWith.call(currentSeconds: e.newValue, isDraggingSlider: !e.triggerGoToSeconds);
       },
     );
 

@@ -1,8 +1,8 @@
-import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../bloc/play/play_bloc.dart';
+import '../../../common/extensions/duration_extensions.dart';
 
 class PlayProgressBar extends StatelessWidget {
   const PlayProgressBar();
@@ -23,21 +23,23 @@ class PlayProgressBar extends StatelessWidget {
           connected: (state) => dummySlider,
           fileLoading: (state) => dummySlider,
           fileLoadingFailed: (state) => dummySlider,
-          playing: (state) {
-            return Slider(
-              onChanged: (double value) => _goToSeconds(context, value),
-              value: state.currentSeconds,
-              max: state.duration,
-              activeColor: theme.accentColor,
-            );
-          },
+          playing: (state) => Slider(
+            onChanged: (double value) =>
+                context.bloc<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
+            value: state.currentSeconds,
+            max: state.duration,
+            activeColor: theme.accentColor,
+            label: _generateLabel(state.currentSeconds),
+            divisions: state.duration.round(),
+            onChangeStart: (startValue) => context.bloc<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
+            onChangeEnd: (finalValue) => context
+                .bloc<PlayBloc>()
+                .add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
+          ),
         );
       },
     );
   }
 
-  void _goToSeconds(BuildContext ctx, double seconds) {
-    final bloc = ctx.bloc<ServerWsBloc>();
-    bloc.gotoSeconds(seconds);
-  }
+  String _generateLabel(double seconds) => Duration(seconds: seconds.round()).formatDuration();
 }

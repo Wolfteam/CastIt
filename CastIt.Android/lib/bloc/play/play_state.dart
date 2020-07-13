@@ -20,5 +20,6 @@ abstract class PlayState implements _$PlayState {
     double currentSeconds,
     bool isPaused,
     String thumbPath,
+    bool isDraggingSlider,
   }) = PlayingState;
 }

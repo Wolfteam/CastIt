@@ -33,4 +33,13 @@ abstract class PlayEvent implements _$PlayEvent {
   factory PlayEvent.stopped() = Stopped;
 
   factory PlayEvent.disconnected() = Disconnected;
+
+  factory PlayEvent.sliderDragChanged({
+    @required bool isSliding,
+  }) = SliderDragChanged;
+
+  factory PlayEvent.sliderValueChanged({
+    @required double newValue,
+    @Default(false) bool triggerGoToSeconds,
+  }) = SliderValueChanged;
 }
