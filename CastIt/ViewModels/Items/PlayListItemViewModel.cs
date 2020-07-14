@@ -5,8 +5,10 @@ using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
 using CastIt.Models.Messages;
+using CastIt.ViewModels.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
+using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -24,6 +26,7 @@ namespace CastIt.ViewModels.Items
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
+        private readonly IMvxNavigationService _navigationService;
 
         private string _name;
         private bool _showEditPopUp;
@@ -130,13 +133,15 @@ namespace CastIt.ViewModels.Items
             IPlayListsService playListsService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
-            IAppWebServer appWebServer)
+            IAppWebServer appWebServer,
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
             _appWebServer = appWebServer;
+            _navigationService = navigationService;
         }
 
         #region Methods
@@ -263,6 +268,22 @@ namespace CastIt.ViewModels.Items
 
             if (_youtubeUrlDecoder.IsPlayList(url))
             {
+                if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
+                {
+                    bool? result = await _navigationService.Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
+                    //Only video
+                    if (result == true)
+                    {
+                        await AddUrl(url);
+                        return;
+                    }
+                    //Cancel
+                    else if (!result.HasValue)
+                    {
+                        return;
+                    }
+                }
+
                 try
                 {
                     Messenger.Publish(new IsBusyMessage(this, true));

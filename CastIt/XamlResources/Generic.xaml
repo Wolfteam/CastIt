@@ -17,6 +17,25 @@
     </Style>
 
     <Style
+        x:Key="WindowDialogStyle"
+        BasedOn="{StaticResource WindowStyle}"
+        TargetType="{x:Type Window}">
+        <Setter Property="AllowsTransparency" Value="True" />
+        <Setter Property="Background" Value="{DynamicResource WindowLightBackground}" />
+        <Setter Property="ResizeMode" Value="NoResize" />
+        <Setter Property="WindowStyle" Value="None" />
+        <Setter Property="WindowChrome.WindowChrome">
+            <Setter.Value>
+                <WindowChrome
+                    CaptionHeight="0"
+                    CornerRadius="20"
+                    ResizeBorderThickness="5"
+                    UseAeroCaptionButtons="False" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style
         x:Key="FileItemSubTextStyle"
         BasedOn="{StaticResource MaterialDesignCaptionTextBlock}"
         TargetType="TextBlock">

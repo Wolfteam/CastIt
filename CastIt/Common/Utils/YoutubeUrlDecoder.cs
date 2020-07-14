@@ -6,6 +6,7 @@ using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +26,10 @@ namespace CastIt.Common.Utils
         private const string YoutubeUrl = "https://www.youtube.com";
         private const string YoutubePlayerConfig = "ytplayer.config";
 
+        private const string YouTubePlayListPath = "/playlist";
+        private const string YoutubePlayListQueryParam = "list";
+        private const string YoutubeVideoQueryParam = "v";
+
         private readonly IMvxLog _logger;
 
         public YoutubeUrlDecoder(IMvxLogProvider logger)
@@ -37,9 +42,24 @@ namespace CastIt.Common.Utils
             return url.StartsWith(YoutubeUrl, StringComparison.OrdinalIgnoreCase);
         }
 
+        public bool IsPlayListAndVideo(string url)
+        {
+            var query = GetQueryParams(url);
+            return IsPlayList(url) && query.AllKeys.Contains(YoutubeVideoQueryParam, StringComparer.OrdinalIgnoreCase);
+        }
+
         public bool IsPlayList(string url)
         {
-            return IsYoutubeUrl(url) && url.StartsWith(YoutubeUrl + "/playlist", StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                var query = GetQueryParams(url);
+                return IsYoutubeUrl(url) && query.AllKeys.Contains(YoutubePlayListQueryParam, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, $"{nameof(IsPlayList)}: Unknown error while parsing url = {url}");
+                return false;
+            }
         }
 
         public async Task<YoutubeMedia> Parse(string url, int quality)
@@ -166,6 +186,16 @@ namespace CastIt.Common.Utils
         {
             var links = new List<string>();
             _logger.Info($"{nameof(ParseYouTubePlayList)}: Parsing url = {url}");
+
+            //Here we got an url like this: https://www.youtube.com/watch?v=q6WDBOtvgpo&list=PL4Gjf5ZA9aM4PTPdsWMP8BNuLOEW-mWZ2
+            if (IsPlayListAndVideo(url))
+            {
+                //Here we want an url like this: https://www.youtube.com/playlist?list=PL4Gjf5ZA9aM4PTPdsWMP8BNuLOEW-mWZ2
+                string playlistId = GetPlayListId(url);
+                url = $"{YoutubeUrl}{YouTubePlayListPath}?{YoutubePlayListQueryParam}={playlistId}";
+                _logger.Info($"{nameof(ParseYouTubePlayList)}: Url is playlist and video, the final url will be = {url}");
+            }
+
             using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -186,6 +216,8 @@ namespace CastIt.Common.Utils
                 links = table.Descendants("a")
                     .Where(node => node.HasClass("pl-video-title-link"))
                     .Select(node => RemoveNotNeededParams(YoutubeUrl + node.GetAttributeValue("href", string.Empty)))
+                    .Where(link => link.StartsWith(YoutubeUrl))
+                    .Distinct()
                     .ToList();
             }
             else
@@ -193,7 +225,11 @@ namespace CastIt.Common.Utils
                 _logger.Info($"{nameof(ParseYouTubePlayList)}: Body contains pure javascript, parsing it...");
                 string pattern = @"(\/watch).*?(?="")";
                 body = body.Replace("\\u0026", "&").Replace("\\/", "/");
-                links = Regex.Matches(body, pattern).Select(match => RemoveNotNeededParams(YoutubeUrl + match.Value)).ToList();
+                links = Regex.Matches(body, pattern)
+                    .Select(match => RemoveNotNeededParams(YoutubeUrl + match.Value))
+                    .Where(link => link.StartsWith(YoutubeUrl))
+                    .Distinct()
+                    .ToList();
             }
             _logger.Info($"{nameof(ParseYouTubePlayList)}: Got {links.Count} link(s)");
 
@@ -362,7 +398,7 @@ namespace CastIt.Common.Utils
         private string RemoveNotNeededParams(string url)
         {
             string videoId = GetVideoId(url);
-            return url.Substring(0, url.IndexOf("?") + 1) + $"v={videoId}";
+            return url.Substring(0, url.IndexOf("?") + 1) + $"{YoutubeVideoQueryParam}={videoId}";
         }
 
         private string GetVideoId(string url)
@@ -370,9 +406,27 @@ namespace CastIt.Common.Utils
             var uri = new Uri(url);
 
             // you can check host here => uri.Host <= "www.youtube.com"
-            var query = HttpUtility.ParseQueryString(uri.Query);
+            var query = GetQueryParams(url);
 
-            return query.AllKeys.Contains("v") ? query["v"] : uri.Segments.Last();
+            return query.AllKeys.Contains(YoutubeVideoQueryParam, StringComparer.OrdinalIgnoreCase)
+                ? query[YoutubeVideoQueryParam]
+                : uri.Segments.Last();
+        }
+
+        private string GetPlayListId(string url)
+        {
+            var query = GetQueryParams(url);
+            return query.AllKeys.Contains(YoutubePlayListQueryParam, StringComparer.OrdinalIgnoreCase)
+                ? query[YoutubePlayListQueryParam]
+                : string.Empty;
+        }
+
+        private NameValueCollection GetQueryParams(string url)
+        {
+            var uri = new Uri(url);
+
+            // you can check host here => uri.Host <= "www.youtube.com"
+            return HttpUtility.ParseQueryString(uri.Query);
         }
     }
 }

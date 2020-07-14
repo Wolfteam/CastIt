@@ -444,4 +444,13 @@
   <data name="CopyToClipboard" xml:space="preserve">
     <value>Copiar al portapapeles</value>
   </data>
+  <data name="Confirmation" xml:space="preserve">
+    <value>Confirmación</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="ParseVideoOrPlayList" xml:space="preserve">
+    <value>¿ Parsear video o lista de reproducción ?</value>
+  </data>
 </root>

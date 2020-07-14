@@ -16,20 +16,9 @@
     d:DesignHeight="350"
     d:DesignWidth="480"
     x:TypeArguments="vms:AboutDialogViewModel"
-    AllowsTransparency="True"
-    Background="{DynamicResource WindowLightBackground}"
-    ResizeMode="NoResize"
-    Style="{StaticResource WindowStyle}"
+    Style="{StaticResource WindowDialogStyle}"
     WindowStartupLocation="CenterScreen"
-    WindowStyle="None"
     mc:Ignorable="d">
-    <WindowChrome.WindowChrome>
-        <WindowChrome
-            CaptionHeight="0"
-            CornerRadius="20"
-            ResizeBorderThickness="5"
-            UseAeroCaptionButtons="False" />
-    </WindowChrome.WindowChrome>
 
     <Grid VerticalAlignment="Stretch">
         <Grid.RowDefinitions>

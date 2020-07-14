@@ -9,7 +9,7 @@ using System.Windows.Navigation;
 namespace CastIt.Views.Dialogs
 {
     [MvxViewFor(typeof(AboutDialogViewModel))]
-    [MvxWindowPresentation(Identifier = nameof(DownloadDialog), Modal = true)]
+    [MvxWindowPresentation(Identifier = nameof(AboutDialog), Modal = true)]
     public partial class AboutDialog : MvxWindow<AboutDialogViewModel>
     {
         public AboutDialog()
