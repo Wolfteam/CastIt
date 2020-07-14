@@ -178,6 +178,8 @@ class I18n implements WidgetsLocalizations {
   String get confirm => "Confirm";
   /// "Are you sure you want to skip the intro ?"
   String get skipIntroConfirm => "Are you sure you want to skip the intro ?";
+  /// "Playlist not found"
+  String get playlistNotFound => "Playlist not found";
 }
 
 class _I18n_en_US extends I18n {
@@ -409,6 +411,9 @@ class _I18n_es_VE extends I18n {
   /// "¿ Estás seguro de que deseas saltarte la intro ?"
   @override
   String get skipIntroConfirm => "¿ Estás seguro de que deseas saltarte la intro ?";
+  /// "Lista de reproducción no encontrada"
+  @override
+  String get playlistNotFound => "Lista de reproducción no encontrada";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;

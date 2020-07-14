@@ -20,5 +20,7 @@ abstract class PlayListState implements _$PlayListState {
 
   factory PlayListState.close() = PlayListCloseState;
 
+  factory PlayListState.notFound() = PlayListNotFoundState;
+
   const PlayListState._();
 }

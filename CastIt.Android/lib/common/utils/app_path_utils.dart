@@ -17,4 +17,21 @@ class AppPathUtils {
       await Directory(path).create(recursive: true);
     }
   }
+
+  static Future<void> deleteOlLogs() async {
+    final maxDate = DateTime.now().subtract(const Duration(days: 3));
+    final path = await logsPath;
+    final dir = Directory(path);
+    final files = dir.listSync();
+    final filesToDelete = <FileSystemEntity>[];
+    for (final file in files) {
+      final stat = await file.stat();
+      if (stat.modified.isBefore(maxDate)) {
+        filesToDelete.add(file);
+      }
+    }
+    if (filesToDelete.isNotEmpty) {
+      await Future.wait(filesToDelete.map((f) => f.delete()).toList());
+    }
+  }
 }

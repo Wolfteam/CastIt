@@ -71,5 +71,6 @@
     "next": "Siguiente",
     "start": "Empezar",
     "confirm": "Confirmar",
-    "skipIntroConfirm": "¿ Estás seguro de que deseas saltarte la intro ?"
+    "skipIntroConfirm": "¿ Estás seguro de que deseas saltarte la intro ?",
+    "playlistNotFound": "Lista de reproducción no encontrada"
 }

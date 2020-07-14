@@ -89,6 +89,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   List<Widget> _buildPage(PlayListState state) {
     final i18n = I18n.of(context);
+    final theme = Theme.of(context);
     return state.map<List<Widget>>(
       disconnected: (_) {
         return [
@@ -131,6 +132,18 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
         ];
       },
       close: (_) => [],
+      notFound: (_) => [
+        _buildHeader(),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(Icons.info_outline, size: 60),
+              Text(i18n.playlistNotFound, textAlign: TextAlign.center, style: theme.textTheme.headline4),
+            ],
+          ),
+        )
+      ],
     );
   }
 
@@ -255,6 +268,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
     return state.map(
       disconnected: (s) => null,
       loading: (s) => null,
+      notFound: (_) => null,
       loaded: (s) => FadeTransition(
         opacity: _hideFabAnimController,
         child: Card(

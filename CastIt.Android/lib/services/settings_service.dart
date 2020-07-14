@@ -80,7 +80,7 @@ class SettingsServiceImpl extends SettingsService {
   @override
   Future init() async {
     if (_initialized) {
-      _logger.warning(runtimeType, 'Settings are already initialized!');
+      _logger.info(runtimeType, 'Settings are already initialized!');
       return;
     }
 

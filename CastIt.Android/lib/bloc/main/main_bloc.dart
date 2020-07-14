@@ -10,6 +10,7 @@ import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
 import '../../common/extensions/app_theme_type_extensions.dart';
+import '../../common/utils/app_path_utils.dart';
 import '../../generated/i18n.dart';
 import '../../services/logging_service.dart';
 import '../../services/settings_service.dart';
@@ -53,7 +54,16 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   }
 
   Future<MainState> _init() async {
+    _logger.info(runtimeType, '_init: Initializing all..');
     await _settings.init();
+
+    _logger.info(runtimeType, '_init: Deleting old logs...');
+    try {
+      await AppPathUtils.deleteOlLogs();
+    } catch (e, s) {
+      _logger.error(runtimeType, '_init: Unknown error while trying to delete old logs', e, s);
+    }
+
     final packageInfo = await PackageInfo.fromPlatform();
     final appSettings = _settings.appSettings;
     return _loadThemeData(packageInfo.appName, appSettings.appTheme, appSettings.accentColor, appSettings.appLanguage);
@@ -70,6 +80,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     final themeData = accentColor.getThemeData(theme);
     _setLocale(language);
 
+    _logger.info(runtimeType, '_init: Is first intall = ${_settings.isFirstInstall}');
     return MainState.loaded(
       appTitle: appTitle,
       initialized: isInitialized,

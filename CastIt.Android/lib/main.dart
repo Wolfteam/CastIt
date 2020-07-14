@@ -18,12 +18,14 @@ import 'injection.dart';
 import 'logger.dart';
 import 'services/logging_service.dart';
 import 'services/settings_service.dart';
+import 'telemetry.dart';
 import 'ui/pages/intro_page.dart';
 import 'ui/pages/main_page.dart';
 
 Future main() async {
   await setupLogging();
   initInjection();
+  await initTelemetry();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(MyApp());
 }

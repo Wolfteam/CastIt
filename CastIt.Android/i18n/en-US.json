@@ -71,5 +71,6 @@
     "next": "Next",
     "start": "Start",
     "confirm": "Confirm",
-    "skipIntroConfirm": "Are you sure you want to skip the intro ?"
+    "skipIntroConfirm": "Are you sure you want to skip the intro ?",
+    "playlistNotFound": "Playlist not found"
 }
