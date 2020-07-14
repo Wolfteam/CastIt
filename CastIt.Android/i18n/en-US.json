@@ -62,5 +62,14 @@
     "deleteFileConfirm": "Delete file {file} ?",
     "clear": "Clear",
     "invalidName": "Name is not valid",
-    "name": "Name"
+    "name": "Name",
+    "welcome": "Welcome to {appName}",
+    "welcomeSummary": "In the next section you will be asked for the desktop app url app, so please install it and keep it at hand",
+    "youCanSkip": "You can skip this and configure the app later...",
+    "enjoyTheApp": "Enjoy the app !!!",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Start",
+    "confirm": "Confirm",
+    "skipIntroConfirm": "Are you sure you want to skip the intro ?"
 }

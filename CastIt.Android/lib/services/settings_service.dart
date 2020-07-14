@@ -1,6 +1,7 @@
-import 'package:castit/common/app_constants.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../common/app_constants.dart';
 import '../common/enums/app_accent_color_type.dart';
 import '../common/enums/app_language_type.dart';
 import '../common/enums/app_theme_type.dart';
@@ -22,6 +23,9 @@ abstract class SettingsService {
   String get castItUrl;
   set castItUrl(String url);
 
+  bool get isFirstInstall;
+  set isFirstInstall(bool itIs);
+
   Future init();
 }
 
@@ -30,6 +34,7 @@ class SettingsServiceImpl extends SettingsService {
   final _accentColorKey = 'AccentColor';
   final _appLanguageKey = 'AppLanguage';
   final _castItUrlKey = 'CastItUrl';
+  final _firstInstallKey = 'FirstInstall';
 
   bool _initialized = false;
 
@@ -57,6 +62,11 @@ class SettingsServiceImpl extends SettingsService {
   set castItUrl(String url) => _prefs.setString(_castItUrlKey, url);
 
   @override
+  bool get isFirstInstall => _prefs.getBool(_firstInstallKey);
+  @override
+  set isFirstInstall(bool itIs) => _prefs.setBool(_firstInstallKey, itIs);
+
+  @override
   AppSettings get appSettings => AppSettings(
         appTheme: appTheme,
         useDarkAmoled: false,
@@ -78,26 +88,45 @@ class SettingsServiceImpl extends SettingsService {
 
     _prefs = await SharedPreferences.getInstance();
 
+    if (_prefs.get(_firstInstallKey) == null) {
+      _logger.info(runtimeType, 'This is the first install of the app');
+      isFirstInstall = true;
+    }
+
     if (_prefs.get(_appThemeKey) == null) {
       _logger.info(runtimeType, 'Setting default dark theme');
-      _prefs.setInt(_appThemeKey, AppThemeType.dark.index);
+      appTheme = AppThemeType.dark;
     }
 
     if (_prefs.get(_accentColorKey) == null) {
       _logger.info(runtimeType, 'Setting default blue accent color');
-      _prefs.setInt(_accentColorKey, AppAccentColorType.red.index);
+      accentColor = AppAccentColorType.red;
     }
 
     if (_prefs.get(_appLanguageKey) == null) {
       _logger.info(runtimeType, 'Setting english as the default lang');
-      _prefs.setInt(_appLanguageKey, AppLanguageType.english.index);
+      language = AppLanguageType.english;
     }
-//TODO: RETRIEVE THE URL FROM SOMEWHERE
+
     if (_prefs.get(_castItUrlKey) == null) {
-      _logger.info(runtimeType, 'Setting url to the default one');
-      _prefs.setString(_castItUrlKey, AppConstants.baseCastItUrl);
+      final url = await _getWifiIP();
+      _logger.info(runtimeType, 'Setting url to = $url');
+      castItUrl = url;
     }
     _initialized = true;
     _logger.info(runtimeType, 'Settings were initialized successfully');
+  }
+
+  Future<String> _getWifiIP() async {
+    try {
+      final ip = await Connectivity().getWifiIP();
+      if (ip.isNotEmpty) {
+        return 'http://$ip:9696';
+      }
+      return AppConstants.baseCastItUrl;
+    } catch (e, s) {
+      _logger.error(runtimeType, '_getWifiIP: Unknown error , falling back to ${AppConstants.baseCastItUrl}', e, s);
+      return AppConstants.baseCastItUrl;
+    }
   }
 }

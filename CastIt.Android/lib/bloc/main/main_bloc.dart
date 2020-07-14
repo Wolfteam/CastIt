@@ -43,6 +43,10 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       goToTab: (index) async {
         return currentState.copyWith(currentSelectedTab: index);
       },
+      introCompleted: () async {
+        _settings.isFirstInstall = false;
+        return currentState.copyWith.call(firstInstall: false);
+      },
     );
 
     yield s;
@@ -66,7 +70,12 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     final themeData = accentColor.getThemeData(theme);
     _setLocale(language);
 
-    return MainState.loaded(appTitle: appTitle, initialized: isInitialized, theme: themeData);
+    return MainState.loaded(
+      appTitle: appTitle,
+      initialized: isInitialized,
+      theme: themeData,
+      firstInstall: _settings.isFirstInstall,
+    );
   }
 
   void _setLocale(AppLanguageType language) {

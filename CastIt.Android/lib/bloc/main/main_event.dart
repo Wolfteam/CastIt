@@ -13,5 +13,7 @@ abstract class MainEvent implements _$MainEvent {
   }) = MainAccentColorChangedEvent;
 
   factory MainEvent.goToTab({@required int index}) = MainGoToTabEvent;
+
+  factory MainEvent.introCompleted() = MainIntroCompletedEvent;
   const MainEvent._();
 }

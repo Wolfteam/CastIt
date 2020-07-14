@@ -12,12 +12,20 @@ class ChangeConnectionBottomSheetDialog extends StatefulWidget {
   final String currentUrl;
   final String title;
   final IconData icon;
+  final bool showRefreshButton;
+  final bool showOkButton;
+  final Function(String) onOk;
+  final Function onCancel;
 
   const ChangeConnectionBottomSheetDialog({
     Key key,
     @required this.currentUrl,
     this.title,
     this.icon,
+    this.showOkButton = false,
+    this.showRefreshButton = true,
+    this.onOk,
+    this.onCancel,
   }) : super(key: key);
 
   @override
@@ -62,12 +70,14 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                 keyboardType: TextInputType.url,
                 textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
-                  suffixIcon: IconButton(
-                    alignment: Alignment.bottomCenter,
-                    autofocus: false,
-                    icon: Icon(Icons.sync),
-                    onPressed: !(state as SettingsLoadedState).isCastItUrlValid ? null : _onRefreshClick,
-                  ),
+                  suffixIcon: !widget.showRefreshButton
+                      ? null
+                      : IconButton(
+                          alignment: Alignment.bottomCenter,
+                          autofocus: false,
+                          icon: Icon(Icons.sync),
+                          onPressed: !(state as SettingsLoadedState).isCastItUrlValid ? null : _onRefreshClick,
+                        ),
                   alignLabelWithHint: true,
                   hintText: i18n.url,
                   labelText: i18n.url,
@@ -94,14 +104,20 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                 buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
                 children: <Widget>[
                   OutlineButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: widget.onCancel != null ? () => widget.onCancel() : _onCancel,
                     child: Text(
                       i18n.cancel,
                       style: TextStyle(color: theme.primaryColor),
                     ),
                   ),
+                  if (widget.showOkButton)
+                    RaisedButton(
+                      color: theme.primaryColor,
+                      onPressed: !(state as SettingsLoadedState).isCastItUrlValid
+                          ? null
+                          : widget.onOk != null ? () => widget.onOk(_urlController.text) : _onRefreshClick,
+                      child: Text(i18n.ok),
+                    )
                 ],
               )
             ],
@@ -121,9 +137,11 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
     context.bloc<SettingsBloc>().add(SettingsEvent.castItUrlChanged(castItUrl: _urlController.text));
   }
 
+  void _onCancel() => Navigator.pop(context);
+
   void _onRefreshClick() {
     // context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
     context.bloc<ServerWsBloc>().add(ServerWsEvent.updateUrlAndConnectToWs(castItUrl: _urlController.text));
-    Navigator.of(context).pop();
+    _onCancel();
   }
 }

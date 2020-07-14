@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'bloc/intro/intro_bloc.dart';
 import 'bloc/main/main_bloc.dart';
 import 'bloc/play/play_bloc.dart';
 import 'bloc/played_file_options/played_file_options_bloc.dart';
@@ -17,6 +18,7 @@ import 'injection.dart';
 import 'logger.dart';
 import 'services/logging_service.dart';
 import 'services/settings_service.dart';
+import 'ui/pages/intro_page.dart';
 import 'ui/pages/main_page.dart';
 
 Future main() async {
@@ -88,9 +90,12 @@ class _MyAppState extends State<MyApp> {
           final serverWsBloc = ctx.bloc<ServerWsBloc>();
           return PlayedFileOptionsBloc(serverWsBloc);
         }),
-        BlocProvider(
-          create: (ctx) => PlayListRenameBloc(),
-        )
+        BlocProvider(create: (ctx) => PlayListRenameBloc()),
+        BlocProvider(create: (ctx) {
+          final settings = getIt<SettingsService>();
+          final settingsBloc = ctx.bloc<SettingsBloc>();
+          return IntroBloc(settings, settingsBloc);
+        }),
       ],
       child: BlocBuilder<MainBloc, MainState>(
         builder: (ctx, state) => _buildApp(state),
@@ -110,14 +115,14 @@ class _MyAppState extends State<MyApp> {
       GlobalCupertinoLocalizations.delegate,
     ];
     return state.map<Widget>(
-      loading: (state) {
+      loading: (_) {
         return const CircularProgressIndicator();
       },
-      loaded: (state) {
+      loaded: (s) {
         return MaterialApp(
-          title: state.appTitle,
-          theme: state.theme,
-          home: MainPage(),
+          title: s.appTitle,
+          theme: s.theme,
+          home: s.firstInstall ? IntroPage() : MainPage(),
           localizationsDelegates: delegates,
           supportedLocales: i18n.supportedLocales,
           localeResolutionCallback: i18n.resolution(

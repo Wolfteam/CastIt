@@ -7,6 +7,7 @@ abstract class MainState implements _$MainState {
     @required String appTitle,
     @required ThemeData theme,
     @required bool initialized,
+    @required bool firstInstall,
     @Default(0) int currentSelectedTab,
   }) = MainLoadedState;
   const MainState._();

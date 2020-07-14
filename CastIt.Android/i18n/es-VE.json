@@ -62,5 +62,14 @@
     "deleteFileConfirm": "¿ Borrar el archivo {file} ?",
     "clear": "Limpiar",
     "invalidName": "Nombre inválido",
-    "name": "Nombre"
+    "name": "Nombre",
+    "welcome": "Bienvenido a {appName}",
+    "welcomeSummary": "En la siguiente sección, se te pedirá la url del servidor de la aplicación de escritorio, por lo que por favor instalala y tenla a mano",
+    "youCanSkip": "Puedes saltarte esta parte y configurar la aplicación luego...",
+    "enjoyTheApp": "Disfruta la aplicación !!!",
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "start": "Empezar",
+    "confirm": "Confirmar",
+    "skipIntroConfirm": "¿ Estás seguro de que deseas saltarte la intro ?"
 }

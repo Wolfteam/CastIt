@@ -108,6 +108,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   bool _isCastItUrlValid(String url) {
-    return !url.isNullEmptyOrWhitespace && Uri.parse(url).isAbsolute;
+    try {
+      return !url.isNullEmptyOrWhitespace && url.startsWith('http://') && Uri.parse(url).isAbsolute;
+    } catch (e) {
+      return false;
+    }
   }
 }

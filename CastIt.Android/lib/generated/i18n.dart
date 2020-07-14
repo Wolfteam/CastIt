@@ -160,6 +160,24 @@ class I18n implements WidgetsLocalizations {
   String get invalidName => "Name is not valid";
   /// "Name"
   String get name => "Name";
+  /// "Welcome to ${appName}"
+  String welcome(String appName) => "Welcome to ${appName}";
+  /// "In the next section you will be asked for the desktop app url app, so please install it and keep it at hand"
+  String get welcomeSummary => "In the next section you will be asked for the desktop app url app, so please install it and keep it at hand";
+  /// "You can skip this and configure the app later..."
+  String get youCanSkip => "You can skip this and configure the app later...";
+  /// "Enjoy the app !!!"
+  String get enjoyTheApp => "Enjoy the app !!!";
+  /// "Skip"
+  String get skip => "Skip";
+  /// "Next"
+  String get next => "Next";
+  /// "Start"
+  String get start => "Start";
+  /// "Confirm"
+  String get confirm => "Confirm";
+  /// "Are you sure you want to skip the intro ?"
+  String get skipIntroConfirm => "Are you sure you want to skip the intro ?";
 }
 
 class _I18n_en_US extends I18n {
@@ -364,6 +382,33 @@ class _I18n_es_VE extends I18n {
   /// "Nombre"
   @override
   String get name => "Nombre";
+  /// "Bienvenido a ${appName}"
+  @override
+  String welcome(String appName) => "Bienvenido a ${appName}";
+  /// "En la siguiente sección, se te pedirá la url del servidor de la aplicación de escritorio, por lo que por favor instalala y tenla a mano"
+  @override
+  String get welcomeSummary => "En la siguiente sección, se te pedirá la url del servidor de la aplicación de escritorio, por lo que por favor instalala y tenla a mano";
+  /// "Puedes saltarte esta parte y configurar la aplicación luego..."
+  @override
+  String get youCanSkip => "Puedes saltarte esta parte y configurar la aplicación luego...";
+  /// "Disfruta la aplicación !!!"
+  @override
+  String get enjoyTheApp => "Disfruta la aplicación !!!";
+  /// "Saltar"
+  @override
+  String get skip => "Saltar";
+  /// "Siguiente"
+  @override
+  String get next => "Siguiente";
+  /// "Empezar"
+  @override
+  String get start => "Empezar";
+  /// "Confirmar"
+  @override
+  String get confirm => "Confirmar";
+  /// "¿ Estás seguro de que deseas saltarte la intro ?"
+  @override
+  String get skipIntroConfirm => "¿ Estás seguro de que deseas saltarte la intro ?";
 
   @override
   TextDirection get textDirection => TextDirection.ltr;
