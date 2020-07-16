@@ -13,7 +13,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid Tag="{Binding Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
+    <Grid Width="120" Tag="{Binding Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
         <Grid.ContextMenu>
             <ContextMenu StaysOpen="False">
                 <MenuItem Command="{Binding OpenEditPopUpCommand}" Header="{Binding [Rename]}">
@@ -43,10 +43,9 @@
         </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <materialDesign:Chip
-            Margin="0,0,10,0"
             VerticalAlignment="Center"
             Background="{DynamicResource PrimaryHueDarkBrush}"
             Content="{Binding Items.Count}"
@@ -55,10 +54,12 @@
         <TextBlock
             x:Name="PlayListTitle"
             Grid.Column="1"
+            HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Foreground="{DynamicResource FontColorBrush}"
-            Text="{Binding Name}" />
-
+            Text="{Binding Name}"
+            TextTrimming="CharacterEllipsis"
+            TextWrapping="NoWrap" />
         <Popup
             IsOpen="{Binding ShowEditPopUp, Mode=TwoWay}"
             Placement="Bottom"
