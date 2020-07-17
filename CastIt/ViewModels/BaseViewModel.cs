@@ -1,4 +1,5 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Interfaces.ViewModels;
 using CastIt.Models.Messages;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
@@ -8,7 +9,7 @@ using System.Collections.Generic;
 
 namespace CastIt.ViewModels
 {
-    public abstract class BaseViewModel : MvxViewModel
+    public abstract class BaseViewModel : MvxViewModel, IBaseViewModel
     {
         #region Members
         public List<MvxSubscriptionToken> SubscriptionTokens = new List<MvxSubscriptionToken>();
@@ -75,7 +76,7 @@ namespace CastIt.ViewModels
             ?? throw new Exception($"{key} was not found in the resources file");
     }
 
-    public abstract class BaseViewModelResult<TResult> : MvxViewModelResult<TResult>
+    public abstract class BaseViewModelResult<TResult> : MvxViewModelResult<TResult>, IBaseViewModel
     {
         #region Members
         public List<MvxSubscriptionToken> SubscriptionTokens = new List<MvxSubscriptionToken>();

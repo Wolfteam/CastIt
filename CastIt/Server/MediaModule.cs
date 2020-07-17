@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Server
 {
-    internal class VideoModule : WebModuleBase
+    internal class MediaModule : WebModuleBase
     {
         private readonly IMvxLog _logger;
         private readonly IFFMpegService _ffmpegService;
@@ -19,7 +19,7 @@ namespace CastIt.Server
         private CancellationTokenSource _tokenSource;
         private bool _checkTranscodeProcess;
 
-        public VideoModule(
+        public MediaModule(
             IMvxLog logger,
             IFFMpegService fFMpegService,
             ITelemetryService telemetryService,
@@ -34,7 +34,7 @@ namespace CastIt.Server
 
         public override bool IsFinalHandler => false;
 
-        protected override Task OnRequestAsync(IHttpContext context)
+        protected override async Task OnRequestAsync(IHttpContext context)
         {
             var path = context.RequestedPath;
             var verb = context.Request.HttpVerb;
@@ -43,7 +43,7 @@ namespace CastIt.Server
             {
                 context.SetHandled();
                 _logger.Warn($"{nameof(OnRequestAsync)}: Query params does not contain the all the allowed values.");
-                return Task.CompletedTask;
+                return;
             }
             try
             {
@@ -56,7 +56,16 @@ namespace CastIt.Server
                 {
                     context.Response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
                     _logger.Warn($"{nameof(OnRequestAsync)}: File = {filepath} does not exist.");
-                    return Task.CompletedTask;
+                    return;
+                }
+
+                bool isVideoFile = FileUtils.IsVideoFile(filepath);
+                bool isMusicFile = FileUtils.IsMusicFile(filepath);
+
+                if (!isVideoFile && !isMusicFile)
+                {
+                    _logger.Warn($"{nameof(OnRequestAsync)}: File = {filepath} is not a video nor music file.");
+                    return;
                 }
 
                 _logger.Info(
@@ -76,20 +85,34 @@ namespace CastIt.Server
                 }
 
                 _checkTranscodeProcess = true;
-                if (FileUtils.IsVideoFile(filepath))
+                if (isVideoFile)
                 {
-                    return _ffmpegService.TranscodeVideo(
+                    await _ffmpegService.TranscodeVideo(
                         context.Response.OutputStream,
                         filepath,
                         videoStreamIndex,
                         audioStreamIndex,
                         seconds,
-                        _tokenSource.Token);
+                        _tokenSource.Token).ConfigureAwait(false);
                 }
-                return _ffmpegService.TranscodeMusic(context, filepath, audioStreamIndex, seconds, _tokenSource.Token);
+                else
+                {
+                    using var memoryStream = await _ffmpegService.TranscodeMusic(
+                        filepath,
+                        audioStreamIndex,
+                        seconds,
+                        _tokenSource.Token).ConfigureAwait(false);
+                    //TODO: THIS LENGTH IS NOT WORKING PROPERLY
+                    context.Response.ContentLength64 = memoryStream.Length;
+                    await memoryStream.CopyToAsync(context.Response.OutputStream, _tokenSource.Token)
+                        .ConfigureAwait(false);
+                }
+                _logger.Info($"{nameof(OnRequestAsync)}: Request was successfully handled for file = {filepath}.");
             }
             catch (Exception e)
             {
+                if (e is IOException || e is TaskCanceledException)
+                    return;
                 _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occcured");
                 _telemetryService.TrackError(e);
             }
@@ -97,7 +120,6 @@ namespace CastIt.Server
             {
                 context.SetHandled();
             }
-            return Task.CompletedTask;
         }
     }
 }

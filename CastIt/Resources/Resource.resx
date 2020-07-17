@@ -435,4 +435,22 @@
   <data name="MinimizeToTray" xml:space="preserve">
     <value>Minimize to tray</value>
   </data>
+  <data name="PlayListDoesntExist" xml:space="preserve">
+    <value>PlayList does not exist</value>
+  </data>
+  <data name="ServerUrl" xml:space="preserve">
+    <value>Server: {0}</value>
+  </data>
+  <data name="CopyToClipboard" xml:space="preserve">
+    <value>Copy to clipboard</value>
+  </data>
+  <data name="Confirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="ParseVideoOrPlayList" xml:space="preserve">
+    <value>Parse video or playlist ?</value>
+  </data>
 </root>

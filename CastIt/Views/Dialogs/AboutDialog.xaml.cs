@@ -3,13 +3,14 @@ using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using System.Diagnostics;
+using System.Windows;
 using System.Windows.Navigation;
 
 namespace CastIt.Views.Dialogs
 {
     [MvxViewFor(typeof(AboutDialogViewModel))]
-    [MvxWindowPresentation(Identifier = nameof(DownloadDialog), Modal = true)]
-    public partial class AboutDialog : MvxWindow
+    [MvxWindowPresentation(Identifier = nameof(AboutDialog), Modal = true)]
+    public partial class AboutDialog : MvxWindow<AboutDialogViewModel>
     {
         public AboutDialog()
         {
@@ -23,6 +24,11 @@ namespace CastIt.Views.Dialogs
                 UseShellExecute = true
             });
             e.Handled = true;
+        }
+
+        private void CopyToClipboard(object sender, System.Windows.RoutedEventArgs e)
+        {
+            Clipboard.SetText(ViewModel.CastItServerUrl.Substring(ViewModel.CastItServerUrl.IndexOf(":") + 1));
         }
     }
 }

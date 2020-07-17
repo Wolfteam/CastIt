@@ -47,6 +47,7 @@
         <ScrollViewer
             Grid.Row="1"
             Padding="16"
+            VerticalAlignment="Center"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
             ScrollViewer.VerticalScrollBarVisibility="Auto">
             <Grid HorizontalAlignment="Stretch">

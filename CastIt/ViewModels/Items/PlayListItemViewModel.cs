@@ -5,8 +5,10 @@ using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.Entities;
 using CastIt.Models.Messages;
+using CastIt.ViewModels.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
+using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -23,6 +25,8 @@ namespace CastIt.ViewModels.Items
         private readonly IPlayListsService _playListsService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
+        private readonly IAppWebServer _appWebServer;
+        private readonly IMvxNavigationService _navigationService;
 
         private string _name;
         private bool _showEditPopUp;
@@ -61,13 +65,21 @@ namespace CastIt.ViewModels.Items
         public bool Loop
         {
             get => _loop;
-            set => SetProperty(ref _loop, value);
+            set
+            {
+                SetProperty(ref _loop, value);
+                _appWebServer.OnPlayListChanged?.Invoke(Id);
+            }
         }
 
         public bool Shuffle
         {
             get => _shuffle;
-            set => SetProperty(ref _shuffle, value);
+            set
+            {
+                SetProperty(ref _shuffle, value);
+                _appWebServer.OnPlayListChanged?.Invoke(Id);
+            }
         }
 
         public FileItemViewModel SelectedItem
@@ -120,12 +132,16 @@ namespace CastIt.ViewModels.Items
             IMvxLogProvider logger,
             IPlayListsService playListsService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
-            ITelemetryService telemetryService)
+            ITelemetryService telemetryService,
+            IAppWebServer appWebServer,
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
+            _appWebServer = appWebServer;
+            _navigationService = navigationService;
         }
 
         #region Methods
@@ -182,6 +198,22 @@ namespace CastIt.ViewModels.Items
             }
         }
 
+        public async Task RemoveFile(long id)
+        {
+            var file = Items.FirstOrDefault(f => f.Id == id);
+            if (file == null)
+            {
+                Logger.Warn($"{nameof(RemoveFile)}: FileId = {id} not found");
+                return;
+            }
+
+            await _playListsService.DeleteFile(id);
+            Items.Remove(file);
+            SelectedItems.Clear();
+            SetPositionIfChanged();
+            _appWebServer.OnFileDeleted?.Invoke(Id);
+        }
+
         private async Task OnFolderAdded(string[] folders)
         {
             foreach (var folder in folders)
@@ -220,6 +252,8 @@ namespace CastIt.ViewModels.Items
                 await vm.SetFileInfo(_setDurationTokenSource.Token);
                 Items.Add(vm);
             }
+
+            _appWebServer.OnFileAdded?.Invoke(Id);
         }
 
         private async Task OnUrlAdded(string url)
@@ -234,6 +268,22 @@ namespace CastIt.ViewModels.Items
 
             if (_youtubeUrlDecoder.IsPlayList(url))
             {
+                if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
+                {
+                    bool? result = await _navigationService.Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
+                    //Only video
+                    if (result == true)
+                    {
+                        await AddUrl(url);
+                        return;
+                    }
+                    //Cancel
+                    else if (!result.HasValue)
+                    {
+                        return;
+                    }
+                }
+
                 try
                 {
                     Messenger.Publish(new IsBusyMessage(this, true));
@@ -277,6 +327,8 @@ namespace CastIt.ViewModels.Items
             Items.RemoveItems(itemsToDelete);
             SelectedItems.Clear();
             SetPositionIfChanged();
+
+            _appWebServer.OnFileDeleted?.Invoke(Id);
         }
 
         private async Task RemoveAllMissing()
@@ -288,6 +340,8 @@ namespace CastIt.ViewModels.Items
             await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList());
             Items.RemoveItems(items);
             SetPositionIfChanged();
+
+            _appWebServer.OnFileDeleted?.Invoke(Id);
         }
 
         private void SelectAll()
@@ -298,9 +352,11 @@ namespace CastIt.ViewModels.Items
             }
         }
 
-        private async Task SavePlayList(string newName)
+        public async Task SavePlayList(string newName)
         {
-            if (Id > 0)
+            newName = newName.Trim();
+            bool added = Id <= 0;
+            if (!added)
             {
                 await _playListsService.UpdatePlayList(Id, newName, Position);
             }
@@ -311,6 +367,11 @@ namespace CastIt.ViewModels.Items
             }
             Name = newName;
             ShowEditPopUp = false;
+
+            if (added)
+                _appWebServer.OnPlayListAdded?.Invoke(Id);
+            else
+                _appWebServer.OnPlayListChanged?.Invoke(Id);
         }
 
         private void ScrollToSelectedFile()
@@ -328,6 +389,7 @@ namespace CastIt.ViewModels.Items
             var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
             await vm.SetFileInfo(_setDurationTokenSource.Token);
             Items.Add(vm);
+            _appWebServer.OnFileAdded?.Invoke(Id);
         }
 
         private void SortFiles(SortModeType sortBy)

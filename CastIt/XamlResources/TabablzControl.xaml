@@ -55,7 +55,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type dragablz:DragablzItem}">
-                    <Grid x:Name="templateRoot" SnapsToDevicePixels="true">
+                    <Grid
+                        x:Name="templateRoot"
+                        SnapsToDevicePixels="true"
+                        ToolTip="{Binding Name}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />

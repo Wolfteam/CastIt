@@ -1,0 +1,14 @@
+include: package:lint/analysis_options.yaml
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    avoid_classes_with_only_static_members: false
+
+analyzer:
+  exclude: 
+    - '**/*.freezed.dart'
+    - '**/*.g.dart'
+    - lib/**/*.*.dart
+  errors:
+    missing_return: error

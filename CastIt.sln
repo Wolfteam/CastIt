@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CastIt.GoogleCast", "CastIt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CastIt.ConsoleApp", "CastIt.ConsoleApp\CastIt.ConsoleApp.csproj", "{0268F156-8F64-4806-AA94-1C2DBF088CE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CastIt.Setup.CustomActions", "CastIt.Setup.CustomActions\CastIt.Setup.CustomActions.csproj", "{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,10 +35,12 @@ Global
 		{644DE111-1F10-42A4-92A0-0E9F5217CC01}.Release|x86.Build.0 = Release|x86
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Debug|x64.ActiveCfg = Debug|x64
+		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Debug|x64.Build.0 = Debug|x64
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Debug|x86.ActiveCfg = Debug|x86
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Debug|x86.Build.0 = Debug|x86
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Release|Any CPU.ActiveCfg = Release|x86
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Release|x64.ActiveCfg = Release|x64
+		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Release|x64.Build.0 = Release|x64
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Release|x86.ActiveCfg = Release|x86
 		{CAEE4ECB-1448-4468-9776-01F5FEB188BE}.Release|x86.Build.0 = Release|x86
 		{6C18B012-420F-4289-A8B2-941B7433C0DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -63,6 +67,16 @@ Global
 		{0268F156-8F64-4806-AA94-1C2DBF088CE1}.Release|x64.Build.0 = Release|Any CPU
 		{0268F156-8F64-4806-AA94-1C2DBF088CE1}.Release|x86.ActiveCfg = Release|Any CPU
 		{0268F156-8F64-4806-AA94-1C2DBF088CE1}.Release|x86.Build.0 = Release|Any CPU
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Debug|x64.ActiveCfg = Debug|x64
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Debug|x64.Build.0 = Debug|x64
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Debug|x86.ActiveCfg = Debug|x86
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Debug|x86.Build.0 = Debug|x86
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Release|Any CPU.ActiveCfg = Release|x86
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Release|x64.ActiveCfg = Release|x64
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Release|x64.Build.0 = Release|x64
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Release|x86.ActiveCfg = Release|x86
+		{9771D1A9-11EC-4104-B537-25BB9EC3BAF5}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

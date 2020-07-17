@@ -1,5 +1,4 @@
 ﻿using CastIt.Models.FFMpeg;
-using EmbedIO;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +18,11 @@ namespace CastIt.Interfaces
             int audioStreamIndex,
             double seconds,
             CancellationToken token);
-        Task TranscodeMusic(IHttpContext context, string filePath, int audioStreamIndex, double seconds, CancellationToken token);
+        Task<MemoryStream> TranscodeMusic(
+            string filePath,
+            int audioStreamIndex,
+            double seconds,
+            CancellationToken token);
         string GetOutputTranscodeMimeType(string filepath);
         Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token);
         Task GenerateSubTitles(string filePath, string subtitleFinalPath, double seconds, int index, CancellationToken token);

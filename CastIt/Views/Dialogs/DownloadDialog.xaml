@@ -11,19 +11,9 @@
     Height="200"
     d:DesignHeight="200"
     d:DesignWidth="450"
-    AllowsTransparency="True"
-    Background="{DynamicResource WindowLightBackground}"
-    Style="{StaticResource WindowStyle}"
+    Style="{StaticResource WindowDialogStyle}"
     WindowStartupLocation="CenterScreen"
-    WindowStyle="None"
     mc:Ignorable="d">
-    <WindowChrome.WindowChrome>
-        <WindowChrome
-            CaptionHeight="0"
-            CornerRadius="20"
-            ResizeBorderThickness="5"
-            UseAeroCaptionButtons="False" />
-    </WindowChrome.WindowChrome>
 
     <Grid VerticalAlignment="Stretch">
         <Grid.RowDefinitions>

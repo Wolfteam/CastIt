@@ -49,6 +49,7 @@ namespace CastIt
             Mvx.IoCProvider.RegisterType<PlayListItemViewModel>();
             Mvx.IoCProvider.RegisterType<FileItemViewModel>();
             Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
+            Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(SettingsViewModel));
 
             RegisterAppStart<MainViewModel>();
         }

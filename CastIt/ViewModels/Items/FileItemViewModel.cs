@@ -20,6 +20,7 @@ namespace CastIt.ViewModels.Items
         private readonly ICastService _castService;
         private readonly IAppSettingsService _settingsService;
         private readonly IFFMpegService _ffmpegService;
+        private readonly IAppWebServer _appWebServer;
 
         private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
@@ -95,7 +96,11 @@ namespace CastIt.ViewModels.Items
         public bool Loop
         {
             get => _loop;
-            set => SetProperty(ref _loop, value);
+            set
+            {
+                SetProperty(ref _loop, value);
+                _appWebServer.OnFileChanged?.Invoke(PlayListId);
+            }
         }
 
         public bool ShowFileDetails
@@ -107,11 +112,11 @@ namespace CastIt.ViewModels.Items
         public bool Exists
             => IsLocalFile || IsUrlFile;
         public string Filename
-            => _castService.GetFileName(Path);
+            => FileUtils.GetFileName(Path);
         public string Size
-            => _castService.GetFileSizeString(Path);
+            => FileUtils.GetFileSizeString(Path);
         public string Extension
-            => _castService.GetExtension(Path);
+            => FileUtils.GetExtension(Path);
         public string SubTitle
             => $"{Extension}, {Size}";
 
@@ -131,12 +136,14 @@ namespace CastIt.ViewModels.Items
             IMvxLogProvider logger,
             ICastService castService,
             IAppSettingsService settingsService,
-            IFFMpegService ffmpegService)
+            IFFMpegService ffmpegService,
+            IAppWebServer appWebServer)
             : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
         {
             _castService = castService;
             _settingsService = settingsService;
             _ffmpegService = ffmpegService;
+            _appWebServer = appWebServer;
         }
 
         public override void SetCommands()
@@ -238,7 +245,7 @@ namespace CastIt.ViewModels.Items
         {
             if (IsLocalFile)
             {
-                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + Path);
+                var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + @$"""{Path}""");
                 Process.Start(psi);
             }
             else

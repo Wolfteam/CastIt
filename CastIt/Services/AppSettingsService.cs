@@ -132,7 +132,8 @@ namespace CastIt.Services
                 EnableHardwareAcceleration = true,
                 ShowFileDetails = true,
                 PlayNextFileAutomatically = true,
-                MinimizeToTray = true
+                MinimizeToTray = true,
+                VideoScale = VideoScaleType.Original
             });
         }
 

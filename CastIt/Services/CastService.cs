@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.Services
@@ -28,7 +27,6 @@ namespace CastIt.Services
         private readonly ITelemetryService _telemetryService;
 
         private readonly Player _player;
-        private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
         private readonly Track _subtitle;
         private readonly TextTrackStyle _subtitlesStyle;
 
@@ -39,14 +37,14 @@ namespace CastIt.Services
         public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        public OnFileLoaded OnFileLoaded { get; set; }
+        public OnFileLoadedHandler OnFileLoaded { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
-        public OnQualitiesChanged QualitiesChanged { get; set; }
-        public OnPaused OnPaused { get; set; }
-        public OnDisconnected OnDisconnected { get; set; }
-        public OnVolumeChanged OnVolumeChanged { get; set; }
+        public OnQualitiesChangedHandler QualitiesChanged { get; set; }
+        public OnPausedHandler OnPaused { get; set; }
+        public OnDisconnectedHandler OnDisconnected { get; set; }
+        public OnVolumeChangedHandler OnVolumeChanged { get; set; }
         public Func<string> GetSubTitles { get; set; }
 
         public CastService(
@@ -72,12 +70,13 @@ namespace CastIt.Services
             };
             _subtitlesStyle = new TextTrackStyle
             {
+                ForegroundColor = Color.WhiteSmoke,
                 BackgroundColor = Color.Transparent,
                 EdgeColor = Color.Black,
-                FontScale = 1.2F,
+                FontScale = 1.4F,
                 WindowType = TextTrackWindowType.Normal,
-                EdgeType = TextTrackEdgeType.None,
-                FontStyle = TextTrackFontStyleType.Normal,
+                EdgeType = TextTrackEdgeType.Raised,
+                FontStyle = TextTrackFontStyleType.Bold,
                 FontGenericFamily = TextTrackFontGenericFamilyType.Casual,
             };
         }
@@ -85,6 +84,7 @@ namespace CastIt.Services
         public void Init()
         {
             _logger.Info($"{nameof(Init)}: Initializing all...");
+            _player.FileLoading += FileLoading;
             _player.DeviceAdded += RendererDiscovererItemAdded;
             _player.EndReached += EndReached;
             _player.TimeChanged += TimeChanged;
@@ -95,7 +95,6 @@ namespace CastIt.Services
             _player.IsMutedChanged += IsMutedChanged;
             _player.Init();
 
-            _appWebServer.Init(_webServerCancellationToken.Token);
             _logger.Info($"{nameof(Init)}: Initialize completed");
         }
 
@@ -218,14 +217,7 @@ namespace CastIt.Services
             var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
             _logger.Info($"{nameof(StartPlay)}: Url was succesfully loaded");
 
-            double volumeLevel = (status.Volume?.Level ?? 0);
-            OnFileLoaded?.Invoke(
-                _currentFilePath,
-                metadata.Title,
-                isLocal ? firstThumbnail : imgUrl,
-                _player.CurrentMediaDuration,
-                volumeLevel,
-                status.Volume?.IsMuted ?? false);
+            FileLoaded(metadata.Title, imgUrl, _player.CurrentMediaDuration, _player.CurrentVolumeLevel, _player.IsMuted);
         }
 
         public string GetFirstThumbnail()
@@ -297,6 +289,19 @@ namespace CastIt.Services
             int quality,
             double seconds)
         {
+            if (seconds >= _player.CurrentMediaDuration)
+            {
+                _logger.Warn(
+                    $"{nameof(GoToSeconds)}: Cant go to = {seconds} because is bigger than " +
+                    $"the media duration = {_player.CurrentMediaDuration}");
+                return Task.CompletedTask;
+            }
+            if (seconds < 0)
+            {
+                _logger.Warn($"{nameof(GoToSeconds)}: Wont go to = {seconds}, instead we will go to 0");
+                seconds = 0;
+            }
+
             if (FileUtils.IsLocalFile(_currentFilePath))
                 return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
 
@@ -353,6 +358,7 @@ namespace CastIt.Services
         {
             try
             {
+                _player.FileLoading -= FileLoading;
                 _player.DeviceAdded -= RendererDiscovererItemAdded;
                 _player.EndReached -= EndReached;
                 _player.TimeChanged -= TimeChanged;
@@ -362,7 +368,6 @@ namespace CastIt.Services
                 _player.VolumeLevelChanged -= VolumeLevelChanged;
                 _player.IsMutedChanged -= IsMutedChanged;
 
-                _webServerCancellationToken.Cancel();
                 StopRunningProcess();
 
                 _appWebServer.Dispose();
@@ -373,30 +378,6 @@ namespace CastIt.Services
                 _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error ocurred");
                 _telemetryService.TrackError(ex);
             }
-        }
-
-        public string GetFileName(string mrl)
-        {
-            if (FileUtils.IsUrlFile(mrl))
-                return mrl;
-            return Path.GetFileName(mrl);
-        }
-
-        public string GetExtension(string mrl)
-        {
-            if (FileUtils.IsLocalFile(mrl))
-                return Path.GetExtension(mrl).ToUpper();
-            if (FileUtils.IsUrlFile(mrl))
-                return "WEB";
-            return "N/A";
-        }
-
-        public string GetFileSizeString(string mrl)
-        {
-            if (!FileUtils.IsLocalFile(mrl))
-                return "N/A";
-            var fileInfo = new FileInfo(mrl);
-            return GetBytesReadable(fileInfo.Length);
         }
 
         public Task SetCastRenderer(string id)
@@ -414,8 +395,27 @@ namespace CastIt.Services
             return SetCastRenderer(renderer);
         }
 
+        #region Events handlers
+        private void FileLoading(object sender, EventArgs e)
+        {
+            _appWebServer.OnFileLoading?.Invoke();
+        }
+
+        private void FileLoaded(
+            string title,
+            string thumbUrl,
+            double duration,
+            double volumeLevel,
+            bool isMuted)
+        {
+            OnFileLoaded?.Invoke(title, thumbUrl, duration, volumeLevel, isMuted);
+        }
+
         private void EndReached(object sender, EventArgs e)
-          => OnEndReached?.Invoke();
+        {
+            OnEndReached?.Invoke();
+            _appWebServer.OnEndReached?.Invoke();
+        }
 
         private void PositionChanged(object sender, double position)
         {
@@ -424,25 +424,39 @@ namespace CastIt.Services
                 position = 100;
             }
             OnPositionChanged?.Invoke(position);
+            _appWebServer.OnPositionChanged?.Invoke(position);
         }
 
         private void TimeChanged(object sender, double seconds)
-          => OnTimeChanged?.Invoke(seconds);
+        {
+            OnTimeChanged?.Invoke(seconds);
+            _appWebServer.OnTimeChanged?.Invoke(seconds);
+        }
 
         private void Paused(object sender, EventArgs e)
-            => OnPaused?.Invoke();
+        {
+            OnPaused?.Invoke();
+            _appWebServer.OnPaused?.Invoke();
+        }
 
         private void Disconnected(object sender, EventArgs e)
         {
             _renderWasSet = false;
             OnDisconnected?.Invoke();
+            _appWebServer.OnDisconnected?.Invoke();
         }
 
         private void VolumeLevelChanged(object sender, double e)
-            => OnVolumeChanged?.Invoke(e, _player.IsMuted);
+        {
+            OnVolumeChanged?.Invoke(e, _player.IsMuted);
+            _appWebServer.OnVolumeChanged?.Invoke(e, _player.IsMuted);
+        }
 
         private void IsMutedChanged(object sender, bool e)
-            => OnVolumeChanged?.Invoke(_player.CurrentVolumeLevel, e);
+        {
+            OnVolumeChanged?.Invoke(_player.CurrentVolumeLevel, e);
+            _appWebServer.OnVolumeChanged?.Invoke(_player.CurrentVolumeLevel, e);
+        }
 
         private void RendererDiscovererItemAdded(object sender, DeviceAddedArgs e)
         {
@@ -453,6 +467,7 @@ namespace CastIt.Services
 
             OnCastableDeviceAdded?.Invoke(e.Receiver);
         }
+        #endregion
 
         //TODO: CHECK IF WE CAN KNOW WHEN A DEVICE IS REMOVED
         //private void RendererDiscovererItemDeleted(object sender, RendererDiscovererItemDeletedEventArgs e)
@@ -479,53 +494,6 @@ namespace CastIt.Services
         {
             _renderWasSet = false;
             return _player.DisconnectAsync();
-        }
-
-        private string GetBytesReadable(long i)
-        {
-            // Get absolute value
-            long absolute_i = i < 0 ? -i : i;
-            // Determine the suffix and readable value
-            string suffix;
-            double readable;
-            if (absolute_i >= 0x1000000000000000) // Exabyte
-            {
-                suffix = "EB";
-                readable = i >> 50;
-            }
-            else if (absolute_i >= 0x4000000000000) // Petabyte
-            {
-                suffix = "PB";
-                readable = i >> 40;
-            }
-            else if (absolute_i >= 0x10000000000) // Terabyte
-            {
-                suffix = "TB";
-                readable = i >> 30;
-            }
-            else if (absolute_i >= 0x40000000) // Gigabyte
-            {
-                suffix = "GB";
-                readable = i >> 20;
-            }
-            else if (absolute_i >= 0x100000) // Megabyte
-            {
-                suffix = "MB";
-                readable = i >> 10;
-            }
-            else if (absolute_i >= 0x400) // Kilobyte
-            {
-                suffix = "KB";
-                readable = i;
-            }
-            else
-            {
-                return i.ToString("0 B"); // Byte
-            }
-            // Divide by 1024 to get fractional value
-            readable /= 1024;
-            // Return formatted number with suffix
-            return readable.ToString("0.## ") + suffix;
         }
     }
 }

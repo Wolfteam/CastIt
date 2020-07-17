@@ -31,6 +31,7 @@ namespace CastIt.Services
             }
         }
 
+        #region Methods
         public async Task<FileItemViewModel> AddFile(long playListId, string path, int position)
         {
             using var db = new SQLiteConnection(_connectionString);
@@ -187,5 +188,6 @@ namespace CastIt.Services
 
             db.UpdateAll(entities);
         }
+        #endregion
     }
 }

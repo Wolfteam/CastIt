@@ -46,6 +46,8 @@ namespace CastIt.GoogleCast
         #region Events
         public event EventHandler Disconnected;
         public event EventHandler<DeviceAddedArgs> DeviceAdded;
+        public event EventHandler FileLoading;
+        public event EventHandler FileLoaded;
         public event EventHandler<double> TimeChanged;
         public event EventHandler<double> PositionChanged;
         public event EventHandler Paused;
@@ -219,6 +221,8 @@ namespace CastIt.GoogleCast
 
             await Task.Delay(GetMediaStatusDelay * 2);
 
+            FileLoading?.Invoke(this, EventArgs.Empty);
+
             var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
             var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
 
@@ -233,6 +237,8 @@ namespace CastIt.GoogleCast
             IsPlaying = true;
             ListenForMediaChanges(_listenerToken.Token);
             ListenForReceiverChanges(_listenerToken.Token);
+
+            FileLoaded?.Invoke(this, EventArgs.Empty);
             return status;
         }
 
