@@ -57,7 +57,7 @@ class LoggingServiceImpl implements LoggingService {
       'msg': _formatEx(msg, ex),
       'trace': trace?.toString() ?? 'No trace available',
     };
-    trackEventAsync('Error', map);
+    trackEventAsync('Error - ${DateTime.now()}', map);
   }
 
   void _trackWarning(String tag, String msg, [dynamic ex, StackTrace trace]) {
@@ -66,6 +66,6 @@ class LoggingServiceImpl implements LoggingService {
       'msg': _formatEx(msg, ex),
       'trace': trace?.toString() ?? 'No trace available',
     };
-    trackEventAsync('Warning', map);
+    trackEventAsync('Warning - ${DateTime.now()}', map);
   }
 }
