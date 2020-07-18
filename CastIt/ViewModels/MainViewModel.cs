@@ -904,11 +904,11 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
 
+            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
+
             SetCurrentlyPlayingInfo(file.Filename, true);
             if (!fileOptionsChanged)
                 SetAvailableAudiosAndSubTitles();
-
-            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
             playList.SelectedItem = file;

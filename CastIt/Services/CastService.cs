@@ -126,7 +126,7 @@ namespace CastIt.Services
 
             if (!_renderWasSet && AvailableDevices.Count > 0)
             {
-                await SetCastRenderer(AvailableDevices.First());
+                await SetCastRenderer(AvailableDevices.First()).ConfigureAwait(false);
             }
             // create new media
             _currentFilePath = mrl;
@@ -214,7 +214,7 @@ namespace CastIt.Services
             }
 
             _logger.Info($"{nameof(StartPlay)}: Trying to load url = {url}");
-            var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray());
+            var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray()).ConfigureAwait(false);
             _logger.Info($"{nameof(StartPlay)}: Url was succesfully loaded");
 
             FileLoaded(metadata.Title, imgUrl, _player.CurrentMediaDuration, _player.CurrentVolumeLevel, _player.IsMuted);

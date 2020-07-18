@@ -173,7 +173,7 @@ namespace CastIt.Services
                 _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
                 return;
             }
-            var fileInfo = await GetFileInfo(mrl, default);
+            var fileInfo = await GetFileInfo(mrl, default).ConfigureAwait(false);
             string thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
             bool useHwAccel = fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
                 AvailableHwDevices.Contains(HwAccelDeviceType.Intel) &&
@@ -333,12 +333,28 @@ namespace CastIt.Services
             CancellationToken token)
         {
             var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
-            string cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex);
+            string cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex, from: 0, to: 2);
+
+            _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd...");
+            _transcodeProcess.StartInfo.Arguments = cmd;
+            _transcodeProcess.Start();
+            using var memStream = new MemoryStream();
+            var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
+            await testStream.CopyToAsync(memStream).ConfigureAwait(false);
+            if (_transcodeProcess.ExitCode > 0)
+            {
+                _logger.Warn($"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd}. Creating a new one..");
+                cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex, false);
+            }
+            else
+            {
+                cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex);
+            }
 
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
             //string cmd = $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset superfast -c:v copy -acodec aac -b:a 128k -movflags frag_keyframe+faststart -f mp4 -";
-            _logger.Info($"{nameof(TranscodeVideo)}: Trying to transcode file = {filePath} with CMD = {cmd}");
+            _logger.Info($"{nameof(TranscodeVideo)}: Trying to transcode file with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
@@ -356,7 +372,7 @@ namespace CastIt.Services
 
             string cmd = BuildAudioTranscodeCmd(filePath, seconds, audioStreamIndex, audioNeedsTranscode);
 
-            _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file = {filePath} with CMD = {cmd}");
+            _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
             var memoryStream = new MemoryStream();
@@ -441,7 +457,10 @@ namespace CastIt.Services
             string filePath,
             double seconds,
             int videoStreamIndex,
-            int audioStreamIndex)
+            int audioStreamIndex,
+            bool useHwAccel = true,
+            double? from = null,
+            double? to = null)
         {
             string fileExt = Path.GetExtension(filePath);
             var videoInfo = fileInfo.Streams.Find(f => f.IsVideo);
@@ -460,7 +479,7 @@ namespace CastIt.Services
                 _settingsService.ForceAudioTranscode;
 
             var hwAccelType = GetHwAccelDeviceType();
-            if (!videoCodecIsValid)
+            if (!videoCodecIsValid || !useHwAccel)
             {
                 hwAccelType = HwAccelDeviceType.None;
             }
@@ -479,8 +498,14 @@ namespace CastIt.Services
                 .AddArg("map_metadata", -1)
                 .AddArg("map_chapters", -1); //for some reason the chromecast doesnt like chapters o.o
 
-            if (seconds > 0)
+            if (seconds > 0 && !from.HasValue && !to.HasValue)
                 inputArgs.Seek(seconds);
+
+            if (from.HasValue)
+                outputArgs.Seek(from.Value);
+
+            if (to.HasValue)
+                outputArgs.To(to.Value);
 
             if (videoNeedsTranscode)
             {

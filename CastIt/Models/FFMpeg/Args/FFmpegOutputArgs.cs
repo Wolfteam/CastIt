@@ -90,6 +90,9 @@ namespace CastIt.Models.FFMpeg.Args
         public FFmpegOutputArgs Seek(double seconds)
             => AddArg("ss", seconds);
 
+        public FFmpegOutputArgs To(double seconds)
+            => AddArg("to", seconds);
+
         public FFmpegOutputArgs SetPixelFormat(string format)
             => AddArg("pix_fmt", format);
 
