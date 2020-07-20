@@ -17,7 +17,7 @@ namespace CastIt.Common
             CreateMap<IReceiver, DeviceItemViewModel>()
                 .ConstructUsingServiceLocator();
 
-            CreateMap<FileItem, FileItemResponseDto>();
+            CreateMap<FileItemViewModel, FileItemResponseDto>();
             CreateMap<PlayList, GetAllPlayListResponseDto>();
             CreateMap<PlayList, PlayListItemResponseDto>();
             CreateMap<FileItemOptionsViewModel, FileItemOptionsResponseDto>();

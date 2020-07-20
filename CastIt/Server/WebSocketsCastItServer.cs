@@ -100,27 +100,32 @@ namespace CastIt.Server
 
         protected override Task OnMessageReceivedAsync(IWebSocketContext context, byte[] buffer, IWebSocketReceiveResult result)
         {
-            return HandleMessage(buffer);
+            return HandleMessage(context, buffer);
         }
 
         protected override async Task OnClientConnectedAsync(IWebSocketContext context)
         {
+            _logger.Info($"{nameof(OnClientConnectedAsync)}: Client connected = {context.Id} - IP = {context.RemoteEndPoint}");
             await ClientConnected().ConfigureAwait(false);
             if (_mainViewModel.IsCurrentlyPlaying)
             {
-                FileLoaded();
+                await FileLoadedTask().ConfigureAwait(false);
             }
-            AppSettingsChanged();
+            await AppSettingsChangedTask().ConfigureAwait(false);
+
+            await SendPlayLists().ConfigureAwait(false);
         }
 
         #region Client Msgs
-        private Task HandleMessage(byte[] buffer)
+        private Task HandleMessage(IWebSocketContext context, byte[] buffer)
         {
             try
             {
                 string msg = Encoding.GetString(buffer);
                 var baseMsg = JsonConvert.DeserializeObject<BaseSocketRequestDto>(msg);
-                _logger.Info($"Handling msgType = {baseMsg.MessageType}");
+                _logger.Info(
+                    $"{nameof(HandleMessage)}: Received msgType = {baseMsg.MessageType} " +
+                    $"from clientId = {context.Id} - IP = {context.RemoteEndPoint}");
                 switch (baseMsg.MessageType)
                 {
                     case GetPlayListsMsgType:
@@ -229,10 +234,15 @@ namespace CastIt.Server
 
         private async void FileLoaded()
         {
+            await FileLoadedTask().ConfigureAwait(false);
+        }
+
+        private Task FileLoadedTask()
+        {
             var file = _mainViewModel.GetCurrentFileLoaded();
             if (file == null)
-                return;
-            await SendMsg(file, FileLoadedMsgType).ConfigureAwait(false);
+                return Task.CompletedTask;
+            return SendMsg(file, FileLoadedMsgType);
         }
 
         private async void FileLoadingError(string error)
@@ -294,6 +304,11 @@ namespace CastIt.Server
 
         private async void AppSettingsChanged()
         {
+            await AppSettingsChangedTask().ConfigureAwait(false);
+        }
+
+        private Task AppSettingsChangedTask()
+        {
             var settings = new AppSettingsResponseDto
             {
                 EnableHardwareAcceleration = _appSettings.EnableHardwareAcceleration,
@@ -303,7 +318,7 @@ namespace CastIt.Server
                 StartFilesFromTheStart = _appSettings.StartFilesFromTheStart,
                 VideoScale = _appSettings.VideoScale,
             };
-            await SendMsg(settings, SettingsChangedMsgType).ConfigureAwait(false);
+            return SendMsg(settings, SettingsChangedMsgType);
         }
 
         private async void PlayListAdded(long id)
@@ -317,7 +332,7 @@ namespace CastIt.Server
             await SendPlayList(id).ConfigureAwait(false);
             if (_mainViewModel.IsCurrentlyPlaying)
             {
-                FileLoaded();
+                await FileLoadedTask().ConfigureAwait(false);
             }
         }
 
@@ -327,7 +342,7 @@ namespace CastIt.Server
             await RefreshPlayList(id, true).ConfigureAwait(false);
             if (_mainViewModel.IsCurrentlyPlaying)
             {
-                FileLoaded();
+                await FileLoadedTask().ConfigureAwait(false);
             }
         }
 
@@ -353,7 +368,7 @@ namespace CastIt.Server
             await SendPlayList(onPlayListId).ConfigureAwait(false);
             if (_mainViewModel.IsCurrentlyPlaying)
             {
-                FileLoaded();
+                await FileLoadedTask().ConfigureAwait(false);
             }
         }
 
@@ -363,7 +378,7 @@ namespace CastIt.Server
             await SendPlayList(onPlayListId).ConfigureAwait(false);
             if (_mainViewModel.IsCurrentlyPlaying)
             {
-                FileLoaded();
+                await FileLoadedTask().ConfigureAwait(false);
             }
         }
 

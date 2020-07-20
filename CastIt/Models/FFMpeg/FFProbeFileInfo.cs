@@ -21,5 +21,14 @@ namespace CastIt.Models.FFMpeg
 
         public List<FileInfoStream> SubTitles
             => Streams.Where(s => s.IsSubTitle).ToList();
+
+        public string GetVideoResolution(int videoIndex = 0)
+        {
+            if (Videos.Count == 0)
+                return string.Empty;
+
+            var video = Videos[videoIndex];
+            return video.WidthAndHeightText;
+        }
     }
 }

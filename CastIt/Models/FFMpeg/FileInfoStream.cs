@@ -37,8 +37,9 @@ namespace CastIt.Models.FFMpeg
         [JsonProperty(PropertyName = "tags")]
         public FileInfoTag Tag { get; set; }
 
+        //The CodecType in an audio returns may return video if the stream is a png img
         public bool IsVideo
-            => CodecType == "video";
+            => CodecType == "video" && Level > 0;
 
         public bool IsAudio
             => CodecType == "audio";
