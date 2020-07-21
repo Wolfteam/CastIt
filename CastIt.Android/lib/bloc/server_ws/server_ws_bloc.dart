@@ -191,7 +191,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       _logger.info(runtimeType, '_isServerRunning: Server is running');
       isServerRunning = true;
     } catch (e) {
-      _logger.warning(
+      _logger.info(
         runtimeType,
         '_isServerRunning: Connectivity error, server may not be running or url = $url is not valid',
       );
@@ -448,7 +448,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     return _sendMsg(dto);
   }
 
-  Future<void> setVolume(double volumeLvl, bool isMuted) {
+  Future<void> setVolume(double volumeLvl, {bool isMuted = false}) {
     final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted, msgType: _setVolumeMsgType);
     return _sendMsg(dto);
   }

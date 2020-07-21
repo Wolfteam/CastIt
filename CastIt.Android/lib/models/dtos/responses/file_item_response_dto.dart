@@ -47,6 +47,9 @@ class FileItemResponseDto extends Equatable {
   @JsonKey(name: 'Loop')
   final bool loop;
 
+  @JsonKey(name: 'SubTitle')
+  final String subtitle;
+
   @override
   List<Object> get props => [
         id,
@@ -63,6 +66,7 @@ class FileItemResponseDto extends Equatable {
         size,
         ext,
         loop,
+        subtitle
       ];
 
   const FileItemResponseDto({
@@ -80,6 +84,7 @@ class FileItemResponseDto extends Equatable {
     this.size,
     this.ext,
     this.loop,
+    this.subtitle,
   });
 
   factory FileItemResponseDto.fromJson(Map<String, dynamic> json) => _$FileItemResponseDtoFromJson(json);
@@ -98,6 +103,7 @@ class FileItemResponseDto extends Equatable {
         'Filename',
         'Size',
         'Extension',
-        'Loop'
+        'Loop',
+        'SubTitle'
       ];
 }

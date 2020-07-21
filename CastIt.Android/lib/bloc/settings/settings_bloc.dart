@@ -12,7 +12,6 @@ import '../../common/enums/video_scale_type.dart';
 import '../../common/extensions/string_extensions.dart';
 import '../../generated/i18n.dart';
 import '../../models/dtos/responses/app_settings_response_dto.dart';
-import '../../services/logging_service.dart';
 import '../../services/settings_service.dart';
 import '../server_ws/server_ws_bloc.dart';
 
@@ -21,14 +20,13 @@ part 'settings_event.dart';
 part 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
-  final LoggingService _logger;
   final SettingsService _settings;
 
   final ServerWsBloc _serverWsBloc;
 
   SettingsState get initialState => SettingsState.loading();
 
-  SettingsBloc(this._logger, this._settings, this._serverWsBloc) : super(SettingsState.loading()) {
+  SettingsBloc(this._settings, this._serverWsBloc) : super(SettingsState.loading()) {
     _serverWsBloc.connected.stream.listen((event) {
       add(SettingsEvent.load());
     });

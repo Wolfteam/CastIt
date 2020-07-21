@@ -82,10 +82,9 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (ctx) {
-            final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
             final serverWsBloc = ctx.bloc<ServerWsBloc>();
-            return SettingsBloc(logger, settings, serverWsBloc);
+            return SettingsBloc(settings, serverWsBloc);
           },
         ),
         BlocProvider(create: (ctx) {

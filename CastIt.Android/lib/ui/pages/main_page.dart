@@ -23,7 +23,9 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   bool _didChangeDependencies = false;
   TabController _tabController;
   int _index = 0;
+  bool _canShowConnectionModal = true;
   final _pages = [PlayPage(), PlayListsPage(), SettingsPage()];
+
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
@@ -49,8 +51,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void didChangeAppLifecycleState(AppLifecycleState state) {
     debugPrint('State = $state');
     if (state == AppLifecycleState.inactive) {
+      _canShowConnectionModal = false;
       context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectFromWs());
     } else if (state == AppLifecycleState.resumed) {
+      _canShowConnectionModal = true;
       context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
     }
   }
@@ -144,7 +148,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
   Future<void> _showConnectionDialog(bool isConnected, String currentCastIt) async {
     debugPrint('IsConnected = $isConnected - ShowingModal = $_isShowingConnectionModal');
-    if (!isConnected && !_isShowingConnectionModal) {
+    if (!isConnected && !_isShowingConnectionModal && _canShowConnectionModal) {
       _isShowingConnectionModal = true;
       await showModalBottomSheet(
         context: context,

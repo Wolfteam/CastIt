@@ -165,9 +165,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
                 alignment: Alignment.centerLeft,
                 child: FlatButton.icon(
                   icon: Icon(Icons.arrow_back),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   label: Text(
                     i18n.playlists,
                     style: const TextStyle(fontSize: 24),
@@ -218,6 +216,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             isUrlFile: file.isUrlFile,
             playedPercentage: file.playedPercentage,
             loop: file.loop,
+            subtitle: file.subtitle,
           );
         },
       ),
