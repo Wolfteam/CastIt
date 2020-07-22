@@ -3,7 +3,7 @@
   <Fragment>
     <ComponentGroup Id="DesktopComponentsGroup" Directory="DesktopInstallFolder">
       <!--StartMenu Shorcut to the desktop app-->
-      <Component Id="DesktopStartMenuShorcutComponent" Guid="{CCF424EF-6E57-4034-B697-B65D6171B707}">
+      <Component Id="DesktopStartMenuShorcutComponent" Guid="{785BA406-F1E4-4DC3-8516-9B90A47EF835}">
 
         <Shortcut
           Id="DesktopStartMenuShorcut"
@@ -21,7 +21,7 @@
       </Component>
 
       <!--Desktop Shorcut to the desktop app-->
-      <Component Id="DesktopShorcutComponent" Guid="{CC3678BA-4019-415F-B6BA-618FB9445D90}">
+      <Component Id="DesktopShorcutComponent" Guid="{402D3F84-680F-468E-996C-FA2FDC711F7B}">
         <Shortcut
           Id="DesktopShorcut"
           Name="!(loc.ProductName)"
