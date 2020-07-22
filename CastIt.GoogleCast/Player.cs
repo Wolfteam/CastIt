@@ -41,6 +41,7 @@ namespace CastIt.GoogleCast
         private static readonly SupportedMessages _supportedMsgs = new SupportedMessages();
         private CancellationTokenSource _listenerToken;
         private double _seekedSeconds;
+        private bool _disposed = false;
         #endregion
 
         #region Events
@@ -73,6 +74,9 @@ namespace CastIt.GoogleCast
         }
         public double CurrentVolumeLevel { get; private set; }
         public bool IsMuted { get; private set; }
+
+        private SemaphoreSlim ListenMediaChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim ListenReceiverChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
         #endregion
 
         #region Constructors
@@ -164,20 +168,36 @@ namespace CastIt.GoogleCast
 
         public void Dispose()
         {
-            foreach (var subscription in _subscriptions)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
             {
-                subscription.Dispose();
+                return;
             }
 
-            Disconnected = null;
-            DeviceAdded = null;
-            TimeChanged = null;
-            PositionChanged = null;
-            Paused = null;
-            EndReached = null;
-            VolumeLevelChanged = null;
-            IsMutedChanged = null;
-            DisconnectAsync().GetAwaiter().GetResult();
+            if (disposing)
+            {
+                _logger.Info($"{nameof(Dispose)} Disposing subscriptions, events, and disconecting...");
+                foreach (var subscription in _subscriptions)
+                {
+                    subscription.Dispose();
+                }
+
+                Disconnected = null;
+                DeviceAdded = null;
+                TimeChanged = null;
+                PositionChanged = null;
+                Paused = null;
+                EndReached = null;
+                VolumeLevelChanged = null;
+                IsMutedChanged = null;
+                DisconnectAsync().GetAwaiter().GetResult();
+            }
+            _disposed = true;
         }
 
         public static Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
@@ -202,8 +222,8 @@ namespace CastIt.GoogleCast
                 await _receiverChannel.StopAsync(_sender);
             (_receiverChannel as IStatusChannel).Status = null;
             (_mediaChannel as IStatusChannel).Status = null;
-            CancelAndSetMediaToken();
-            _sender.Disconnect(true);
+            CancelAndSetListenerToken(false);
+            _sender.Disconnect(true, false);
             CurrentContentId = null;
             OnDisconnect(this, EventArgs.Empty);
         }
@@ -216,15 +236,14 @@ namespace CastIt.GoogleCast
             double seekedSeconds = 0,
             params int[] activeTrackIds)
         {
+            _logger.Info($"{nameof(LoadAsync)}: Trying to load media = {media.ContentId}");
             CurrentContentId = null;
-            CancelAndSetMediaToken();
-
-            await Task.Delay(GetMediaStatusDelay * 2);
+            CancelAndSetListenerToken();
 
             FileLoading?.Invoke(this, EventArgs.Empty);
 
-            var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
-            var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
+            var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace).ConfigureAwait(false);
+            var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds).ConfigureAwait(false);
 
             CurrentContentId = media.ContentId;
             CurrentMediaDuration = media.Duration ?? status?.Media?.Duration ?? 0;
@@ -239,6 +258,7 @@ namespace CastIt.GoogleCast
             ListenForReceiverChanges(_listenerToken.Token);
 
             FileLoaded?.Invoke(this, EventArgs.Empty);
+            _logger.Info($"{nameof(LoadAsync)}: Media = {media.ContentId} was loaded");
             return status;
         }
 
@@ -263,7 +283,7 @@ namespace CastIt.GoogleCast
         {
             CurrentContentId = null;
             IsPlaying = false;
-            CancelAndSetMediaToken(false);
+            CancelAndSetListenerToken(false);
             return _mediaChannel.StopAsync(_sender);
         }
 
@@ -294,7 +314,6 @@ namespace CastIt.GoogleCast
                 _logger.LogTrace($"{nameof(HandleResponseMsg)}: Got msg type = {message.Type}");
                 try
                 {
-
                     var response = (IMessage)JsonConvert.DeserializeObject(payload, type, AppConstants.JsonSettings);
                     var appMessage = await channel.OnMessageReceivedAsync(_sender, response);
                     TaskCompletionSourceInvoke(message, "SetResult", response);
@@ -311,7 +330,7 @@ namespace CastIt.GoogleCast
             }
             else
             {
-                _logger.LogInfo($"{nameof(HandleResponseMsg)}: Could not get a supported msg for type {message.Type}. Payload = {payload}");
+                _logger.LogWarn($"{nameof(HandleResponseMsg)}: Could not get a supported msg for type {message.Type}. Payload = {payload}");
             }
         }
 
@@ -345,11 +364,12 @@ namespace CastIt.GoogleCast
                 _heartbeatChannel
             };
 
-            return channels.FirstOrDefault(c => c.Namespace.Equals(ns, StringComparison.OrdinalIgnoreCase));
+            return channels.Find(c => c.Namespace.Equals(ns, StringComparison.OrdinalIgnoreCase));
         }
 
-        private void CancelAndSetMediaToken(bool createNewToken = true)
+        private void CancelAndSetListenerToken(bool createNewToken = true)
         {
+            _logger.Info($"{nameof(CancelAndSetListenerToken)}: Cancelling listener token... Creating a new token = {createNewToken}");
             if (_listenerToken?.IsCancellationRequested == false)
                 _listenerToken.Cancel();
 
@@ -361,6 +381,8 @@ namespace CastIt.GoogleCast
         {
             try
             {
+                _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Starting the media changes loop");
+                await ListenMediaChangesSemaphoreSlim.WaitAsync(token);
                 await Task.Run(async () =>
                 {
                     bool checkMediaStatus = true;
@@ -371,7 +393,7 @@ namespace CastIt.GoogleCast
 
                         var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
                         if (token.IsCancellationRequested)
-                            return;
+                            break;
 
                         if (mediaStatus is null)
                         {
@@ -380,10 +402,10 @@ namespace CastIt.GoogleCast
                             _logger.LogInfo(
                                 $"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {contentIsBeingPlayed}. " +
                                 $"CurrentContentId = {CurrentContentId}");
+                            CancelAndSetListenerToken(false);
+
                             if (contentIsBeingPlayed)
                                 EndReached?.Invoke(this, EventArgs.Empty);
-
-                            CancelAndSetMediaToken(false);
                             break;
                         }
 
@@ -398,10 +420,12 @@ namespace CastIt.GoogleCast
                         TriggerTimeEvents();
                         if (Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
                         {
-                            _logger.LogInfo($"{nameof(ListenForMediaChanges)}: End reached because the ElapsedSeconds >= CurrentMediaDuration.");
+                            _logger.LogInfo(
+                                $"{nameof(ListenForMediaChanges)}: End reached because the " +
+                                $"ElapsedSeconds >= CurrentMediaDuration. CurrentContentId = { CurrentContentId}");
                             IsPlaying = false;
+                            CancelAndSetListenerToken(false);
                             EndReached?.Invoke(this, EventArgs.Empty);
-                            CancelAndSetMediaToken(false);
                             break;
                         }
                     }
@@ -409,9 +433,15 @@ namespace CastIt.GoogleCast
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException || e is TimeoutException)
+                if (e is TaskCanceledException || e is OperationCanceledException)
                     return;
                 _logger.LogError($"{nameof(ListenForMediaChanges)}: Unknown error occurred", e);
+            }
+            finally
+            {
+                _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Media changes loop completed");
+                if (ListenMediaChangesSemaphoreSlim.CurrentCount == 0)
+                    ListenMediaChangesSemaphoreSlim.Release();
             }
         }
 
@@ -419,6 +449,8 @@ namespace CastIt.GoogleCast
         {
             try
             {
+                _logger.LogInfo($"{nameof(ListenForReceiverChanges)}: Starting the receiver changes loop");
+                await ListenReceiverChangesSemaphoreSlim.WaitAsync(token);
                 await Task.Run(async () =>
                 {
                     while (!token.IsCancellationRequested)
@@ -433,9 +465,15 @@ namespace CastIt.GoogleCast
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException || e is TimeoutException)
+                if (e is TaskCanceledException || e is OperationCanceledException)
                     return;
                 _logger.LogError($"{nameof(ListenForReceiverChanges)}: Unknown error occurred", e);
+            }
+            finally
+            {
+                _logger.LogInfo($"{nameof(ListenForMediaChanges)}: Receiver changes loop completed");
+                if (ListenReceiverChangesSemaphoreSlim.CurrentCount == 0)
+                    ListenReceiverChangesSemaphoreSlim.Release();
             }
         }
 

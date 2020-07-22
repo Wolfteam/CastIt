@@ -24,7 +24,7 @@ namespace CastIt.GoogleCast.Channels
         {
             if (message is CloseMessage)
             {
-                sender.Disconnect(true);
+                sender.Disconnect(true, true);
             }
             return base.OnMessageReceivedAsync(sender, message);
         }
