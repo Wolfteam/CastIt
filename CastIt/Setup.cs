@@ -28,10 +28,11 @@ namespace CastIt
         protected override IMvxLogProvider CreateLogProvider()
         {
             const string fileOutputTemplate =
-                "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{Level}] {Message:lj}{NewLine}{Exception}";
+                "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} ({ThreadId}) [{Level}] {Message:lj}{NewLine}{Exception}";
             var basePath = FileUtils.GetLogsPath();
             var loggerConfig = new LoggerConfiguration().MinimumLevel
-                .Debug();
+                .Debug()
+                .Enrich.WithThreadId();
 
             var logs = new Dictionary<string, string>
             {

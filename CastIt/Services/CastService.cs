@@ -358,6 +358,7 @@ namespace CastIt.Services
         {
             try
             {
+                _logger.Info($"{nameof(CleanThemAll)} Clean them all started...");
                 _player.FileLoading -= FileLoading;
                 _player.DeviceAdded -= RendererDiscovererItemAdded;
                 _player.EndReached -= EndReached;

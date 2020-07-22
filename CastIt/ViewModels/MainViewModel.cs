@@ -751,6 +751,7 @@ namespace CastIt.ViewModels
 
         private async Task HandleCloseApp()
         {
+            Logger.Info($"{nameof(HandleCloseApp)} App is about to be closed, cleaning them all!");
             _appWebServer.OnAppClosing?.Invoke();
             _setDurationTokenSource.Cancel();
             foreach (var playList in PlayLists)
