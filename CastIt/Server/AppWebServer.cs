@@ -88,7 +88,7 @@ namespace CastIt.Server
             _playListsService = playListsService;
             _appSettings = appSettings;
         }
-        //TODO: EXPOSE THE URL OF THE SOCKET IN THE ABOUT 
+
         #region Methods
         public void Init(IMainViewModel mainViewModel, CancellationToken cancellationToken)
         {

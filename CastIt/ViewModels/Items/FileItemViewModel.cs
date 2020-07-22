@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Extensions;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Models.FFMpeg;
@@ -117,8 +118,12 @@ namespace CastIt.ViewModels.Items
             => FileUtils.GetFileSizeString(Path);
         public string Extension
             => FileUtils.GetExtension(Path);
+        public string Resolution
+            => !IsLocalFile
+                ? string.Empty
+                : FileInfo?.GetVideoResolution();
         public string SubTitle
-            => $"{Extension}, {Size}";
+            => Extension.AppendDelimitator("|", Size, Resolution);
 
         public FFProbeFileInfo FileInfo { get; set; }
         #endregion
@@ -196,6 +201,7 @@ namespace CastIt.ViewModels.Items
             FileInfo = await _ffmpegService.GetFileInfo(Path, token);
 
             SetDuration(FileInfo?.Format?.Duration ?? -1);
+            await RaisePropertyChanged(nameof(SubTitle));
         }
 
         public void SetDuration(double seconds)

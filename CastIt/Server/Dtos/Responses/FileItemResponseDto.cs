@@ -16,5 +16,6 @@
         public string Size { get; set; }
         public string Extension { get; set; }
         public bool Loop { get; set; }
+        public string SubTitle { get; set; }
     }
 }

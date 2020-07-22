@@ -12,14 +12,14 @@ Future<void> setupLogging() async {
         'type': 'CONSOLE',
         'dateFormat': 'yyyy-MM-dd HH:mm:ss',
         'format': '%d %i %t %l %m',
-        'level': 'INFO'
+        'level': 'INFO',
       },
       {
         'type': 'FILE',
         'dateFormat': 'dd-MM-yyyy HH:mm:ss',
         'format': '%d [%l] - [%t]: %m',
         'level': 'ALL',
-        'filePattern': 'my_expenses_log',
+        'filePattern': 'castit_log',
         'fileExtension': 'txt',
         'path': '$dirPath/',
         'rotationCycle': 'DAY'

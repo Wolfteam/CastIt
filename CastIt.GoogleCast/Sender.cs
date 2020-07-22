@@ -30,7 +30,7 @@ namespace CastIt.GoogleCast
         public event EventHandler Disconnected;
 
         public IReceiver CurrentReceiver { get; private set; }
-        private Stream NetworkStream { get; set; }
+        private SslStream NetworkStream { get; set; }
         private TcpClient TcpClient { get; set; }
         private SemaphoreSlim SendSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
         private SemaphoreSlim EnsureConnectionSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
@@ -69,12 +69,15 @@ namespace CastIt.GoogleCast
 
         public async Task ConnectAsync()
         {
-            Disconnect(false);
+            _logger.LogInfo(
+                $"{nameof(ConnectAsync)}: Connecting to = {CurrentReceiver.FriendlyName} - " +
+                $"{CurrentReceiver.Host}:{CurrentReceiver.Port}");
+            Disconnect(false, false);
 
             TcpClient = new TcpClient();
             await TcpClient.ConnectAsync(CurrentReceiver.Host, CurrentReceiver.Port);
 
-            var secureStream = new SslStream(TcpClient.GetStream(), true, (a, b, c, d) => true);
+            var secureStream = new SslStream(TcpClient.GetStream(), true, (_, __, ___, ____) => true);
             await secureStream.AuthenticateAsClientAsync(CurrentReceiver.Host);
             NetworkStream = secureStream;
 
@@ -88,8 +91,10 @@ namespace CastIt.GoogleCast
             return ConnectAsync();
         }
 
-        public void Disconnect(bool triggerDisconnectEvent)
+        public void Disconnect(bool triggerDisconnectEvent, bool chromeCastAskedForDisconnection)
         {
+            if (chromeCastAskedForDisconnection)
+                _logger.LogWarn($"{nameof(Disconnect)}: A dispose will take place and was requested from the chromecast");
             Dispose(triggerDisconnectEvent);
         }
 
@@ -98,11 +103,11 @@ namespace CastIt.GoogleCast
             return SendAsync(msg.NameSpace, msg.Message, msg.DestinationId);
         }
 
-        public async Task SendAsync(string ns, IMessage message, string destinationId)
+        public Task SendAsync(string ns, IMessage message, string destinationId)
         {
             var castMessage = CreateCastMessage(ns, destinationId);
             castMessage.PayloadUtf8 = JsonConvert.SerializeObject(message, AppConstants.JsonSettings);
-            await SendAsync(castMessage);
+            return SendAsync(castMessage);
         }
 
         public async Task<TResponse> SendAsync<TResponse>(string ns, IMessageWithId message, string destinationId)
@@ -155,12 +160,13 @@ namespace CastIt.GoogleCast
         [MethodImpl(MethodImplOptions.Synchronized)]
         private void Dispose(bool triggerDisconnectEvent)
         {
+            _logger.LogInfo($"{nameof(Dispose)}: Disposing...");
             foreach (var kvp in WaitingTasks)
             {
                 var tcsType = kvp.Value.GetType();
                 var methodToInvoke = tcsType.GetMethod("SetResult");
                 methodToInvoke.Invoke(kvp.Value, new object[] { null });
-                _logger.LogInfo("Calling set result...");
+                _logger.LogInfo($"{nameof(Dispose)}: Calling set result for a pending task...");
             }
             WaitingTasks.Clear();
             CancellationTokenSource?.Cancel();
@@ -171,7 +177,11 @@ namespace CastIt.GoogleCast
             TcpClient = null;
 
             if (triggerDisconnectEvent)
+            {
+                _logger.LogInfo($"{nameof(Dispose)}: Triggering disconnected event");
                 Disconnected?.Invoke(this, EventArgs.Empty);
+            }
+            _logger.LogInfo($"{nameof(Dispose)}: Dispose completed");
         }
 
         private async Task EnsureConnection()
@@ -183,6 +193,7 @@ namespace CastIt.GoogleCast
                 {
                     if (TcpClient == null && CurrentReceiver != null)
                     {
+                        _logger.Info($"{nameof(EnsureConnection)} TcpClient is null, connecting...");
                         await ConnectAsync();
                     }
                 }
@@ -195,6 +206,7 @@ namespace CastIt.GoogleCast
 
         private async void Receive(CancellationToken cancellationToken)
         {
+            _logger.LogInfo($"{nameof(Receive)}: Starting the receive loop");
             try
             {
                 while (!cancellationToken.IsCancellationRequested)
@@ -208,7 +220,8 @@ namespace CastIt.GoogleCast
                     CastMessage castMessage;
                     using (var ms = new MemoryStream())
                     {
-                        await ms.WriteAsync(await ReadAsync(length, cancellationToken), 0, length, cancellationToken);
+                        var bytes = await ReadAsync(length, cancellationToken);
+                        await ms.WriteAsync(bytes, 0, length, cancellationToken);
                         ms.Position = 0;
                         castMessage = Serializer.Deserialize<CastMessage>(ms);
                     }
@@ -220,7 +233,12 @@ namespace CastIt.GoogleCast
             {
                 if (e is NullReferenceException || e is OperationCanceledException)
                     return;
-                _logger.LogError($"{nameof(Receive)}: Unknown error", e);
+                _logger.LogError($"{nameof(Receive)}: Unknown error, triggering a dispose", e);
+                Dispose(true);
+            }
+            finally
+            {
+                _logger.LogInfo($"{nameof(Receive)}: Receive loop completed");
             }
         }
 
@@ -241,9 +259,11 @@ namespace CastIt.GoogleCast
             while (length < bufferLength)
             {
                 nb = await NetworkStream.ReadAsync(buffer, length, bufferLength - length, cancellationToken);
-                if (nb == 0)
+                //a disconnection occured
+                if (nb == 0 && !NetworkStream.CanRead)
                 {
-                    throw new Exception("Number of bytes read is 0");
+                    _logger.LogInfo($"{nameof(ReadAsync)}: End of stream reached");
+                    throw new Exception("Number of bytes read is 0, end of stream reached");
                 }
                 length += nb;
             }

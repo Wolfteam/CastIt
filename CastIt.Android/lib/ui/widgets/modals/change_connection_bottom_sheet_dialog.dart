@@ -74,7 +74,6 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                       ? null
                       : IconButton(
                           alignment: Alignment.bottomCenter,
-                          autofocus: false,
                           icon: Icon(Icons.sync),
                           onPressed: !(state as SettingsLoadedState).isCastItUrlValid ? null : _onRefreshClick,
                         ),

@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
   <!--Do not modify this upgrade code-->
-  <?define ProductUpgradeCode = "{a2dbeaf4-a6b5-4139-a0a0-15babbf877fc}" ?>
+  <?define ProductUpgradeCode = "{DD46D441-3F63-416F-A2A2-9785B668C4E0}" ?>
 
   <Product
       Id="*"

@@ -24,6 +24,7 @@ class FileItem extends StatelessWidget {
   final bool exists;
   final bool loop;
   final double itemHeight;
+  final String subtitle;
 
   const FileItem({
     @required this.position,
@@ -41,13 +42,13 @@ class FileItem extends StatelessWidget {
     @required this.isUrlFile,
     @required this.loop,
     @required this.itemHeight,
+    @required this.subtitle,
     Key key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final extraInfo = '$ext | $size';
     final title = !loop
         ? Text(
             name,
@@ -95,10 +96,7 @@ class FileItem extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text(
-                  extraInfo,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text(subtitle, overflow: TextOverflow.ellipsis),
                 Text(
                   totalSeconds > 0 ? Duration(seconds: totalSeconds.round()).formatDuration() : 'N/A',
                   overflow: TextOverflow.ellipsis,

@@ -283,7 +283,6 @@ namespace CastIt.ViewModels
             IsExpanded = _settingsService.IsPlayListExpanded;
             Logger.Info($"{nameof(Initialize)}: Initializing cast service...");
             _castService.Init();
-            _appWebServer.Init(this, _webServerCancellationToken.Token);
 
             Logger.Info($"{nameof(Initialize)}: Getting all playlists...");
             var playLists = await _playListsService.GetAllPlayLists();
@@ -298,6 +297,9 @@ namespace CastIt.ViewModels
             {
                 pl.SetPositionIfChanged();
             }
+            //This needs to happen after the playlist/files are initialized, otherwise, you will be sending a lot of ws msgs
+            Logger.Info($"{nameof(Initialize)}: Initializing web server...");
+            _appWebServer.Init(this, _webServerCancellationToken.Token);
 
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnFileLoaded += OnFileLoaded;
@@ -478,23 +480,7 @@ namespace CastIt.ViewModels
                 NumberOfFiles = playlist.Items.Count,
                 Position = playlist.Position,
                 Shuffle = playlist.Shuffle,
-                Files = playlist.Items.Select(f => new FileItemResponseDto
-                {
-                    Extension = f.Extension,
-                    Filename = f.Filename,
-                    Exists = f.Exists,
-                    Id = f.Id,
-                    IsLocalFile = f.IsLocalFile,
-                    IsUrlFile = f.IsUrlFile,
-                    Path = f.Path,
-                    PlayedPercentage = f.PlayedPercentage,
-                    PlayListId = f.PlayListId,
-                    Position = f.Position,
-                    Size = f.Size,
-                    IsBeingPlayed = f.IsBeingPlayed,
-                    Loop = f.Loop,
-                    TotalSeconds = f.TotalSeconds
-                }).ToList()
+                Files = _mapper.Map<List<FileItemResponseDto>>(playlist.Items)
             };
         }
 
@@ -765,6 +751,7 @@ namespace CastIt.ViewModels
 
         private async Task HandleCloseApp()
         {
+            Logger.Info($"{nameof(HandleCloseApp)} App is about to be closed, cleaning them all!");
             _appWebServer.OnAppClosing?.Invoke();
             _setDurationTokenSource.Cancel();
             foreach (var playList in PlayLists)
@@ -904,11 +891,11 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
 
+            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
+
             SetCurrentlyPlayingInfo(file.Filename, true);
             if (!fileOptionsChanged)
                 SetAvailableAudiosAndSubTitles();
-
-            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
             playList.SelectedItem = file;

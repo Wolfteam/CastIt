@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:log_4_dart_2/log_4_dart_2.dart';
 import 'package:sprintf/sprintf.dart';
 import '../common/extensions/string_extensions.dart';
@@ -33,7 +34,9 @@ class LoggingServiceImpl implements LoggingService {
     assert(type != null && !msg.isNullEmptyOrWhitespace);
     final tag = type.toString();
     _logger.warning(tag, _formatEx(msg, ex), ex, trace);
-    _trackWarning(tag, msg, ex, trace);
+    if (kReleaseMode) {
+      _trackWarning(tag, msg, ex, trace);
+    }
   }
 
   @override
@@ -41,7 +44,10 @@ class LoggingServiceImpl implements LoggingService {
     assert(type != null && !msg.isNullEmptyOrWhitespace);
     final tag = type.toString();
     _logger.error(tag, _formatEx(msg, ex), ex, trace);
-    _trackError(tag, msg, ex, trace);
+
+    if (kReleaseMode) {
+      _trackError(tag, msg, ex, trace);
+    }
   }
 
   String _formatEx(String msg, dynamic ex) {

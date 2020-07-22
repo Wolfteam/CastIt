@@ -59,7 +59,7 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
         return currentState.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted);
       },
       setVolume: (e) async {
-        await _serverWsBloc.setVolume(e.volumeLvl, e.isMuted);
+        await _serverWsBloc.setVolume(e.volumeLvl, isMuted: e.isMuted);
         return currentState.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted);
       },
       closeModal: (e) async => PlayedFileOptionsState.closed(),

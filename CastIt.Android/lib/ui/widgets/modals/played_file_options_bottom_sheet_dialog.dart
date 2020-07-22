@@ -173,12 +173,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           Row(
             children: <Widget>[
               Expanded(
-                child: Slider(
-                  min: 0,
-                  max: 1,
-                  value: volumeLevel,
-                  onChanged: (newValue) => _setVolume(context, newValue, isMuted),
-                ),
+                child: Slider(value: volumeLevel, onChanged: (newValue) => _setVolume(context, newValue, isMuted)),
               ),
               IconButton(
                 icon: Icon(isMuted ? Icons.volume_off : Icons.volume_up),
