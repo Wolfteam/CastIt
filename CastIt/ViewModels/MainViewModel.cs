@@ -121,7 +121,7 @@ namespace CastIt.ViewModels
             {
                 if (value == _currentPlayedSeconds)
                     return;
-                else if (value > CurrentFileDuration)
+                if (value > CurrentFileDuration)
                     SetProperty(ref _currentPlayedSeconds, CurrentFileDuration);
                 else
                     SetProperty(ref _currentPlayedSeconds, value);
@@ -512,59 +512,52 @@ namespace CastIt.ViewModels
 
         public Task PlayFile(long id, long playlistId, bool force)
         {
-            var pl = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
-            if (pl == null)
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
+            if (playList == null)
             {
                 Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because playlistId = {playlistId} doesnt exists");
                 _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return Task.CompletedTask;
             }
 
-            var file = pl.Items.FirstOrDefault(f => f.Id == id);
-            if (file == null)
-            {
-                Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because it doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("FileDoesntExist"));
-                return Task.CompletedTask;
-            }
-
-            return PlayFile(file, force);
+            var file = playList.Items.FirstOrDefault(f => f.Id == id);
+            if (file != null)
+                return PlayFile(file, force);
+            Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because it doesnt exists");
+            _appWebServer.OnServerMsg?.Invoke(GetText("FileDoesntExist"));
+            return Task.CompletedTask;
         }
 
         public void SetPlayListOptions(long id, bool loop, bool shuffle)
         {
-            var pl = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (pl == null)
+            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
+            if (playlist == null)
             {
                 Logger.Warn($"{nameof(SetPlayListOptions)}: PlaylistId = {id} doesnt exists");
                 _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
                 return;
             }
 
-            pl.Loop = loop;
-            pl.Shuffle = shuffle;
+            playlist.Loop = loop;
+            playlist.Shuffle = shuffle;
         }
 
         public Task DeletePlayList(long id)
         {
             var pl = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (pl == null)
-            {
-                Logger.Warn($"{nameof(DeletePlayList)}: Cant delete playlistId = {id} because it doesnt exists");
-                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-            }
-            return DeletePlayList(pl);
+            if (pl != null)
+                return DeletePlayList(pl);
+            Logger.Warn($"{nameof(DeletePlayList)}: Cant delete playlistId = {id} because it doesnt exists");
+            return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
         }
 
         public Task DeleteFile(long id, long playListId)
         {
-            var pl = PlayLists.FirstOrDefault(pl => pl.Id == playListId);
-            if (pl == null)
-            {
-                Logger.Warn($"{nameof(DeleteFile)}: Couldnt delete fileId = {id} because playlistId = {playListId} doesnt exists");
-                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-            }
-            return pl.RemoveFile(id);
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == playListId);
+            if (playList != null)
+                return playList.RemoveFile(id);
+            Logger.Warn($"{nameof(DeleteFile)}: Couldnt delete fileId = {id} because playlistId = {playListId} doesnt exists");
+            return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
         }
 
         public Task SetFileLoop(long id, long playlistId, bool loop)
@@ -645,13 +638,11 @@ namespace CastIt.ViewModels
 
         public Task RenamePlayList(long id, string newName)
         {
-            var pl = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (pl == null)
-            {
-                Logger.Warn($"{nameof(DeletePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
-                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-            }
-            return pl.SavePlayList(newName);
+            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
+            if (playlist != null)
+                return playlist.SavePlayList(newName);
+            Logger.Warn($"{nameof(DeletePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
+            return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
         }
         #endregion
 
@@ -727,13 +718,7 @@ namespace CastIt.ViewModels
                 return;
             var exceptIndex = PlayLists.IndexOf(except);
 
-            var items = new List<PlayListItemViewModel>();
-            for (int i = 0; i < PlayLists.Count; i++)
-            {
-                if (i == exceptIndex)
-                    continue;
-                items.Add(PlayLists[i]);
-            }
+            var items = PlayLists.Where((t, i) => i != exceptIndex).ToList();
 
             var ids = items.Select(pl => pl.Id).ToList();
             await _playListsService.DeletePlayLists(ids);
@@ -775,14 +760,7 @@ namespace CastIt.ViewModels
         private void SwitchPlayLists()
         {
             int tentativeIndex = SelectedPlayListIndex + 1;
-            if (PlayLists.ElementAtOrDefault(tentativeIndex) != null)
-            {
-                SelectedPlayListIndex = tentativeIndex;
-            }
-            else
-            {
-                SelectedPlayListIndex = 0;
-            }
+            SelectedPlayListIndex = PlayLists.ElementAtOrDefault(tentativeIndex) != null ? tentativeIndex : 0;
         }
 
         private void GoTo(bool nextTrack)
@@ -803,8 +781,8 @@ namespace CastIt.ViewModels
                     .Select(f => f.Position)
                     .GetClosest(nextPosition);
 
-                var f = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
-                f?.PlayCommand?.Execute();
+                var closestFile = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
+                closestFile?.PlayCommand?.Execute();
                 return;
             }
 
@@ -821,11 +799,10 @@ namespace CastIt.ViewModels
                     "Probably an end of playlist");
                 _castService.StopRunningProcess();
 
-                if (playlist.Loop)
-                {
-                    Logger.Info($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
-                    playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
-                }
+                if (!playlist.Loop)
+                    return;
+                Logger.Info($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
+                playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
                 return;
             }
 
@@ -1096,7 +1073,7 @@ namespace CastIt.ViewModels
 
             //Videos
             bool isSelected = true;
-            bool isEnabled = isEnabled = _currentlyPlayedFile.FileInfo.Videos.Count > 1;
+            bool isEnabled = _currentlyPlayedFile.FileInfo.Videos.Count > 1;
             foreach (var video in _currentlyPlayedFile.FileInfo.Videos)
             {
                 CurrentFileVideos.Add(new FileItemOptionsViewModel

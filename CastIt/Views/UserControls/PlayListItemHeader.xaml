@@ -46,6 +46,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <materialDesign:Chip
+            Margin="0,0,10,0"
             VerticalAlignment="Center"
             Background="{DynamicResource PrimaryHueDarkBrush}"
             Content="{Binding Items.Count}"
