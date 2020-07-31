@@ -330,12 +330,10 @@ namespace CastIt.Services
 
         public async Task<double> SetVolume(double level)
         {
-            if (!string.IsNullOrEmpty(_currentFilePath) && _player.CurrentVolumeLevel != level)
-            {
-                var status = await _player.SetVolumeAsync((float)level).ConfigureAwait(false);
-                return (double)(status?.Volume?.Level ?? level);
-            }
-            return _player.CurrentVolumeLevel;
+            if (string.IsNullOrEmpty(_currentFilePath) || _player.CurrentVolumeLevel == level)
+                return _player.CurrentVolumeLevel;
+            var status = await _player.SetVolumeAsync((float)level).ConfigureAwait(false);
+            return (double)(status?.Volume?.Level ?? level);
         }
 
         public async Task<bool> SetIsMuted(bool isMuted)
@@ -388,12 +386,7 @@ namespace CastIt.Services
                 return SetNullCastRenderer();
             }
             var renderer = AvailableDevices.FirstOrDefault(d => d.Id == id);
-            if (renderer is null)
-            {
-                return SetNullCastRenderer();
-            }
-
-            return SetCastRenderer(renderer);
+            return renderer is null ? SetNullCastRenderer() : SetCastRenderer(renderer);
         }
 
         #region Events handlers

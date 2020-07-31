@@ -116,7 +116,6 @@ namespace CastIt.Services
             }
 
             var filename = Path.GetFileName(mrl);
-            var ext = Path.GetExtension(mrl);
             var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, second);
             if (File.Exists(thumbnailPath))
             {
@@ -125,11 +124,11 @@ namespace CastIt.Services
 
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
-            var ouputArgs = builder.AddOutputFile(thumbnailPath);
+            var outputArgs = builder.AddOutputFile(thumbnailPath);
             if (!FileUtils.IsMusicFile(mrl))
             {
                 inputArgs.Seek(second);
-                ouputArgs.SetVideoFrames(1);
+                outputArgs.SetVideoFrames(1);
             }
             try
             {
@@ -462,7 +461,6 @@ namespace CastIt.Services
             double? from = null,
             double? to = null)
         {
-            string fileExt = Path.GetExtension(filePath);
             var videoInfo = fileInfo.Streams.Find(f => f.IsVideo);
             var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
             bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);

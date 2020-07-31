@@ -47,10 +47,10 @@ namespace CastIt.ViewModels
         public override void SetCommands()
         {
             base.SetCommands();
-            ConnectCommand = new MvxAsyncCommand<DeviceItemViewModel>(ToggleConectedDevice);
+            ConnectCommand = new MvxAsyncCommand<DeviceItemViewModel>(ToggleConnectedDevice);
 
             DisconnectCommand = new MvxAsyncCommand<DeviceItemViewModel>(
-                (_) => ToggleConectedDevice(null));
+                (_) => ToggleConnectedDevice(null));
         }
 
         public void CleanUp()
@@ -60,7 +60,7 @@ namespace CastIt.ViewModels
             _castService.OnDisconnected -= DeSelectAllDevices;
         }
 
-        private Task ToggleConectedDevice(DeviceItemViewModel device)
+        private Task ToggleConnectedDevice(DeviceItemViewModel device)
         {
             DeSelectAllDevices();
 
