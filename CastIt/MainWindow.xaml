@@ -19,7 +19,6 @@
     SizeChanged="AppMainWindow_SizeChanged"
     Style="{StaticResource WindowStyle}"
     WindowStartupLocation="CenterScreen"
-    WindowStyle="None"
     mc:Ignorable="d">
     <views:MvxWindow.Resources>
         <Storyboard x:Key="ShowWinStoryboard">

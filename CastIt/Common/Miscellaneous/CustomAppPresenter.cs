@@ -1,6 +1,7 @@
 ﻿using CastIt.Common.Utils;
 using MvvmCross.Platforms.Wpf.Presenters;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
+using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.Presenters;
 using MvvmCross.ViewModels;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace CastIt.Common.Miscellaneous
                 return base.ShowContentView(element, attribute, request);
 
             var contentControl = FrameworkElementsDictionary.Keys
-                .FirstOrDefault(w => (w as MainWindow)?.Identifier == attribute.WindowIdentifier)
+                .FirstOrDefault(w => (w as MvxWindow)?.Identifier == attribute.WindowIdentifier)
                 ?? FrameworkElementsDictionary.Keys.Last();
 
             if (!attribute.StackNavigation && FrameworkElementsDictionary[contentControl].Any())

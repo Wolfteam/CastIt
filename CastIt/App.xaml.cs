@@ -1,7 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
 using CastIt.Services;
-using MvvmCross.Core;
 using MvvmCross.Platforms.Wpf.Views;
 using System;
 using System.Runtime;
@@ -11,7 +10,7 @@ using System.Windows;
 
 namespace CastIt
 {
-    public partial class App : MvxApplication
+    public partial class App : MvxApplication<Setup, Application>
     {
         //https://stackoverflow.com/questions/14506406/wpf-single-instance-best-practices
         private static readonly string UniqueEventName = $"{AppConstants.AppName}_UniqueEvent";
@@ -27,7 +26,6 @@ namespace CastIt
             ProfileOptimization.SetProfileRoot(FileUtils.GetBaseAppFolder());
             // Enables Multicore JIT with the specified profile
             ProfileOptimization.StartProfile("Startup.Profile");
-            this.RegisterSetupType<Setup>();
         }
 
         private void AppOnStartup(object sender, StartupEventArgs e)
