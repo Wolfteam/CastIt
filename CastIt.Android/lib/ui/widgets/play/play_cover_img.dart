@@ -98,7 +98,7 @@ class PlayCoverImg extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.playlist_play,
             color: Colors.white,
           ),
@@ -116,12 +116,12 @@ class PlayCoverImg extends StatelessWidget {
             Text(
               playListName.isNullEmptyOrWhitespace ? '' : playListName,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
           ],
         ),
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.settings,
             color: Colors.white,
           ),
@@ -145,11 +145,14 @@ class PlayCoverImg extends StatelessWidget {
             onPressed: !playListIsValid ? null : () => _togglePlayListShuffle(context),
           ),
           Flexible(
-            child: Text(
-              fileName.isNullEmptyOrWhitespace ? '' : fileName,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28.0),
+            child: Tooltip(
+              message: fileName.isNullEmptyOrWhitespace ? i18n.na : fileName,
+              child: Text(
+                fileName.isNullEmptyOrWhitespace ? '' : fileName,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28.0),
+              ),
             ),
           ),
           IconButton(

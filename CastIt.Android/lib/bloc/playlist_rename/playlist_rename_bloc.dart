@@ -30,5 +30,5 @@ class PlayListRenameBloc extends Bloc<PlayListRenameEvent, PlayListRenameState> 
     yield s;
   }
 
-  bool _isNameValid(String name) => !name.isNullEmptyOrWhitespace && !name.isLengthValid(minLength: 1, maxLength: 255);
+  bool _isNameValid(String name) => !name.isNullEmptyOrWhitespace && !name.isLengthValid(minLength: 1);
 }

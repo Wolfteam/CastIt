@@ -133,7 +133,7 @@ class _IntroPageState extends State<IntroPage> {
                   alignment: Alignment.center,
                   child: Text(
                     i18n.start.toUpperCase(),
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                   ),
                 ),
               );
@@ -173,9 +173,8 @@ class _IntroPageState extends State<IntroPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.language),
+            const Icon(Icons.language),
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(i18n.language, style: Theme.of(context).textTheme.headline6),
@@ -188,7 +187,6 @@ class _IntroPageState extends State<IntroPage> {
             isExpanded: true,
             hint: Text(i18n.chooseLanguage),
             value: currentLang,
-            iconSize: 24,
             underline: Container(height: 0, color: Colors.transparent),
             onChanged: (newValue) => context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
             items: dropdown,

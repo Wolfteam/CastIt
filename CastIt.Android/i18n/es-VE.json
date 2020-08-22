@@ -72,5 +72,10 @@
     "start": "Empezar",
     "confirm": "Confirmar",
     "skipIntroConfirm": "¿ Estás seguro de que deseas saltarte la intro ?",
-    "playlistNotFound": "Lista de reproducción no encontrada"
+    "playlistNotFound": "Lista de reproducción no encontrada",
+    "closeDesktopApp": "Cerrar la app. de escritorio",
+    "closeDesktopAppConfirmation": "¿ Estás seguro que deseas cerrar la aplicación de escritorio ?",
+    "stopPlayback": "Detener reproducción",
+    "desktopApp": "Aplicación de escritorio",
+    "issues": "Inconvenientes"
 }

@@ -26,10 +26,7 @@ class PlayListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(
-        Icons.list,
-        size: 36,
-      ),
+      leading: const Icon(Icons.list, size: 36),
       title: Text(
         name,
         style: theme.textTheme.headline6,

@@ -36,6 +36,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   static const String _getFileOptionsMsgType = 'CLIENT_GET_FILE_OPTIONS';
   static const String _updateSettingsMsgType = 'CLIENT_SETTINGS_UPDATE';
   static const String _setVolumeMsgType = 'CLIENT_SET_VOLUME';
+  static const String _closeAppMsgType = 'CLIENT_CLOSE_APP';
 
   //Server Msg
   static const String _gotPlayListsMsgType = 'SERVER_PLAYLISTS_ALL';
@@ -455,6 +456,11 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   Future<void> renamePlayList(int id, String name) {
     final dto = RenamePlayListRequestDto(id: id, name: name, msgType: _renamePlayListMsgType);
+    return _sendMsg(dto);
+  }
+
+  Future<void> closeDesktopApp() {
+    final dto = BaseSocketRequestDto(messageType: _closeAppMsgType);
     return _sendMsg(dto);
   }
 }

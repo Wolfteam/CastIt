@@ -15,7 +15,7 @@ abstract class PlayListEvent implements _$PlayListEvent {
     bool shuffle,
   }) = PlayListOptionsChangedEvent;
 
-  const factory PlayListEvent.disconnected() = PlayListDisconnectedEvent;
+  const factory PlayListEvent.disconnected({int playListId}) = PlayListDisconnectedEvent;
 
   const factory PlayListEvent.toggleSearchBoxVisibility() = PlayListToggleSearchBoxVisibilityEvent;
 

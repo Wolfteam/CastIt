@@ -26,7 +26,7 @@ class PlayListPage extends StatefulWidget {
 }
 
 class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderStateMixin {
-  final _refreshController = RefreshController(initialRefresh: false);
+  final _refreshController = RefreshController();
 
   final _listViewScrollController = ScrollController();
 
@@ -138,7 +138,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Icon(Icons.info_outline, size: 60),
+              const Icon(Icons.info_outline, size: 60),
               Text(i18n.playlistNotFound, textAlign: TextAlign.center, style: theme.textTheme.headline4),
             ],
           ),
@@ -164,7 +164,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
               Align(
                 alignment: Alignment.centerLeft,
                 child: FlatButton.icon(
-                  icon: Icon(Icons.arrow_back),
+                  icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.of(context).pop(),
                   label: Text(
                     i18n.playlists,
@@ -187,7 +187,6 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   Widget _buildItems(List<FileItemResponseDto> files) {
     final listView = SmartRefresher(
-      enablePullDown: true,
       header: const MaterialClassicHeader(),
       controller: _refreshController,
       onRefresh: () {
@@ -236,7 +235,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
         children: <Widget>[
           Container(
             margin: const EdgeInsets.only(left: 10),
-            child: Icon(Icons.search, size: 30),
+            child: const Icon(Icons.search, size: 30),
           ),
           Expanded(
             child: TextField(
@@ -253,7 +252,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             ),
           ),
           IconButton(
-            icon: Icon(Icons.close),
+            icon: const Icon(Icons.close),
             onPressed: _cleanSearchText,
           ),
         ],
@@ -299,11 +298,11 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
                   buttonPadding: const EdgeInsets.all(0),
                   children: <Widget>[
                     IconButton(
-                      icon: Icon(Icons.search, size: iconSize),
+                      icon: const Icon(Icons.search, size: iconSize),
                       onPressed: _toggleSearchBoxVisibility,
                     ),
                     IconButton(
-                      icon: Icon(Icons.arrow_upward, size: iconSize),
+                      icon: const Icon(Icons.arrow_upward, size: iconSize),
                       onPressed: () => _animateToIndex(1),
                     ),
                   ],

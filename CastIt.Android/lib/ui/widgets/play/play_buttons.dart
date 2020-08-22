@@ -20,7 +20,6 @@ class PlayButtons extends StatelessWidget {
     final isDarkTheme = theme.brightness == Brightness.dark;
     final iconColor = isDarkTheme ? Colors.white : Colors.black;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         IconButton(

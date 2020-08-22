@@ -78,7 +78,6 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
         return [
           TextFormField(
             autofocus: true,
-            maxLines: 1,
             minLines: 1,
             validator: (_) => s.isNameValid ? null : i18n.invalidName,
             autovalidate: true,
@@ -88,7 +87,7 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
             decoration: InputDecoration(
               suffixIcon: IconButton(
                 alignment: Alignment.bottomCenter,
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () => _nameController.clear(),
               ),
               alignLabelWithHint: true,

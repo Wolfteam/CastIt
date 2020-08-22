@@ -118,7 +118,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
         ),
-        icon: Icon(Icons.play_arrow),
+        icon: const Icon(Icons.play_arrow),
       ),
       BottomNavigationBarItem(
         title: Text(
@@ -126,7 +126,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
         ),
-        icon: Icon(Icons.playlist_play),
+        icon: const Icon(Icons.playlist_play),
       ),
       BottomNavigationBarItem(
         title: Text(
@@ -134,7 +134,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
         ),
-        icon: Icon(Icons.settings),
+        icon: const Icon(Icons.settings),
       ),
     ];
   }
@@ -174,14 +174,13 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       behavior: SnackBarBehavior.floating,
       backgroundColor: color,
       content: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Icon(Icons.info_outline, color: Colors.white),
+          const Icon(Icons.info_outline, color: Colors.white),
           Container(
             margin: const EdgeInsets.only(left: 10),
             child: Text(
               msg,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -14,19 +14,11 @@ class BottomSheetTitle extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: <Widget>[
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Icon(
-            icon,
-            size: 36,
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(left: 5),
-          child: Text(
-            title,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.headline6,
+        Align(alignment: Alignment.centerLeft, child: Icon(icon, size: 36)),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(left: 5),
+            child: Text(title, style: theme.textTheme.headline6),
           ),
         ),
       ],

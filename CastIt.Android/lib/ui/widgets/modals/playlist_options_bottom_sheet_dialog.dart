@@ -33,9 +33,8 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
             FlatButton(
               onPressed: () => _showRenameModal(context),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.edit),
+                  const Icon(Icons.edit),
                   const SizedBox(width: 10),
                   Text(i18n.rename),
                 ],
@@ -44,9 +43,8 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
             FlatButton(
               onPressed: () => _showDeleteModal(context),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.delete),
+                  const Icon(Icons.delete),
                   const SizedBox(width: 10),
                   Text(i18n.delete),
                 ],

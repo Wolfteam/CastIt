@@ -16,7 +16,7 @@ abstract class PlayListState implements _$PlayListState {
     @Default(false) bool isFiltering,
   }) = PlayListLoadedState;
 
-  factory PlayListState.disconnected() = PlayListDisconnectedState;
+  factory PlayListState.disconnected({int playListId}) = PlayListDisconnectedState;
 
   factory PlayListState.close() = PlayListCloseState;
 

@@ -36,9 +36,8 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
             FlatButton(
               onPressed: () => _playFile(context, false),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.play_arrow),
+                  const Icon(Icons.play_arrow),
                   const SizedBox(width: 10),
                   Text(i18n.playFile),
                 ],
@@ -47,9 +46,8 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
             FlatButton(
               onPressed: () => _playFile(context, true),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.play_circle_filled),
+                  const Icon(Icons.play_circle_filled),
                   const SizedBox(width: 10),
                   Text(i18n.playFileFromTheBeginning),
                 ],
@@ -58,9 +56,8 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
             FlatButton(
               onPressed: () => _showDeleteModal(context),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.delete),
+                  const Icon(Icons.delete),
                   const SizedBox(width: 10),
                   Text(i18n.deleteFile),
                 ],

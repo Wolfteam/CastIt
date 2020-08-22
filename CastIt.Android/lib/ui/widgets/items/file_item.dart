@@ -67,13 +67,10 @@ class FileItem extends StatelessWidget {
                   style: theme.textTheme.headline6,
                 ),
               ),
-              Flexible(
+              const Flexible(
                 flex: 10,
                 fit: FlexFit.tight,
-                child: Icon(
-                  Icons.loop,
-                  size: 20,
-                ),
+                child: Icon(Icons.loop, size: 20),
               ),
             ],
           );
@@ -89,10 +86,7 @@ class FileItem extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              path,
-              overflow: TextOverflow.ellipsis,
-            ),
+            Text(path, overflow: TextOverflow.ellipsis),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -117,7 +111,6 @@ class FileItem extends StatelessWidget {
                 child: Slider(
                   value: playedPercentage,
                   max: 100,
-                  min: 0,
                   activeColor: Colors.black,
                   inactiveColor: Colors.grey,
                   onChanged: null,

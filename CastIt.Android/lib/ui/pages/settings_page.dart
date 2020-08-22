@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../bloc/main/main_bloc.dart';
 import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../bloc/settings/settings_bloc.dart';
+import '../../common/app_constants.dart';
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
@@ -88,7 +89,6 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       isExpanded: true,
       hint: Text(i18n.chooseBaseAppColor),
       value: currentTheme,
-      iconSize: 24,
       underline: Container(
         height: 0,
         color: Colors.transparent,
@@ -110,9 +110,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.color_lens),
+            const Icon(Icons.color_lens),
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
@@ -126,9 +125,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           padding: const EdgeInsets.only(top: 5),
           child: Text(
             i18n.chooseBaseAppColor,
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
         Padding(
@@ -157,12 +154,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         child: Container(
           padding: const EdgeInsets.all(8),
           color: color,
-          child: currentAccentColor == accentColor
-              ? Icon(
-                  Icons.check,
-                  color: Colors.white,
-                )
-              : null,
+          child: currentAccentColor == accentColor ? const Icon(Icons.check, color: Colors.white) : null,
         ),
       );
 
@@ -173,9 +165,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.colorize),
+            const Icon(Icons.colorize),
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
@@ -191,9 +182,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           ),
           child: Text(
             i18n.chooseAccentColor,
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
         GridView.count(
@@ -231,9 +220,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.language),
+            const Icon(Icons.language),
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
@@ -247,9 +235,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           padding: const EdgeInsets.only(top: 5),
           child: Text(
             i18n.chooseLanguage,
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
         Padding(
@@ -261,7 +247,6 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
             isExpanded: true,
             hint: Text(i18n.chooseLanguage),
             value: currentLang,
-            iconSize: 24,
             underline: Container(
               height: 0,
               color: Colors.transparent,
@@ -294,7 +279,6 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       isExpanded: true,
       hint: Text(i18n.videoScale),
       value: videoScale,
-      iconSize: 24,
       underline: Container(
         height: 0,
         color: Colors.transparent,
@@ -323,9 +307,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.queue_play_next),
+            const Icon(Icons.queue_play_next),
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
@@ -336,14 +319,10 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(
-            top: 5,
-          ),
+          padding: const EdgeInsets.only(top: 5),
           child: Text(
             i18n.changeAppBehaviour,
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
         ListTile(
@@ -351,11 +330,14 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           subtitle: Text(castItUrl),
           onTap: () => _showConnectionDialog(i18n.webServerUrl, castItUrl),
         ),
+        ListTile(
+          onTap: _showCloseappDialog,
+          contentPadding: const EdgeInsets.only(right: 20, left: 16),
+          title: Text(i18n.closeDesktopApp),
+          trailing: const Icon(Icons.cast),
+        ),
         Padding(
-          padding: const EdgeInsets.only(
-            left: 16,
-            right: 16,
-          ),
+          padding: const EdgeInsets.only(left: 16, right: 16),
           child: videoScaleDropdown,
         ),
         SwitchListTile(
@@ -440,9 +422,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.info_outline),
+            const Icon(Icons.info_outline),
             Container(
               margin: const EdgeInsets.only(left: 5),
               child: Text(
@@ -458,9 +439,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           ),
           child: Text(
             i18n.appInfo,
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
         Container(
@@ -490,6 +469,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                 i18n.aboutSummary,
                 textAlign: TextAlign.center,
               ),
+              _buildLink(i18n.desktopApp, AppConstants.githubReleasePage),
               Container(
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
@@ -513,30 +493,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                   i18n.donationSupport,
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.only(top: 5),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Github Issue Page',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.blue,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            _lauchUrl(
-                              'https://github.com/Wolfteam/CastIt/issues',
-                            );
-                          },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildLink(i18n.issues, AppConstants.githubIssuesPage)
             ],
           ),
         ),
@@ -555,6 +512,28 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         margin: Styles.cardSettingsContainerMargin,
         padding: Styles.cardSettingsContainerPadding,
         child: child,
+      ),
+    );
+  }
+
+  Widget _buildLink(String title, String url) {
+    return Container(
+      margin: const EdgeInsets.only(top: 5),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: title,
+              style: const TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+                decorationColor: Colors.blue,
+              ),
+              recognizer: TapGestureRecognizer()..onTap = () => _lauchUrl(url),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -611,5 +590,28 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         icon: Icons.link,
       ),
     );
+  }
+
+  void _showCloseappDialog() {
+    final i18n = I18n.of(context);
+    final theme = Theme.of(context);
+    final cancelButton = OutlineButton(
+      onPressed: () => Navigator.of(context).pop(),
+      child: Text(i18n.cancel, style: TextStyle(color: theme.primaryColor)),
+    );
+    final continueButton = RaisedButton(
+      onPressed: () async {
+        Navigator.of(context).pop();
+        await context.bloc<ServerWsBloc>().closeDesktopApp();
+      },
+      child: Text(i18n.ok),
+    );
+
+    final alert = AlertDialog(
+      title: Text(i18n.closeDesktopApp),
+      content: Text(i18n.closeDesktopAppConfirmation),
+      actions: [cancelButton, continueButton],
+    );
+    showDialog(context: context, builder: (ctx) => alert);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
 import 'package:castit/models/dtos/responses/file_item_options_response_dto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,6 +54,11 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           _buildSubtitleOptions(context, i18n, s.options),
           _buildQualitiesOptions(context, i18n, s.options),
           _buildVolumeOptions(context, i18n, s.volumeLvl, s.isMuted),
+          OutlineButton.icon(
+            onPressed: () => _stopPlayback(context),
+            icon: const Icon(Icons.stop),
+            label: Text(i18n.stopPlayback),
+          ),
         ];
       },
       closed: (s) {
@@ -108,7 +114,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       isExpanded: true,
       hint: Text(selected.text),
       value: selected,
-      iconSize: 24,
       underline: Container(
         height: 0,
         color: Colors.transparent,
@@ -130,7 +135,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Icon(icon),
               Container(
@@ -157,9 +161,8 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Icon(Icons.volume_up),
+              const Icon(Icons.volume_up),
               Container(
                 margin: const EdgeInsets.only(left: 10),
                 child: Text(
@@ -200,4 +203,9 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
   void _setVolume(BuildContext context, double volumeLevel, bool isMuted) => context
       .bloc<PlayedFileOptionsBloc>()
       .add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
+
+  Future<void> _stopPlayback(BuildContext context) async {
+    await context.bloc<ServerWsBloc>().stopPlayBack();
+    Navigator.of(context).pop();
+  }
 }
