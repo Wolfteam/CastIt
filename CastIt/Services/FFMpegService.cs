@@ -27,7 +27,7 @@ namespace CastIt.Services
         private readonly Process _generateThumbnailProcess;
         private readonly Process _generateAllThumbnailsProcess;
         private readonly Process _transcodeProcess;
-        private readonly List<HwAccelDeviceType> AvailableHwDevices = new List<HwAccelDeviceType>();
+        private readonly List<HwAccelDeviceType> _availableHwDevices = new List<HwAccelDeviceType>();
 
         private static readonly IReadOnlyList<string> AllowedVideoContainers = new List<string>
         {
@@ -140,14 +140,14 @@ namespace CastIt.Services
                 _generateThumbnailProcess.WaitForExit();
                 if (_generateThumbnailProcess.ExitCode != 0)
                 {
-                    _logger.Info($"{nameof(GetThumbnail)}: Couldnt retrieve the first thumbnail for file = {mrl}");
+                    _logger.Info($"{nameof(GetThumbnail)}: Couldn't retrieve the first thumbnail for file = {mrl}");
                     return null;
                 }
-                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was succesfully generated for file = {mrl}");
+                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+                _logger.Error(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
             finally
@@ -157,31 +157,33 @@ namespace CastIt.Services
             return thumbnailPath;
         }
 
-        public async Task GenerateThumbmnails(string mrl)
+        public async Task GenerateThumbnails(string mrl)
         {
             if (!FileUtils.IsLocalFile(mrl))
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
+                _logger.Info($"{nameof(GenerateThumbnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
                 return;
             }
             var filename = Path.GetFileName(mrl);
-            var ext = Path.GetExtension(mrl);
 
             if (FileUtils.IsMusicFile(mrl))
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
+                _logger.Info($"{nameof(GenerateThumbnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
                 return;
             }
             var fileInfo = await GetFileInfo(mrl, default).ConfigureAwait(false);
+            if (fileInfo?.Videos.Any(f => f.IsVideo) == false)
+                throw new InvalidOperationException($"The file = {mrl} does not have a valid file info or video stream");
+
             string thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
             bool useHwAccel = fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
-                AvailableHwDevices.Contains(HwAccelDeviceType.Intel) &&
+                _availableHwDevices.Contains(HwAccelDeviceType.Intel) &&
                 _settingsService.EnableHardwareAcceleration;
 
             string cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, useHwAccel);
             try
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
+                _logger.Info($"{nameof(GenerateThumbnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
                 _checkGenerateAllThumbnailsProcess = true;
                 _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateAllThumbnailsProcess.Start();
@@ -189,7 +191,7 @@ namespace CastIt.Services
                 if (_generateAllThumbnailsProcess.ExitCode > 0 && useHwAccel)
                 {
                     _logger.Warn(
-                        $"{nameof(GenerateThumbmnails)}: Could not generate thumbnails for file = {mrl} " +
+                        $"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl} " +
                         "using hw accel, falling back to sw.");
                     cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, false);
 
@@ -200,21 +202,17 @@ namespace CastIt.Services
 
                 if (_generateAllThumbnailsProcess.ExitCode > 0)
                 {
-                    _logger.Error($"{nameof(GenerateThumbmnails)}: Could not generate thumbnails for file = {mrl}.");
-                    throw new FFMpegException("Couldnt generate thumbnails", cmd);
+                    _logger.Error($"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl}.");
+                    throw new FFMpegException("Couldn't generate thumbnails", cmd);
                 }
-                else if (_generateAllThumbnailsProcess.ExitCode < 0)
-                {
-                    _logger.Info($"{nameof(GenerateThumbmnails)}: Process was killed for file = {mrl}");
-                }
-                else
-                {
-                    _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {mrl}");
-                }
+
+                _logger.Info(_generateAllThumbnailsProcess.ExitCode < 0
+                    ? $"{nameof(GenerateThumbnails)}: Process was killed for file = {mrl}"
+                    : $"{nameof(GenerateThumbnails)}: All thumbnails were successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+                _logger.Error(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
             finally
@@ -337,9 +335,9 @@ namespace CastIt.Services
             _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd...");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
-            using var memStream = new MemoryStream();
+            await using var memStream = new MemoryStream();
             var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            await testStream.CopyToAsync(memStream).ConfigureAwait(false);
+            await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
             if (_transcodeProcess.ExitCode > 0)
             {
                 _logger.Warn($"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd}. Creating a new one..");
@@ -365,6 +363,9 @@ namespace CastIt.Services
         {
             var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
             var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
+            if (audioInfo is null)
+                throw new NullReferenceException($"The file = {filePath} does not have a valid video stream");
+
             bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
                 !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
                 _settingsService.ForceAudioTranscode;
@@ -377,6 +378,7 @@ namespace CastIt.Services
             var memoryStream = new MemoryStream();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
+
             memoryStream.Position = 0;
             _logger.Info($"{nameof(TranscodeMusic)}: Transcode completed for file = {filePath}");
 
@@ -463,6 +465,9 @@ namespace CastIt.Services
         {
             var videoInfo = fileInfo.Streams.Find(f => f.IsVideo);
             var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
+            if (videoInfo is null)
+                throw new NullReferenceException($"The file = {filePath} does not have a valid video stream");
+
             bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
             bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
@@ -472,9 +477,10 @@ namespace CastIt.Services
                 !videoLevelIsValid ||
                 _settingsService.ForceVideoTranscode ||
                 _settingsService.VideoScale != VideoScaleType.Original;
-            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
+            bool audioNeedsTranscode = audioInfo != null &&
+                (!audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
                 !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
-                _settingsService.ForceAudioTranscode;
+                _settingsService.ForceAudioTranscode);
 
             var hwAccelType = GetHwAccelDeviceType();
             if (!videoCodecIsValid || !useHwAccel)
@@ -511,21 +517,25 @@ namespace CastIt.Services
                 if (_settingsService.VideoScale != VideoScaleType.Original)
                 {
                     int videoScale = (int)_settingsService.VideoScale;
-                    if (hwAccelType == HwAccelDeviceType.Intel)
+                    switch (hwAccelType)
                     {
-                        outputArgs.AddArg("global_quality", 25);
-                        outputArgs.AddArg("look_ahead", 1);
-                        outputArgs.SetFilters($"scale_qsv=trunc(oh*a/2)*2:{videoScale}");
-                    }
-                    else if (hwAccelType == HwAccelDeviceType.Nvidia)
-                    {
-                        string scale = _settingsService.VideoScale == VideoScaleType.Hd ? "1280x720" : "1920x1080";
-                        if (scale != videoInfo.WidthAndHeightText)
-                            inputArgs.AddArg("resize", scale);
-                    }
-                    else if (hwAccelType == HwAccelDeviceType.None)
-                    {
-                        outputArgs.SetFilters($"scale=trunc(oh*a/2)*2:{videoScale}");
+                        case HwAccelDeviceType.Intel:
+                            outputArgs.AddArg("global_quality", 25)
+                                .AddArg("look_ahead", 1)
+                                .SetFilters($"scale_qsv=trunc(oh*a/2)*2:{videoScale}");
+                            break;
+                        case HwAccelDeviceType.Nvidia:
+                            string scale = _settingsService.VideoScale == VideoScaleType.Hd ? "1280x720" : "1920x1080";
+                            if (scale != videoInfo.WidthAndHeightText)
+                                inputArgs.AddArg("resize", scale);
+                            break;
+                        case HwAccelDeviceType.None:
+                            outputArgs.SetFilters($"scale=trunc(oh*a/2)*2:{videoScale}");
+                            break;
+                        case HwAccelDeviceType.AMD:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
                 }
             }
@@ -578,27 +588,28 @@ namespace CastIt.Services
                 _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Getting available devices..");
                 var objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
                 var adapters = new List<string>();
-                foreach (ManagementObject obj in objvide.Get())
+                foreach (var o in objvide.Get())
                 {
+                    var obj = (ManagementObject)o;
                     adapters.Add(obj["AdapterCompatibility"].ToString());
                 }
 
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
                 {
-                    AvailableHwDevices.Add(HwAccelDeviceType.Nvidia);
+                    _availableHwDevices.Add(HwAccelDeviceType.Nvidia);
                 }
 
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.AMD), StringComparison.OrdinalIgnoreCase)))
                 {
-                    AvailableHwDevices.Add(HwAccelDeviceType.AMD);
+                    _availableHwDevices.Add(HwAccelDeviceType.AMD);
                 }
 
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
                 {
-                    AvailableHwDevices.Add(HwAccelDeviceType.Intel);
+                    _availableHwDevices.Add(HwAccelDeviceType.Intel);
                 }
 
-                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", AvailableHwDevices)}");
+                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", _availableHwDevices)}");
             }
             catch (Exception ex)
             {
@@ -609,16 +620,13 @@ namespace CastIt.Services
 
         private HwAccelDeviceType GetHwAccelDeviceType()
         {
-            if (AvailableHwDevices.Contains(HwAccelDeviceType.Nvidia))
+            if (_availableHwDevices.Contains(HwAccelDeviceType.Nvidia))
                 return HwAccelDeviceType.Nvidia;
 
-            if (AvailableHwDevices.Contains(HwAccelDeviceType.AMD))
+            if (_availableHwDevices.Contains(HwAccelDeviceType.AMD))
                 return HwAccelDeviceType.AMD;
 
-            if (AvailableHwDevices.Contains(HwAccelDeviceType.Intel))
-                return HwAccelDeviceType.Intel;
-
-            return HwAccelDeviceType.None;
+            return _availableHwDevices.Contains(HwAccelDeviceType.Intel) ? HwAccelDeviceType.Intel : HwAccelDeviceType.None;
         }
 
         private string GenerateCmdForThumbnails(string mrl, string thumbnailPath, bool useHwAccel)

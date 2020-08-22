@@ -1,6 +1,5 @@
 ﻿using CastIt.Common;
 using CastIt.GoogleCast.Interfaces;
-using CastIt.GoogleCast.Models.Media;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

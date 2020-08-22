@@ -8,7 +8,6 @@ using MvvmCross.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CastIt.Server
@@ -37,6 +36,7 @@ namespace CastIt.Server
 
         private const string UpdateSettingsMsgType = "CLIENT_SETTINGS_UPDATE";
         private const string SetVolumeMsgType = "CLIENT_SET_VOLUME";
+        private const string CloseAppMsgType = "CLIENT_CLOSE_APP";
         #endregion
 
         #region Server Constants
@@ -55,14 +55,13 @@ namespace CastIt.Server
 
         private const string ClientConnectedMsgType = "SERVER_CLIENT_CONNECTED";
         private const string SettingsChangedMsgType = "SERVER_SETTINGS_CHANGED";
-        private const string ChromeCastDisconectedMsgType = "SERVER_CHROMECAST_DISCONNECTED";
+        private const string ChromeCastDisconnectedMsgType = "SERVER_CHROMECAST_DISCONNECTED";
         private const string VolumeChangedMsgType = "SERVER_VOLUME_LEVEL_CHANGED";
         private const string AppClosedMsgType = "SERVER_APP_CLOSING";
         private const string InfoMsgType = "SERVER_INFO_MSG";
         #endregion
 
         private readonly IMvxLog _logger;
-        private readonly IAppWebServer _server;
         private readonly IAppSettingsService _appSettings;
         private readonly IMainViewModel _mainViewModel;
 
@@ -75,27 +74,26 @@ namespace CastIt.Server
             : base(urlPath, true)
         {
             _logger = logger;
-            _server = server;
             _appSettings = appSettings;
             _mainViewModel = mainViewModel;
-            _server.OnFileLoading += FileLoading;
-            _server.OnFileLoaded += FileLoaded;
-            _server.OnFileLoadingError += FileLoadingError;
-            _server.OnEndReached += EndReached;
-            _server.OnTimeChanged += TimeChanged;
-            _server.OnPositionChanged += PositionChanged;
-            _server.OnPaused += Paused;
-            _server.OnDisconnected += ChromecastDisconnected;
-            _server.OnVolumeChanged += VolumeLevelChanged;
-            _server.OnAppClosing += AppClosing;
-            _server.OnAppSettingsChanged += AppSettingsChanged;
-            _server.OnPlayListAdded += PlayListAdded;
-            _server.OnPlayListChanged += PlayListChanged;
-            _server.OnPlayListDeleted += PlayListDeleted;
-            _server.OnFileAdded += FileAdded;
-            _server.OnFileChanged += FileChanged;
-            _server.OnFileDeleted += FilesDeleted;
-            _server.OnServerMsg += SendInfoMessage;
+            server.OnFileLoading += FileLoading;
+            server.OnFileLoaded += FileLoaded;
+            server.OnFileLoadingError += FileLoadingError;
+            server.OnEndReached += EndReached;
+            server.OnTimeChanged += TimeChanged;
+            server.OnPositionChanged += PositionChanged;
+            server.OnPaused += Paused;
+            server.OnDisconnected += ChromecastDisconnected;
+            server.OnVolumeChanged += VolumeLevelChanged;
+            server.OnAppClosing += AppClosing;
+            server.OnAppSettingsChanged += AppSettingsChanged;
+            server.OnPlayListAdded += PlayListAdded;
+            server.OnPlayListChanged += PlayListChanged;
+            server.OnPlayListDeleted += PlayListDeleted;
+            server.OnFileAdded += FileAdded;
+            server.OnFileChanged += FileChanged;
+            server.OnFileDeleted += FilesDeleted;
+            server.OnServerMsg += SendInfoMessage;
         }
 
         protected override Task OnMessageReceivedAsync(IWebSocketContext context, byte[] buffer, IWebSocketReceiveResult result)
@@ -198,6 +196,8 @@ namespace CastIt.Server
                     case RenamePlayListMsgType:
                         var renameRequest = JsonConvert.DeserializeObject<RenamePlayListRequestDto>(msg);
                         return _mainViewModel.RenamePlayList(renameRequest.Id, renameRequest.Name);
+                    case CloseAppMsgType:
+                        return _mainViewModel.CloseAppCommand.ExecuteAsync();
                 }
             }
             catch (Exception e)
@@ -240,9 +240,7 @@ namespace CastIt.Server
         private Task FileLoadedTask()
         {
             var file = _mainViewModel.GetCurrentFileLoaded();
-            if (file == null)
-                return Task.CompletedTask;
-            return SendMsg(file, FileLoadedMsgType);
+            return file == null ? Task.CompletedTask : SendMsg(file, FileLoadedMsgType);
         }
 
         private async void FileLoadingError(string error)
@@ -284,7 +282,7 @@ namespace CastIt.Server
 
         private async void ChromecastDisconnected()
         {
-            await SendMsg(ChromeCastDisconectedMsgType).ConfigureAwait(false);
+            await SendMsg(ChromeCastDisconnectedMsgType).ConfigureAwait(false);
         }
 
         private async void VolumeLevelChanged(double newLevel, bool isMuted)
@@ -394,22 +392,23 @@ namespace CastIt.Server
             VolumeLevelChanged(_mainViewModel.VolumeLevel, _mainViewModel.IsMuted);
         }
 
-        private Task SendMsg(string msgType, bool succed = true)
+        private Task SendMsg(string msgType, bool succeed = true)
         {
             var response = new EmptySocketResponseDto
             {
                 MessageType = msgType,
-                Succeed = succed,
+                Succeed = succeed,
             };
-            _logger.Info($"{nameof(SendMsg)}: Sending msg of type = {msgType}");
+            if (msgType != FilePausedMsgType)
+                _logger.Info($"{nameof(SendMsg)}: Sending msg of type = {msgType}");
             return SendMsg(response);
         }
 
-        private Task SendMsg<T>(T result, string msgType, bool succed = true) where T : class
+        private Task SendMsg<T>(T result, string msgType, bool succeed = true) where T : class
         {
             var response = new SocketResponseDto<T>
             {
-                Succeed = succed,
+                Succeed = succeed,
                 MessageType = msgType,
                 Result = result
             };

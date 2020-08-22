@@ -34,11 +34,11 @@ namespace CastIt.Views.UserControls
             set
             {
                 if (_openFileDialogRequest != null)
-                    _openFileDialogRequest.Requested -= (sender, args) => OpenFileDialog();
+                    _openFileDialogRequest.Requested -= OpenFileDialogHandler;
 
                 _openFileDialogRequest = value;
                 if (value != null)
-                    _openFileDialogRequest.Requested += (sender, args) => OpenFileDialog();
+                    _openFileDialogRequest.Requested += OpenFileDialogHandler;
             }
         }
 
@@ -48,11 +48,11 @@ namespace CastIt.Views.UserControls
             set
             {
                 if (_openFolderDialogRequest != null)
-                    _openFolderDialogRequest.Requested -= (sender, args) => OpenFolderDialog();
+                    _openFolderDialogRequest.Requested -= OpenFolderDialogHandler;
 
                 _openFolderDialogRequest = value;
                 if (value != null)
-                    _openFolderDialogRequest.Requested += (sender, args) => OpenFolderDialog();
+                    _openFolderDialogRequest.Requested += OpenFolderDialogHandler;
             }
         }
 
@@ -80,19 +80,19 @@ namespace CastIt.Views.UserControls
             set.Bind(this).For(v => v.ScrollToSelectedItemRequest).To(vm => vm.ScrollToSelectedItem).OneWay();
             set.Apply();
 
-            Loaded += (sender, args) => SetViewModel();
+            Loaded += SetViewModelHandler;
         }
 
-        private void SetViewModel()
+        private void SetViewModelHandler(object sender, EventArgs e)
         {
-            Loaded -= (sender, args) => SetViewModel();
+            Loaded -= SetViewModelHandler;
             ViewModel = DataContext as PlayListItemViewModel;
 
             var view = CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource);
             view.Filter = FilterFiles;
         }
 
-        private void OpenFileDialog()
+        private void OpenFileDialogHandler(object sender, EventArgs e)
         {
             var allowedFormats = AppConstants.AllowedFormatsString;
             string filter = $"{ViewModel.GetText("VideoOrMusicFiles")} ({allowedFormats})|{allowedFormats}|{ViewModel.GetText("AllFiles")} (*.*)|*.*";
@@ -109,7 +109,7 @@ namespace CastIt.Views.UserControls
             }
         }
 
-        private void OpenFolderDialog()
+        private void OpenFolderDialogHandler(object sender, EventArgs e)
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog();
             var result = dialog.ShowDialog();
@@ -284,7 +284,7 @@ namespace CastIt.Views.UserControls
         private void HideAllSeparatorsLines()
         {
             var f = ViewModel.Items
-                .Where(f => f.IsSeparatorBottomLineVisible || f.IsSeparatorTopLineVisible)
+                .Where(item => item.IsSeparatorBottomLineVisible || item.IsSeparatorTopLineVisible)
                 .ToList();
             foreach (var file in f)
             {

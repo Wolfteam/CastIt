@@ -8,7 +8,7 @@ namespace CastIt.Interfaces
     public interface IFFMpegService
     {
         string GetThumbnail(string mrl, int second);
-        Task GenerateThumbmnails(string mrl);
+        Task GenerateThumbnails(string mrl);
         void KillThumbnailProcess();
         void KillTranscodeProcess();
         Task TranscodeVideo(

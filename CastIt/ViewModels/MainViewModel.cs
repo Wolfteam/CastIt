@@ -569,7 +569,6 @@ namespace CastIt.ViewModels
                 return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
             }
 
-
             var file = pl.Items.FirstOrDefault(f => f.Id == id);
             if (file == null)
             {

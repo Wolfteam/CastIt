@@ -220,10 +220,7 @@ namespace CastIt.ViewModels.Items
             var time = TimeSpan.FromSeconds(seconds);
             //here backslash is must to tell that colon is
             //not the part of format, it just a character that we want in output
-            if (time.Hours > 0)
-                Duration = time.ToString(AppConstants.FullElapsedTimeFormat);
-            else
-                Duration = time.ToString(AppConstants.ShortElapsedTimeFormat);
+            Duration = time.ToString(time.Hours > 0 ? AppConstants.FullElapsedTimeFormat : AppConstants.ShortElapsedTimeFormat);
         }
 
         public void ListenEvents()

@@ -36,8 +36,6 @@ namespace CastIt.Server
 
         protected override async Task OnRequestAsync(IHttpContext context)
         {
-            var path = context.RequestedPath;
-            var verb = context.Request.HttpVerb;
             var query = context.GetRequestQueryData();
             if (query.Count == 0 || !query.AllKeys.All(q => AppWebServer.AllowedQueryParameters.Contains(q)))
             {
@@ -97,7 +95,7 @@ namespace CastIt.Server
                 }
                 else
                 {
-                    using var memoryStream = await _ffmpegService.TranscodeMusic(
+                    await using var memoryStream = await _ffmpegService.TranscodeMusic(
                         filepath,
                         audioStreamIndex,
                         seconds,
@@ -113,7 +111,7 @@ namespace CastIt.Server
             {
                 if (e is IOException || e is TaskCanceledException)
                     return;
-                _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occcured");
+                _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occurred");
                 _telemetryService.TrackError(e);
             }
             finally

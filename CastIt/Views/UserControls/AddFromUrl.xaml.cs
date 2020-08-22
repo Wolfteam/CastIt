@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 
 namespace CastIt.Views.UserControls
 {
@@ -10,6 +11,16 @@ namespace CastIt.Views.UserControls
         public AddFromUrl()
         {
             InitializeComponent();
+        }
+
+        public void FocusUrl()
+        {
+            UrlText.Text = Clipboard.GetText();
+            UrlText.Focus();
+            if (!string.IsNullOrEmpty(UrlText.Text))
+            {
+                UrlText.SelectionStart = UrlText.Text.Length;
+            }
         }
     }
 }

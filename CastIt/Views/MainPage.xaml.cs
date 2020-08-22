@@ -27,11 +27,11 @@ namespace CastIt.Views
             set
             {
                 if (_closeAppRequest != null)
-                    _closeAppRequest.Requested -= (sender, args) => WindowButtons.CloseApp();
+                    _closeAppRequest.Requested -= CloseAppHandler;
 
                 _closeAppRequest = value;
                 if (value != null)
-                    _closeAppRequest.Requested += (sender, args) => WindowButtons.CloseApp();
+                    _closeAppRequest.Requested += CloseAppHandler;
             }
         }
 
@@ -102,5 +102,7 @@ namespace CastIt.Views
                 ViewModel.SetSubTitlesCommand.Execute(openFileDialog.FileName);
             }
         }
+
+        private void CloseAppHandler(object sender, EventArgs e) => WindowButtons.CloseApp();
     }
 }

@@ -166,6 +166,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <materialDesign:PackIcon
                     Grid.Column="0"
@@ -358,7 +359,6 @@
                             </Style.Triggers>
                         </Style>
                     </Menu.Style>
-
                     <MenuItem
                         Height="40"
                         IsTabStop="False"
@@ -439,6 +439,13 @@
                         <MenuItem Template="{StaticResource VolumeMenuItemControlTemplate}" />
                     </MenuItem>
                 </Menu>
+
+                <ProgressBar
+                    Grid.Column="7"
+                    Margin="0,0,5,0"
+                    IsIndeterminate="True"
+                    Style="{StaticResource MaterialDesignCircularProgressBar}"
+                    Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Grid>
         </materialDesign:ColorZone>
 
@@ -537,6 +544,9 @@
             PlacementTarget="{Binding ElementName=PlaylistLv}"
             StaysOpen="False">
             <behaviours:Interaction.Triggers>
+                <behaviours:EventTrigger EventName="Opened">
+                    <behaviours:CallMethodAction MethodName="FocusUrl" TargetObject="{Binding ElementName=AddFromUrlUserControl}" />
+                </behaviours:EventTrigger>
                 <behaviours:EventTrigger EventName="Closed">
                     <behaviours:ChangePropertyAction
                         PropertyName="Text"

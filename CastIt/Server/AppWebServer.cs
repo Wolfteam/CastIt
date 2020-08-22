@@ -181,24 +181,17 @@ namespace CastIt.Server
 
         private string GetIpAddress()
         {
-            string localIP = null;
-            try
+            string localIp = null;
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
             {
-                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-                {
-                    socket.Connect("8.8.8.8", 65530);
-                    var endPoint = socket.LocalEndPoint as IPEndPoint;
-                    localIP = endPoint.Address.ToString();
-                }
-
-                var port = GetOpenPort();
-
-                return $"http://{localIP}:{port}";
+                socket.Connect("8.8.8.8", 65530);
+                var endPoint = socket.LocalEndPoint as IPEndPoint;
+                localIp = endPoint.Address.ToString();
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            var port = GetOpenPort();
+
+            return $"http://{localIp}:{port}";
         }
 
         private int GetOpenPort(int startPort = DefaultPort)

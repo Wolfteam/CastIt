@@ -240,7 +240,7 @@ namespace CastIt.Services
             await Task.Run(() =>
             {
                 _ffmpegService.KillThumbnailProcess();
-                _ffmpegService.GenerateThumbmnails(filePath);
+                _ffmpegService.GenerateThumbnails(filePath);
             }).ConfigureAwait(false);
         }
 
@@ -371,10 +371,11 @@ namespace CastIt.Services
 
                 _appWebServer.Dispose();
                 _player.Dispose();
+                _logger.Info($"{nameof(CleanThemAll)} Clean them all completed");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error ocurred");
+                _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
         }
