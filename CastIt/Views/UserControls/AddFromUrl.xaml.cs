@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using CastIt.Common.Extensions;
 
 namespace CastIt.Views.UserControls
 {
@@ -16,11 +17,7 @@ namespace CastIt.Views.UserControls
         public void FocusUrl()
         {
             UrlText.Text = Clipboard.GetText();
-            UrlText.Focus();
-            if (!string.IsNullOrEmpty(UrlText.Text))
-            {
-                UrlText.SelectionStart = UrlText.Text.Length;
-            }
+            UrlText.FocusAndSetPointer();
         }
     }
 }

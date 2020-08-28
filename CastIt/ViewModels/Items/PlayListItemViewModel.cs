@@ -225,7 +225,7 @@ namespace CastIt.ViewModels.Items
         {
             foreach (var folder in folders)
             {
-                var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.TopDirectoryOnly)
+                var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
                     .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                     .ToArray();
                 await OnFilesAdded(files);

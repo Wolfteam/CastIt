@@ -689,7 +689,9 @@ namespace CastIt.ViewModels
         {
             var vm = Mvx.IoCProvider.Resolve<PlayListItemViewModel>();
             vm.Name = $"New PlayList {PlayLists.Count}";
-            vm.Position = PlayLists.Max(pl => pl.Position) + 1;
+            vm.Position = PlayLists.Any()
+                ? PlayLists.Max(pl => pl.Position) + 1
+                : 1;
 
             var playList = await _playListsService.AddNewPlayList(vm.Name, vm.Position);
             vm.Id = playList.Id;
