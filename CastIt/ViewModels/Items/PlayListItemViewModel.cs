@@ -192,7 +192,7 @@ namespace CastIt.ViewModels.Items
             {
                 if (token.IsCancellationRequested)
                     break;
-                await item.SetFileInfo(token);
+                await item.SetFileInfo(token, false);
             }
             IsBusy = false;
         }
@@ -276,6 +276,7 @@ namespace CastIt.ViewModels.Items
                     Position = startIndex + index,
                     PlayListId = Id,
                     Path = path,
+                    CreatedAt = DateTime.Now
                 }).ToList();
 
                 var vms = await _playListsService.AddFiles(files);

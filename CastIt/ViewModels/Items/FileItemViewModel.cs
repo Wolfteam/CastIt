@@ -22,6 +22,7 @@ namespace CastIt.ViewModels.Items
         private readonly IAppSettingsService _settingsService;
         private readonly IFFMpegService _ffmpegService;
         private readonly IAppWebServer _appWebServer;
+        private readonly IPlayListsService _playListsService;
 
         private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
@@ -37,9 +38,10 @@ namespace CastIt.ViewModels.Items
         #region Properties
         public long Id { get; set; }
         public long PlayListId { get; set; }
-        public double TotalSeconds { get; private set; }
+        public double TotalSeconds { get; set; }
         public bool PositionChanged { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
 
         public int Position
         {
@@ -114,10 +116,12 @@ namespace CastIt.ViewModels.Items
         public bool Exists
             => IsLocalFile || IsUrlFile;
         public string Filename
-            => FileUtils.IsLocalFile(Path)
-                ? FileUtils.GetFileName(Path)
-                : !string.IsNullOrEmpty(Name)
-                    ? Name : Path;
+            => IsCached
+                ? Name
+                : FileUtils.IsLocalFile(Path)
+                    ? FileUtils.GetFileName(Path)
+                    : !string.IsNullOrEmpty(Name)
+                        ? Name : Path;
         public string Size
             => FileUtils.GetFileSizeString(Path);
         public string Extension
@@ -127,7 +131,10 @@ namespace CastIt.ViewModels.Items
                 ? string.Empty
                 : FileInfo?.GetVideoResolution();
         public string SubTitle
-            => Extension.AppendDelimitator("|", Size, Resolution);
+            => IsCached ? Description : Extension.AppendDelimitator("|", Size, Resolution);
+
+        public bool IsCached
+            => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Path);
 
         public FFProbeFileInfo FileInfo { get; set; }
         #endregion
@@ -146,13 +153,15 @@ namespace CastIt.ViewModels.Items
             ICastService castService,
             IAppSettingsService settingsService,
             IFFMpegService ffmpegService,
-            IAppWebServer appWebServer)
+            IAppWebServer appWebServer,
+            IPlayListsService playListsService)
             : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
         {
             _castService = castService;
             _settingsService = settingsService;
             _ffmpegService = ffmpegService;
             _appWebServer = appWebServer;
+            _playListsService = playListsService;
         }
 
         public override void SetCommands()
@@ -190,7 +199,7 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        public async Task SetFileInfo(CancellationToken token)
+        public async Task SetFileInfo(CancellationToken token, bool force = true)
         {
             if (IsUrlFile)
             {
@@ -198,17 +207,24 @@ namespace CastIt.ViewModels.Items
                 {
                     Format = new FileInfoFormat()
                 };
-                SetDuration(-1);
+                await SetDuration(TotalSeconds > 0 ? TotalSeconds : -1);
+                return;
+            }
+
+            if (IsCached && !force)
+            {
+                await SetDuration(TotalSeconds);
                 return;
             }
 
             FileInfo = await _ffmpegService.GetFileInfo(Path, token);
 
-            SetDuration(FileInfo?.Format?.Duration ?? -1);
+            var duration = FileInfo?.Format?.Duration ?? -1;
+            await SetDuration(duration);
             await RaisePropertyChanged(nameof(SubTitle));
         }
 
-        public void SetDuration(double seconds)
+        public async Task SetDuration(double seconds)
         {
             if (!Exists)
             {
@@ -216,6 +232,8 @@ namespace CastIt.ViewModels.Items
                 return;
             }
             TotalSeconds = seconds;
+
+            await _playListsService.UpdateFile(Id, Filename, SubTitle, seconds);
             if (seconds <= 0)
             {
                 Duration = "N/A";

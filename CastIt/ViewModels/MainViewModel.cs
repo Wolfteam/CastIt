@@ -112,7 +112,7 @@ namespace CastIt.ViewModels
         }
 
         public double CurrentFileDuration
-            => _currentlyPlayedFile?.TotalSeconds ?? 1;
+            => _currentlyPlayedFile?.TotalSeconds ?? 1; //Has to be one, in order for the slider to show correctly
 
         public double CurrentPlayedSeconds
         {
@@ -878,23 +878,27 @@ namespace CastIt.ViewModels
             IsBusy = true;
             IsPaused = false;
 
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == file.PlayListId);
+            if (playList == null)
+            {
+                await ShowSnackbarMsg(GetText("PlayListDoesntExist"));
+                return false;
+            }
+            playList.SelectedItem = file;
+
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _currentlyPlayedFile.ListenEvents();
+            _appWebServer.OnFileLoading?.Invoke();
 
             Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             SetCurrentlyPlayingInfo(file.Filename, true);
             if (!fileOptionsChanged)
-                SetAvailableAudiosAndSubTitles();
-
-            var playList = PlayLists.First(pl => pl.Id == file.PlayListId);
-            playList.SelectedItem = file;
+                await SetAvailableAudiosAndSubTitles();
 
             try
             {
-                _appWebServer.OnFileLoading?.Invoke();
-
                 if (file.CanStartPlayingFromCurrentPercentage &&
                     !file.IsUrlFile &&
                     !force &&
@@ -981,7 +985,7 @@ namespace CastIt.ViewModels
             RaisePropertyChanged(() => CurrentFileDuration);
         }
 
-        private void OnFileLoaded(
+        private async void OnFileLoaded(
             string title,
             string thumbUrl,
             double duration,
@@ -994,8 +998,9 @@ namespace CastIt.ViewModels
             if (_currentlyPlayedFile?.IsUrlFile == true)
             {
                 CurrentlyPlayingFilename = title;
-                _currentlyPlayedFile.SetDuration(duration);
-                RaisePropertyChanged(() => CurrentFileDuration);
+                _currentlyPlayedFile.Name = title;
+                await _currentlyPlayedFile.SetDuration(duration);
+                await RaisePropertyChanged(() => CurrentFileDuration);
             }
 
             _appWebServer.OnFileLoaded?.Invoke();
@@ -1072,17 +1077,28 @@ namespace CastIt.ViewModels
             SnackbarActionCommand.Execute();
         }
 
-        private void SetAvailableAudiosAndSubTitles()
+        private async Task SetAvailableAudiosAndSubTitles()
         {
             Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Cleaning current file videos, audios and subs streams");
             CurrentFileVideos.Clear();
             CurrentFileAudios.Clear();
             CurrentFileSubTitles.Clear();
             CurrentFileQualities.Clear();
-            if (_currentlyPlayedFile?.FileInfo == null)
+
+            if (_currentlyPlayedFile == null)
             {
-                Logger.Warn($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file = {_currentlyPlayedFile?.Path} doesnt have a fileinfo");
+                Logger.Warn($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file is null");
                 return;
+            }
+
+            if (_currentlyPlayedFile.FileInfo == null)
+            {
+                await _currentlyPlayedFile.SetFileInfo(_setDurationTokenSource.Token);
+                if (_currentlyPlayedFile.FileInfo == null)
+                {
+                    Logger.Warn($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file = {_currentlyPlayedFile.Path} doesnt have a fileinfo");
+                    return;
+                }
             }
 
             Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Setting available file videos, audios and subs streams");

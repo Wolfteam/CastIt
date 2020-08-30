@@ -14,13 +14,17 @@ namespace CastIt.Interfaces
         Task DeletePlayLists(List<long> ids);
 
         Task<List<FileItemViewModel>> GetAllFiles(long playlistId);
-        Task<FileItemViewModel> AddFile(long playListId,
+        Task<FileItemViewModel> AddFile(
+            long playListId,
             string path,
             int position,
-            string name = null);
+            string name = null,
+            string description = null,
+            double duration = 0);
         Task<List<FileItemViewModel>> AddFiles(List<FileItem> files);
         Task DeleteFile(long id);
         Task DeleteFiles(List<long> ids);
+        Task UpdateFile(long id, string name, string description, double duration);
 
         void SaveChangesBeforeClosingApp(Dictionary<PlayListItemViewModel, int> playListsPositions, List<FileItemViewModel> vms);
     }

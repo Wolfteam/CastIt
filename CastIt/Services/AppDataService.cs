@@ -33,7 +33,9 @@ namespace CastIt.Services
             long playListId,
             string path,
             int position,
-            string name = null)
+            string name = null,
+            string description = null,
+            double duration = 0)
         {
             using var db = new SQLiteConnection(_connectionString);
             var file = new FileItem
@@ -42,7 +44,9 @@ namespace CastIt.Services
                 Path = path,
                 PlayListId = playListId,
                 Position = position,
-                Name = name
+                Name = name,
+                Description = description,
+                TotalSeconds = duration
             };
 
             db.Insert(file);
@@ -95,6 +99,7 @@ namespace CastIt.Services
         {
             using var db = new SQLiteConnection(_connectionString);
             db.Delete<PlayList>(id);
+            db.Execute($"delete from {nameof(FileItem)} where {nameof(FileItem.PlayListId)} = {id}");
         }
 
         public async Task DeletePlayLists(List<long> ids)
@@ -134,10 +139,22 @@ namespace CastIt.Services
         public async Task UpdatePlayList(long id, string name, int position)
         {
             using var db = new SQLiteConnection(_connectionString);
-            var playlist = db.Table<PlayList>().Where(pl => pl.Id == id).First();
+            var playlist = db.Table<PlayList>().First(pl => pl.Id == id);
             playlist.Name = name;
             playlist.Position = position;
+            playlist.UpdatedAt = DateTime.Now;
             db.Update(playlist);
+        }
+
+        public async Task UpdateFile(long id, string name, string description, double duration)
+        {
+            using var db = new SQLiteConnection(_connectionString);
+            var file = db.Table<FileItem>().First(f => f.Id == id);
+            file.Name = name;
+            file.Description = description;
+            file.TotalSeconds = duration;
+            file.UpdatedAt = DateTime.Now;
+            db.Update(file);
         }
 
         private void CreateDb()

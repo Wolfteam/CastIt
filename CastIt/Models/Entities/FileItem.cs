@@ -13,6 +13,12 @@ namespace CastIt.Models.Entities
         [MaxLength(AppConstants.MaxCharsPerString)]
         public string Name { get; set; }
 
+        [MaxLength(AppConstants.MaxCharsPerString)]
+        public string Description { get; set; }
+
+        [NotNull]
+        public double TotalSeconds { get; set; }
+
         [NotNull, MaxLength(AppConstants.MaxCharsPerString)]
         public string Path { get; set; }
 
