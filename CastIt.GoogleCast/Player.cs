@@ -55,6 +55,7 @@ namespace CastIt.GoogleCast
         public event EventHandler EndReached;
         public event EventHandler<double> VolumeLevelChanged;
         public event EventHandler<bool> IsMutedChanged;
+        public event EventHandler LoadFailed;
         #endregion
 
         #region Properties
@@ -181,7 +182,7 @@ namespace CastIt.GoogleCast
 
             if (disposing)
             {
-                _logger.Info($"{nameof(Dispose)} Disposing subscriptions, events, and disconecting...");
+                _logger.LogInfo($"{nameof(Dispose)} Disposing subscriptions, events, and disconecting...");
                 foreach (var subscription in _subscriptions)
                 {
                     subscription.Dispose();
@@ -236,14 +237,21 @@ namespace CastIt.GoogleCast
             double seekedSeconds = 0,
             params int[] activeTrackIds)
         {
-            _logger.Info($"{nameof(LoadAsync)}: Trying to load media = {media.ContentId}");
+            _logger.LogInfo($"{nameof(LoadAsync)}: Trying to load media = {media.ContentId}");
             CurrentContentId = null;
             CancelAndSetListenerToken();
 
             FileLoading?.Invoke(this, EventArgs.Empty);
 
-            var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace).ConfigureAwait(false);
-            var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds).ConfigureAwait(false);
+            var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
+            var status = await _mediaChannel.LoadAsync(_sender, app.SessionId, media, autoPlay, activeTrackIds);
+
+            if (status is null)
+            {
+                LoadFailed?.Invoke(this, EventArgs.Empty);
+                _logger.LogWarn($"{nameof(LoadAsync)}: Couldn't load media {media.ContentId}");
+                return null;
+            }
 
             CurrentContentId = media.ContentId;
             CurrentMediaDuration = media.Duration ?? status?.Media?.Duration ?? 0;
@@ -258,7 +266,7 @@ namespace CastIt.GoogleCast
             ListenForReceiverChanges(_listenerToken.Token);
 
             FileLoaded?.Invoke(this, EventArgs.Empty);
-            _logger.Info($"{nameof(LoadAsync)}: Media = {media.ContentId} was loaded");
+            _logger.LogInfo($"{nameof(LoadAsync)}: Media = {media.ContentId} was loaded");
             return status;
         }
 
@@ -336,22 +344,14 @@ namespace CastIt.GoogleCast
 
         private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
         {
-            if (message.HasRequestId && _sender.WaitingTasks.TryRemove(message.RequestId, out object tcs))
-            {
-                var tcsType = tcs.GetType();
-                var methodToInvoke = types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types);
-                var methodParameters = methodToInvoke.GetParameters();
-                bool isAsignable = methodParameters.First().ParameterType.IsAssignableFrom(parameter.GetType());
+            if (!message.HasRequestId || !_sender.WaitingTasks.TryRemove(message.RequestId, out object tcs))
+                return;
+            var tcsType = tcs.GetType();
+            var methodToInvoke = types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types);
+            var methodParameters = methodToInvoke.GetParameters();
+            bool isAsignable = methodParameters.First().ParameterType.IsAssignableFrom(parameter.GetType());
 
-                if (isAsignable)
-                {
-                    methodToInvoke.Invoke(tcs, new object[] { parameter });
-                }
-                else
-                {
-                    methodToInvoke.Invoke(tcs, new object[] { null });
-                }
-            }
+            methodToInvoke.Invoke(tcs, isAsignable ? new[] { parameter } : new object[] { null });
         }
 
         private IChannel GetChannel(string ns)
@@ -369,7 +369,7 @@ namespace CastIt.GoogleCast
 
         private void CancelAndSetListenerToken(bool createNewToken = true)
         {
-            _logger.Info($"{nameof(CancelAndSetListenerToken)}: Cancelling listener token... Creating a new token = {createNewToken}");
+            _logger.LogInfo($"{nameof(CancelAndSetListenerToken)}: Cancelling listener token... Creating a new token = {createNewToken}");
             if (_listenerToken?.IsCancellationRequested == false)
                 _listenerToken.Cancel();
 
@@ -418,7 +418,8 @@ namespace CastIt.GoogleCast
                         }
                         IsPlaying = true;
                         TriggerTimeEvents();
-                        if (Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
+                        //If CurrentMediaDuration  <= 0, that means that a live streaming is being played
+                        if (CurrentMediaDuration > 0 && Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
                         {
                             _logger.LogInfo(
                                 $"{nameof(ListenForMediaChanges)}: End reached because the " +
