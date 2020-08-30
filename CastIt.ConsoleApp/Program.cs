@@ -1,5 +1,6 @@
 ﻿using CastIt.GoogleCast;
 using CastIt.GoogleCast.Enums;
+using CastIt.GoogleCast.Models;
 using CastIt.GoogleCast.Models.Media;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,8 @@ namespace CastIt.ConsoleApp
 
         private static async Task TestPlayer()
         {
-            var devices = await Player.GetDevicesAsync(TimeSpan.FromSeconds(3));
+            Console.WriteLine("Getting devices....");
+            var devices = await Player.GetDevicesAsync(TimeSpan.FromSeconds(10));
             if (devices.Count == 0)
             {
                 Console.WriteLine("No devices were found");
@@ -27,7 +29,9 @@ namespace CastIt.ConsoleApp
                 return;
             }
             var device = devices.First();
-            _player = new Player(device, logMsgs: false);
+            Console.WriteLine($"Device to use will be = {device.FriendlyName}");
+
+            _player = new Player(device, logMsgs: true);
             _player.Disconnected += (e, sender) =>
             {
                 Console.WriteLine("DISCONNECTED");
@@ -36,20 +40,27 @@ namespace CastIt.ConsoleApp
             {
                 Console.WriteLine($"END REACHED");
             };
+            _player.LoadFailed += (sender, e) =>
+            {
+                Console.WriteLine($"LOAD FAILED");
+            };
 
+            Console.WriteLine($"Connecting to device = {device.FriendlyName}....");
             _player.Init();
             await _player.ConnectAsync();
             bool canSeek = false;
 
-            await PlayFromLocal();
+            //await PlayFromLocal();
 
             //await PlayFromLocalWithSubs();
 
-            Console.WriteLine("Tap to pause");
+            await PlayFromHls();
+
+            Console.WriteLine("File loaded, tap to pause");
             Console.ReadKey();
             await _player.PauseAsync();
 
-            Console.WriteLine("Tap to play");
+            Console.WriteLine("File paused, tap to play");
             Console.ReadKey();
             await _player.PlayAsync();
 
@@ -63,17 +74,18 @@ namespace CastIt.ConsoleApp
             Console.WriteLine("Type any key to disconnect");
             Console.ReadKey();
             await _player.StopPlaybackAsync();
+            await _player.DisconnectAsync();
             _player.Dispose();
-
             Console.WriteLine("Type any key to close this app");
             Console.ReadKey();
         }
 
-        private static  Task PlayFromLocal()
+        private static Task PlayFromLocal()
         {
+            Console.WriteLine($"Playing from local file...");
             return _player.LoadAsync(new MediaInformation
             {
-                ContentId = @"http://192.168.1.101:9696/videos?seconds=400&file=F:\Anime\Asobi%20Asobase\Asobi%20Asobase%201.mp4",
+                ContentId = @"http://192.168.1.101:9696/videos?seconds=400&file=F:\Anime\Asobi%20Asobase\Asobi%20Asobase%201.mp4&videoNeedsTranscode=False&audioNeedsTranscode=False&hwAccelTypeToUse=Nvidia&videoWidthAndHeight=1280x720",
                 StreamType = StreamType.Live,
                 Duration = 1200
             });
@@ -81,9 +93,10 @@ namespace CastIt.ConsoleApp
 
         private static Task PlayFromLocalWithSubs()
         {
+            Console.WriteLine($"Playing from local file with subs...");
             var mediaInfo = new MediaInformation
             {
-                ContentId = @"http://192.168.1.101:9696/videos?seconds=600&file=F:\Movies\John%20Wick\John%20Wick%203%20Parabellum.mkv",
+                ContentId = @"http://192.168.1.101:9696/videos?seconds=40&file=F:\Movies\John%20Wick\John%20Wick%203%20Parabellum.mkv&videoNeedsTranscode=False&audioNeedsTranscode=False&hwAccelTypeToUse=Nvidia&videoWidthAndHeight=1280x720",
                 ContentType = "video/mp4",
                 StreamType = StreamType.Live,
                 Metadata = new MovieMetadata
@@ -115,6 +128,35 @@ namespace CastIt.ConsoleApp
             };
 
             return _player.LoadAsync(mediaInfo, true, 0, 360, 1);
+        }
+
+        private static Task PlayFromHls()
+        {
+            Console.WriteLine($"Playing from hls");
+            var mediaInfo = new MediaInformation
+            {
+                //ContentId = "https://edge.flowplayer.org/bauhaus.m3u8",
+                //Duration = -1,
+                //ContentType = "application/vnd.apple.mpegurl",
+                //ContentType = "application/x-mpegurl",
+                //ContentType = "application/dash+xml",
+                ContentId = "http://192.168.1.101:9696/videos?seconds=40&file=https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/hls/DesigningForGoogleCast.m3u8&videoNeedsTranscode=False&audioNeedsTranscode=False&hwAccelTypeToUse=Nvidia&videoWidthAndHeight=1280x720",
+                StreamType = StreamType.Live,
+                ContentType = "video/mp4",
+                Metadata = new GenericMediaMetadata
+                {
+                    Title = "This is the title",
+                    Subtitle = "This is the subtitle",
+                    Images = new List<Image>
+                    {
+                        new Image
+                        {
+                            Url = "https://i.ytimg.com/vi/wHn1_QVoXGM/maxresdefault_live.jpg"
+                        }
+                    }
+                }
+            };
+            return _player.LoadAsync(mediaInfo, true, 0, new List<int>().ToArray());
         }
     }
 }
