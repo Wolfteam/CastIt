@@ -266,6 +266,28 @@
                     IsMainMenu="True"
                     IsTabStop="False"
                     ToolTip="{Binding [Sort]}">
+                    <Menu.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenu}" TargetType="{x:Type Menu}">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Value="True">
+                                            <Condition.Binding>
+                                                <MultiBinding Converter="{StaticResource BooleanOrConverter}">
+                                                    <Binding Path="DataContext.IsBusy" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                                    <Binding Path="IsBusy" />
+                                                </MultiBinding>
+                                            </Condition.Binding>
+                                        </Condition>
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Menu.Style>
                     <MenuItem
                         Height="40"
                         IsTabStop="False"
@@ -279,7 +301,7 @@
 
                         <MenuItem
                             Command="{Binding SortFilesCommand}"
-                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalAsc}"
+                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalNameAsc}"
                             Header="{Binding [ByNameAsc]}"
                             IsCheckable="False">
                             <MenuItem.Icon>
@@ -291,8 +313,32 @@
                         </MenuItem>
                         <MenuItem
                             Command="{Binding SortFilesCommand}"
-                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalDesc}"
+                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalNameDesc}"
                             Header="{Binding [ByNameDesc]}"
+                            IsCheckable="False">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="SortAlphabeticalAscending" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SortFilesCommand}"
+                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalPathAsc}"
+                            Header="{Binding [ByPathAsc]}"
+                            IsCheckable="False">
+                            <MenuItem.Icon>
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="SortAlphabeticalAscending" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SortFilesCommand}"
+                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalPathDesc}"
+                            Header="{Binding [ByPathDesc]}"
                             IsCheckable="False">
                             <MenuItem.Icon>
                                 <materialDesign:PackIcon

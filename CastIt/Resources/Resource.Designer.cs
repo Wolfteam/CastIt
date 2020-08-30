@@ -196,6 +196,24 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to By path asc..
+        /// </summary>
+        public static string ByPathAsc {
+            get {
+                return ResourceManager.GetString("ByPathAsc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to By path desc..
+        /// </summary>
+        public static string ByPathDesc {
+            get {
+                return ResourceManager.GetString("ByPathDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Cancel {
@@ -660,6 +678,15 @@ namespace CastIt.Resources {
         public static string NoDevicesWereFound {
             get {
                 return ResourceManager.GetString("NoDevicesWereFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no files to be added.
+        /// </summary>
+        public static string NoFilesToBeAdded {
+            get {
+                return ResourceManager.GetString("NoFilesToBeAdded", resourceCulture);
             }
         }
         

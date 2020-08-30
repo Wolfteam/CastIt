@@ -465,4 +465,13 @@
   <data name="InvalidPlayListName" xml:space="preserve">
     <value>The playlist name is not valid</value>
   </data>
+  <data name="ByPathAsc" xml:space="preserve">
+    <value>By path asc.</value>
+  </data>
+  <data name="ByPathDesc" xml:space="preserve">
+    <value>By path desc.</value>
+  </data>
+  <data name="NoFilesToBeAdded" xml:space="preserve">
+    <value>There are no files to be added</value>
+  </data>
 </root>

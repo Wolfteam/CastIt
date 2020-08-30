@@ -39,6 +39,8 @@
             <converters:StringToImgConverter x:Key="StringToImgConverter" />
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
             <converters:FileOptionsMultiConverter x:Key="FileOptionsMultiConverter" />
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+            <converters:BooleanOrConverter x:Key="BooleanOrConverter" />
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.jpg" />

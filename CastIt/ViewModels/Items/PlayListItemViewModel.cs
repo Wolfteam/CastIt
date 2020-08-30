@@ -12,6 +12,7 @@ using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -233,22 +234,25 @@ namespace CastIt.ViewModels.Items
             _appWebServer.OnFileDeleted?.Invoke(Id);
         }
 
-        private async Task OnFolderAdded(string[] folders)
+        private Task OnFolderAdded(string[] folders)
         {
+            var files = new List<string>();
             foreach (var folder in folders)
             {
                 Logger.Info($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
-                var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
+                var filesInDir = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
                     .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
-                    .ToArray();
-                await OnFilesAdded(files);
+                    .ToList();
+                files.AddRange(filesInDir);
             }
+            return OnFilesAdded(files.ToArray());
         }
 
         private async Task OnFilesAdded(string[] paths)
         {
             if (paths == null || paths.Length == 0)
             {
+                Messenger.Publish(new SnackbarMessage(this, GetText("NoFilesToBeAdded")));
                 return;
             }
 
@@ -463,17 +467,20 @@ namespace CastIt.ViewModels.Items
 
         private void SortFiles(SortModeType sortBy)
         {
-            if (Items.Any(f => string.IsNullOrEmpty(f.Duration)))
+            if ((sortBy == SortModeType.DurationAsc || sortBy == SortModeType.DurationDesc) &&
+                Items.Any(f => string.IsNullOrEmpty(f.Duration)))
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("FileIsNotReadyYet")));
                 return;
             }
             var sortedItems = sortBy switch
             {
-                SortModeType.AlphabeticalAsc => Items.OrderBy(f => f.Path, new WindowsExplorerComparer()).ToList(),
-                SortModeType.AlphabeticalDesc => Items.OrderByDescending(f => f.Path, new WindowsExplorerComparer()).ToList(),
+                SortModeType.AlphabeticalPathAsc => Items.OrderBy(f => f.Path, new WindowsExplorerComparer()).ToList(),
+                SortModeType.AlphabeticalPathDesc => Items.OrderByDescending(f => f.Path, new WindowsExplorerComparer()).ToList(),
                 SortModeType.DurationAsc => Items.OrderBy(f => f.TotalSeconds).ToList(),
                 SortModeType.DurationDesc => Items.OrderByDescending(f => f.TotalSeconds).ToList(),
+                SortModeType.AlphabeticalNameAsc => Items.OrderBy(f => f.Filename, new WindowsExplorerComparer()).ToList(),
+                SortModeType.AlphabeticalNameDesc => Items.OrderByDescending(f => f.Filename, new WindowsExplorerComparer()).ToList(),
                 _ => throw new ArgumentOutOfRangeException(nameof(sortBy), sortBy, "Invalid sort mode"),
             };
 

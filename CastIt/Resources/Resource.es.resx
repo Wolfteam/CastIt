@@ -465,4 +465,13 @@
   <data name="InvalidPlayListName" xml:space="preserve">
     <value>El nombre de la lista de reproducción no es válido</value>
   </data>
+  <data name="ByPathAsc" xml:space="preserve">
+    <value>Por ruta asc.</value>
+  </data>
+  <data name="ByPathDesc" xml:space="preserve">
+    <value>Por ruta desc.</value>
+  </data>
+  <data name="NoFilesToBeAdded" xml:space="preserve">
+    <value>No hay archivos para ser agregados</value>
+  </data>
 </root>
