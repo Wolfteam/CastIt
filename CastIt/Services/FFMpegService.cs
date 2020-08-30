@@ -287,10 +287,11 @@ namespace CastIt.Services
             _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}. Cmd = {cmd}");
             try
             {
-                if (!File.Exists(filePath))
+                if (!FileUtils.Exists(filePath))
                 {
                     return Task.FromResult<FFProbeFileInfo>(null);
                 }
+
                 return Task.Run(() =>
                 {
                     var process = new Process
@@ -327,26 +328,50 @@ namespace CastIt.Services
             int videoStreamIndex,
             int audioStreamIndex,
             double seconds,
-            CancellationToken token)
+            bool videoNeedsTranscode,
+            bool audioNeedsTranscode,
+            HwAccelDeviceType hwAccelType,
+            CancellationToken token,
+            string videoWidthAndHeight)
         {
-            var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
-            string cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex, from: 0, to: 2);
+            string cmd;
+            if (hwAccelType != HwAccelDeviceType.None)
+            {
+                cmd = BuildVideoTranscodeCmd(
+                    filePath,
+                    seconds,
+                    videoStreamIndex,
+                    audioStreamIndex,
+                    videoNeedsTranscode,
+                    audioNeedsTranscode,
+                    hwAccelType,
+                    videoWidthAndHeight,
+                    0, 2);
 
-            _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd...");
-            _transcodeProcess.StartInfo.Arguments = cmd;
-            _transcodeProcess.Start();
-            await using var memStream = new MemoryStream();
-            var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
-            if (_transcodeProcess.ExitCode > 0)
-            {
-                _logger.Warn($"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd}. Creating a new one..");
-                cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex, false);
+                _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd for hwAccelType = {hwAccelType}...");
+                _transcodeProcess.StartInfo.Arguments = cmd;
+                _transcodeProcess.Start();
+                await using var memStream = new MemoryStream();
+                var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
+                await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
+                if (_transcodeProcess.ExitCode > 0)
+                {
+                    _logger.Warn(
+                        $"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd} for hwAccelType = {hwAccelType}. " +
+                        $"Creating a new one with hwAccelType = {HwAccelDeviceType.None}..");
+                    hwAccelType = HwAccelDeviceType.None;
+                }
             }
-            else
-            {
-                cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex);
-            }
+
+            cmd = BuildVideoTranscodeCmd(
+                filePath,
+                seconds,
+                videoStreamIndex,
+                audioStreamIndex,
+                videoNeedsTranscode,
+                audioNeedsTranscode,
+                hwAccelType,
+                videoWidthAndHeight);
 
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
@@ -361,10 +386,15 @@ namespace CastIt.Services
 
         public async Task<MemoryStream> TranscodeMusic(string filePath, int audioStreamIndex, double seconds, CancellationToken token)
         {
-            var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
-            var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
+            var fileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
+            if (fileInfo == null)
+            {
+                _logger.Info($"{nameof(TranscodeVideo)}: Couldn't retrieve file info for file = {filePath}");
+                return null;
+            }
+            var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
             if (audioInfo is null)
-                throw new NullReferenceException($"The file = {filePath} does not have a valid video stream");
+                throw new NullReferenceException($"The file = {filePath} does not have a valid audio stream");
 
             bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
                 !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
@@ -389,12 +419,13 @@ namespace CastIt.Services
         {
             bool isVideoFile = FileUtils.IsVideoFile(filepath);
             bool isMusicFile = FileUtils.IsMusicFile(filepath);
-
-            if (isVideoFile || isMusicFile)
+            bool isHls = FileUtils.IsHls(filepath);
+            if (isVideoFile || isMusicFile || isHls)
             {
                 //The transcode process generate either of these
-                return isVideoFile ? "video/mp4" : "audio/aac";
+                return isVideoFile || isHls ? "video/mp4" : "audio/aac";
             }
+
             return "video/webm";
         }
 
@@ -453,41 +484,76 @@ namespace CastIt.Services
             }
         }
 
-        private string BuildVideoTranscodeCmd(
-            FFProbeFileInfo fileInfo,
-            string filePath,
-            double seconds,
-            int videoStreamIndex,
-            int audioStreamIndex,
-            bool useHwAccel = true,
-            double? from = null,
-            double? to = null)
+        public bool VideoNeedsTranscode(int videoStreamIndex, FFProbeFileInfo fileInfo)
         {
-            var videoInfo = fileInfo.Streams.Find(f => f.IsVideo);
-            var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
+            if (fileInfo == null)
+                throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
+
+            var videoInfo = fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex && f.IsVideo);
             if (videoInfo is null)
-                throw new NullReferenceException($"The file = {filePath} does not have a valid video stream");
+                throw new NullReferenceException("The file does not have a valid video stream");
 
             bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
             bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
 
-            bool videoNeedsTranscode = !videoCodecIsValid ||
-                !videoProfileIsValid ||
-                !videoLevelIsValid ||
-                _settingsService.ForceVideoTranscode ||
-                _settingsService.VideoScale != VideoScaleType.Original;
-            bool audioNeedsTranscode = audioInfo != null &&
-                (!audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
+            return !videoCodecIsValid ||
+               !videoProfileIsValid ||
+               !videoLevelIsValid ||
+               _settingsService.ForceVideoTranscode ||
+               _settingsService.VideoScale != VideoScaleType.Original;
+        }
+
+        public bool AudioNeedsTranscode(int audioStreamIndex, FFProbeFileInfo fileInfo, bool checkIfAudioIsNull = false)
+        {
+            if (fileInfo == null)
+                throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
+
+            var audioInfo = fileInfo.Streams.FirstOrDefault(f => f.Index == audioStreamIndex && f.IsAudio);
+            if (checkIfAudioIsNull && audioInfo is null)
+                throw new NullReferenceException("The file does not have a valid audio stream");
+
+            return audioInfo != null &&
+               (!audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
                 !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
                 _settingsService.ForceAudioTranscode);
+        }
 
+        public HwAccelDeviceType GetHwAccelToUse(
+            int videoStreamIndex,
+            FFProbeFileInfo fileInfo,
+            bool shouldUseHwAccel = true,
+            bool isHls = false)
+        {
+            if (fileInfo == null)
+                throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
+
+            var videoInfo = fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex && f.IsVideo);
+            if (videoInfo is null)
+                throw new NullReferenceException($"The file does not have a valid video stream");
+
+            bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             var hwAccelType = GetHwAccelDeviceType();
-            if (!videoCodecIsValid || !useHwAccel)
+            if (!videoCodecIsValid || !shouldUseHwAccel || isHls)
             {
                 hwAccelType = HwAccelDeviceType.None;
             }
 
+            return hwAccelType;
+        }
+
+        private string BuildVideoTranscodeCmd(
+            string filePath,
+            double seconds,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            bool videoNeedsTranscode,
+            bool audioNeedsTranscode,
+            HwAccelDeviceType hwAccelType,
+            string videoWidthAndHeight = null,
+            double? from = null,
+            double? to = null)
+        {
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(filePath)
                 .BeQuiet()
@@ -496,11 +562,15 @@ namespace CastIt.Services
                 .SetHwAccel(hwAccelType)
                 .SetVideoCodec(hwAccelType);
             var outputArgs = builder.AddOutputPipe()
-                .SetMap(videoStreamIndex)
-                .SetMap(audioStreamIndex)
                 .SetPreset(hwAccelType)
                 .AddArg("map_metadata", -1)
                 .AddArg("map_chapters", -1); //for some reason the chromecast doesnt like chapters o.o
+
+            if (videoStreamIndex >= 0)
+                outputArgs.SetMap(videoStreamIndex);
+
+            if (audioStreamIndex >= 0)
+                outputArgs.SetMap(audioStreamIndex);
 
             if (seconds > 0 && !from.HasValue && !to.HasValue)
                 inputArgs.Seek(seconds);
@@ -526,7 +596,7 @@ namespace CastIt.Services
                             break;
                         case HwAccelDeviceType.Nvidia:
                             string scale = _settingsService.VideoScale == VideoScaleType.Hd ? "1280x720" : "1920x1080";
-                            if (scale != videoInfo.WidthAndHeightText)
+                            if (scale != videoWidthAndHeight && !string.IsNullOrWhiteSpace(videoWidthAndHeight))
                                 inputArgs.AddArg("resize", scale);
                             break;
                         case HwAccelDeviceType.None:

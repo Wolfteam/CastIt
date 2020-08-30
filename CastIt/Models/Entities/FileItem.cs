@@ -1,6 +1,7 @@
 ﻿using CastIt.Interfaces;
 using SQLite;
 using System;
+using CastIt.Common;
 
 namespace CastIt.Models.Entities
 {
@@ -9,11 +10,14 @@ namespace CastIt.Models.Entities
         [PrimaryKey, AutoIncrement]
         public long Id { get; set; }
 
+        [MaxLength(AppConstants.MaxCharsPerString)]
+        public string Name { get; set; }
+
+        [NotNull, MaxLength(AppConstants.MaxCharsPerString)]
+        public string Path { get; set; }
+
         [NotNull]
         public int Position { get; set; }
-
-        [NotNull, MaxLength(1000)]
-        public string Path { get; set; }
 
         [NotNull]
         public double PlayedPercentage { get; set; }

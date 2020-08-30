@@ -1,4 +1,6 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Enums;
+using CastIt.Common.Extensions;
 using CastIt.Common.Utils;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Enums;
@@ -6,6 +8,7 @@ using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
+using CastIt.Models.FFMpeg;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
@@ -45,6 +48,7 @@ namespace CastIt.Services
         public OnPausedHandler OnPaused { get; set; }
         public OnDisconnectedHandler OnDisconnected { get; set; }
         public OnVolumeChangedHandler OnVolumeChanged { get; set; }
+        public OnFileLoadFailed OnFileLoadFailed { get; set; }
         public Func<string> GetSubTitles { get; set; }
 
         public CastService(
@@ -93,6 +97,7 @@ namespace CastIt.Services
             _player.Disconnected += Disconnected;
             _player.VolumeLevelChanged += VolumeLevelChanged;
             _player.IsMutedChanged += IsMutedChanged;
+            _player.LoadFailed += LoadFailed;
             _player.Init();
 
             _logger.Info($"{nameof(Init)}: Initialize completed");
@@ -104,8 +109,14 @@ namespace CastIt.Services
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
+            FFProbeFileInfo fileInfo,
             double seconds = 0)
         {
+            if (fileInfo == null)
+            {
+                _logger.Warn($"{nameof(StartPlay)}: No file info was provided for mrl = {mrl}");
+                throw new ArgumentNullException(nameof(fileInfo), "A file info must be provided");
+            }
             _ffmpegService.KillTranscodeProcess();
             bool isLocal = FileUtils.IsLocalFile(mrl);
             bool isUrlFile = FileUtils.IsUrlFile(mrl);
@@ -129,10 +140,22 @@ namespace CastIt.Services
                 await SetCastRenderer(AvailableDevices.First()).ConfigureAwait(false);
             }
             // create new media
+            bool videoNeedsTranscode = isVideoFile && _ffmpegService.VideoNeedsTranscode(videoStreamIndex, fileInfo);
+            bool audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, fileInfo, isMusicFile);
+            var hwAccelToUse = isVideoFile ? _ffmpegService.GetHwAccelToUse(videoStreamIndex, fileInfo) : HwAccelDeviceType.None;
+
             _currentFilePath = mrl;
             string title = isLocal ? Path.GetFileName(mrl) : mrl;
             string url = isLocal
-                ? _appWebServer.GetMediaUrl(mrl, videoStreamIndex, audioStreamIndex, seconds)
+                ? _appWebServer.GetMediaUrl(
+                    mrl,
+                    videoStreamIndex,
+                    audioStreamIndex,
+                    seconds,
+                    videoNeedsTranscode,
+                    audioNeedsTranscode,
+                    hwAccelToUse,
+                    fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex)?.WidthAndHeightText)
                 : mrl;
 
             var metadata = isVideoFile ? new MovieMetadata
@@ -180,8 +203,6 @@ namespace CastIt.Services
 
                 if (isVideoFile)
                     media.StreamType = StreamType.Live;
-
-                var fileInfo = await _ffmpegService.GetFileInfo(mrl, default);
                 media.Duration = fileInfo.Format.Duration;
                 if (isMusicFile)
                 {
@@ -196,13 +217,48 @@ namespace CastIt.Services
             else if (_youtubeUrlDecoder.IsYoutubeUrl(media.ContentId))
             {
                 _logger.Info($"{nameof(StartPlay)}: File is a youtube link, parsing it...");
-                var youtubeMedia = await _youtubeUrlDecoder.Parse(media.ContentId, quality);
-                QualitiesChanged?.Invoke(youtubeMedia.SelectedQuality, youtubeMedia.Qualities);
+                var ytMedia = await _youtubeUrlDecoder.Parse(media.ContentId, quality);
+                QualitiesChanged?.Invoke(ytMedia.SelectedQuality, ytMedia.Qualities);
 
-                imgUrl = youtubeMedia.ThumbnailUrl;
-                media.ContentId = youtubeMedia.Url;
-                media.Metadata.Title = youtubeMedia.Title;
-                media.Metadata.Subtitle = youtubeMedia.Description;
+                imgUrl = ytMedia.ThumbnailUrl;
+                media.ContentId = ytMedia.Url;
+                media.Metadata.Title = ytMedia.Title;
+                media.Metadata.Subtitle = ytMedia.Description;
+                if (ytMedia.IsHls)
+                {
+                    fileInfo = await _ffmpegService.GetFileInfo(ytMedia.Url, default);
+                    if (fileInfo == null)
+                    {
+                        _logger.Warn($"{nameof(StartPlay)}: Couldn't get the file info for url = {ytMedia.Url}");
+                        throw new Exception($"File info is null for yt hls = {ytMedia.Url}");
+                    }
+
+                    var closestQuality = fileInfo.Videos
+                        .Select(v => v.Height)
+                        .GetClosest(quality);
+                    var videoInfo = fileInfo.Videos.First(v => v.Height == closestQuality);
+                    videoStreamIndex = videoInfo.Index;
+                    audioStreamIndex = fileInfo.Audios.Any()
+                        ? fileInfo.Audios.Select(a => a.Index).GetClosest(videoStreamIndex)
+                        : -1;
+
+                    videoNeedsTranscode = _ffmpegService.VideoNeedsTranscode(videoStreamIndex, fileInfo);
+                    audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, fileInfo);
+                    hwAccelToUse = HwAccelDeviceType.None;
+
+                    media.Duration = -1;
+                    media.StreamType = StreamType.Live;
+                    media.ContentId = _appWebServer.GetMediaUrl(
+                        ytMedia.Url,
+                        videoStreamIndex,
+                        audioStreamIndex,
+                        seconds,
+                        videoNeedsTranscode,
+                        audioNeedsTranscode,
+                        hwAccelToUse,
+                        videoInfo.WidthAndHeightText);
+                    media.ContentType = _ffmpegService.GetOutputTranscodeMimeType(media.ContentId);
+                }
             }
 
             if (!string.IsNullOrEmpty(imgUrl))
@@ -213,9 +269,14 @@ namespace CastIt.Services
                 });
             }
 
-            _logger.Info($"{nameof(StartPlay)}: Trying to load url = {url}");
-            var status = await _player.LoadAsync(media, true, seekedSeconds: seconds, activeTrackIds.ToArray()).ConfigureAwait(false);
-            _logger.Info($"{nameof(StartPlay)}: Url was succesfully loaded");
+            _logger.Info($"{nameof(StartPlay)}: Trying to load url = {media.ContentId}");
+            var status = await _player.LoadAsync(media, true, seconds, activeTrackIds.ToArray());
+            if (status is null)
+            {
+                _logger.Warn($"{nameof(StartPlay)}: Couldn't load url = {media.ContentId}");
+                return;
+            }
+            _logger.Info($"{nameof(StartPlay)}: Url was successfully loaded");
 
             FileLoaded(metadata.Title, imgUrl, _player.CurrentMediaDuration, _player.CurrentVolumeLevel, _player.IsMuted);
         }
@@ -246,12 +307,7 @@ namespace CastIt.Services
 
         public Task TogglePlayback()
         {
-            if (_player.IsPlaying)
-            {
-                return _player.PauseAsync();
-            }
-
-            return _player.PlayAsync();
+            return _player.IsPlaying ? _player.PauseAsync() : _player.PlayAsync();
         }
 
         public Task StopPlayback()
@@ -267,13 +323,14 @@ namespace CastIt.Services
             int subtitleStreamIndex,
             int quality,
             double position,
-            double totalSeconds)
+            double totalSeconds,
+            FFProbeFileInfo fileInfo)
         {
             if (position >= 0 && position <= 100)
             {
                 double seconds = position * totalSeconds / 100;
                 if (FileUtils.IsLocalFile(filePath))
-                    return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
+                    return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
                 return _player.SeekAsync(seconds);
             }
@@ -287,12 +344,13 @@ namespace CastIt.Services
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
-            double seconds)
+            double seconds,
+            FFProbeFileInfo fileInfo)
         {
             if (seconds >= _player.CurrentMediaDuration)
             {
                 _logger.Warn(
-                    $"{nameof(GoToSeconds)}: Cant go to = {seconds} because is bigger than " +
+                    $"{nameof(GoToSeconds)}: Cant go to = {seconds} because is bigger or equal than " +
                     $"the media duration = {_player.CurrentMediaDuration}");
                 return Task.CompletedTask;
             }
@@ -303,7 +361,7 @@ namespace CastIt.Services
             }
 
             if (FileUtils.IsLocalFile(_currentFilePath))
-                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, seconds);
+                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
             return _player.SeekAsync(seconds);
         }
@@ -313,19 +371,33 @@ namespace CastIt.Services
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
-            double seconds)
+            double seconds,
+            FFProbeFileInfo fileInfo)
         {
-            var current = _player.ElapsedSeconds + seconds;
-            if (FileUtils.IsLocalFile(_currentFilePath))
+            if (seconds >= _player.CurrentMediaDuration || _player.CurrentMediaDuration + seconds < 0)
             {
-                if (current < 0)
-                {
-                    _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {current}. They will be set to 0");
-                    current = 0;
-                }
-                return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, current);
+                _logger.Warn(
+                    $"{nameof(AddSeconds)}: Cant add seconds = {seconds} because is bigger or equal than " +
+                    $"the media duration = {_player.CurrentMediaDuration} or the diff is less than 0");
+                return Task.CompletedTask;
             }
-            return _player.SeekAsync(current);
+
+            var newValue = _player.ElapsedSeconds + seconds;
+            if (newValue < 0)
+            {
+                _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {newValue}. They will be set to 0");
+                newValue = 0;
+            }
+            else if (newValue >= _player.CurrentMediaDuration)
+            {
+                _logger.Warn(
+                    $"{nameof(AddSeconds)}: The seconds to add exceeds the media duration, " +
+                    $"they will be set to = {_player.CurrentMediaDuration}");
+                newValue = _player.CurrentMediaDuration;
+            }
+            if (!FileUtils.IsLocalFile(_currentFilePath))
+                return _player.SeekAsync(newValue);
+            return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
         }
 
         public async Task<double> SetVolume(double level)
@@ -333,17 +405,15 @@ namespace CastIt.Services
             if (string.IsNullOrEmpty(_currentFilePath) || _player.CurrentVolumeLevel == level)
                 return _player.CurrentVolumeLevel;
             var status = await _player.SetVolumeAsync((float)level).ConfigureAwait(false);
-            return (double)(status?.Volume?.Level ?? level);
+            return status?.Volume?.Level ?? level;
         }
 
         public async Task<bool> SetIsMuted(bool isMuted)
         {
-            if (!string.IsNullOrEmpty(_currentFilePath) && _player.IsMuted != isMuted)
-            {
-                var status = await _player.SetIsMutedAsync(isMuted).ConfigureAwait(false);
-                return status?.Volume?.IsMuted ?? isMuted;
-            }
-            return _player.IsMuted;
+            if (string.IsNullOrEmpty(_currentFilePath) || _player.IsMuted == isMuted)
+                return _player.IsMuted;
+            var status = await _player.SetIsMutedAsync(isMuted).ConfigureAwait(false);
+            return status?.Volume?.IsMuted ?? isMuted;
         }
 
         public void StopRunningProcess()
@@ -366,6 +436,7 @@ namespace CastIt.Services
                 _player.Disconnected -= Disconnected;
                 _player.VolumeLevelChanged -= VolumeLevelChanged;
                 _player.IsMutedChanged -= IsMutedChanged;
+                _player.LoadFailed -= LoadFailed;
 
                 StopRunningProcess();
 
@@ -461,6 +532,11 @@ namespace CastIt.Services
             AvailableDevices.Add(e.Receiver);
 
             OnCastableDeviceAdded?.Invoke(e.Receiver);
+        }
+
+        private void LoadFailed(object sender, EventArgs e)
+        {
+            OnFileLoadFailed?.Invoke();
         }
         #endregion
 

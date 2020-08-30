@@ -39,6 +39,7 @@ namespace CastIt.ViewModels.Items
         public long PlayListId { get; set; }
         public double TotalSeconds { get; private set; }
         public bool PositionChanged { get; set; }
+        public string Name { get; set; }
 
         public int Position
         {
@@ -113,7 +114,10 @@ namespace CastIt.ViewModels.Items
         public bool Exists
             => IsLocalFile || IsUrlFile;
         public string Filename
-            => FileUtils.GetFileName(Path);
+            => FileUtils.IsLocalFile(Path)
+                ? FileUtils.GetFileName(Path)
+                : !string.IsNullOrEmpty(Name)
+                    ? Name : Path;
         public string Size
             => FileUtils.GetFileSizeString(Path);
         public string Extension
@@ -218,7 +222,7 @@ namespace CastIt.ViewModels.Items
                 return;
             }
             var time = TimeSpan.FromSeconds(seconds);
-            //here backslash is must to tell that colon is
+            //here backslash is used to tell that colon is
             //not the part of format, it just a character that we want in output
             Duration = time.ToString(time.Hours > 0 ? AppConstants.FullElapsedTimeFormat : AppConstants.ShortElapsedTimeFormat);
         }

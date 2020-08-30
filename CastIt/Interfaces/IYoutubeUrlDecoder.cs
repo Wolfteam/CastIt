@@ -10,7 +10,7 @@ namespace CastIt.Interfaces
         bool IsYoutubeUrl(string url);
         bool IsPlayListAndVideo(string url);
         bool IsPlayList(string url);
-        Task<YoutubeMedia> Parse(string url, int quality);
+        Task<YoutubeMedia> Parse(string url, int? desiredQuality, bool getFinalUrl = true);
         Task<List<string>> ParseYouTubePlayList(string url, CancellationToken cancellationToken);
     }
 }

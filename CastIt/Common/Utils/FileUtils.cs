@@ -170,23 +170,28 @@ namespace CastIt.Common.Utils
 
         public static bool IsVideoFile(string mrl)
         {
-            if (!IsLocalFile(mrl))
-                return false;
-            return IsVideoOrMusicFile(mrl, true);
+            return IsLocalFile(mrl) && IsVideoOrMusicFile(mrl, true);
         }
 
         public static bool IsMusicFile(string mrl)
         {
-            if (!IsLocalFile(mrl))
-                return false;
-            return IsVideoOrMusicFile(mrl, false);
+            return IsLocalFile(mrl) && IsVideoOrMusicFile(mrl, false);
+        }
+
+        public static bool IsHls(string mrl)
+        {
+            string ext = Path.GetExtension(mrl);
+            return IsUrlFile(mrl) && AppConstants.AllowedStreamingFormats.Contains(ext, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static bool Exists(string mrl)
+        {
+            return IsLocalFile(mrl) || IsUrlFile(mrl);
         }
 
         public static string GetFileName(string mrl)
         {
-            if (IsUrlFile(mrl))
-                return mrl;
-            return Path.GetFileName(mrl);
+            return IsUrlFile(mrl) ? mrl : Path.GetFileName(mrl);
         }
 
         public static string GetExtension(string mrl)
@@ -284,9 +289,9 @@ namespace CastIt.Common.Utils
         private static bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
         {
             string ext = Path.GetExtension(mrl);
-            if (checkForVideo)
-                return AppConstants.AllowedVideoFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
-            return AppConstants.AllowedMusicFormats.Contains(ext.ToLower(), StringComparer.OrdinalIgnoreCase);
+            return checkForVideo
+                ? AppConstants.AllowedVideoFormats.Contains(ext, StringComparer.OrdinalIgnoreCase)
+                : AppConstants.AllowedMusicFormats.Contains(ext, StringComparer.OrdinalIgnoreCase);
         }
 
         private static string GetBytesReadable(long i)

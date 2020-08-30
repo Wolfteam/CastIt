@@ -102,5 +102,8 @@ namespace CastIt.Models.FFMpeg.Args
                 HwAccelDeviceType.None => SetPixelFormat("yuv420p"),
                 _ => this
             };
+
+        public FFmpegOutputArgs SetPlayList(int index)
+            => AddArg("map", $"p:{index}");
     }
 }

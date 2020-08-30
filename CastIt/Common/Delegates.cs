@@ -15,4 +15,5 @@ namespace CastIt.Common
     public delegate void OnPausedHandler();
     public delegate void OnDisconnectedHandler();
     public delegate void OnVolumeChangedHandler(double newLevel, bool isMuted);
+    public delegate void OnFileLoadFailed();
 }

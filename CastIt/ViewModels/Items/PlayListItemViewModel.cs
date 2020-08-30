@@ -184,6 +184,18 @@ namespace CastIt.ViewModels.Items
             SortFilesCommand = new MvxCommand<SortModeType>(SortFiles);
         }
 
+        public async Task SetFilesInfo(CancellationToken token)
+        {
+            IsBusy = true;
+            foreach (var item in Items)
+            {
+                if (token.IsCancellationRequested)
+                    break;
+                await item.SetFileInfo(token);
+            }
+            IsBusy = false;
+        }
+
         public void CleanUp()
         {
             _cancellationToken.Cancel();
@@ -225,6 +237,7 @@ namespace CastIt.ViewModels.Items
         {
             foreach (var folder in folders)
             {
+                Logger.Info($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
                 var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
                     .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                     .ToArray();
@@ -234,33 +247,64 @@ namespace CastIt.ViewModels.Items
 
         private async Task OnFilesAdded(string[] paths)
         {
-            int startIndex = Items.Count + 1;
-            var files = paths.Where(path =>
+            if (paths == null || paths.Length == 0)
             {
-                var ext = Path.GetExtension(path);
-                return AppConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
-            }).OrderBy(p => p, new WindowsExplorerComparer())
-            .Select((path, index) => new FileItem
-            {
-                Position = startIndex + index,
-                PlayListId = Id,
-                Path = path,
-            }).ToList();
-
-            var vms = await _playListsService.AddFiles(files);
-
-            foreach (var vm in vms)
-            {
-                //vm.Position = Items.Count + 1;
-                await vm.SetFileInfo(_cancellationToken.Token);
-                Items.Add(vm);
+                return;
             }
 
-            _appWebServer.OnFileAdded?.Invoke(Id);
+            if (paths.Any(p => string.IsNullOrEmpty(p) || p.Length > AppConstants.MaxCharsPerString))
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("InvalidFiles")));
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                int startIndex = Items.Count + 1;
+                var files = paths.Where(path =>
+                {
+                    var ext = Path.GetExtension(path);
+                    return AppConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
+                }).OrderBy(p => p, new WindowsExplorerComparer())
+                .Select((path, index) => new FileItem
+                {
+                    Position = startIndex + index,
+                    PlayListId = Id,
+                    Path = path,
+                }).ToList();
+
+                var vms = await _playListsService.AddFiles(files);
+
+                foreach (var vm in vms)
+                {
+                    //vm.Position = Items.Count + 1;
+                    await vm.SetFileInfo(_cancellationToken.Token);
+                    Items.Add(vm);
+                }
+
+                _appWebServer.OnFileAdded?.Invoke(Id);
+            }
+            catch (Exception e)
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("SomethingWentWrong")));
+                _telemetryService.TrackError(e);
+                Logger.Error(e, $"{nameof(OnFilesAdded)}: Couldn't parse the following paths = {string.Join(",", paths)}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         private async Task OnUrlAdded(string url)
         {
+            if (!NetworkUtils.IsInternetAvailable())
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("NoInternetConnection")));
+                return;
+            }
+
             ShowAddUrlPopUp = false;
             bool isUrlFile = FileUtils.IsUrlFile(url);
             if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
@@ -268,29 +312,56 @@ namespace CastIt.ViewModels.Items
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlNotSupported")));
                 return;
             }
-            //TODO: PARSE THE YOUTUBE VIDEO URL TO ONLY RETRIEVE THE NAME / DURATION / DESC
-            if (_youtubeUrlDecoder.IsPlayList(url))
+
+            try
             {
+                IsBusy = true;
+
+                Logger.Info($"{nameof(OnUrlAdded)}: Trying to parse url = {url}");
+                if (!_youtubeUrlDecoder.IsPlayList(url))
+                {
+                    Logger.Info($"{nameof(OnUrlAdded)}: Url is not a playlist, parsing it...");
+                    await AddYoutubeUrl(url);
+                    return;
+                }
+
                 if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
                 {
-                    bool? result = await _navigationService.Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
+                    Logger.Info($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
+                    bool? result = await _navigationService
+                        .Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
                     switch (result)
                     {
                         //Only video
                         case true:
-                            await AddUrl(url);
+                            Logger.Info($"{nameof(OnUrlAdded)}: Parsing only the video...");
+                            await AddYoutubeUrl(url);
                             return;
                         //Cancel
                         case null:
+                            Logger.Info($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
                             return;
                     }
                 }
-
-                await ParseYoutubePlayList(url);
+                Logger.Info($"{nameof(OnUrlAdded)}: Parsing playlist...");
+                var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url, _cancellationToken.Token);
+                foreach (var link in links)
+                {
+                    if (_cancellationToken.IsCancellationRequested)
+                        break;
+                    Logger.Info($"{nameof(OnUrlAdded)}: Parsing playlist url = {link}");
+                    await AddYoutubeUrl(link);
+                }
             }
-            else
+            catch (Exception e)
             {
-                await AddUrl(url);
+                Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
+                _telemetryService.TrackError(e);
+                Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldn't parse url = {url}");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
@@ -332,7 +403,16 @@ namespace CastIt.ViewModels.Items
 
         public async Task SavePlayList(string newName)
         {
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("InvalidPlayListName")));
+                return;
+            }
             newName = newName.Trim();
+            if (newName.Length > AppConstants.MaxCharsPerString)
+            {
+                newName = newName.Substring(0, AppConstants.MaxCharsPerString);
+            }
             bool added = Id <= 0;
             if (!added)
             {
@@ -362,9 +442,20 @@ namespace CastIt.ViewModels.Items
             _scrollToSelectedItem.Raise(SelectedItem);
         }
 
-        private async Task AddUrl(string url)
+        private async Task AddYoutubeUrl(string url)
         {
-            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1);
+            var media = await _youtubeUrlDecoder.Parse(url, null, false);
+            if (media == null)
+            {
+                Logger.Info($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
+                Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
+                return;
+            }
+            if (!string.IsNullOrEmpty(media.Title) && media.Title.Length > AppConstants.MaxCharsPerString)
+            {
+                media.Title = media.Title.Substring(0, AppConstants.MaxCharsPerString);
+            }
+            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1, media.Title);
             await vm.SetFileInfo(_cancellationToken.Token);
             Items.Add(vm);
             _appWebServer.OnFileAdded?.Invoke(Id);
@@ -396,37 +487,6 @@ namespace CastIt.ViewModels.Items
                 Items.Move(currentIndex, newIndex);
             }
             SetPositionIfChanged();
-        }
-
-        private async Task ParseYoutubePlayList(string url)
-        {
-            try
-            {
-                if (!NetworkUtils.IsInternetAvailable())
-                {
-                    Messenger.Publish(new SnackbarMessage(this, GetText("NoInternetConnection")));
-                    return;
-                }
-
-                IsBusy = true;
-                var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url, _cancellationToken.Token);
-                foreach (var link in links)
-                {
-                    if (_cancellationToken.IsCancellationRequested)
-                        break;
-                    await AddUrl(link);
-                }
-            }
-            catch (Exception e)
-            {
-                Messenger.Publish(new SnackbarMessage(this, GetText("CouldntParsePlayList")));
-                _telemetryService.TrackError(e);
-                Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldn't parse youtube playlist");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
         }
         #endregion
     }

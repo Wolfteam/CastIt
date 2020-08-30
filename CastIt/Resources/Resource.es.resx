@@ -453,4 +453,16 @@
   <data name="ParseVideoOrPlayList" xml:space="preserve">
     <value>¿ Parsear video o lista de reproducción ?</value>
   </data>
+  <data name="InvalidFiles" xml:space="preserve">
+    <value>Uno de los archivos no es válido</value>
+  </data>
+  <data name="UrlCouldntBeParsed" xml:space="preserve">
+    <value>La ruta no pudo ser parseada</value>
+  </data>
+  <data name="SomethingWentWrong" xml:space="preserve">
+    <value>Algo salió mal!</value>
+  </data>
+  <data name="InvalidPlayListName" xml:space="preserve">
+    <value>El nombre de la lista de reproducción no es válido</value>
+  </data>
 </root>

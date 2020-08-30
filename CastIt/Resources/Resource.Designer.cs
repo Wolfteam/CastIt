@@ -547,6 +547,24 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to One of the provided files is not valid.
+        /// </summary>
+        public static string InvalidFiles {
+            get {
+                return ResourceManager.GetString("InvalidFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The playlist name is not valid.
+        /// </summary>
+        public static string InvalidPlayListName {
+            get {
+                return ResourceManager.GetString("InvalidPlayListName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Language.
         /// </summary>
         public static string Language {
@@ -970,6 +988,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Something went wrong!.
+        /// </summary>
+        public static string SomethingWentWrong {
+            get {
+                return ResourceManager.GetString("SomethingWentWrong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sort.
         /// </summary>
         public static string Sort {
@@ -1020,6 +1047,15 @@ namespace CastIt.Resources {
         public static string Theme {
             get {
                 return ResourceManager.GetString("Theme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Url couldn&apos;t be parsed.
+        /// </summary>
+        public static string UrlCouldntBeParsed {
+            get {
+                return ResourceManager.GetString("UrlCouldntBeParsed", resourceCulture);
             }
         }
         

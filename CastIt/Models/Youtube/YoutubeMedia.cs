@@ -11,5 +11,6 @@ namespace CastIt.Models.Youtube
         public int SelectedQuality { get; set; }
         public List<int> Qualities { get; set; }
             = new List<int>();
+        public bool IsHls { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using CastIt.GoogleCast.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CastIt.Models.FFMpeg;
 
 namespace CastIt.Interfaces
 {
@@ -20,6 +21,7 @@ namespace CastIt.Interfaces
         OnPausedHandler OnPaused { get; set; }
         OnDisconnectedHandler OnDisconnected { get; set; }
         OnVolumeChangedHandler OnVolumeChanged { get; set; }
+        OnFileLoadFailed OnFileLoadFailed { get; set; }
         Func<string> GetSubTitles { get; set; }
 
         void Init();
@@ -30,13 +32,15 @@ namespace CastIt.Interfaces
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
-            double seconds);
+            double seconds,
+            FFProbeFileInfo fileInfo);
         Task GoToSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
-            double seconds);
+            double seconds,
+            FFProbeFileInfo fileInfo);
         Task GoToPosition(
             string filePath,
             int videoStreamIndex,
@@ -44,7 +48,8 @@ namespace CastIt.Interfaces
             int subtitleStreamIndex,
             int quality,
             double position,
-            double totalSeconds);
+            double totalSeconds,
+            FFProbeFileInfo fileInfo);
         Task<double> SetVolume(double level);
         Task<bool> SetIsMuted(bool isMuted);
         Task StartPlay(
@@ -53,6 +58,7 @@ namespace CastIt.Interfaces
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
+            FFProbeFileInfo fileInfo,
             double seconds = 0);
 
         string GetFirstThumbnail();

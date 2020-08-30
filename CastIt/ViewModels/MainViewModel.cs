@@ -311,6 +311,7 @@ namespace CastIt.ViewModels
             _castService.OnDisconnected += OnDisconnected;
             _castService.GetSubTitles = () => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Path;
             _castService.OnVolumeChanged += OnVolumeChanged;
+            _castService.OnFileLoadFailed += OnFileLoadFailed;
 
             Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
@@ -648,39 +649,48 @@ namespace CastIt.ViewModels
         private async Task GoToSeconds(long seconds)
         {
             Logger.Info($"{nameof(GoToSeconds)}: Trying to go to seconds = {seconds}");
+
+            if (_currentlyPlayedFile == null)
+            {
+                Logger.Warn($"{nameof(GoToSeconds)}: Can't go to seconds = {seconds} because the current played file is null");
+                return;
+            }
+
             IsBusy = true;
             await _castService.GoToSeconds(
                 CurrentFileVideoStreamIndex,
                 CurrentFileAudioStreamIndex,
                 CurrentFileSubTitleStreamIndex,
                 CurrentFileQuality,
-                seconds);
+                seconds,
+                _currentlyPlayedFile.FileInfo);
             IsBusy = false;
         }
 
         private async Task SkipSeconds(int seconds)
         {
-            Logger.Info($"{nameof(GoToSeconds)}: Trying to skip {seconds} seconds");
+            Logger.Info($"{nameof(SkipSeconds)}: Trying to skip {seconds} seconds");
+            if (_currentlyPlayedFile == null)
+            {
+                Logger.Warn($"{nameof(SkipSeconds)}: Can't go skip seconds = {seconds} because the current played file is null");
+                return;
+            }
+
             IsBusy = true;
             await _castService.AddSeconds(
                 CurrentFileVideoStreamIndex,
                 CurrentFileAudioStreamIndex,
                 CurrentFileSubTitleStreamIndex,
                 CurrentFileQuality,
-                seconds);
+                seconds,
+                _currentlyPlayedFile.FileInfo);
             IsBusy = false;
         }
 
         private Task SetFileDurations()
         {
             Logger.Info($"{nameof(SetFileDurations)}: Setting file duration to all the files");
-            var tasks = PlayLists.Select(pl => Task.Run(async () =>
-            {
-                foreach (var file in pl.Items)
-                {
-                    await file.SetFileInfo(_setDurationTokenSource.Token);
-                }
-            }, _setDurationTokenSource.Token)).ToList();
+            var tasks = PlayLists.Select(pl => pl.SetFilesInfo(_setDurationTokenSource.Token)).ToList();
 
             return Task.WhenAll(tasks);
         }
@@ -755,6 +765,7 @@ namespace CastIt.ViewModels
             _castService.OnPaused -= OnPaused;
             _castService.OnDisconnected -= OnDisconnected;
             _castService.OnVolumeChanged -= OnVolumeChanged;
+            _castService.OnFileLoadFailed -= OnFileLoadFailed;
             _closeApp.Raise();
         }
 
@@ -798,10 +809,12 @@ namespace CastIt.ViewModels
                 Logger.Info(
                     $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
                     "Probably an end of playlist");
-                _castService.StopRunningProcess();
 
                 if (!playlist.Loop)
+                {
+                    StopPlayBackCommand.Execute();
                     return;
+                }
                 Logger.Info($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
                 playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
                 return;
@@ -895,7 +908,8 @@ namespace CastIt.ViewModels
                         CurrentFileSubTitleStreamIndex,
                         CurrentFileQuality,
                         file.PlayedPercentage,
-                        file.TotalSeconds);
+                        file.TotalSeconds,
+                        file.FileInfo);
                 }
                 else
                 {
@@ -905,7 +919,8 @@ namespace CastIt.ViewModels
                         CurrentFileVideoStreamIndex,
                         CurrentFileAudioStreamIndex,
                         CurrentFileSubTitleStreamIndex,
-                        CurrentFileQuality);
+                        CurrentFileQuality,
+                        file.FileInfo);
                 }
 
                 _castService.GenerateThumbmnails(file.Path);
@@ -1275,6 +1290,13 @@ namespace CastIt.ViewModels
 
             foreach (var file in files)
                 file.Loop = false;
+        }
+
+        private async void OnFileLoadFailed()
+        {
+            _appWebServer.OnFileLoadingError?.Invoke(GetText("CouldntPlayFile"));
+            await StopPlayBack();
+            await ShowSnackbarMsg(GetText("CouldntPlayFile"));
         }
         #endregion
     }

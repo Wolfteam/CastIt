@@ -32,8 +32,11 @@ namespace CastIt.Common
         public const string FullElapsedTimeFormat = @"hh\:mm\:ss";
         public const string ShortElapsedTimeFormat = @"mm\:ss";
 
+        public const int MaxCharsPerString = 1000;
+
         public static IReadOnlyList<string> AllowedFormats
             => AllowedVideoFormats.Concat(AllowedMusicFormats).ToList();
+
         public static IReadOnlyList<string> AllowedVideoFormats => new List<string>
         {
             ".mp4",
@@ -60,8 +63,13 @@ namespace CastIt.Common
             ".webvtt"
         };
 
+        public static IReadOnlyList<string> AllowedStreamingFormats = new List<string>
+        {
+            ".m3u8"
+        };
+
         public static string AllowedFormatsString
-            => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
+                => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
 
         public static string AllowedSubtitleFormatsString
             => string.Join(";", AllowedSubtitleFormats.Select(ext => $"*{ext}"));

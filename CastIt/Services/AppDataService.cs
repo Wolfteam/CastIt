@@ -25,14 +25,15 @@ namespace CastIt.Services
 
             _connectionString = FileUtils.GetDbConnectionString();
 
-            if (!File.Exists(_connectionString))
-            {
-                CreateDb();
-            }
+            CreateDb();
         }
 
         #region Methods
-        public async Task<FileItemViewModel> AddFile(long playListId, string path, int position)
+        public async Task<FileItemViewModel> AddFile(
+            long playListId,
+            string path,
+            int position,
+            string name = null)
         {
             using var db = new SQLiteConnection(_connectionString);
             var file = new FileItem
@@ -41,6 +42,7 @@ namespace CastIt.Services
                 Path = path,
                 PlayListId = playListId,
                 Position = position,
+                Name = name
             };
 
             db.Insert(file);
@@ -140,9 +142,12 @@ namespace CastIt.Services
 
         private void CreateDb()
         {
+            bool dbExists = File.Exists(_connectionString);
             using var db = new SQLiteConnection(_connectionString);
             db.CreateTable<PlayList>();
             db.CreateTable<FileItem>();
+            if (dbExists)
+                return;
             var playList = new PlayList
             {
                 CreatedAt = DateTime.Now,
