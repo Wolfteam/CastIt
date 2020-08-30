@@ -31,15 +31,11 @@ class PlayProgressText extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     current,
-                    style: TextStyle(
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                    ),
+                    style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
                   ),
                   Text(
                     total,
-                    style: TextStyle(
-                      color: isDarkTheme ? Colors.white : Colors.black,
-                    ),
+                    style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
                   )
                 ],
               ),

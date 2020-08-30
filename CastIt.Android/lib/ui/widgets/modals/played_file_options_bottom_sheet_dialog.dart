@@ -1,11 +1,11 @@
-import 'package:castit/bloc/server_ws/server_ws_bloc.dart';
-import 'package:castit/models/dtos/responses/file_item_options_response_dto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../bloc/played_file_options/played_file_options_bloc.dart';
+import '../../../bloc/server_ws/server_ws_bloc.dart';
 import '../../../common/styles.dart';
 import '../../../generated/i18n.dart';
+import '../../../models/dtos/responses/file_item_options_response_dto.dart';
 import 'bottom_sheet_title.dart';
 import 'modal_sheet_separator.dart';
 
@@ -20,7 +20,11 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         child: BlocConsumer<PlayedFileOptionsBloc, PlayedFileOptionsState>(
           listener: (ctx, state) {
             state.maybeWhen(
-              closed: () => Navigator.of(ctx).pop(),
+              closed: () {
+                if (ModalRoute.of(context).isCurrent) {
+                  Navigator.of(ctx).pop();
+                }
+              },
               orElse: () {},
             );
           },
@@ -107,9 +111,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     if (options.isEmpty) {
       options.add(dummy);
     }
-    final selected = options.firstWhere(
-      (element) => element.isSelected,
-    );
+    final selected = options.firstWhere((element) => element.isSelected);
     final dropdown = DropdownButton<FileItemOptionsResponseDto>(
       isExpanded: true,
       hint: Text(selected.text),
@@ -196,8 +198,8 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       isSubtitle: option.isSubTitle,
       isQuality: option.isQuality,
     );
-    context.bloc<PlayedFileOptionsBloc>().add(event);
     Navigator.of(context).pop();
+    context.bloc<PlayedFileOptionsBloc>().add(event);
   }
 
   void _setVolume(BuildContext context, double volumeLevel, bool isMuted) => context
