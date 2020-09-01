@@ -75,7 +75,7 @@ class FileItem extends StatelessWidget {
             ],
           );
     return Container(
-      color: isBeingPlayed ? Colors.red.withOpacity(0.5) : null,
+      color: isBeingPlayed ? theme.accentColor.withOpacity(0.5) : null,
       height: itemHeight,
       child: ListTile(
         isThreeLine: true,
