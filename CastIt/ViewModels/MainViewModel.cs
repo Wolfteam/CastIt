@@ -888,7 +888,6 @@ namespace CastIt.ViewModels
 
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
-            _currentlyPlayedFile.ListenEvents();
             _appWebServer.OnFileLoading?.Invoke();
 
             Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
@@ -926,7 +925,7 @@ namespace CastIt.ViewModels
                         CurrentFileQuality,
                         file.FileInfo);
                 }
-
+                _currentlyPlayedFile.ListenEvents();
                 _castService.GenerateThumbmnails(file.Path);
 
                 Logger.Info($"{nameof(PlayFile)}: File is being played...");
