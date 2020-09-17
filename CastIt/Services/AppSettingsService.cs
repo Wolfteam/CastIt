@@ -108,6 +108,12 @@ namespace CastIt.Services
             get => _appSettings.MinimizeToTray;
             set => _appSettings.MinimizeToTray = value;
         }
+
+        public bool ShowPlayListTotalDuration
+        {
+            get => _appSettings.ShowPlayListTotalDuration;
+            set => _appSettings.ShowPlayListTotalDuration = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider, ITelemetryService telemetryService)
@@ -120,7 +126,7 @@ namespace CastIt.Services
         #region Methods
         public void SaveSettings()
         {
-            SaveSettings(_appSettings ?? new AppSettings()
+            SaveSettings(_appSettings ?? new AppSettings
             {
                 AppTheme = AppThemeType.Dark,
                 AccentColor = AppConstants.AccentColorVividRed,
@@ -133,7 +139,8 @@ namespace CastIt.Services
                 ShowFileDetails = true,
                 PlayNextFileAutomatically = true,
                 MinimizeToTray = true,
-                VideoScale = VideoScaleType.Original
+                VideoScale = VideoScaleType.Original,
+                ShowPlayListTotalDuration = true
             });
         }
 

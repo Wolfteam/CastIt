@@ -19,5 +19,6 @@ namespace CastIt.Models
         public VideoScaleType VideoScale { get; set; }
         public bool EnableHardwareAcceleration { get; set; }
         public bool MinimizeToTray { get; set; }
+        public bool ShowPlayListTotalDuration { get; set; }
     }
 }

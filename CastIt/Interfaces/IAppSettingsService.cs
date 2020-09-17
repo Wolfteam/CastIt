@@ -19,6 +19,7 @@ namespace CastIt.Interfaces
         VideoScaleType VideoScale { get; set; }
         bool EnableHardwareAcceleration { get; set; }
         bool MinimizeToTray { get; set; }
+        bool ShowPlayListTotalDuration { get; set; }
 
         void SaveSettings();
     }

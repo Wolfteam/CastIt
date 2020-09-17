@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -94,5 +95,13 @@ namespace CastIt.Common
             AccentColorDarkGray, AccentColorOrange, AccentColorYellow,
             AccentColorDarkBlue, AccentColorViolet, AccentColorLightGrey
         };
+
+        public static string FormatDuration(double seconds)
+        {
+            //here backslash is used to tell that colon is
+            //not the part of format, it just a character that we want in output
+            var time = TimeSpan.FromSeconds(seconds);
+            return time.ToString(time.Hours > 0 ? AppConstants.FullElapsedTimeFormat : AppConstants.ShortElapsedTimeFormat);
+        }
     }
 }

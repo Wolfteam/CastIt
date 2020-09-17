@@ -7,6 +7,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:CastIt.Models"
+    xmlns:uc="clr-namespace:CastIt.Views.UserControls"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     Width="500"
@@ -15,15 +16,6 @@
     d:DesignWidth="500"
     x:TypeArguments="vms:SettingsViewModel"
     mc:Ignorable="d">
-
-    <views:MvxWpfView.Resources>
-        <Style x:Key="TogleButtonTextStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="Margin" Value="5,0" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="TextWrapping" Value="NoWrap" />
-        </Style>
-    </views:MvxWpfView.Resources>
 
     <Grid
         HorizontalAlignment="Stretch"
@@ -49,7 +41,7 @@
             Padding="16"
             VerticalAlignment="Center"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
-            ScrollViewer.VerticalScrollBarVisibility="Auto">
+            VerticalScrollBarVisibility="Auto">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -126,12 +118,14 @@
 
                 <TextBlock
                     Grid.Row="1"
+                    Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Margin="0,10"
                     Text="{Binding [AccentColors]}" />
                 <ItemsControl
                     x:Name="AccentColorsIc"
                     Grid.Row="2"
+                    Grid.Column="0"
                     Grid.ColumnSpan="2"
                     ItemsSource="{Binding AccentColors}">
                     <ItemsControl.ItemsPanel>
@@ -153,113 +147,57 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Grid
+                <uc:SettingToggleItem
                     Grid.Row="3"
                     Grid.Column="0"
-                    Margin="0,8"
-                    ToolTip="{Binding [ShowFileDetailsMsg]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding ShowFileDetails}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [ShowFileDetails]}" />
-                </Grid>
-                <Grid
+                    IsChecked="{Binding ShowFileDetails}"
+                    Text="{Binding [ShowFileDetails]}"
+                    ToolTipText="{Binding [ShowFileDetailsMsg]}" />
+                <uc:SettingToggleItem
                     Grid.Row="3"
                     Grid.Column="1"
-                    Margin="0,8"
-                    ToolTip="{Binding [UseIfPlaybackIssues]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding ForceVideoTranscode}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [ForceVideoTranscode]}" />
-                </Grid>
-                <Grid
+                    IsChecked="{Binding ForceVideoTranscode}"
+                    Text="{Binding [ForceVideoTranscode]}"
+                    ToolTipText="{Binding [UseIfPlaybackIssues]}" />
+                <uc:SettingToggleItem
                     Grid.Row="4"
-                    Grid.ColumnSpan="1"
-                    Margin="0,8"
-                    ToolTip="{Binding [PlayFilesFromTheStartMsg]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding StartFilesFromTheStart}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [PlayFilesFromTheStart]}" />
-                </Grid>
-                <Grid
+                    Grid.Column="0"
+                    IsChecked="{Binding StartFilesFromTheStart}"
+                    Text="{Binding [PlayFilesFromTheStart]}"
+                    ToolTipText="{Binding [PlayFilesFromTheStartMsg]}" />
+                <uc:SettingToggleItem
                     Grid.Row="4"
                     Grid.Column="1"
-                    Margin="0,8"
-                    ToolTip="{Binding [UseIfPlaybackIssues]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding ForceAudioTranscode}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [ForceAudioTranscode]}" />
-                </Grid>
-                <Grid
+                    IsChecked="{Binding ForceAudioTranscode}"
+                    Text="{Binding [ForceAudioTranscode]}"
+                    ToolTipText="{Binding [UseIfPlaybackIssues]}" />
+                <uc:SettingToggleItem
                     Grid.Row="5"
                     Grid.Column="0"
-                    Margin="0,8"
-                    ToolTip="{Binding [PlayNextFileAutomaticallyMsg]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding PlayNextFileAutomatically}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [PlayNextFileAutomatically]}" />
-                </Grid>
-                <Grid
+                    IsChecked="{Binding PlayNextFileAutomatically}"
+                    Text="{Binding [PlayNextFileAutomatically]}"
+                    ToolTipText="{Binding [PlayNextFileAutomaticallyMsg]}" />
+                <uc:SettingToggleItem
                     Grid.Row="5"
                     Grid.Column="1"
-                    Margin="0,8"
-                    ToolTip="{Binding [EnableHardwareAccelerationMsg]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding EnableHardwareAcceleration}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [EnableHardwareAcceleration]}" />
-                </Grid>
-                <Grid
+                    IsChecked="{Binding EnableHardwareAcceleration}"
+                    Text="{Binding [EnableHardwareAcceleration]}"
+                    ToolTipText="{Binding [EnableHardwareAccelerationMsg]}" />
+                <uc:SettingToggleItem
                     Grid.Row="6"
                     Grid.Column="0"
-                    Margin="0,8"
-                    ToolTip="{Binding [MinimizeToTray]}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton IsChecked="{Binding MinimizeToTray}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        Style="{StaticResource TogleButtonTextStyle}"
-                        Text="{Binding [MinimizeToTray]}" />
-                </Grid>
+                    IsChecked="{Binding MinimizeToTray}"
+                    Text="{Binding [MinimizeToTray]}"
+                    ToolTipText="{Binding [MinimizeToTray]}" />
+                <uc:SettingToggleItem
+                    Grid.Row="6"
+                    Grid.Column="1"
+                    IsChecked="{Binding ShowPlayListTotalDuration}"
+                    Text="Show playlist total duration"
+                    ToolTipText="Show playlist total duration" />
                 <Button
                     Grid.Row="7"
+                    Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Width="150"
                     Margin="0,5"

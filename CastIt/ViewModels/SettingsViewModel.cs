@@ -156,6 +156,17 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => MinimizeToTray);
             }
         }
+
+        public bool ShowPlayListTotalDuration
+        {
+            get => _settingsService.ShowPlayListTotalDuration;
+            set
+            {
+                _settingsService.ShowPlayListTotalDuration = value;
+                Messenger.Publish(new ShowPlayListTotalDurationMessage(this, value));
+                RaisePropertyChanged(() => ShowPlayListTotalDuration);
+            }
+        }
         #endregion
 
         #region Commands

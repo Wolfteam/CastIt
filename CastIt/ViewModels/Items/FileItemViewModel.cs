@@ -239,10 +239,7 @@ namespace CastIt.ViewModels.Items
                 Duration = "N/A";
                 return;
             }
-            var time = TimeSpan.FromSeconds(seconds);
-            //here backslash is used to tell that colon is
-            //not the part of format, it just a character that we want in output
-            Duration = time.ToString(time.Hours > 0 ? AppConstants.FullElapsedTimeFormat : AppConstants.ShortElapsedTimeFormat);
+            Duration = AppConstants.FormatDuration(seconds);
         }
 
         public void ListenEvents()

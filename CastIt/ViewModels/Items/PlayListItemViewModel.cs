@@ -28,6 +28,7 @@ namespace CastIt.ViewModels.Items
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
         private readonly IMvxNavigationService _navigationService;
+        private readonly IAppSettingsService _appSettings;
 
         private string _name;
         private bool _showEditPopUp;
@@ -104,6 +105,17 @@ namespace CastIt.ViewModels.Items
             = new MvxObservableCollection<FileItemViewModel>();
         public MvxObservableCollection<FileItemViewModel> SelectedItems { get; set; }
             = new MvxObservableCollection<FileItemViewModel>();
+        public string TotalDuration
+        {
+            get
+            {
+                if (!_appSettings.ShowPlayListTotalDuration)
+                    return string.Empty;
+                var totalSeconds = Items.Select(i => i.TotalSeconds).Sum();
+                var formatted = AppConstants.FormatDuration(totalSeconds);
+                return $"{GetText("Total")}: {formatted}";
+            }
+        }
         #endregion
 
         #region Commands
@@ -142,7 +154,8 @@ namespace CastIt.ViewModels.Items
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
-            IMvxNavigationService navigationService)
+            IMvxNavigationService navigationService,
+            IAppSettingsService appSettings)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
@@ -150,6 +163,7 @@ namespace CastIt.ViewModels.Items
             _telemetryService = telemetryService;
             _appWebServer = appWebServer;
             _navigationService = navigationService;
+            _appSettings = appSettings;
         }
 
         #region Methods
@@ -185,6 +199,15 @@ namespace CastIt.ViewModels.Items
             SortFilesCommand = new MvxCommand<SortModeType>(SortFiles);
         }
 
+        public override void RegisterMessages()
+        {
+            base.RegisterMessages();
+            SubscriptionTokens.AddRange(new[]
+            {
+                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(_ => RaisePropertyChanged(() => TotalDuration))
+            });
+        }
+
         public async Task SetFilesInfo(CancellationToken token)
         {
             IsBusy = true;
@@ -194,6 +217,8 @@ namespace CastIt.ViewModels.Items
                     break;
                 await item.SetFileInfo(token, false);
             }
+
+            await RaisePropertyChanged(() => TotalDuration);
             IsBusy = false;
         }
 
@@ -232,6 +257,7 @@ namespace CastIt.ViewModels.Items
             SelectedItems.Clear();
             SetPositionIfChanged();
             _appWebServer.OnFileDeleted?.Invoke(Id);
+            await RaisePropertyChanged(() => TotalDuration);
         }
 
         private Task OnFolderAdded(string[] folders)
@@ -299,6 +325,7 @@ namespace CastIt.ViewModels.Items
             finally
             {
                 IsBusy = false;
+                await RaisePropertyChanged(() => TotalDuration);
             }
         }
 
@@ -367,6 +394,7 @@ namespace CastIt.ViewModels.Items
             finally
             {
                 IsBusy = false;
+                await RaisePropertyChanged(() => TotalDuration);
             }
         }
 
@@ -383,6 +411,7 @@ namespace CastIt.ViewModels.Items
             SetPositionIfChanged();
 
             _appWebServer.OnFileDeleted?.Invoke(Id);
+            await RaisePropertyChanged(() => TotalDuration);
         }
 
         private async Task RemoveAllMissing()
@@ -396,6 +425,7 @@ namespace CastIt.ViewModels.Items
             SetPositionIfChanged();
 
             _appWebServer.OnFileDeleted?.Invoke(Id);
+            await RaisePropertyChanged(() => TotalDuration);
         }
 
         private void SelectAll()

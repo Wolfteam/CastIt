@@ -198,8 +198,11 @@ namespace CastIt.Views.UserControls
                     .Where(f => (File.GetAttributes(f) & FileAttributes.Directory) == 0)
                     .ToArray();
 
-                ViewModel.OnFolderAddedCommand.Execute(folders);
-                ViewModel.OnFilesAddedCommand.Execute(files);
+                if (folders.Any())
+                    ViewModel.OnFolderAddedCommand.Execute(folders);
+
+                if (files.Any())
+                    ViewModel.OnFilesAddedCommand.Execute(files);
             }
         }
 

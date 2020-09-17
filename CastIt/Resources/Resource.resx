@@ -474,4 +474,7 @@
   <data name="NoFilesToBeAdded" xml:space="preserve">
     <value>There are no files to be added</value>
   </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
 </root>
