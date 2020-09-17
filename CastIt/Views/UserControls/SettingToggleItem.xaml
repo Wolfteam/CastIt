@@ -5,20 +5,22 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Margin="0,5"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
     <UserControl.Resources>
         <Style x:Key="ToggleButtonTextStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="Margin" Value="5,0" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="Margin" Value="5,0,0,0" />
+            <Setter Property="TextTrimming" Value="WordEllipsis" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
     </UserControl.Resources>
 
     <Grid
-        Margin="0,8"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Center"
         MouseDown="Grid_OnMouseDown"
         ToolTip="{Binding ToolTipText, RelativeSource={RelativeSource AncestorType=UserControl}}">
         <Grid.ColumnDefinitions>

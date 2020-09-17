@@ -28,10 +28,10 @@ namespace CastIt.Services
         private readonly IFFMpegService _ffmpegService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
+        private readonly IAppSettingsService _appSettings;
 
         private readonly Player _player;
         private readonly Track _subtitle;
-        private readonly TextTrackStyle _subtitlesStyle;
 
         private bool _renderWasSet;
         private string _currentFilePath;
@@ -56,13 +56,15 @@ namespace CastIt.Services
             IAppWebServer appWebServer,
             IFFMpegService ffmpegService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
-            ITelemetryService telemetryService)
+            ITelemetryService telemetryService,
+            IAppSettingsService appSettings)
         {
             _logger = logProvider.GetLogFor<CastService>();
             _appWebServer = appWebServer;
             _ffmpegService = ffmpegService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
+            _appSettings = appSettings;
             _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: true);
             _subtitle = new Track
             {
@@ -71,17 +73,6 @@ namespace CastIt.Services
                 Type = TrackType.Text,
                 Name = "English",
                 Language = "en-US"
-            };
-            _subtitlesStyle = new TextTrackStyle
-            {
-                ForegroundColor = Color.WhiteSmoke,
-                BackgroundColor = Color.Transparent,
-                EdgeColor = Color.Black,
-                FontScale = 1.4F,
-                WindowType = TextTrackWindowType.Normal,
-                EdgeType = TextTrackEdgeType.Raised,
-                FontStyle = TextTrackFontStyleType.Bold,
-                FontGenericFamily = TextTrackFontGenericFamilyType.Casual,
             };
         }
 
@@ -190,7 +181,7 @@ namespace CastIt.Services
                 _subtitle.TrackContentId = _appWebServer.GetSubTitlePath(subTitleFilePath);
                 _logger.Info($"{nameof(StartPlay)}: Subtitles were generated");
                 media.Tracks.Add(_subtitle);
-                media.TextTrackStyle = _subtitlesStyle;
+                media.TextTrackStyle = GetSubtitleStyle();
                 activeTrackIds.Add(SubTitleDefaultTrackId);
             }
 
@@ -565,6 +556,23 @@ namespace CastIt.Services
         {
             _renderWasSet = false;
             return _player.DisconnectAsync();
+        }
+
+        private TextTrackStyle GetSubtitleStyle()
+        {
+            return new TextTrackStyle
+            {
+                ForegroundColor = _appSettings.CurrentSubtitleFgColor == SubtitleFgColorType.White
+                    ? Color.WhiteSmoke
+                    : Color.Yellow,
+                BackgroundColor = Color.Transparent,
+                EdgeColor = Color.Black,
+                FontScale = (int)_appSettings.CurrentSubtitleFontScale / 100,
+                WindowType = TextTrackWindowType.Normal,
+                EdgeType = TextTrackEdgeType.Raised,
+                FontStyle = _appSettings.CurrentSubtitleFontStyle,
+                FontGenericFamily = _appSettings.CurrentSubtitleFontFamily
+            };
         }
     }
 }

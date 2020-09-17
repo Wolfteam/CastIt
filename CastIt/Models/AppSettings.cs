@@ -1,4 +1,5 @@
 ﻿using CastIt.Common.Enums;
+using CastIt.GoogleCast.Enums;
 
 namespace CastIt.Models
 {
@@ -20,5 +21,12 @@ namespace CastIt.Models
         public bool EnableHardwareAcceleration { get; set; }
         public bool MinimizeToTray { get; set; }
         public bool ShowPlayListTotalDuration { get; set; }
+        public SubtitleFgColorType CurrentSubtitleFgColor { get; set; }
+        public SubtitleBgColorType CurrentSubtitleBgColor { get; set; }
+        public SubtitleFontScaleType CurrentSubtitleFontScale { get; set; }
+        public TextTrackFontStyleType CurrentSubtitleFontStyle { get; set; }
+        public TextTrackFontGenericFamilyType CurrentSubtitleFontFamily { get; set; }
+        public double SubtitleDelayInSeconds { get; set; }
+        public bool LoadFirstSubtitleFoundAutomatically { get; set; }
     }
 }

@@ -159,14 +159,14 @@
 
             <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock
-                    Margin="10,0"
-                    VerticalAlignment="Center"
-                    Text="{Binding TotalDuration, Mode=OneWay}" />
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                    <materialDesign:PackIcon Margin="10,0,0,0" Kind="TimerSand" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding TotalDuration, Mode=OneWay}" />
+                </StackPanel>
 
                 <Grid
                     Grid.Column="1"

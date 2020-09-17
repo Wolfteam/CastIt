@@ -10,8 +10,8 @@
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
-    Width="500"
-    Height="420"
+    Width="720"
+    Height="460"
     d:DesignHeight="420"
     d:DesignWidth="500"
     x:TypeArguments="vms:SettingsViewModel"
@@ -39,7 +39,7 @@
         <ScrollViewer
             Grid.Row="1"
             Padding="16"
-            VerticalAlignment="Center"
+            VerticalAlignment="Stretch"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
             VerticalScrollBarVisibility="Auto">
             <Grid HorizontalAlignment="Stretch">
@@ -56,15 +56,30 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0" Grid.ColumnSpan="2">
+                <!--  General  -->
+                <Grid
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        VerticalAlignment="Center"
+                        Text="{Binding [General]}" />
                     <ComboBox
+                        Grid.Row="1"
                         Grid.Column="0"
                         HorizontalAlignment="Stretch"
                         materialDesign:HintAssist.Hint="{Binding [Theme]}"
@@ -81,6 +96,7 @@
                         </ComboBox.ItemsPanel>
                     </ComboBox>
                     <ComboBox
+                        Grid.Row="1"
                         Grid.Column="1"
                         Margin="5,0"
                         HorizontalAlignment="Stretch"
@@ -98,6 +114,7 @@
                         </ComboBox.ItemsPanel>
                     </ComboBox>
                     <ComboBox
+                        Grid.Row="1"
                         Grid.Column="2"
                         Margin="5,0"
                         HorizontalAlignment="Stretch"
@@ -115,38 +132,193 @@
                         </ComboBox.ItemsPanel>
                     </ComboBox>
                 </Grid>
+                <Separator
+                    Grid.Row="0"
+                    Grid.RowSpan="7"
+                    Grid.Column="2"
+                    Width="5"
+                    Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                <TextBlock
+                <!--  Subtitles  -->
+                <Grid
+                    Grid.Row="0"
+                    Grid.RowSpan="7"
+                    Grid.Column="3"
+                    VerticalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding [Subtitles]}" />
+                    <ComboBox
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Margin="5,10"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [FontColor]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding SubtitleFgColors}"
+                        SelectedItem="{Binding CurrentSubtitleFgColor}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [FontColor]}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="5,10"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [FontBackgroundColor]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding SubtitleBgColors}"
+                        SelectedItem="{Binding CurrentSubtitleBgColor}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [FontBackgroundColor]}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Margin="5,10"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [FontStyle]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding SubtitleFontStyles}"
+                        SelectedItem="{Binding CurrentSubtitleFontStyle}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [FontStyle]}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="5,10"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [FontFamily]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding SubtitleFontFamilies}"
+                        SelectedItem="{Binding CurrentSubtitleFontFamily}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [FontFamily]}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Margin="5,10"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [FontScale]}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding SubtitleFontScales}"
+                        SelectedItem="{Binding CurrentSubtitleFontScale}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [FontScale]}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <StackPanel
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <TextBlock
+                            Margin="0,10"
+                            Text="{Binding SubtitleDelayText}"
+                            TextTrimming="WordEllipsis"
+                            TextWrapping="NoWrap"
+                            ToolTip="{Binding SubtitleDelayText}" />
+                        <Slider
+                            Foreground="{DynamicResource PrimaryHueDarkBrush}"
+                            IsSelectionRangeEnabled="True"
+                            Maximum="10"
+                            Minimum="-10"
+                            Orientation="Horizontal"
+                            TickFrequency="0.1"
+                            ToolTip="{Binding [SubtitleDelay]}"
+                            Value="{Binding SubtitleDelay, Mode=TwoWay}" />
+                    </StackPanel>
+                    <uc:SettingToggleItem
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        IsChecked="{Binding LoadFirstSubtitleFoundAutomatically}"
+                        Text="{Binding [LoadFirstSubtitleFoundAutomatically]}"
+                        ToolTipText="{Binding [LoadFirstSubtitleFoundAutomatically]}" />
+                </Grid>
+
+                <!--  Accent colors  -->
+                <StackPanel
                     Grid.Row="1"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
-                    Margin="0,10"
-                    Text="{Binding [AccentColors]}" />
-                <ItemsControl
-                    x:Name="AccentColorsIc"
+                    VerticalAlignment="Center"
+                    Orientation="Vertical">
+                    <TextBlock
+                        Margin="0,10"
+                        VerticalAlignment="Center"
+                        Text="{Binding [AccentColors]}" />
+                    <ItemsControl x:Name="AccentColorsIc" ItemsSource="{Binding AccentColors}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ToggleButton
+                                    x:Name="AccentColorButton"
+                                    Margin="0,5"
+                                    VerticalAlignment="Center"
+                                    Background="{Binding}"
+                                    Command="{Binding DataContext.AccentColorChangedCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}"
+                                    CommandParameter="{Binding}"
+                                    Foreground="{DynamicResource FontColorBrush}"
+                                    Style="{StaticResource MaterialDesignActionDarkToggleButton}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!--  Options  -->
+                <TextBlock
                     Grid.Row="2"
                     Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    ItemsSource="{Binding AccentColors}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="8" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <ToggleButton
-                                x:Name="AccentColorButton"
-                                Margin="0,0,0,5"
-                                VerticalAlignment="Center"
-                                Background="{Binding}"
-                                Command="{Binding DataContext.AccentColorChangedCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}"
-                                CommandParameter="{Binding}"
-                                Foreground="{DynamicResource FontColorBrush}"
-                                Style="{StaticResource MaterialDesignActionDarkToggleButton}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    Margin="0,5,0,10"
+                    VerticalAlignment="Center"
+                    Text="Options" />
                 <uc:SettingToggleItem
                     Grid.Row="3"
                     Grid.Column="0"
@@ -193,8 +365,8 @@
                     Grid.Row="6"
                     Grid.Column="1"
                     IsChecked="{Binding ShowPlayListTotalDuration}"
-                    Text="Show playlist total duration"
-                    ToolTipText="Show playlist total duration" />
+                    Text="{Binding [ShowPlayListTotalDuration]}"
+                    ToolTipText="{Binding [ShowPlayListTotalDuration]}" />
                 <Button
                     Grid.Row="7"
                     Grid.Column="0"

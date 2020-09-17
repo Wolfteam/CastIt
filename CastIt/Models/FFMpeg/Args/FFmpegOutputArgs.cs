@@ -105,5 +105,11 @@ namespace CastIt.Models.FFMpeg.Args
 
         public FFmpegOutputArgs SetPlayList(int index)
             => AddArg("map", $"p:{index}");
+
+        public FFmpegOutputArgs SetDelayInSeconds(double seconds)
+            => AddArg("muxdelay", seconds);
+
+        public FFmpegOutputArgs SetDelayInMicroSeconds(int ms)
+            => AddArg("maxdelay", ms);
     }
 }

@@ -160,6 +160,24 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Background color.
+        /// </summary>
+        public static string BackgroundColor {
+            get {
+                return ResourceManager.GetString("BackgroundColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bold.
+        /// </summary>
+        public static string Bold {
+            get {
+                return ResourceManager.GetString("Bold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By duration asc..
         /// </summary>
         public static string ByDurationAsc {
@@ -511,6 +529,51 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Font background color.
+        /// </summary>
+        public static string FontBackgroundColor {
+            get {
+                return ResourceManager.GetString("FontBackgroundColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Font color.
+        /// </summary>
+        public static string FontColor {
+            get {
+                return ResourceManager.GetString("FontColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Font family.
+        /// </summary>
+        public static string FontFamily {
+            get {
+                return ResourceManager.GetString("FontFamily", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Font scale.
+        /// </summary>
+        public static string FontScale {
+            get {
+                return ResourceManager.GetString("FontScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Font style.
+        /// </summary>
+        public static string FontStyle {
+            get {
+                return ResourceManager.GetString("FontStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Force audio transcode.
         /// </summary>
         public static string ForceAudioTranscode {
@@ -534,6 +597,15 @@ namespace CastIt.Resources {
         public static string FromUrl {
             get {
                 return ResourceManager.GetString("FromUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to General.
+        /// </summary>
+        public static string General {
+            get {
+                return ResourceManager.GetString("General", resourceCulture);
             }
         }
         
@@ -583,6 +655,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Italic.
+        /// </summary>
+        public static string Italic {
+            get {
+                return ResourceManager.GetString("Italic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Language.
         /// </summary>
         public static string Language {
@@ -597,6 +678,15 @@ namespace CastIt.Resources {
         public static string Light {
             get {
                 return ResourceManager.GetString("Light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load the first subtitles found automatically.
+        /// </summary>
+        public static string LoadFirstSubtitleFoundAutomatically {
+            get {
+                return ResourceManager.GetString("LoadFirstSubtitleFoundAutomatically", resourceCulture);
             }
         }
         
@@ -705,6 +795,15 @@ namespace CastIt.Resources {
         public static string None {
             get {
                 return ResourceManager.GetString("None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        public static string Normal {
+            get {
+                return ResourceManager.GetString("Normal", resourceCulture);
             }
         }
         
@@ -1006,6 +1105,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show playlist total duration.
+        /// </summary>
+        public static string ShowPlayListTotalDuration {
+            get {
+                return ResourceManager.GetString("ShowPlayListTotalDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shuffle.
         /// </summary>
         public static string Shuffle {
@@ -1051,6 +1159,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Subtitle delay.
+        /// </summary>
+        public static string SubtitleDelay {
+            get {
+                return ResourceManager.GetString("SubtitleDelay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Subtitles.
         /// </summary>
         public static string Subtitles {
@@ -1083,6 +1200,15 @@ namespace CastIt.Resources {
         public static string Total {
             get {
                 return ResourceManager.GetString("Total", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transparent.
+        /// </summary>
+        public static string Transparent {
+            get {
+                return ResourceManager.GetString("Transparent", resourceCulture);
             }
         }
         
@@ -1137,6 +1263,33 @@ namespace CastIt.Resources {
         public static string VideoScale {
             get {
                 return ResourceManager.GetString("VideoScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to White.
+        /// </summary>
+        public static string White {
+            get {
+                return ResourceManager.GetString("White", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} seconds.
+        /// </summary>
+        public static string XSeconds {
+            get {
+                return ResourceManager.GetString("XSeconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yellow.
+        /// </summary>
+        public static string Yellow {
+            get {
+                return ResourceManager.GetString("Yellow", resourceCulture);
             }
         }
     }

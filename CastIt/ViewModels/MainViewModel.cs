@@ -1145,7 +1145,7 @@ namespace CastIt.ViewModels
             {
                 Id = NoStreamSelectedId,
                 IsSubTitle = true,
-                IsSelected = !localSubExists && _currentlyPlayedFile.FileInfo.SubTitles.Count == 0,
+                IsSelected = !localSubExists && _currentlyPlayedFile.FileInfo.SubTitles.Count == 0 || !_settingsService.LoadFirstSubtitleFoundAutomatically,
                 IsEnabled = isEnabled,
                 Text = GetText("None")
             });
@@ -1164,7 +1164,7 @@ namespace CastIt.ViewModels
             }
 
             isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 0;
-            isSelected = !localSubExists;
+            isSelected = !localSubExists && _settingsService.LoadFirstSubtitleFoundAutomatically;
             foreach (var subtitle in _currentlyPlayedFile.FileInfo.SubTitles)
             {
                 CurrentFileSubTitles.Add(new FileItemOptionsViewModel

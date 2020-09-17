@@ -1,6 +1,7 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Enums;
 using CastIt.Common.Utils;
+using CastIt.GoogleCast.Enums;
 using CastIt.Interfaces;
 using CastIt.Models;
 using MvvmCross.Logging;
@@ -114,6 +115,48 @@ namespace CastIt.Services
             get => _appSettings.ShowPlayListTotalDuration;
             set => _appSettings.ShowPlayListTotalDuration = value;
         }
+
+        public SubtitleFgColorType CurrentSubtitleFgColor
+        {
+            get => _appSettings.CurrentSubtitleFgColor;
+            set => _appSettings.CurrentSubtitleFgColor = value;
+        }
+
+        public SubtitleBgColorType CurrentSubtitleBgColor
+        {
+            get => _appSettings.CurrentSubtitleBgColor;
+            set => _appSettings.CurrentSubtitleBgColor = value;
+        }
+
+        public SubtitleFontScaleType CurrentSubtitleFontScale
+        {
+            get => _appSettings.CurrentSubtitleFontScale;
+            set => _appSettings.CurrentSubtitleFontScale = value;
+        }
+
+        public TextTrackFontStyleType CurrentSubtitleFontStyle
+        {
+            get => _appSettings.CurrentSubtitleFontStyle;
+            set => _appSettings.CurrentSubtitleFontStyle = value;
+        }
+
+        public TextTrackFontGenericFamilyType CurrentSubtitleFontFamily
+        {
+            get => _appSettings.CurrentSubtitleFontFamily;
+            set => _appSettings.CurrentSubtitleFontFamily = value;
+        }
+
+        public double SubtitleDelayInSeconds
+        {
+            get => _appSettings.SubtitleDelayInSeconds;
+            set => _appSettings.SubtitleDelayInSeconds = value;
+        }
+
+        public bool LoadFirstSubtitleFoundAutomatically
+        {
+            get => _appSettings.LoadFirstSubtitleFoundAutomatically;
+            set => _appSettings.LoadFirstSubtitleFoundAutomatically = value;
+        }
         #endregion
 
         public AppSettingsService(IMvxLogProvider logProvider, ITelemetryService telemetryService)
@@ -140,7 +183,12 @@ namespace CastIt.Services
                 PlayNextFileAutomatically = true,
                 MinimizeToTray = true,
                 VideoScale = VideoScaleType.Original,
-                ShowPlayListTotalDuration = true
+                ShowPlayListTotalDuration = true,
+                CurrentSubtitleFgColor = SubtitleFgColorType.White,
+                CurrentSubtitleFontFamily = TextTrackFontGenericFamilyType.Casual,
+                CurrentSubtitleFontStyle = TextTrackFontStyleType.Bold,
+                CurrentSubtitleFontScale = SubtitleFontScaleType.HundredAndFifty,
+                LoadFirstSubtitleFoundAutomatically = true
             });
         }
 
