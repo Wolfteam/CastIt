@@ -105,12 +105,13 @@ namespace CastIt.ViewModels.Items
             = new MvxObservableCollection<FileItemViewModel>();
         public MvxObservableCollection<FileItemViewModel> SelectedItems { get; set; }
             = new MvxObservableCollection<FileItemViewModel>();
+
+        public bool ShowTotalDuration
+            => _appSettings.ShowPlayListTotalDuration;
         public string TotalDuration
         {
             get
             {
-                if (!_appSettings.ShowPlayListTotalDuration)
-                    return string.Empty;
                 var totalSeconds = Items.Select(i => i.TotalSeconds).Sum();
                 var formatted = AppConstants.FormatDuration(totalSeconds);
                 return $"{GetText("Total")}: {formatted}";
@@ -204,7 +205,7 @@ namespace CastIt.ViewModels.Items
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new[]
             {
-                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(_ => RaisePropertyChanged(() => TotalDuration))
+                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(_ => RaisePropertyChanged(() => ShowTotalDuration))
             });
         }
 

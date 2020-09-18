@@ -163,7 +163,10 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                <StackPanel
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Visibility="{Binding ShowTotalDuration, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <materialDesign:PackIcon Margin="10,0,0,0" Kind="TimerSand" />
                     <TextBlock VerticalAlignment="Center" Text="{Binding TotalDuration, Mode=OneWay}" />
                 </StackPanel>
