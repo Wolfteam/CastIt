@@ -1022,6 +1022,9 @@ namespace CastIt.ViewModels
                 ElapsedTimeString = $"{elapsed}";
             else
                 ElapsedTimeString = $"{elapsed} / {total}";
+
+            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
+            playlist?.UpdatePlayedTime();
         }
 
         private void OnFilePositionChanged(double playedPercentage)
@@ -1034,6 +1037,12 @@ namespace CastIt.ViewModels
             SetCurrentlyPlayingInfo(null, false);
 
             IsPaused = false;
+
+            if (_currentlyPlayedFile != null)
+            {
+                var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
+                playlist?.UpdatePlayedTime();
+            }
 
             if (_currentlyPlayedFile?.Loop == true)
             {

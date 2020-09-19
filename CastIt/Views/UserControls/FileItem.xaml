@@ -182,14 +182,22 @@
             Visibility="{Binding Loop, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
         <TextBlock
+            Grid.Row="0"
             Grid.RowSpan="5"
             Grid.Column="2"
             Style="{StaticResource FileItemTextStyleWithTriggers}"
-            Text="{Binding Duration}"
-            TextAlignment="Right" />
+            TextAlignment="Right">
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{}{0} / {1}">
+                    <Binding Path="PlayedTime" />
+                    <Binding Path="Duration" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
 
         <ProgressBar
             Grid.Row="4"
+            Grid.Column="0"
             Grid.ColumnSpan="3"
             Margin="0,5"
             VerticalAlignment="Center"

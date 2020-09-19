@@ -8,7 +8,6 @@ using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
-using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +32,7 @@ namespace CastIt.ViewModels.Items
         private double _playedPercentage;
         private bool _isBeingPlayed;
         private bool _loop;
+        private string _playedTime;
         #endregion
 
         #region Properties
@@ -137,6 +137,16 @@ namespace CastIt.ViewModels.Items
             => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Path);
 
         public FFProbeFileInfo FileInfo { get; set; }
+
+        public double PlayedSeconds
+            => PlayedPercentage * TotalSeconds / 100;
+
+        //had to do it this way, so the ui does not call this prop each time i scroll
+        public string PlayedTime
+        {
+            get => _playedTime ??= AppConstants.FormatDuration(PlayedSeconds);
+            set =>  this.RaiseAndSetIfChanged(ref _playedTime, value);
+        }
         #endregion
 
         #region Commands
@@ -258,7 +268,10 @@ namespace CastIt.ViewModels.Items
         }
 
         private void OnPositionChanged(double position)
-            => PlayedPercentage = position;
+        {
+            PlayedPercentage = position;
+            PlayedTime = AppConstants.FormatDuration(PlayedSeconds);
+        }
 
         private void OnEndReached()
             => OnPositionChanged(100);

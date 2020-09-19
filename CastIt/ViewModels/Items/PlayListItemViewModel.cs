@@ -108,13 +108,24 @@ namespace CastIt.ViewModels.Items
 
         public bool ShowTotalDuration
             => _appSettings.ShowPlayListTotalDuration;
+
+        public string PlayedTime
+        {
+            get
+            {
+                var playedSeconds = Items.Sum(i => i.PlayedSeconds);
+                var formatted = AppConstants.FormatDuration(playedSeconds);
+                return $"{formatted}";
+            }
+        }
+
         public string TotalDuration
         {
             get
             {
-                var totalSeconds = Items.Select(i => i.TotalSeconds).Sum();
+                var totalSeconds = Items.Where(i => i.TotalSeconds >= 0).Sum(i => i.TotalSeconds);
                 var formatted = AppConstants.FormatDuration(totalSeconds);
-                return $"{GetText("Total")}: {formatted}";
+                return $"{PlayedTime} / {formatted}";
             }
         }
         #endregion
@@ -205,7 +216,11 @@ namespace CastIt.ViewModels.Items
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new[]
             {
-                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(_ => RaisePropertyChanged(() => ShowTotalDuration))
+                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(async _ =>
+                {
+                    await RaisePropertyChanged(() => ShowTotalDuration);
+                    await UpdatePlayedTime();
+                })
             });
         }
 
@@ -219,7 +234,7 @@ namespace CastIt.ViewModels.Items
                 await item.SetFileInfo(token, false);
             }
 
-            await RaisePropertyChanged(() => TotalDuration);
+            await UpdatePlayedTime();
             IsBusy = false;
         }
 
@@ -258,7 +273,12 @@ namespace CastIt.ViewModels.Items
             SelectedItems.Clear();
             SetPositionIfChanged();
             _appWebServer.OnFileDeleted?.Invoke(Id);
-            await RaisePropertyChanged(() => TotalDuration);
+            await UpdatePlayedTime();
+        }
+
+        public Task UpdatePlayedTime()
+        {
+            return !_appSettings.ShowPlayListTotalDuration ? Task.CompletedTask : RaisePropertyChanged(() => TotalDuration);
         }
 
         private Task OnFolderAdded(string[] folders)
@@ -326,7 +346,7 @@ namespace CastIt.ViewModels.Items
             finally
             {
                 IsBusy = false;
-                await RaisePropertyChanged(() => TotalDuration);
+                await UpdatePlayedTime();
             }
         }
 
@@ -395,7 +415,7 @@ namespace CastIt.ViewModels.Items
             finally
             {
                 IsBusy = false;
-                await RaisePropertyChanged(() => TotalDuration);
+                await UpdatePlayedTime();
             }
         }
 
@@ -412,7 +432,7 @@ namespace CastIt.ViewModels.Items
             SetPositionIfChanged();
 
             _appWebServer.OnFileDeleted?.Invoke(Id);
-            await RaisePropertyChanged(() => TotalDuration);
+            await UpdatePlayedTime();
         }
 
         private async Task RemoveAllMissing()
@@ -426,7 +446,7 @@ namespace CastIt.ViewModels.Items
             SetPositionIfChanged();
 
             _appWebServer.OnFileDeleted?.Invoke(Id);
-            await RaisePropertyChanged(() => TotalDuration);
+            await UpdatePlayedTime();
         }
 
         private void SelectAll()

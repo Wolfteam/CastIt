@@ -86,7 +86,6 @@ namespace CastIt.Common
             => FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion;
 #endif
 
-
         public static IReadOnlyList<string> AppAccentColors => new List<string>
         {
             AccentColorLightBlue, AccentColorLimeGreen, AccentColorPink,
@@ -101,7 +100,7 @@ namespace CastIt.Common
             //here backslash is used to tell that colon is
             //not the part of format, it just a character that we want in output
             var time = TimeSpan.FromSeconds(seconds);
-            return time.ToString(time.Hours > 0 ? AppConstants.FullElapsedTimeFormat : AppConstants.ShortElapsedTimeFormat);
+            return time.ToString(time.Hours > 0 ? FullElapsedTimeFormat : ShortElapsedTimeFormat);
         }
     }
 }
