@@ -266,7 +266,7 @@ namespace CastIt.GoogleCast
             ListenForReceiverChanges(_listenerToken.Token);
 
             FileLoaded?.Invoke(this, EventArgs.Empty);
-            _logger.LogInfo($"{nameof(LoadAsync)}: Media = {media.ContentId} was loaded");
+            _logger.LogInfo($"{nameof(LoadAsync)}: Media = {media.ContentId} was loaded. Duration = {CurrentMediaDuration} - SeekSeconds = {_seekedSeconds}");
             return status;
         }
 
@@ -419,11 +419,12 @@ namespace CastIt.GoogleCast
                         IsPlaying = true;
                         TriggerTimeEvents();
                         //If CurrentMediaDuration  <= 0, that means that a live streaming is being played
-                        if (CurrentMediaDuration > 0 && Math.Round(ElapsedSeconds, 1) >= Math.Round(CurrentMediaDuration, 1))
+                        if (CurrentMediaDuration > 0 && Math.Round(ElapsedSeconds, 4) >= Math.Round(CurrentMediaDuration, 4))
                         {
                             _logger.LogInfo(
                                 $"{nameof(ListenForMediaChanges)}: End reached because the " +
-                                $"ElapsedSeconds >= CurrentMediaDuration. CurrentContentId = { CurrentContentId}");
+                                $"ElapsedSeconds = {ElapsedSeconds} is greater / equal to " +
+                                $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = { CurrentContentId}");
                             IsPlaying = false;
                             CancelAndSetListenerToken(false);
                             EndReached?.Invoke(this, EventArgs.Empty);
