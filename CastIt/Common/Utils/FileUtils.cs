@@ -294,7 +294,7 @@ namespace CastIt.Common.Utils
                 : AppConstants.AllowedMusicFormats.Contains(ext, StringComparer.OrdinalIgnoreCase);
         }
 
-        private static string GetBytesReadable(long i)
+        public static string GetBytesReadable(long i)
         {
             // Get absolute value
             long absolute_i = i < 0 ? -i : i;
