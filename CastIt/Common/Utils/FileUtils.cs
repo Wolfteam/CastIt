@@ -72,7 +72,6 @@ namespace CastIt.Common.Utils
             long second = tentativeSecond / AppConstants.ThumbnailsEachSeconds;
             string folder = GetPreviewsPath();
             string filename = Path.GetFileName(filePath);
-            string ext = Path.GetExtension(filePath);
             string searchPattern = $"{filename}_*";
 
             try
@@ -81,7 +80,7 @@ namespace CastIt.Common.Utils
                     .Where(p => p.EndsWith(".jpg"))
                     .Select(p => p.Substring(p.IndexOf(filename)).Replace(filename, string.Empty))
                     .Select(p => p.Substring(p.LastIndexOf("_") + 1, p.IndexOf(".") - 1))
-                    .Select(p => long.Parse(p))
+                    .Select(long.Parse)
                     .ToList();
 
                 if (!files.Any())

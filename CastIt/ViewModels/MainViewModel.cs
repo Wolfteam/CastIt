@@ -463,7 +463,8 @@ namespace CastIt.ViewModels
                 Name = pl.Name,
                 NumberOfFiles = pl.Items.Count,
                 Position = pl.Position,
-                Shuffle = pl.Shuffle
+                Shuffle = pl.Shuffle,
+                TotalDuration = pl.TotalDuration
             }).ToList();
         }
 
@@ -481,6 +482,7 @@ namespace CastIt.ViewModels
                 NumberOfFiles = playlist.Items.Count,
                 Position = playlist.Position,
                 Shuffle = playlist.Shuffle,
+                TotalDuration = playlist.TotalDuration,
                 Files = _mapper.Map<List<FileItemResponseDto>>(playlist.Items)
             };
         }

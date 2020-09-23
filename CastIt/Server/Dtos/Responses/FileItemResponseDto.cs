@@ -5,6 +5,7 @@
         public long Id { get; set; }
         public int Position { get; set; }
         public string Path { get; set; }
+        public double PlayedSeconds { get; set; }
         public double TotalSeconds { get; set; }
         public double PlayedPercentage { get; set; }
         public bool IsBeingPlayed { get; set; }
