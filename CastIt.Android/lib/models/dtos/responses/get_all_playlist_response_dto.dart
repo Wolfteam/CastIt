@@ -23,6 +23,9 @@ class GetAllPlayListResponseDto extends Equatable {
   @JsonKey(name: 'NumberOfFiles')
   final int numberOfFiles;
 
+  @JsonKey(name: 'TotalDuration')
+  final String totalDuration;
+
   @override
   List<Object> get props => [
         id,
@@ -31,16 +34,11 @@ class GetAllPlayListResponseDto extends Equatable {
         loop,
         shuffle,
         numberOfFiles,
+        totalDuration,
       ];
 
-  const GetAllPlayListResponseDto({
-    this.id,
-    this.name,
-    this.position,
-    this.loop,
-    this.shuffle,
-    this.numberOfFiles,
-  });
+  const GetAllPlayListResponseDto(
+      {this.id, this.name, this.position, this.loop, this.shuffle, this.numberOfFiles, this.totalDuration});
 
   factory GetAllPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$GetAllPlayListResponseDtoFromJson(json);
 
@@ -51,5 +49,6 @@ class GetAllPlayListResponseDto extends Equatable {
         'Loop',
         'Shuffle',
         'NumberOfFiles',
+        'TotalDuration',
       ];
 }

@@ -216,6 +216,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             playedPercentage: file.playedPercentage,
             loop: file.loop,
             subtitle: file.subtitle,
+            playedSeconds: file.playedSeconds,
           );
         },
       ),

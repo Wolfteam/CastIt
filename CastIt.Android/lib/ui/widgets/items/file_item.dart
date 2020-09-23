@@ -25,6 +25,7 @@ class FileItem extends StatelessWidget {
   final bool loop;
   final double itemHeight;
   final String subtitle;
+  final double playedSeconds;
 
   const FileItem({
     @required this.position,
@@ -43,6 +44,7 @@ class FileItem extends StatelessWidget {
     @required this.loop,
     @required this.itemHeight,
     @required this.subtitle,
+    @required this.playedSeconds,
     Key key,
   }) : super(key: key);
 
@@ -74,6 +76,9 @@ class FileItem extends StatelessWidget {
               ),
             ],
           );
+
+    final playedDurationText = playedSeconds >= 0 ? Duration(seconds: playedSeconds.round()).formatDuration() : 'N/A';
+    final totalDurationText = totalSeconds > 0 ? Duration(seconds: totalSeconds.round()).formatDuration() : 'N/A';
     return Container(
       color: isBeingPlayed ? theme.accentColor.withOpacity(0.5) : null,
       height: itemHeight,
@@ -91,10 +96,7 @@ class FileItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(subtitle, overflow: TextOverflow.ellipsis),
-                Text(
-                  totalSeconds > 0 ? Duration(seconds: totalSeconds.round()).formatDuration() : 'N/A',
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text('$playedDurationText / $totalDurationText', overflow: TextOverflow.ellipsis),
               ],
             ),
             Container(
