@@ -5,6 +5,7 @@ using CastIt.Interfaces;
 using CastIt.Interfaces.ViewModels;
 using EmbedIO;
 using EmbedIO.Actions;
+using EmbedIO.WebApi;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
@@ -83,7 +84,7 @@ namespace CastIt.Server
         };
 
         public string BaseUrl
-            => GetBaseUrl(); 
+            => GetBaseUrl();
         #endregion
 
         public AppWebServer(
@@ -118,6 +119,7 @@ namespace CastIt.Server
                     .WithCors()
                     .WithStaticFolder(ImagesPath, previewPath, false)
                     .WithStaticFolder(SubTitlesPath, subtitlesPath, false)
+                    .WithWebApi("/api", m => m.WithController<CastItController>())
                     .WithModule(new WebSocketsCastItServer(_logger, this, _appSettings, mainViewModel, "/socket"))
                     .WithModule(new MediaModule(_logger, _ffmpegService, _telemetryService, MediaPath))
                     .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));
