@@ -409,6 +409,7 @@ namespace CastIt.Common.Utils
         {
             if (body.Contains(UrlEncodedStreamMap))
             {
+                _logger.Info($"{nameof(GetFinalUrl)}: Body contains old parameters...");
                 //TODO: COMPLETE THIS CASE
                 int start = body.IndexOf(UrlEncodedStreamMap, StringComparison.OrdinalIgnoreCase) + UrlEncodedStreamMap.Length + 1;  // is the opening "
                 string urlMap = body.Substring(start);
@@ -422,10 +423,12 @@ namespace CastIt.Common.Utils
 
             if (body.Contains(YoutubePlayerConfig))
             {
+                _logger.Info($"{nameof(GetFinalUrl)}: Body contains yt player config js...");
                 //body = body.Replace("\\/", "/");
                 var (isHls, liveUrl) = IsHls(body);
                 if (isHls)
                 {
+                    _logger.Info($"{nameof(GetFinalUrl)}: Url is an hls");
                     //media.Url = liveMatch.Value;
                     //media.IsHls = true;
                     return liveUrl;
@@ -444,18 +447,18 @@ namespace CastIt.Common.Utils
                 string cipher = Regex.Match(pickedQualityUrl, cipherPattern).Value;
                 if (string.IsNullOrEmpty(cipher))
                 {
-                    _logger.Info($"{nameof(Parse)}: Url doesn't contain a cipher...");
+                    _logger.Info($"{nameof(GetFinalUrl)}: Body doesn't contain a cipher...");
                     //Unscrambled signature, already included in ready-to-use URL
                     string urlPattern = @"(?<=url\\"":\\"").*?(?=\\"")";
                     return DecodeUrlString(Regex.Match(pickedQualityUrl, urlPattern).Value);
                 }
 
-                _logger.Info($"{nameof(Parse)}: Url contains a cipher...");
+                _logger.Info($"{nameof(GetFinalUrl)}: Body contains a cipher...");
                 //Scrambled signature: some assembly required
                 return await GetUrlFromCipher(cipher, jsUrl).ConfigureAwait(false);
             }
 
-            _logger.Info($"{nameof(Parse)}: Url couldn't be parsed");
+            _logger.Error($"{nameof(GetFinalUrl)}: Url couldn't be parsed");
             throw new Exception("Url couldn't be parsed");
         }
 
