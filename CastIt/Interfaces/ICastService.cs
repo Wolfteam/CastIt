@@ -63,11 +63,11 @@ namespace CastIt.Interfaces
 
         string GetFirstThumbnail();
         string GetFirstThumbnail(string filePath);
-        string GetThumbnail(int second);
-        string GetThumbnail(string filePath, int second);
+        string GetThumbnail();
+        string GetThumbnail(string filePath);
         Task StopPlayback();
         Task TogglePlayback();
-        void GenerateThumbmnails();
+        void GenerateThumbnails();
         void GenerateThumbmnails(string filePath);
         Task SetCastRenderer(string id);
     }

@@ -273,18 +273,18 @@ namespace CastIt.Services
         }
 
         public string GetFirstThumbnail()
-            => GetThumbnail(10);
+            => GetThumbnail();
 
         public string GetFirstThumbnail(string filePath)
-            => GetThumbnail(filePath, 10);
+            => GetThumbnail(filePath);
 
-        public string GetThumbnail(int second)
-            => GetThumbnail(_currentFilePath, second);
+        public string GetThumbnail()
+            => GetThumbnail(_currentFilePath);
 
-        public string GetThumbnail(string filePath, int second)
-            => _ffmpegService.GetThumbnail(filePath, second);
+        public string GetThumbnail(string filePath)
+            => _ffmpegService.GetThumbnail(filePath);
 
-        public void GenerateThumbmnails()
+        public void GenerateThumbnails()
             => GenerateThumbmnails(_currentFilePath);
 
         public async void GenerateThumbmnails(string filePath)

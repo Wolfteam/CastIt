@@ -6,9 +6,9 @@ namespace CastIt.Models.FFMpeg.Args
     {
         private readonly string _output;
 
-        public FFmpegOutputArgs(string Output)
+        public FFmpegOutputArgs(string output)
         {
-            _output = Output;
+            _output = output;
         }
 
         public override string GetArgs()
@@ -111,5 +111,8 @@ namespace CastIt.Models.FFMpeg.Args
 
         public FFmpegOutputArgs SetDelayInMicroSeconds(int ms)
             => AddArg("maxdelay", ms);
+
+        public FFmpegOutputArgs WithVideoFilter(string filter)
+            => AddArg("vf", filter);
     }
 }

@@ -107,7 +107,7 @@ namespace CastIt.Services
             SetAvailableHwAccelDevices();
         }
 
-        public string GetThumbnail(string mrl, int second)
+        public string GetThumbnail(string mrl)
         {
             if (!FileUtils.IsLocalFile(mrl))
             {
@@ -116,19 +116,20 @@ namespace CastIt.Services
             }
 
             var filename = Path.GetFileName(mrl);
-            var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, second);
+            var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, 0);
             if (File.Exists(thumbnailPath))
             {
                 return thumbnailPath;
             }
 
             var builder = new FFmpegArgsBuilder();
-            var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
+            builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
             var outputArgs = builder.AddOutputFile(thumbnailPath);
             if (!FileUtils.IsMusicFile(mrl))
             {
-                inputArgs.Seek(second);
-                outputArgs.SetVideoFrames(1);
+                outputArgs.WithVideoFilter(@"select=gt(scene\,0.4)")
+                    .SetVideoFrames(1)
+                    .WithVideoFilter("fps=1/60");
             }
             try
             {
@@ -140,7 +141,7 @@ namespace CastIt.Services
                 _generateThumbnailProcess.WaitForExit();
                 if (_generateThumbnailProcess.ExitCode != 0)
                 {
-                    _logger.Info($"{nameof(GetThumbnail)}: Couldn't retrieve the first thumbnail for file = {mrl}");
+                    _logger.Warn($"{nameof(GetThumbnail)}: Couldn't retrieve the first thumbnail for file = {mrl}.");
                     return null;
                 }
                 _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was successfully generated for file = {mrl}");
