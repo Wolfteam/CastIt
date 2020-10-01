@@ -72,5 +72,10 @@
     "start": "Start",
     "confirm": "Confirm",
     "skipIntroConfirm": "Are you sure you want to skip the intro ?",
-    "playlistNotFound": "Playlist not found"
+    "playlistNotFound": "Playlist not found",
+    "closeDesktopApp": "Close desktop app",
+    "closeDesktopAppConfirmation": "Are you sure you want to close the desktop app ?",
+    "stopPlayback": "Stop playback",
+    "desktopApp": "Desktop app",
+    "issues": "Issues"
 }

@@ -4,8 +4,10 @@ using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
+using MvvmCross.ViewModels;
 using System;
 using System.Threading.Tasks;
+using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
 
 namespace CastIt.ViewModels.Dialogs
@@ -17,6 +19,8 @@ namespace CastIt.ViewModels.Dialogs
         private readonly ITelemetryService _telemetryService;
 
         private bool _isDownloading;
+        private double _downloadedProgress;
+        private string _downloadedProgressText;
         #endregion
 
         #region Properties
@@ -24,6 +28,18 @@ namespace CastIt.ViewModels.Dialogs
         {
             get => _isDownloading;
             set => SetProperty(ref _isDownloading, value);
+        }
+
+        public double DownloadedProgress
+        {
+            get => _downloadedProgress;
+            set => this.RaiseAndSetIfChanged(ref _downloadedProgress, value);
+        }
+
+        public string DownloadedProgressText
+        {
+            get => _downloadedProgressText;
+            set => this.RaiseAndSetIfChanged(ref _downloadedProgressText, value);
         }
         #endregion
 
@@ -61,7 +77,19 @@ namespace CastIt.ViewModels.Dialogs
             {
                 var path = FileUtils.GetFFMpegFolder();
                 Logger.Info($"{nameof(DownloadMissingFiles)}: Downloading missing files. Save path is = {path}");
-                await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, path);
+                var progress = new Progress<ProgressInfo>((p) =>
+                {
+                    var downloaded = (double)p.DownloadedBytes / p.TotalBytes * 100;
+                    if (downloaded > 100)
+                        downloaded = 100;
+                    if (downloaded > DownloadedProgress)
+                    {
+                        DownloadedProgressText = $"{FileUtils.GetBytesReadable(p.DownloadedBytes)} / {FileUtils.GetBytesReadable(p.TotalBytes)}";
+                        DownloadedProgress = downloaded;
+                    }
+                });
+                await Task.Delay(500);
+                await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, path, progress).ConfigureAwait(false);
                 filesWereDownloaded = true;
             }
             catch (Exception e)

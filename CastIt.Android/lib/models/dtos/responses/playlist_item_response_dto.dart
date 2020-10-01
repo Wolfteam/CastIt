@@ -19,6 +19,7 @@ class PlayListItemResponseDto extends GetAllPlayListResponseDto {
         shuffle,
         numberOfFiles,
         files,
+        totalDuration,
       ];
 
   const PlayListItemResponseDto({
@@ -28,6 +29,7 @@ class PlayListItemResponseDto extends GetAllPlayListResponseDto {
     bool loop,
     bool shuffle,
     int numberOfFiles,
+    String totalDuration,
     this.files,
   }) : super(
           id: id,
@@ -36,6 +38,7 @@ class PlayListItemResponseDto extends GetAllPlayListResponseDto {
           loop: loop,
           shuffle: shuffle,
           numberOfFiles: numberOfFiles,
+          totalDuration: totalDuration,
         );
 
   factory PlayListItemResponseDto.fromJson(Map<String, dynamic> json) => _$PlayListItemResponseDtoFromJson(json);
@@ -47,6 +50,7 @@ class PlayListItemResponseDto extends GetAllPlayListResponseDto {
         'Loop',
         'Shuffle',
         'NumberOfFiles',
+        'TotalDuration',
         'Files',
       ];
 }

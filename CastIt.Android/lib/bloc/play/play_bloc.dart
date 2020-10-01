@@ -95,6 +95,10 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         if (currentState.isDraggingSlider) {
           return currentState.copyWith.call(isPaused: false);
         }
+        //A live stream is being played
+        if (currentState.duration <= 0) {
+          return currentState.copyWith.call(currentSeconds: e.seconds, isPaused: false);
+        }
         final s = e.seconds >= currentState.duration ? currentState.duration : e.seconds;
         return currentState.copyWith.call(currentSeconds: s, isPaused: false);
       },

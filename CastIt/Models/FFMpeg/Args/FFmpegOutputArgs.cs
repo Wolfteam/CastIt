@@ -6,9 +6,9 @@ namespace CastIt.Models.FFMpeg.Args
     {
         private readonly string _output;
 
-        public FFmpegOutputArgs(string Output)
+        public FFmpegOutputArgs(string output)
         {
-            _output = Output;
+            _output = output;
         }
 
         public override string GetArgs()
@@ -102,5 +102,17 @@ namespace CastIt.Models.FFMpeg.Args
                 HwAccelDeviceType.None => SetPixelFormat("yuv420p"),
                 _ => this
             };
+
+        public FFmpegOutputArgs SetPlayList(int index)
+            => AddArg("map", $"p:{index}");
+
+        public FFmpegOutputArgs SetDelayInSeconds(double seconds)
+            => AddArg("muxdelay", seconds);
+
+        public FFmpegOutputArgs SetDelayInMicroSeconds(int ms)
+            => AddArg("maxdelay", ms);
+
+        public FFmpegOutputArgs WithVideoFilter(string filter)
+            => AddArg("vf", filter);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -32,8 +33,11 @@ namespace CastIt.Common
         public const string FullElapsedTimeFormat = @"hh\:mm\:ss";
         public const string ShortElapsedTimeFormat = @"mm\:ss";
 
+        public const int MaxCharsPerString = 1000;
+
         public static IReadOnlyList<string> AllowedFormats
             => AllowedVideoFormats.Concat(AllowedMusicFormats).ToList();
+
         public static IReadOnlyList<string> AllowedVideoFormats => new List<string>
         {
             ".mp4",
@@ -60,8 +64,13 @@ namespace CastIt.Common
             ".webvtt"
         };
 
+        public static IReadOnlyList<string> AllowedStreamingFormats = new List<string>
+        {
+            ".m3u8"
+        };
+
         public static string AllowedFormatsString
-            => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
+                => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
 
         public static string AllowedSubtitleFormatsString
             => string.Join(";", AllowedSubtitleFormats.Select(ext => $"*{ext}"));
@@ -77,7 +86,6 @@ namespace CastIt.Common
             => FileVersionInfo.GetVersionInfo(typeof(AppConstants).Assembly.Location).FileVersion;
 #endif
 
-
         public static IReadOnlyList<string> AppAccentColors => new List<string>
         {
             AccentColorLightBlue, AccentColorLimeGreen, AccentColorPink,
@@ -86,5 +94,13 @@ namespace CastIt.Common
             AccentColorDarkGray, AccentColorOrange, AccentColorYellow,
             AccentColorDarkBlue, AccentColorViolet, AccentColorLightGrey
         };
+
+        public static string FormatDuration(double seconds)
+        {
+            //here backslash is used to tell that colon is
+            //not the part of format, it just a character that we want in output
+            var time = TimeSpan.FromSeconds(seconds);
+            return time.ToString(time.Hours > 0 ? FullElapsedTimeFormat : ShortElapsedTimeFormat);
+        }
     }
 }

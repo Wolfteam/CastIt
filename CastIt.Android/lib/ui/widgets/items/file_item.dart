@@ -25,6 +25,7 @@ class FileItem extends StatelessWidget {
   final bool loop;
   final double itemHeight;
   final String subtitle;
+  final double playedSeconds;
 
   const FileItem({
     @required this.position,
@@ -43,6 +44,7 @@ class FileItem extends StatelessWidget {
     @required this.loop,
     @required this.itemHeight,
     @required this.subtitle,
+    @required this.playedSeconds,
     Key key,
   }) : super(key: key);
 
@@ -67,18 +69,18 @@ class FileItem extends StatelessWidget {
                   style: theme.textTheme.headline6,
                 ),
               ),
-              Flexible(
+              const Flexible(
                 flex: 10,
                 fit: FlexFit.tight,
-                child: Icon(
-                  Icons.loop,
-                  size: 20,
-                ),
+                child: Icon(Icons.loop, size: 20),
               ),
             ],
           );
+
+    final playedDurationText = playedSeconds >= 0 ? Duration(seconds: playedSeconds.round()).formatDuration() : 'N/A';
+    final totalDurationText = totalSeconds > 0 ? Duration(seconds: totalSeconds.round()).formatDuration() : 'N/A';
     return Container(
-      color: isBeingPlayed ? Colors.red.withOpacity(0.5) : null,
+      color: isBeingPlayed ? theme.accentColor.withOpacity(0.5) : null,
       height: itemHeight,
       child: ListTile(
         isThreeLine: true,
@@ -89,18 +91,12 @@ class FileItem extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              path,
-              overflow: TextOverflow.ellipsis,
-            ),
+            Text(path, overflow: TextOverflow.ellipsis),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(subtitle, overflow: TextOverflow.ellipsis),
-                Text(
-                  totalSeconds > 0 ? Duration(seconds: totalSeconds.round()).formatDuration() : 'N/A',
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text('$playedDurationText / $totalDurationText', overflow: TextOverflow.ellipsis),
               ],
             ),
             Container(
@@ -117,7 +113,6 @@ class FileItem extends StatelessWidget {
                 child: Slider(
                   value: playedPercentage,
                   max: 100,
-                  min: 0,
                   activeColor: Colors.black,
                   inactiveColor: Colors.grey,
                   onChanged: null,

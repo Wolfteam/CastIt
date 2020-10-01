@@ -24,7 +24,7 @@ class IntroPageItem extends StatelessWidget {
           Text(
             mainTitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 24),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 24),
           ),
           const SizedBox(height: 10),
           Text(subTitle),
@@ -32,7 +32,7 @@ class IntroPageItem extends StatelessWidget {
           Text(
             content,
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
           ),
           const SizedBox(height: 20),
           if (extraContent != null) extraContent

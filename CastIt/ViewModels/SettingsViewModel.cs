@@ -1,6 +1,7 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Enums;
 using CastIt.Common.Utils;
+using CastIt.GoogleCast.Enums;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
@@ -13,6 +14,7 @@ using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CastIt.ViewModels
 {
@@ -156,6 +158,118 @@ namespace CastIt.ViewModels
                 RaisePropertyChanged(() => MinimizeToTray);
             }
         }
+
+        public bool ShowPlayListTotalDuration
+        {
+            get => _settingsService.ShowPlayListTotalDuration;
+            set
+            {
+                _settingsService.ShowPlayListTotalDuration = value;
+                Messenger.Publish(new ShowPlayListTotalDurationMessage(this, value));
+                RaisePropertyChanged(() => ShowPlayListTotalDuration);
+            }
+        }
+
+        #region Subtitles
+        public MvxObservableCollection<Item> SubtitleFgColors
+            => GetSubtitleFgColors();
+        public MvxObservableCollection<Item> SubtitleBgColors
+            => GetSubtitleBgColors();
+        public MvxObservableCollection<Item> SubtitleFontStyles
+            => GetSubtitleFontStyles();
+        public MvxObservableCollection<Item> SubtitleFontFamilies
+            => GetSubtitleFontFamilies();
+        public MvxObservableCollection<Item> SubtitleFontScales
+            => GetFontScales();
+
+        public Item CurrentSubtitleFgColor
+        {
+            get => SubtitleFgColors.First(l => l.Id == _settingsService.CurrentSubtitleFgColor.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.CurrentSubtitleFgColor = (SubtitleFgColorType)Enum.Parse(typeof(SubtitleFgColorType), value.Id, true);
+                RaisePropertyChanged(() => CurrentSubtitleFgColor);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
+            }
+        }
+
+        public Item CurrentSubtitleBgColor
+        {
+            get => SubtitleBgColors.First(l => l.Id == _settingsService.CurrentSubtitleBgColor.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.CurrentSubtitleBgColor = (SubtitleBgColorType)Enum.Parse(typeof(SubtitleBgColorType), value.Id, true);
+                RaisePropertyChanged(() => CurrentSubtitleBgColor);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
+            }
+        }
+
+        public Item CurrentSubtitleFontScale
+        {
+            get => SubtitleFontScales.First(l => l.Id == _settingsService.CurrentSubtitleFontScale.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.CurrentSubtitleFontScale = (SubtitleFontScaleType)Enum.Parse(typeof(SubtitleFontScaleType), value.Id, true);
+                RaisePropertyChanged(() => CurrentSubtitleFontScale);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
+            }
+        }
+
+        public Item CurrentSubtitleFontStyle
+        {
+            get => SubtitleFontStyles.First(l => l.Id == _settingsService.CurrentSubtitleFontStyle.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.CurrentSubtitleFontStyle = (TextTrackFontStyleType)Enum.Parse(typeof(TextTrackFontStyleType), value.Id, true);
+                RaisePropertyChanged(() => CurrentSubtitleFontStyle);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
+            }
+        }
+
+        public Item CurrentSubtitleFontFamily
+        {
+            get => SubtitleFontFamilies.First(l => l.Id == _settingsService.CurrentSubtitleFontFamily.ToString());
+            set
+            {
+                if (value == null)
+                    return;
+                _settingsService.CurrentSubtitleFontFamily = (TextTrackFontGenericFamilyType)Enum.Parse(typeof(TextTrackFontGenericFamilyType), value.Id, true);
+                RaisePropertyChanged(() => CurrentSubtitleFontFamily);
+                _appWebServer.OnAppSettingsChanged?.Invoke();
+            }
+        }
+
+        public string SubtitleDelayText
+            => $"{GetText("SubtitleDelay")} ({GetText("XSeconds", $"{(SubtitleDelay == 0 ? 0 : SubtitleDelay)}")})";
+        public double SubtitleDelay
+        {
+            get => _settingsService.SubtitleDelayInSeconds;
+            set
+            {
+                _settingsService.SubtitleDelayInSeconds = Math.Round(value, 1);
+                RaisePropertyChanged(() => SubtitleDelay);
+                RaisePropertyChanged(() => SubtitleDelayText);
+            }
+        }
+
+        public bool LoadFirstSubtitleFoundAutomatically
+        {
+            get => _settingsService.LoadFirstSubtitleFoundAutomatically;
+            set
+            {
+                _settingsService.LoadFirstSubtitleFoundAutomatically = value;
+                RaisePropertyChanged(() => LoadFirstSubtitleFoundAutomatically);
+            }
+        }
+        #endregion
         #endregion
 
         #region Commands
@@ -250,6 +364,78 @@ namespace CastIt.ViewModels
                     Text = "1080p"
                 }
             };
+
+            return new MvxObservableCollection<Item>(scales);
+        }
+
+        private MvxObservableCollection<Item> GetSubtitleFgColors()
+        {
+            var colors = Enum.GetValues(typeof(SubtitleFgColorType)).Cast<SubtitleFgColorType>().Select(color => new Item
+            {
+                Id = color.ToString(),
+                Text = GetText(color.ToString())
+            });
+
+            return new MvxObservableCollection<Item>(colors);
+        }
+
+        private MvxObservableCollection<Item> GetSubtitleBgColors()
+        {
+            var colors = Enum.GetValues(typeof(SubtitleBgColorType)).Cast<SubtitleBgColorType>().Select(color => new Item
+            {
+                Id = color.ToString(),
+                Text = GetText(color.ToString())
+            });
+
+            return new MvxObservableCollection<Item>(colors);
+        }
+
+        private MvxObservableCollection<Item> GetSubtitleFontStyles()
+        {
+            var styles = Enum.GetValues(typeof(TextTrackFontStyleType)).Cast<TextTrackFontStyleType>().Select(style =>
+            {
+                var text = style switch
+                {
+                    TextTrackFontStyleType.Normal => GetText(style.ToString()),
+                    TextTrackFontStyleType.Bold => GetText(style.ToString()),
+                    TextTrackFontStyleType.BoldItalic => GetText("Bold") + " & " + GetText("Italic"),
+                    TextTrackFontStyleType.Italic => GetText(style.ToString()),
+                    _ => throw new ArgumentOutOfRangeException(nameof(style), style, null)
+                };
+                return new Item
+                {
+                    Id = style.ToString(),
+                    Text = text
+                };
+            });
+
+            return new MvxObservableCollection<Item>(styles);
+        }
+
+        private MvxObservableCollection<Item> GetSubtitleFontFamilies()
+        {
+            var families = Enum.GetValues(typeof(TextTrackFontGenericFamilyType)).Cast<TextTrackFontGenericFamilyType>()
+                .Select(family =>
+                {
+                    var text = string.Join(" ", Regex.Split($"{family}", "(?<!^)(?=[A-Z])"));
+                    return new Item
+                    {
+                        Id = family.ToString(),
+                        Text = text
+                    };
+                });
+
+            return new MvxObservableCollection<Item>(families);
+        }
+
+        private MvxObservableCollection<Item> GetFontScales()
+        {
+            var scales = Enum.GetValues(typeof(SubtitleFontScaleType)).Cast<SubtitleFontScaleType>()
+                .Select(scale => new Item
+                {
+                    Id = scale.ToString(),
+                    Text = $"{(int)scale} %"
+                });
 
             return new MvxObservableCollection<Item>(scales);
         }

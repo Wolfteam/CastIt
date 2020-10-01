@@ -11,12 +11,7 @@ Future<void> initTelemetry() async {
     return;
   }
 
-  await AppCenter.startAsync(
-    appSecretAndroid: Secrets.appCenterKey,
-    appSecretIOS: '',
-    enableAnalytics: true,
-    enableCrashes: true,
-  );
+  await AppCenter.startAsync(appSecretAndroid: Secrets.appCenterKey, appSecretIOS: '');
 }
 
 Future<void> trackEventAsync(String name, [Map<String, String> properties]) {

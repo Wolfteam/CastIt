@@ -14,6 +14,9 @@ class FileItemResponseDto extends Equatable {
   @JsonKey(name: 'Path')
   final String path;
 
+  @JsonKey(name: 'PlayedSeconds')
+  final double playedSeconds;
+
   @JsonKey(name: 'TotalSeconds')
   final double totalSeconds;
 
@@ -66,7 +69,8 @@ class FileItemResponseDto extends Equatable {
         size,
         ext,
         loop,
-        subtitle
+        subtitle,
+        playedSeconds,
       ];
 
   const FileItemResponseDto({
@@ -85,6 +89,7 @@ class FileItemResponseDto extends Equatable {
     this.ext,
     this.loop,
     this.subtitle,
+    this.playedSeconds,
   });
 
   factory FileItemResponseDto.fromJson(Map<String, dynamic> json) => _$FileItemResponseDtoFromJson(json);
@@ -104,6 +109,7 @@ class FileItemResponseDto extends Equatable {
         'Size',
         'Extension',
         'Loop',
-        'SubTitle'
+        'SubTitle',
+        'PlayedSeconds',
       ];
 }

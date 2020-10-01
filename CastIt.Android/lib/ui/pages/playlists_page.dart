@@ -15,7 +15,7 @@ class PlayListsPage extends StatefulWidget {
 }
 
 class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveClientMixin<PlayListsPage> {
-  final _refreshController = RefreshController(initialRefresh: false);
+  final _refreshController = RefreshController();
 
   @override
   bool get wantKeepAlive => true;
@@ -45,7 +45,6 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
               );
             },
             builder: (ctx, state) => SmartRefresher(
-              enablePullDown: true,
               header: const MaterialClassicHeader(),
               controller: _refreshController,
               onRefresh: () {
@@ -81,6 +80,7 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
                 numberOfFiles: playlist.numberOfFiles,
                 loop: playlist.loop,
                 shuffle: playlist.shuffle,
+                totalDuration: playlist.totalDuration,
               ),
             );
           },

@@ -13,6 +13,7 @@ class PlayListItem extends StatelessWidget {
   final int numberOfFiles;
   final bool loop;
   final bool shuffle;
+  final String totalDuration;
 
   const PlayListItem({
     @required this.id,
@@ -20,20 +21,24 @@ class PlayListItem extends StatelessWidget {
     @required this.numberOfFiles,
     @required this.loop,
     @required this.shuffle,
+    @required this.totalDuration,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(
-        Icons.list,
-        size: 36,
-      ),
+      leading: const Icon(Icons.list, size: 36),
       title: Text(
         name,
         style: theme.textTheme.headline6,
         overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Row(
+        children: [
+          const Icon(Icons.hourglass_empty, size: 18),
+          Text(totalDuration, overflow: TextOverflow.ellipsis),
+        ],
       ),
       trailing: ItemCounter(numberOfFiles),
       onLongPress: () => _showPlayListOptionsModal(context),

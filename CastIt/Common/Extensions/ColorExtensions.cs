@@ -76,7 +76,7 @@ namespace CastIt.Common.Extensions
         }
 
         public static string ToHexString(this Color c)
-            => string.Format("#{0:X6}", c.ToArgb() & 0x00FFFFFF);
+            => $"#{c.ToArgb() & 0x00FFFFFF:X6}";
 
         public static Color ToDrawingColor(this System.Windows.Media.Color mediaColor)
         {

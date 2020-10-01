@@ -193,7 +193,7 @@ namespace CastIt.GoogleCast
                 {
                     if (TcpClient == null && CurrentReceiver != null)
                     {
-                        _logger.Info($"{nameof(EnsureConnection)} TcpClient is null, connecting...");
+                        _logger.LogInfo($"{nameof(EnsureConnection)} TcpClient is null, connecting...");
                         await ConnectAsync();
                     }
                 }

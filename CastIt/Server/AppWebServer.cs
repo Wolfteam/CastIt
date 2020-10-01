@@ -1,9 +1,11 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Enums;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Interfaces.ViewModels;
 using EmbedIO;
 using EmbedIO.Actions;
+using EmbedIO.WebApi;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
@@ -28,6 +30,10 @@ namespace CastIt.Server
         public const string FileQueryParameter = "file";
         public const string VideoStreamIndexParameter = "videoStream";
         public const string AudioStreamIndexParameter = "audioStream";
+        public const string VideoNeedsTranscode = "videoNeedsTranscode";
+        public const string AudioNeedsTranscode = "audioNeedsTranscode";
+        public const string HwAccelTypeToUse = "hwAccelTypeToUse";
+        public const string VideoWidthAndHeight = "videoWidthAndHeight";
         //public const string SubTitleStreamIndexParameter = "subtitleStream";
 
         private readonly IMvxLog _logger;
@@ -64,16 +70,22 @@ namespace CastIt.Server
         public OnServerMsgHandler OnServerMsg { get; set; }
         #endregion
 
+        #region Properties
         public static IReadOnlyList<string> AllowedQueryParameters => new List<string>
         {
             SecondsQueryParameter,
             FileQueryParameter,
             VideoStreamIndexParameter,
-            AudioStreamIndexParameter
+            AudioStreamIndexParameter,
+            VideoNeedsTranscode,
+            AudioNeedsTranscode,
+            HwAccelTypeToUse,
+            VideoWidthAndHeight
         };
 
         public string BaseUrl
             => GetBaseUrl();
+        #endregion
 
         public AppWebServer(
             IMvxLogProvider logger,
@@ -107,6 +119,7 @@ namespace CastIt.Server
                     .WithCors()
                     .WithStaticFolder(ImagesPath, previewPath, false)
                     .WithStaticFolder(SubTitlesPath, subtitlesPath, false)
+                    .WithWebApi("/api", m => m.WithController<CastItController>())
                     .WithModule(new WebSocketsCastItServer(_logger, this, _appSettings, mainViewModel, "/socket"))
                     .WithModule(new MediaModule(_logger, _ffmpegService, _telemetryService, MediaPath))
                     .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));
@@ -143,14 +156,26 @@ namespace CastIt.Server
             _disposed = true;
         }
 
-        public string GetMediaUrl(string filePath, int videoStreamIndex, int audioStreamIndex, double seconds)
+        public string GetMediaUrl(
+            string filePath,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            double seconds,
+            bool videoNeedsTranscode,
+            bool audioNeedsTranscode,
+            HwAccelDeviceType hwAccelToUse,
+            string videoWidthAndHeight = null)
         {
             var baseUrl = GetBaseUrl();
             return $"{baseUrl}{MediaPath}?" +
                 $"{VideoStreamIndexParameter}={videoStreamIndex}" +
                 $"&{AudioStreamIndexParameter}={audioStreamIndex}" +
                 $"&{SecondsQueryParameter}={seconds}" +
-                $"&{FileQueryParameter}={Uri.EscapeDataString(filePath)}";
+                $"&{FileQueryParameter}={Uri.EscapeDataString(filePath)}" +
+                $"&{VideoNeedsTranscode}={videoNeedsTranscode}" +
+                $"&{AudioNeedsTranscode}={audioNeedsTranscode}" +
+                $"&{HwAccelTypeToUse}={hwAccelToUse}" +
+                $"&{VideoWidthAndHeight}={videoWidthAndHeight}";
         }
 
         public string GetPreviewPath(string filepath)
@@ -171,34 +196,25 @@ namespace CastIt.Server
 
         private string GetBaseUrl()
         {
-            if (_webServer is null)
-            {
-                _logger.Error($"{nameof(GetBaseUrl)}: Web server is null!");
-                throw new NullReferenceException("Web server is null");
-            }
-            return _webServer.Options.UrlPrefixes.First();
+            if (_webServer != null)
+                return _webServer.Options.UrlPrefixes.First();
+            _logger.Error($"{nameof(GetBaseUrl)}: Web server is null!");
+            throw new NullReferenceException("Web server is null");
         }
 
         private string GetIpAddress()
         {
-            string localIP = null;
-            try
+            string localIp = null;
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
             {
-                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-                {
-                    socket.Connect("8.8.8.8", 65530);
-                    var endPoint = socket.LocalEndPoint as IPEndPoint;
-                    localIP = endPoint.Address.ToString();
-                }
-
-                var port = GetOpenPort();
-
-                return $"http://{localIP}:{port}";
+                socket.Connect("8.8.8.8", 65530);
+                var endPoint = socket.LocalEndPoint as IPEndPoint;
+                localIp = endPoint.Address.ToString();
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            var port = GetOpenPort();
+
+            return $"http://{localIp}:{port}";
         }
 
         private int GetOpenPort(int startPort = DefaultPort)

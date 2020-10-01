@@ -62,7 +62,6 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                 icon: widget.icon ?? Icons.warning,
               ),
               TextFormField(
-                maxLines: 1,
                 minLines: 1,
                 validator: (_) => (state as SettingsLoadedState).isCastItUrlValid ? null : i18n.invalidUrl,
                 autovalidate: true,
@@ -74,7 +73,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                       ? null
                       : IconButton(
                           alignment: Alignment.bottomCenter,
-                          icon: Icon(Icons.sync),
+                          icon: const Icon(Icons.sync),
                           onPressed: !(state as SettingsLoadedState).isCastItUrlValid ? null : _onRefreshClick,
                         ),
                   alignLabelWithHint: true,

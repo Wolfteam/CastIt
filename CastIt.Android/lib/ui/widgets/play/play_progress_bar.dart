@@ -23,21 +23,34 @@ class PlayProgressBar extends StatelessWidget {
           connected: (state) => dummySlider,
           fileLoading: (state) => dummySlider,
           fileLoadingFailed: (state) => dummySlider,
-          playing: (state) => Slider(
-            onChanged: (double value) =>
-                context.bloc<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
-            value: state.currentSeconds,
-            max: state.duration,
-            activeColor: theme.accentColor,
-            label: _generateLabel(state.currentSeconds),
-            divisions: state.duration.round(),
-            onChangeStart: (startValue) => context.bloc<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
-            onChangeEnd: (finalValue) => context
-                .bloc<PlayBloc>()
-                .add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
-          ),
+          playing: (state) => _buildPlayingSlider(state, context),
         );
       },
+    );
+  }
+
+  Slider _buildPlayingSlider(PlayingState state, BuildContext context) {
+    final theme = Theme.of(context);
+    if (state.duration <= 0) {
+      return Slider(
+        onChanged: null,
+        value: 100,
+        max: 100,
+        activeColor: theme.accentColor,
+      );
+    }
+    return Slider(
+      onChanged: (double value) =>
+          context.bloc<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
+      value: state.currentSeconds,
+      max: state.duration,
+      activeColor: theme.accentColor,
+      label: _generateLabel(state.currentSeconds),
+      divisions: state.duration.round(),
+      onChangeStart: (startValue) => context.bloc<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
+      onChangeEnd: (finalValue) => context
+          .bloc<PlayBloc>()
+          .add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
     );
   }
 

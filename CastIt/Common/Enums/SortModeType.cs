@@ -2,8 +2,10 @@
 {
     public enum SortModeType
     {
-        AlphabeticalAsc,
-        AlphabeticalDesc,
+        AlphabeticalPathAsc,
+        AlphabeticalPathDesc,
+        AlphabeticalNameAsc,
+        AlphabeticalNameDesc,
         DurationAsc,
         DurationDesc
     }

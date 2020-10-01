@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -29,6 +30,8 @@ namespace CastIt.Common.Utils
         private const string YouTubePlayListPath = "/playlist";
         private const string YoutubePlayListQueryParam = "list";
         private const string YoutubeVideoQueryParam = "v";
+
+        private const int DefaultQuality = 360;
 
         private readonly IMvxLog _logger;
 
@@ -62,127 +65,59 @@ namespace CastIt.Common.Utils
             }
         }
 
-        public async Task<YoutubeMedia> Parse(string url, int quality)
+        public async Task<YoutubeMedia> Parse(
+            string url,
+            int? desiredQuality = null,
+            bool getFinalUrl = true)
         {
+            desiredQuality ??= DefaultQuality;
             _logger.Info($"{nameof(Parse)}: Trying to parse url = {url}");
             var media = new YoutubeMedia();
             using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync(url);
+            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                return media;
+                throw new Exception($"Couldn't retrieve youtube video. StatusCode = {response.StatusCode}");
 
-            var body = await response.Content.ReadAsStringAsync();
-            if (body.Contains(TitleKeyWord))
+            var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            body = body.Replace("\\/", "/");
+
+            var (isHls, _) = IsHls(body);
+            media.IsHls = isHls;
+            media.Title = GetVideoKeywordValue(body, TitleKeyWord);
+            media.Description = GetVideoKeywordValue(body, DescriptionKeyWord);
+            media.ThumbnailUrl = GetVideoKeywordValue(body, ThumbnailKeyWord);
+
+            if (getFinalUrl)
             {
-                // video title
-                int titleStart = body.IndexOf(TitleKeyWord);
-                var title = new StringBuilder();
-                char ch;
-                do
-                {
-                    ch = body[titleStart++];
-                    title.Append(ch);
-                }
-                while (ch != '>');
-                media.Title = GetKeyContentValue(title.ToString());
-            }
-
-            if (body.Contains(DescriptionKeyWord))
-            {
-                // video description
-                int descStart = body.IndexOf(DescriptionKeyWord);
-                var desc = new StringBuilder();
-                char ch;
-                do
-                {
-                    ch = body[descStart++];
-                    desc.Append(ch);
-                }
-                while (ch != '>');
-                media.Description = GetKeyContentValue(desc.ToString());
-            }
-
-            if (body.Contains(ThumbnailKeyWord))
-            {
-                // video thumbnail
-                int thumbnailStart = body.IndexOf(ThumbnailKeyWord);
-                StringBuilder thumbnailURL = new StringBuilder();
-                char ch;
-                do
-                {
-                    ch = body[thumbnailStart++];
-                    thumbnailURL.Append(ch);
-                }
-                while (ch != '>');
-                media.ThumbnailUrl = GetKeyContentValue(thumbnailURL.ToString());
-            }
-
-            if (body.Contains(UrlEncodedStreamMap))
-            {
-                // find the string we are looking for
-                int start = body.IndexOf(UrlEncodedStreamMap) + UrlEncodedStreamMap.Length + 1;  // is the opening "
-                string urlMap = body.Substring(start);
-                int end = urlMap.IndexOf("\"");
-                if (end > 0)
-                {
-                    urlMap = urlMap.Substring(0, end);
-                }
-                media.Url = GetURLEncodedStream(urlMap);
-            }
-
-            if (body.Contains(YoutubePlayerConfig))
-            {
-                body = body.Replace("\\/", "/");
-                int start = body.IndexOf(YoutubePlayerConfig);
-                string playerConfig = body.Substring(start);
-                playerConfig = playerConfig
-                    .Substring(0, playerConfig.IndexOf("</script>"))
-                    .Replace("\\/", "/");
-                var jsMatch = Regex.Match(playerConfig, "(\"js\":.*?.js)");
-                string jsUrl = jsMatch.Value;
-                jsUrl = YoutubeUrl + jsUrl.Substring(jsUrl.IndexOf("/"));
-
-                var formatPattern = @"(\\""formats\\"":\[.*?])";
-                var formatMatch = Regex.Match(body, formatPattern);
-                string streamMap = DecodeUrlString(formatMatch.Value).Replace(@"\\u0026", "&");
-
-                string heightPattern = @"(?<=\\""height\\"":).+?(?=,)";
-                var streams = Regex.Matches(streamMap, "{(.*?)}").AsQueryable().OfType<Match>();
-                var qualities = streams.ToDictionary(k => int.Parse(Regex.Match(k.ToString(), heightPattern).Value), v => v.ToString());
-
+                var qualities = GetVideoQualities(body);
+                media.Qualities.AddRange(qualities.Select(q => q.Key));
                 int closest = qualities
                     .Select(k => k.Key)
-                    .Aggregate((x, y) => Math.Abs(x - quality) < Math.Abs(y - quality) ? x : y);
+                    .GetClosest(desiredQuality.Value);
 
-                media.Qualities.AddRange(qualities.Select(q => q.Key));
                 media.SelectedQuality = closest;
-
                 _logger.Info($"{nameof(Parse)}: Selected quality = {closest}");
 
                 string pick = qualities.First(kvp => kvp.Key == closest).Value;
-                string cipherPattern = @"(?<=\\""signatureCipher\\"":).+";
-                string cipher = Regex.Match(pick, cipherPattern).Value;
-                if (string.IsNullOrEmpty(cipher))
-                {
-                    _logger.Info($"{nameof(Parse)}: Url doesnt contain a cipher...");
-                    //Unscrambled signature, already included in ready-to-use URL
-                    string urlPattern = @"(?<=url\\"":\\"").*?(?=\\"")";
-                    media.Url = DecodeUrlString(Regex.Match(pick, urlPattern).Value);
-                }
-                else
-                {
-                    _logger.Info($"{nameof(Parse)}: Url contains a cipher...");
-                    //Scrambled signature: some assembly required
-                    media.Url = await GetUrlFromCipher(cipher, jsUrl);
-                }
+                media.Url = await GetFinalUrl(body, pick);
+            }
+            else
+            {
+                return media;
             }
 
-            _logger.Info($"{nameof(Parse)}: Url was parsed. Media = {JsonConvert.SerializeObject(media)}");
+            if (string.IsNullOrEmpty(media.Url))
+            {
+                _logger.Info($"{nameof(Parse)}: Url couldn't be parsed");
+                throw new Exception($"Url couldn't be parsed for url = {url}");
+            }
+
+            _logger.Info($"{nameof(Parse)}: Url was completely parsed. Media = {JsonConvert.SerializeObject(media)}");
 
             return media;
         }
 
-        public async Task<List<string>> ParseYouTubePlayList(string url)
+        public async Task<List<string>> ParseYouTubePlayList(string url, CancellationToken token)
         {
             var links = new List<string>();
             _logger.Info($"{nameof(ParseYouTubePlayList)}: Parsing url = {url}");
@@ -197,7 +132,7 @@ namespace CastIt.Common.Utils
             }
 
             using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+            var response = await httpClient.GetAsync(url, token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.Warn($"{nameof(ParseYouTubePlayList)}: Response is not success status code. Code = {response.StatusCode}");
@@ -216,7 +151,7 @@ namespace CastIt.Common.Utils
                 links = table.Descendants("a")
                     .Where(node => node.HasClass("pl-video-title-link"))
                     .Select(node => RemoveNotNeededParams(YoutubeUrl + node.GetAttributeValue("href", string.Empty)))
-                    .Where(link => link.StartsWith(YoutubeUrl))
+                    .Where(link => link.StartsWith(YoutubeUrl, StringComparison.OrdinalIgnoreCase))
                     .Distinct()
                     .ToList();
             }
@@ -227,7 +162,7 @@ namespace CastIt.Common.Utils
                 body = body.Replace("\\u0026", "&").Replace("\\/", "/");
                 links = Regex.Matches(body, pattern)
                     .Select(match => RemoveNotNeededParams(YoutubeUrl + match.Value))
-                    .Where(link => link.StartsWith(YoutubeUrl))
+                    .Where(link => link.StartsWith(YoutubeUrl, StringComparison.OrdinalIgnoreCase))
                     .Distinct()
                     .ToList();
             }
@@ -238,18 +173,18 @@ namespace CastIt.Common.Utils
 
         private string GetKeyContentValue(string str)
         {
+            if (string.IsNullOrEmpty(str))
+                return null;
             var contentStr = new StringBuilder();
-            int contentStart = str.IndexOf(ContentValueKeyWord) + ContentValueKeyWord.Length;
-            if (contentStart > 0)
+            int contentStart = str.IndexOf(ContentValueKeyWord, StringComparison.OrdinalIgnoreCase) + ContentValueKeyWord.Length;
+            if (contentStart <= 0)
+                return contentStr.ToString();
+            while (true)
             {
-                char ch;
-                while (true)
-                {
-                    ch = str[contentStart++];
-                    if (ch == '\"')
-                        break;
-                    contentStr.Append(ch);
-                }
+                var ch = str[contentStart++];
+                if (ch == '\"')
+                    break;
+                contentStr.Append(ch);
             }
             return contentStr.ToString();
         }
@@ -258,15 +193,14 @@ namespace CastIt.Common.Utils
         {
             // replace all the \u0026 with &
             string str = DecodeUrlString(stream).Replace("\\u0026", "&");
-            string urlMap = str.Substring(str.IndexOf("url=http") + 4);
+            string urlMap = str.Substring(str.IndexOf("url=http", StringComparison.OrdinalIgnoreCase) + 4);
             // search urlMap until we see either a & or ,
             var sb = new StringBuilder();
-            for (int i = 0; i < urlMap.Length; i++)
+            foreach (var t in urlMap)
             {
-                if ((urlMap[i] == '&') || (urlMap[i] == ','))
+                if (t == '&' || t == ',')
                     break;
-                else
-                    sb.Append(urlMap[i]);
+                sb.Append(t);
             }
             return sb.ToString();
         }
@@ -297,11 +231,11 @@ namespace CastIt.Common.Utils
         {
             //Fetch javascript code
             using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync(jsUrl);
+            var response = await httpClient.GetAsync(jsUrl).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return string.Empty;
 
-            string js = await response.Content.ReadAsStringAsync();
+            string js = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             //Look for the descrambler function's name (in this example its "pt")
             //if (k.s) { var l=k.sp, m=pt(decodeURIComponent(k.s)); f.set(l, encodeURIComponent(m))}
@@ -310,7 +244,7 @@ namespace CastIt.Common.Utils
             //"signature" or "sig") to set with the output, descrambled signature
             string descramblerPattern = @"(?<=[,&|]).(=).+(?=\(decodeURIComponent)";
             var descramblerMatch = Regex.Match(js, descramblerPattern);
-            string descrambler = descramblerMatch.Value.Substring(descramblerMatch.Value.IndexOf("=") + 1);
+            string descrambler = descramblerMatch.Value.Substring(descramblerMatch.Value.IndexOf("=", StringComparison.Ordinal) + 1);
 
             //Fetch the code of the descrambler function
             //Go = function(a){ a = a.split(""); Fo.sH(a, 2); Fo.TU(a, 28); Fo.TU(a, 44); Fo.TU(a, 26); Fo.TU(a, 40); Fo.TU(a, 64); Fo.TR(a, 26); Fo.sH(a, 1); return a.join("")};
@@ -320,7 +254,7 @@ namespace CastIt.Common.Utils
             //Get the name of the helper object providing transformation definitions
             string helperPattern = @"(?<=;).*?(?=\.)";
             string helper = Regex.Split(Regex.Match(rules, helperPattern).Value, @"\W+")
-                .GroupBy(s => s)
+                .GroupBy(g => g)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
                 .FirstOrDefault();
@@ -365,22 +299,26 @@ namespace CastIt.Common.Utils
                 string transToApply = x.Split(".".ToCharArray()).Last();
 
                 //sH
-                string transName = transToApply.Substring(0, transToApply.IndexOf("("));
-                if (trans[transName] == "reverse")
+                string transName = transToApply.Substring(0, transToApply.IndexOf("(", StringComparison.Ordinal));
+                switch (trans[transName])
                 {
-                    s = new string(s.Reverse().ToArray());
-                }
-                else if (trans[transName] == "slice")
-                {
-                    int value = int.Parse(transToApply.Split(commaSeparator).Last().Replace(")", ""));
-                    s = s.Substring(value);
-                }
-                else if (trans[transName] == "swap")
-                {
-                    int value = int.Parse(transToApply.Split(commaSeparator).Last().Replace(")", ""));
-                    var c = s[0];
-                    s = s.ReplaceAt(0, s[value % s.Length]);
-                    s = s.ReplaceAt(value % s.Length, c);
+                    case "reverse":
+                        s = new string(s.Reverse().ToArray());
+                        break;
+                    case "slice":
+                        {
+                            int value = int.Parse(transToApply.Split(commaSeparator).Last().Replace(")", ""));
+                            s = s.Substring(value);
+                            break;
+                        }
+                    case "swap":
+                        {
+                            int value = int.Parse(transToApply.Split(commaSeparator).Last().Replace(")", ""));
+                            var c = s[0];
+                            s = s.ReplaceAt(0, s[value % s.Length]);
+                            s = s.ReplaceAt(value % s.Length, c);
+                            break;
+                        }
                 }
             }
 
@@ -398,7 +336,7 @@ namespace CastIt.Common.Utils
         private string RemoveNotNeededParams(string url)
         {
             string videoId = GetVideoId(url);
-            return url.Substring(0, url.IndexOf("?") + 1) + $"{YoutubeVideoQueryParam}={videoId}";
+            return url.Substring(0, url.IndexOf("?", StringComparison.Ordinal) + 1) + $"{YoutubeVideoQueryParam}={videoId}";
         }
 
         private string GetVideoId(string url)
@@ -427,6 +365,108 @@ namespace CastIt.Common.Utils
 
             // you can check host here => uri.Host <= "www.youtube.com"
             return HttpUtility.ParseQueryString(uri.Query);
+        }
+
+        private string GetVideoKeywordValue(string body, string keyword)
+        {
+            if (!body.Contains(keyword))
+                return null;
+            int index = body.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
+            var value = new StringBuilder();
+            char ch;
+            do
+            {
+                ch = body[index++];
+                value.Append(ch);
+            }
+            while (ch != '>');
+            return GetKeyContentValue(value.ToString());
+        }
+
+        private Dictionary<int, string> GetVideoQualities(string body)
+        {
+            var formatPattern = @"(\\""formats\\"":\[.*?])";
+            var formatMatch = Regex.Match(body, formatPattern);
+            if (formatMatch.Length == 0)
+            {
+                formatPattern = @"(\\""adaptiveFormats\\"":\[.*?])";
+                formatMatch = Regex.Match(body, formatPattern);
+            }
+            string streamMap = DecodeUrlString(formatMatch.Value).Replace(@"\\u0026", "&");
+
+            string heightPattern = @"(?<=\\""height\\"":).+?(?=,)";
+            var streams = Regex.Matches(streamMap, "{(.*?)}").AsQueryable().OfType<Match>().ToList();
+            var qualities = streams.ToDictionary(k =>
+            {
+                var val = Regex.Match(k.ToString(), heightPattern).Value;
+                return int.Parse(string.IsNullOrEmpty(val) ? "-1" : val);
+            }, v => v.ToString());
+
+            return qualities.Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        private async Task<string> GetFinalUrl(string body, string pickedQualityUrl)
+        {
+            if (body.Contains(UrlEncodedStreamMap))
+            {
+                _logger.Info($"{nameof(GetFinalUrl)}: Body contains old parameters...");
+                //TODO: COMPLETE THIS CASE
+                int start = body.IndexOf(UrlEncodedStreamMap, StringComparison.OrdinalIgnoreCase) + UrlEncodedStreamMap.Length + 1;  // is the opening "
+                string urlMap = body.Substring(start);
+                int end = urlMap.IndexOf("\"", StringComparison.Ordinal);
+                if (end > 0)
+                {
+                    urlMap = urlMap.Substring(0, end);
+                }
+                return GetURLEncodedStream(urlMap);
+            }
+
+            if (body.Contains(YoutubePlayerConfig))
+            {
+                _logger.Info($"{nameof(GetFinalUrl)}: Body contains yt player config js...");
+                //body = body.Replace("\\/", "/");
+                var (isHls, liveUrl) = IsHls(body);
+                if (isHls)
+                {
+                    _logger.Info($"{nameof(GetFinalUrl)}: Url is an hls");
+                    //media.Url = liveMatch.Value;
+                    //media.IsHls = true;
+                    return liveUrl;
+                }
+
+                int start = body.IndexOf(YoutubePlayerConfig, StringComparison.OrdinalIgnoreCase);
+                string playerConfig = body.Substring(start);
+                playerConfig = playerConfig
+                    .Substring(0, playerConfig.IndexOf("</script>", StringComparison.OrdinalIgnoreCase))
+                    .Replace("\\/", "/");
+                var jsMatch = Regex.Match(playerConfig, "(\"js\":.*?.js)");
+                string jsUrl = jsMatch.Value;
+                jsUrl = YoutubeUrl + jsUrl.Substring(jsUrl.IndexOf("/", StringComparison.Ordinal));
+
+                string cipherPattern = @"(?<=\\""signatureCipher\\"":).+";
+                string cipher = Regex.Match(pickedQualityUrl, cipherPattern).Value;
+                if (string.IsNullOrEmpty(cipher))
+                {
+                    _logger.Info($"{nameof(GetFinalUrl)}: Body doesn't contain a cipher...");
+                    //Unscrambled signature, already included in ready-to-use URL
+                    string urlPattern = @"(?<=url\\"":\\"").*?(?=\\"")";
+                    return DecodeUrlString(Regex.Match(pickedQualityUrl, urlPattern).Value);
+                }
+
+                _logger.Info($"{nameof(GetFinalUrl)}: Body contains a cipher...");
+                //Scrambled signature: some assembly required
+                return await GetUrlFromCipher(cipher, jsUrl).ConfigureAwait(false);
+            }
+
+            _logger.Error($"{nameof(GetFinalUrl)}: Url couldn't be parsed");
+            throw new Exception("Url couldn't be parsed");
+        }
+
+        private (bool, string) IsHls(string body)
+        {
+            string livePattern = @"(?<=hlsManifestUrl\\"":\\"").*?(?=\\)";
+            var liveMatch = Regex.Match(body, livePattern);
+            return (liveMatch.Success, liveMatch.Value);
         }
     }
 }

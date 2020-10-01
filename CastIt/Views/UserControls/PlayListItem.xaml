@@ -157,289 +157,353 @@
             Background="{DynamicResource DarkestColorBrush}"
             Visibility="{Binding Items.Count, Converter={StaticResource NotZeroToVisibilityConverter}}">
 
-            <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <materialDesign:PackIcon
-                    Grid.Column="0"
-                    Width="16"
-                    Height="16"
+
+                <StackPanel
                     VerticalAlignment="Center"
-                    Kind="Search" />
-                <TextBox
-                    x:Name="PlayListFilter"
+                    Orientation="Horizontal"
+                    Visibility="{Binding ShowTotalDuration, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <materialDesign:PackIcon Margin="10,0,0,0" Kind="TimerSand" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding TotalDuration, Mode=OneWay}" />
+                </StackPanel>
+
+                <Grid
                     Grid.Column="1"
-                    Width="150"
-                    Height="40"
-                    Padding="5,0"
                     HorizontalAlignment="Right"
-                    VerticalContentAlignment="Center"
-                    materialDesign:HintAssist.Hint="{Binding [QuickSearch]}"
-                    materialDesign:TextFieldAssist.HasClearButton="True"
-                    materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryHueDarkBrush}"
-                    TextChanged="PlayListFilter_TextChanged" />
-
-                <ToggleButton
-                    Grid.Column="2"
-                    Width="30"
-                    Height="30"
-                    Margin="5,0"
-                    FocusVisualStyle="{x:Null}"
-                    IsChecked="{Binding Loop, Mode=TwoWay}"
-                    IsTabStop="False"
-                    ToolTip="{Binding [LoopPlayList]}">
+                    VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <materialDesign:PackIcon
+                        Grid.Column="0"
                         Width="16"
                         Height="16"
-                        Kind="Repeat" />
-                    <ToggleButton.Style>
-                        <Style BasedOn="{StaticResource MaterialDesignFlatPrimaryToggleButton}" TargetType="{x:Type ToggleButton}">
-                            <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
-                            <Style.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ToggleButton.Style>
-                </ToggleButton>
-
-                <ToggleButton
-                    Grid.Column="3"
-                    Width="30"
-                    Height="30"
-                    Margin="5,0"
-                    FocusVisualStyle="{x:Null}"
-                    IsChecked="{Binding Shuffle, Mode=TwoWay}"
-                    IsTabStop="False"
-                    ToolTip="{Binding [Shuffle]}">
-                    <materialDesign:PackIcon
-                        Width="16"
-                        Height="16"
-                        Kind="Shuffle" />
-                    <ToggleButton.Style>
-                        <Style BasedOn="{StaticResource MaterialDesignFlatPrimaryToggleButton}" TargetType="{x:Type ToggleButton}">
-                            <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
-                            <Style.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ToggleButton.Style>
-                </ToggleButton>
-
-                <Button
-                    Grid.Column="4"
-                    Height="36"
-                    Margin="-5,0"
-                    Command="{Binding ScrollToSelectedFileCommand}"
-                    ToolTip="{Binding [GoToSelectedFile]}">
-                    <Button.Style>
-                        <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="{x:Type Button}">
-                            <Setter Property="Visibility" Value="Visible" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <materialDesign:PackIcon
-                        Width="16"
-                        Height="16"
-                        Kind="Jump" />
-                </Button>
-
-                <Menu
-                    Grid.Column="5"
-                    Background="{DynamicResource DarkestColorBrush}"
-                    IsMainMenu="True"
-                    IsTabStop="False"
-                    ToolTip="{Binding [Sort]}">
-                    <MenuItem
+                        VerticalAlignment="Center"
+                        Kind="Search" />
+                    <TextBox
+                        x:Name="PlayListFilter"
+                        Grid.Column="1"
+                        Width="150"
                         Height="40"
+                        Padding="5,0"
+                        HorizontalAlignment="Right"
+                        VerticalContentAlignment="Center"
+                        materialDesign:HintAssist.Hint="{Binding [QuickSearch]}"
+                        materialDesign:TextFieldAssist.HasClearButton="True"
+                        materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryHueDarkBrush}"
+                        TextChanged="PlayListFilter_TextChanged" />
+
+                    <ToggleButton
+                        Grid.Column="2"
+                        Width="30"
+                        Height="30"
+                        Margin="5,0"
+                        FocusVisualStyle="{x:Null}"
+                        IsChecked="{Binding Loop, Mode=TwoWay}"
                         IsTabStop="False"
-                        Style="{StaticResource CustomIconMenuItem}">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon
-                                HorizontalAlignment="Center"
-                                HorizontalContentAlignment="Center"
-                                Kind="Sort" />
-                        </MenuItem.Icon>
+                        ToolTip="{Binding [LoopPlayList]}">
+                        <materialDesign:PackIcon
+                            Width="16"
+                            Height="16"
+                            Kind="Repeat" />
+                        <ToggleButton.Style>
+                            <Style BasedOn="{StaticResource MaterialDesignFlatPrimaryToggleButton}" TargetType="{x:Type ToggleButton}">
+                                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ToggleButton.Style>
+                    </ToggleButton>
 
-                        <MenuItem
-                            Command="{Binding SortFilesCommand}"
-                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalAsc}"
-                            Header="{Binding [ByNameAsc]}"
-                            IsCheckable="False">
-                            <MenuItem.Icon>
-                                <materialDesign:PackIcon
-                                    HorizontalAlignment="Center"
-                                    HorizontalContentAlignment="Center"
-                                    Kind="SortAlphabeticalAscending" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Command="{Binding SortFilesCommand}"
-                            CommandParameter="{x:Static enums:SortModeType.AlphabeticalDesc}"
-                            Header="{Binding [ByNameDesc]}"
-                            IsCheckable="False">
-                            <MenuItem.Icon>
-                                <materialDesign:PackIcon
-                                    HorizontalAlignment="Center"
-                                    HorizontalContentAlignment="Center"
-                                    Kind="SortAlphabeticalAscending" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Command="{Binding SortFilesCommand}"
-                            CommandParameter="{x:Static enums:SortModeType.DurationAsc}"
-                            Header="{Binding [ByDurationAsc]}"
-                            IsCheckable="False">
-                            <MenuItem.Icon>
-                                <materialDesign:PackIcon
-                                    HorizontalAlignment="Center"
-                                    HorizontalContentAlignment="Center"
-                                    Kind="SortNumericAscending" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Command="{Binding SortFilesCommand}"
-                            CommandParameter="{x:Static enums:SortModeType.DurationDesc}"
-                            Header="{Binding [ByDurationDesc]}"
-                            IsCheckable="False">
-                            <MenuItem.Icon>
-                                <materialDesign:PackIcon
-                                    HorizontalAlignment="Center"
-                                    HorizontalContentAlignment="Center"
-                                    Kind="SortNumericDescending" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </MenuItem>
-                </Menu>
+                    <ToggleButton
+                        Grid.Column="3"
+                        Width="30"
+                        Height="30"
+                        Margin="5,0"
+                        FocusVisualStyle="{x:Null}"
+                        IsChecked="{Binding Shuffle, Mode=TwoWay}"
+                        IsTabStop="False"
+                        ToolTip="{Binding [Shuffle]}">
+                        <materialDesign:PackIcon
+                            Width="16"
+                            Height="16"
+                            Kind="Shuffle" />
+                        <ToggleButton.Style>
+                            <Style BasedOn="{StaticResource MaterialDesignFlatPrimaryToggleButton}" TargetType="{x:Type ToggleButton}">
+                                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ToggleButton.Style>
+                    </ToggleButton>
 
-                <Menu
-                    Grid.Column="6"
-                    Background="{DynamicResource DarkestColorBrush}"
-                    IsMainMenu="True"
-                    IsTabStop="False"
-                    ToolTip="{Binding [FileOptions]}">
-                    <Menu.Style>
-                        <Style BasedOn="{StaticResource MaterialDesignMenu}" TargetType="{x:Type Menu}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding DataContext.IsCurrentlyPlaying, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
-                                        <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="False" />
-                                    </MultiDataTrigger.Conditions>
-                                    <MultiDataTrigger.Setters>
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </MultiDataTrigger.Setters>
-                                </MultiDataTrigger>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
-                                    </MultiDataTrigger.Conditions>
-                                    <MultiDataTrigger.Setters>
+                    <Button
+                        Grid.Column="4"
+                        Height="36"
+                        Margin="-5,0"
+                        Command="{Binding ScrollToSelectedFileCommand}"
+                        ToolTip="{Binding [GoToSelectedFile]}">
+                        <Button.Style>
+                            <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="{x:Type Button}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Collapsed" />
-                                    </MultiDataTrigger.Setters>
-                                </MultiDataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Menu.Style>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <materialDesign:PackIcon
+                            Width="16"
+                            Height="16"
+                            Kind="Jump" />
+                    </Button>
 
-                    <MenuItem
-                        Height="40"
+                    <Menu
+                        Grid.Column="5"
+                        Background="{DynamicResource DarkestColorBrush}"
+                        IsMainMenu="True"
                         IsTabStop="False"
-                        Style="{StaticResource CustomIconMenuItem}">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon
-                                HorizontalAlignment="Center"
-                                HorizontalContentAlignment="Center"
-                                Kind="Menu" />
-                        </MenuItem.Icon>
-                        <MenuItem Header="{Binding [FileOptions]}" IsEnabled="False">
+                        ToolTip="{Binding [Sort]}">
+                        <Menu.Style>
+                            <Style BasedOn="{StaticResource MaterialDesignMenu}" TargetType="{x:Type Menu}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Value="True">
+                                                <Condition.Binding>
+                                                    <MultiBinding Converter="{StaticResource BooleanOrConverter}">
+                                                        <Binding Path="DataContext.IsBusy" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                                        <Binding Path="IsBusy" />
+                                                    </MultiBinding>
+                                                </Condition.Binding>
+                                            </Condition>
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.Setters>
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </MultiDataTrigger.Setters>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Menu.Style>
+                        <MenuItem
+                            Height="40"
+                            IsTabStop="False"
+                            Style="{StaticResource CustomIconMenuItem}">
                             <MenuItem.Icon>
                                 <materialDesign:PackIcon
                                     HorizontalAlignment="Center"
                                     HorizontalContentAlignment="Center"
-                                    Kind="Cog" />
+                                    Kind="Sort" />
                             </MenuItem.Icon>
+
+                            <MenuItem
+                                Command="{Binding SortFilesCommand}"
+                                CommandParameter="{x:Static enums:SortModeType.AlphabeticalNameAsc}"
+                                Header="{Binding [ByNameAsc]}"
+                                IsCheckable="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="SortAlphabeticalAscending" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Command="{Binding SortFilesCommand}"
+                                CommandParameter="{x:Static enums:SortModeType.AlphabeticalNameDesc}"
+                                Header="{Binding [ByNameDesc]}"
+                                IsCheckable="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="SortAlphabeticalAscending" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Command="{Binding SortFilesCommand}"
+                                CommandParameter="{x:Static enums:SortModeType.AlphabeticalPathAsc}"
+                                Header="{Binding [ByPathAsc]}"
+                                IsCheckable="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="SortAlphabeticalAscending" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Command="{Binding SortFilesCommand}"
+                                CommandParameter="{x:Static enums:SortModeType.AlphabeticalPathDesc}"
+                                Header="{Binding [ByPathDesc]}"
+                                IsCheckable="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="SortAlphabeticalAscending" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Command="{Binding SortFilesCommand}"
+                                CommandParameter="{x:Static enums:SortModeType.DurationAsc}"
+                                Header="{Binding [ByDurationAsc]}"
+                                IsCheckable="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="SortNumericAscending" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Command="{Binding SortFilesCommand}"
+                                CommandParameter="{x:Static enums:SortModeType.DurationDesc}"
+                                Header="{Binding [ByDurationDesc]}"
+                                IsCheckable="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="SortNumericDescending" />
+                                </MenuItem.Icon>
+                            </MenuItem>
                         </MenuItem>
-                        <Separator />
+                    </Menu>
+
+                    <Menu
+                        Grid.Column="6"
+                        Background="{DynamicResource DarkestColorBrush}"
+                        IsMainMenu="True"
+                        IsTabStop="False"
+                        ToolTip="{Binding [FileOptions]}">
+                        <Menu.Style>
+                            <Style BasedOn="{StaticResource MaterialDesignMenu}" TargetType="{x:Type Menu}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding DataContext.IsCurrentlyPlaying, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
+                                            <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.Setters>
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </MultiDataTrigger.Setters>
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.Setters>
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </MultiDataTrigger.Setters>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Menu.Style>
                         <MenuItem
-                            Header="{Binding [Audio]}"
-                            ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
-                            ItemsSource="{Binding DataContext.CurrentFileAudios, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
-                            <MenuItem.IsEnabled>
-                                <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
-                                    <Binding Path="DataContext.CurrentFileAudios.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                    <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                </MultiBinding>
-                            </MenuItem.IsEnabled>
+                            Height="40"
+                            IsTabStop="False"
+                            Style="{StaticResource CustomIconMenuItem}">
                             <MenuItem.Icon>
-                                <materialDesign:PackIcon Kind="Audio" />
+                                <materialDesign:PackIcon
+                                    HorizontalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    Kind="Menu" />
                             </MenuItem.Icon>
+                            <MenuItem Header="{Binding [FileOptions]}" IsEnabled="False">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        Kind="Cog" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem
+                                Header="{Binding [Audio]}"
+                                ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
+                                ItemsSource="{Binding DataContext.CurrentFileAudios, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                                <MenuItem.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
+                                        <Binding Path="DataContext.CurrentFileAudios.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                        <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                    </MultiBinding>
+                                </MenuItem.IsEnabled>
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="Audio" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="{Binding [Subtitles]}">
+                                <MenuItem.ItemsSource>
+                                    <CompositeCollection>
+                                        <!--  Remember, you cant use x:Reference if the target contains the child (the x:Reference one)  -->
+                                        <MenuItem
+                                            Command="{Binding Tag.OpenSubTitleFileDialogCommand, Source={x:Reference Name=PlaylistLv}}"
+                                            Header="{Binding [Search]}"
+                                            IsCheckable="False">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="Search" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator />
+                                        <CollectionContainer Collection="{Binding Source={StaticResource SubTitlesItems}}" />
+                                    </CompositeCollection>
+                                </MenuItem.ItemsSource>
+                                <MenuItem.ItemContainerStyleSelector>
+                                    <selectors:FileOptionsItemContainerStyleSelector Dynamic="{StaticResource FileOptionsItemContainerStyle}" Normal="{StaticResource MaterialDesignMenuItem}" />
+                                </MenuItem.ItemContainerStyleSelector>
+                                <MenuItem.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
+                                        <Binding Path="DataContext.CurrentFileSubTitles.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                        <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                    </MultiBinding>
+                                </MenuItem.IsEnabled>
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="Subtitles" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Header="{Binding [Quality]}"
+                                ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
+                                ItemsSource="{Binding DataContext.CurrentFileQualities, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                                <MenuItem.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
+                                        <Binding Path="DataContext.CurrentFileQualities.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                        <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                    </MultiBinding>
+                                </MenuItem.IsEnabled>
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="QualityHigh" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem Template="{StaticResource VolumeMenuItemControlTemplate}" />
                         </MenuItem>
-                        <MenuItem Header="{Binding [Subtitles]}">
-                            <MenuItem.ItemsSource>
-                                <CompositeCollection>
-                                    <!--  Remember, you cant use x:Reference if the target contains the child (the x:Reference one)  -->
-                                    <MenuItem
-                                        Command="{Binding Tag.OpenSubTitleFileDialogCommand, Source={x:Reference Name=PlaylistLv}}"
-                                        Header="{Binding [Search]}"
-                                        IsCheckable="False">
-                                        <MenuItem.Icon>
-                                            <materialDesign:PackIcon Kind="Search" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <Separator />
-                                    <CollectionContainer Collection="{Binding Source={StaticResource SubTitlesItems}}" />
-                                </CompositeCollection>
-                            </MenuItem.ItemsSource>
-                            <MenuItem.ItemContainerStyleSelector>
-                                <selectors:FileOptionsItemContainerStyleSelector Dynamic="{StaticResource FileOptionsItemContainerStyle}" Normal="{StaticResource MaterialDesignMenuItem}" />
-                            </MenuItem.ItemContainerStyleSelector>
-                            <MenuItem.IsEnabled>
-                                <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
-                                    <Binding Path="DataContext.CurrentFileSubTitles.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                    <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                </MultiBinding>
-                            </MenuItem.IsEnabled>
-                            <MenuItem.Icon>
-                                <materialDesign:PackIcon Kind="Subtitles" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Header="{Binding [Quality]}"
-                            ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
-                            ItemsSource="{Binding DataContext.CurrentFileQualities, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
-                            <MenuItem.IsEnabled>
-                                <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
-                                    <Binding Path="DataContext.CurrentFileQualities.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                    <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                </MultiBinding>
-                            </MenuItem.IsEnabled>
-                            <MenuItem.Icon>
-                                <materialDesign:PackIcon Kind="QualityHigh" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem Template="{StaticResource VolumeMenuItemControlTemplate}" />
-                    </MenuItem>
-                </Menu>
+                    </Menu>
+                </Grid>
             </Grid>
+
         </materialDesign:ColorZone>
 
         <!--
@@ -537,6 +601,9 @@
             PlacementTarget="{Binding ElementName=PlaylistLv}"
             StaysOpen="False">
             <behaviours:Interaction.Triggers>
+                <behaviours:EventTrigger EventName="Opened">
+                    <behaviours:CallMethodAction MethodName="FocusUrl" TargetObject="{Binding ElementName=AddFromUrlUserControl}" />
+                </behaviours:EventTrigger>
                 <behaviours:EventTrigger EventName="Closed">
                     <behaviours:ChangePropertyAction
                         PropertyName="Text"

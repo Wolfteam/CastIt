@@ -1,10 +1,12 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Common.Enums;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using EmbedIO;
 using MvvmCross.Logging;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,11 +38,11 @@ namespace CastIt.Server
 
         protected override async Task OnRequestAsync(IHttpContext context)
         {
-            var path = context.RequestedPath;
-            var verb = context.Request.HttpVerb;
             var query = context.GetRequestQueryData();
             if (query.Count == 0 || !query.AllKeys.All(q => AppWebServer.AllowedQueryParameters.Contains(q)))
             {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                context.Response.StatusDescription = "You need to provide all the query params";
                 context.SetHandled();
                 _logger.Warn($"{nameof(OnRequestAsync)}: Query params does not contain the all the allowed values.");
                 return;
@@ -51,18 +53,16 @@ namespace CastIt.Server
                 double seconds = double.Parse(query[AppWebServer.SecondsQueryParameter]);
                 int videoStreamIndex = int.Parse(query[AppWebServer.VideoStreamIndexParameter]);
                 int audioStreamIndex = int.Parse(query[AppWebServer.AudioStreamIndexParameter]);
-
-                if (!File.Exists(filepath))
-                {
-                    context.Response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
-                    _logger.Warn($"{nameof(OnRequestAsync)}: File = {filepath} does not exist.");
-                    return;
-                }
+                bool videoNeedsTranscode = bool.Parse(query[AppWebServer.VideoNeedsTranscode]);
+                bool audioNeedsTranscode = bool.Parse(query[AppWebServer.AudioNeedsTranscode]);
+                var hwAccelType = Enum.Parse<HwAccelDeviceType>(query[AppWebServer.HwAccelTypeToUse], true);
+                string videoWidthAndHeight = query[AppWebServer.VideoWidthAndHeight];
 
                 bool isVideoFile = FileUtils.IsVideoFile(filepath);
                 bool isMusicFile = FileUtils.IsMusicFile(filepath);
+                bool isHls = FileUtils.IsHls(filepath);
 
-                if (!isVideoFile && !isMusicFile)
+                if (!isVideoFile && !isMusicFile && !isHls)
                 {
                     _logger.Warn($"{nameof(OnRequestAsync)}: File = {filepath} is not a video nor music file.");
                     return;
@@ -70,8 +70,11 @@ namespace CastIt.Server
 
                 _logger.Info(
                     $"{nameof(OnRequestAsync)}: Handling request for file = {filepath} " +
-                    $"with seconds = {seconds}, with videoStreamIndex = {videoStreamIndex} " +
-                    $"and audioStreamIndex = {audioStreamIndex}");
+                    $"with seconds = {seconds}, with videoStreamIndex = {videoStreamIndex}, " +
+                    $"with audioStreamIndex = {audioStreamIndex}, " +
+                    $"with transVideo = {videoNeedsTranscode}, " +
+                    $"with transAudio = {audioNeedsTranscode}, " +
+                    $"with hwAccelType = {hwAccelType}");
 
                 context.Response.ContentType = _ffmpegService.GetOutputTranscodeMimeType(filepath);
 
@@ -85,7 +88,7 @@ namespace CastIt.Server
                 }
 
                 _checkTranscodeProcess = true;
-                if (isVideoFile)
+                if (isVideoFile || isHls)
                 {
                     await _ffmpegService.TranscodeVideo(
                         context.Response.OutputStream,
@@ -93,11 +96,15 @@ namespace CastIt.Server
                         videoStreamIndex,
                         audioStreamIndex,
                         seconds,
-                        _tokenSource.Token).ConfigureAwait(false);
+                        videoNeedsTranscode,
+                        audioNeedsTranscode,
+                        hwAccelType,
+                        _tokenSource.Token,
+                        videoWidthAndHeight).ConfigureAwait(false);
                 }
                 else
                 {
-                    using var memoryStream = await _ffmpegService.TranscodeMusic(
+                    await using var memoryStream = await _ffmpegService.TranscodeMusic(
                         filepath,
                         audioStreamIndex,
                         seconds,
@@ -113,7 +120,7 @@ namespace CastIt.Server
             {
                 if (e is IOException || e is TaskCanceledException)
                     return;
-                _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occcured");
+                _logger.Error(e, $"{nameof(OnRequestAsync)}: Unknown error occurred");
                 _telemetryService.TrackError(e);
             }
             finally

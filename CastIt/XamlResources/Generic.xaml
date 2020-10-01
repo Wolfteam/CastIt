@@ -14,6 +14,7 @@
         <Setter Property="TextElement.Background" Value="{DynamicResource MaterialDesignBody}" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
         <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
+        <Setter Property="WindowStyle" Value="None" />
     </Style>
 
     <Style
@@ -23,7 +24,6 @@
         <Setter Property="AllowsTransparency" Value="True" />
         <Setter Property="Background" Value="{DynamicResource WindowLightBackground}" />
         <Setter Property="ResizeMode" Value="NoResize" />
-        <Setter Property="WindowStyle" Value="None" />
         <Setter Property="WindowChrome.WindowChrome">
             <Setter.Value>
                 <WindowChrome

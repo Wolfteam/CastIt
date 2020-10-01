@@ -1,10 +1,11 @@
-import 'package:castit/models/dtos/responses/file_item_options_response_dto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../bloc/played_file_options/played_file_options_bloc.dart';
+import '../../../bloc/server_ws/server_ws_bloc.dart';
 import '../../../common/styles.dart';
 import '../../../generated/i18n.dart';
+import '../../../models/dtos/responses/file_item_options_response_dto.dart';
 import 'bottom_sheet_title.dart';
 import 'modal_sheet_separator.dart';
 
@@ -19,7 +20,11 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         child: BlocConsumer<PlayedFileOptionsBloc, PlayedFileOptionsState>(
           listener: (ctx, state) {
             state.maybeWhen(
-              closed: () => Navigator.of(ctx).pop(),
+              closed: () {
+                if (ModalRoute.of(context).isCurrent) {
+                  Navigator.of(ctx).pop();
+                }
+              },
               orElse: () {},
             );
           },
@@ -53,6 +58,11 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           _buildSubtitleOptions(context, i18n, s.options),
           _buildQualitiesOptions(context, i18n, s.options),
           _buildVolumeOptions(context, i18n, s.volumeLvl, s.isMuted),
+          OutlineButton.icon(
+            onPressed: () => _stopPlayback(context),
+            icon: const Icon(Icons.stop),
+            label: Text(i18n.stopPlayback),
+          ),
         ];
       },
       closed: (s) {
@@ -101,14 +111,11 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     if (options.isEmpty) {
       options.add(dummy);
     }
-    final selected = options.firstWhere(
-      (element) => element.isSelected,
-    );
+    final selected = options.firstWhere((element) => element.isSelected);
     final dropdown = DropdownButton<FileItemOptionsResponseDto>(
       isExpanded: true,
       hint: Text(selected.text),
       value: selected,
-      iconSize: 24,
       underline: Container(
         height: 0,
         color: Colors.transparent,
@@ -130,7 +137,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Icon(icon),
               Container(
@@ -157,9 +163,8 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Icon(Icons.volume_up),
+              const Icon(Icons.volume_up),
               Container(
                 margin: const EdgeInsets.only(left: 10),
                 child: Text(
@@ -193,11 +198,16 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       isSubtitle: option.isSubTitle,
       isQuality: option.isQuality,
     );
-    context.bloc<PlayedFileOptionsBloc>().add(event);
     Navigator.of(context).pop();
+    context.bloc<PlayedFileOptionsBloc>().add(event);
   }
 
   void _setVolume(BuildContext context, double volumeLevel, bool isMuted) => context
       .bloc<PlayedFileOptionsBloc>()
       .add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
+
+  Future<void> _stopPlayback(BuildContext context) async {
+    await context.bloc<ServerWsBloc>().stopPlayBack();
+    Navigator.of(context).pop();
+  }
 }

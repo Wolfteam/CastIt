@@ -5,7 +5,7 @@ import '../../../bloc/play/play_bloc.dart';
 import '../../../bloc/server_ws/server_ws_bloc.dart';
 
 class PlayButtons extends StatelessWidget {
-  static const double _iconSize = 42;
+  static const double _iconSize = 50;
 
   final bool areDisabled;
 
@@ -19,51 +19,57 @@ class PlayButtons extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final iconColor = isDarkTheme ? Colors.white : Colors.black;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        IconButton(
-          iconSize: _iconSize,
-          onPressed: areDisabled ? null : () => _skipThirtySeconds(context, false),
-          icon: Icon(Icons.fast_rewind, color: iconColor),
-        ),
-        IconButton(
-          iconSize: _iconSize,
-          onPressed: areDisabled ? null : () => _goTo(context, false, true),
-          icon: Icon(Icons.skip_previous, color: iconColor),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.accentColor,
-            borderRadius: BorderRadius.circular(50.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          IconButton(
+            iconSize: _iconSize,
+            padding: EdgeInsets.zero,
+            onPressed: areDisabled ? null : () => _skipThirtySeconds(context, false),
+            icon: Icon(Icons.fast_rewind, color: iconColor),
           ),
-          child: BlocBuilder<PlayBloc, PlayState>(
-            builder: (ctx, state) {
-              if (state is PlayingState) {
-                return _buildPlayBackButton(context, state.isPaused);
-              }
-              return _buildPlayBackButton(context, false);
-            },
+          IconButton(
+            iconSize: _iconSize,
+            padding: EdgeInsets.zero,
+            onPressed: areDisabled ? null : () => _goTo(context, false, true),
+            icon: Icon(Icons.skip_previous, color: iconColor),
           ),
-        ),
-        IconButton(
-          iconSize: _iconSize,
-          onPressed: areDisabled ? null : () => _goTo(context, true, false),
-          icon: Icon(Icons.skip_next, color: iconColor),
-        ),
-        IconButton(
-          iconSize: _iconSize,
-          onPressed: areDisabled ? null : () => _skipThirtySeconds(context, true),
-          icon: Icon(Icons.fast_forward, color: iconColor),
-        ),
-      ],
+          Container(
+            decoration: BoxDecoration(
+              color: theme.accentColor,
+              borderRadius: BorderRadius.circular(50.0),
+            ),
+            child: BlocBuilder<PlayBloc, PlayState>(
+              builder: (ctx, state) {
+                if (state is PlayingState) {
+                  return _buildPlayBackButton(context, state.isPaused);
+                }
+                return _buildPlayBackButton(context, false);
+              },
+            ),
+          ),
+          IconButton(
+            iconSize: _iconSize,
+            padding: EdgeInsets.zero,
+            onPressed: areDisabled ? null : () => _goTo(context, true, false),
+            icon: Icon(Icons.skip_next, color: iconColor),
+          ),
+          IconButton(
+            iconSize: _iconSize,
+            padding: EdgeInsets.zero,
+            onPressed: areDisabled ? null : () => _skipThirtySeconds(context, true),
+            icon: Icon(Icons.fast_forward, color: iconColor),
+          ),
+        ],
+      ),
     );
   }
 
   IconButton _buildPlayBackButton(BuildContext ctx, bool isPaused) {
     return IconButton(
-      iconSize: 60,
+      iconSize: 65,
       onPressed: areDisabled ? null : () => _togglePlayBack(ctx),
       icon: Icon(
         isPaused ? Icons.pause : Icons.play_arrow,

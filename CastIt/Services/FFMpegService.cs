@@ -27,7 +27,7 @@ namespace CastIt.Services
         private readonly Process _generateThumbnailProcess;
         private readonly Process _generateAllThumbnailsProcess;
         private readonly Process _transcodeProcess;
-        private readonly List<HwAccelDeviceType> AvailableHwDevices = new List<HwAccelDeviceType>();
+        private readonly List<HwAccelDeviceType> _availableHwDevices = new List<HwAccelDeviceType>();
 
         private static readonly IReadOnlyList<string> AllowedVideoContainers = new List<string>
         {
@@ -107,7 +107,7 @@ namespace CastIt.Services
             SetAvailableHwAccelDevices();
         }
 
-        public string GetThumbnail(string mrl, int second)
+        public string GetThumbnail(string mrl)
         {
             if (!FileUtils.IsLocalFile(mrl))
             {
@@ -116,19 +116,20 @@ namespace CastIt.Services
             }
 
             var filename = Path.GetFileName(mrl);
-            var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, second);
+            var thumbnailPath = FileUtils.GetThumbnailFilePath(filename, 0);
             if (File.Exists(thumbnailPath))
             {
                 return thumbnailPath;
             }
 
             var builder = new FFmpegArgsBuilder();
-            var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
+            builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
             var outputArgs = builder.AddOutputFile(thumbnailPath);
             if (!FileUtils.IsMusicFile(mrl))
             {
-                inputArgs.Seek(second);
-                outputArgs.SetVideoFrames(1);
+                outputArgs.WithVideoFilter(@"select=gt(scene\,0.4)")
+                    .SetVideoFrames(1)
+                    .WithVideoFilter("fps=1/60");
             }
             try
             {
@@ -140,14 +141,14 @@ namespace CastIt.Services
                 _generateThumbnailProcess.WaitForExit();
                 if (_generateThumbnailProcess.ExitCode != 0)
                 {
-                    _logger.Info($"{nameof(GetThumbnail)}: Couldnt retrieve the first thumbnail for file = {mrl}");
+                    _logger.Warn($"{nameof(GetThumbnail)}: Couldn't retrieve the first thumbnail for file = {mrl}.");
                     return null;
                 }
-                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was succesfully generated for file = {mrl}");
+                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+                _logger.Error(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
             finally
@@ -157,31 +158,33 @@ namespace CastIt.Services
             return thumbnailPath;
         }
 
-        public async Task GenerateThumbmnails(string mrl)
+        public async Task GenerateThumbnails(string mrl)
         {
             if (!FileUtils.IsLocalFile(mrl))
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
+                _logger.Info($"{nameof(GenerateThumbnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
                 return;
             }
             var filename = Path.GetFileName(mrl);
-            var ext = Path.GetExtension(mrl);
 
             if (FileUtils.IsMusicFile(mrl))
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
+                _logger.Info($"{nameof(GenerateThumbnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
                 return;
             }
             var fileInfo = await GetFileInfo(mrl, default).ConfigureAwait(false);
+            if (fileInfo?.Videos.Any(f => f.IsVideo) == false)
+                throw new InvalidOperationException($"The file = {mrl} does not have a valid file info or video stream");
+
             string thumbnailPath = FileUtils.GetPreviewThumbnailFilePath(filename);
             bool useHwAccel = fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
-                AvailableHwDevices.Contains(HwAccelDeviceType.Intel) &&
+                _availableHwDevices.Contains(HwAccelDeviceType.Intel) &&
                 _settingsService.EnableHardwareAcceleration;
 
             string cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, useHwAccel);
             try
             {
-                _logger.Info($"{nameof(GenerateThumbmnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
+                _logger.Info($"{nameof(GenerateThumbnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
                 _checkGenerateAllThumbnailsProcess = true;
                 _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateAllThumbnailsProcess.Start();
@@ -189,7 +192,7 @@ namespace CastIt.Services
                 if (_generateAllThumbnailsProcess.ExitCode > 0 && useHwAccel)
                 {
                     _logger.Warn(
-                        $"{nameof(GenerateThumbmnails)}: Could not generate thumbnails for file = {mrl} " +
+                        $"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl} " +
                         "using hw accel, falling back to sw.");
                     cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, false);
 
@@ -200,21 +203,17 @@ namespace CastIt.Services
 
                 if (_generateAllThumbnailsProcess.ExitCode > 0)
                 {
-                    _logger.Error($"{nameof(GenerateThumbmnails)}: Could not generate thumbnails for file = {mrl}.");
-                    throw new FFMpegException("Couldnt generate thumbnails", cmd);
+                    _logger.Error($"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl}.");
+                    throw new FFMpegException("Couldn't generate thumbnails", cmd);
                 }
-                else if (_generateAllThumbnailsProcess.ExitCode < 0)
-                {
-                    _logger.Info($"{nameof(GenerateThumbmnails)}: Process was killed for file = {mrl}");
-                }
-                else
-                {
-                    _logger.Info($"{nameof(GenerateThumbmnails)}: All thumbnails were succesfully generated for file = {mrl}");
-                }
+
+                _logger.Info(_generateAllThumbnailsProcess.ExitCode < 0
+                    ? $"{nameof(GenerateThumbnails)}: Process was killed for file = {mrl}"
+                    : $"{nameof(GenerateThumbnails)}: All thumbnails were successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GenerateThumbmnails)}: Unknown error occurred");
+                _logger.Error(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
             finally
@@ -289,10 +288,11 @@ namespace CastIt.Services
             _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}. Cmd = {cmd}");
             try
             {
-                if (!File.Exists(filePath))
+                if (!FileUtils.Exists(filePath))
                 {
                     return Task.FromResult<FFProbeFileInfo>(null);
                 }
+
                 return Task.Run(() =>
                 {
                     var process = new Process
@@ -329,26 +329,50 @@ namespace CastIt.Services
             int videoStreamIndex,
             int audioStreamIndex,
             double seconds,
-            CancellationToken token)
+            bool videoNeedsTranscode,
+            bool audioNeedsTranscode,
+            HwAccelDeviceType hwAccelType,
+            CancellationToken token,
+            string videoWidthAndHeight)
         {
-            var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
-            string cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex, from: 0, to: 2);
+            string cmd;
+            if (hwAccelType != HwAccelDeviceType.None)
+            {
+                cmd = BuildVideoTranscodeCmd(
+                    filePath,
+                    seconds,
+                    videoStreamIndex,
+                    audioStreamIndex,
+                    videoNeedsTranscode,
+                    audioNeedsTranscode,
+                    hwAccelType,
+                    videoWidthAndHeight,
+                    0, 2);
 
-            _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd...");
-            _transcodeProcess.StartInfo.Arguments = cmd;
-            _transcodeProcess.Start();
-            using var memStream = new MemoryStream();
-            var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            await testStream.CopyToAsync(memStream).ConfigureAwait(false);
-            if (_transcodeProcess.ExitCode > 0)
-            {
-                _logger.Warn($"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd}. Creating a new one..");
-                cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex, false);
+                _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd for hwAccelType = {hwAccelType}...");
+                _transcodeProcess.StartInfo.Arguments = cmd;
+                _transcodeProcess.Start();
+                await using var memStream = new MemoryStream();
+                var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
+                await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
+                if (_transcodeProcess.ExitCode > 0)
+                {
+                    _logger.Warn(
+                        $"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd} for hwAccelType = {hwAccelType}. " +
+                        $"Creating a new one with hwAccelType = {HwAccelDeviceType.None}..");
+                    hwAccelType = HwAccelDeviceType.None;
+                }
             }
-            else
-            {
-                cmd = BuildVideoTranscodeCmd(ffprobeFileInfo, filePath, seconds, videoStreamIndex, audioStreamIndex);
-            }
+
+            cmd = BuildVideoTranscodeCmd(
+                filePath,
+                seconds,
+                videoStreamIndex,
+                audioStreamIndex,
+                videoNeedsTranscode,
+                audioNeedsTranscode,
+                hwAccelType,
+                videoWidthAndHeight);
 
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
@@ -363,8 +387,16 @@ namespace CastIt.Services
 
         public async Task<MemoryStream> TranscodeMusic(string filePath, int audioStreamIndex, double seconds, CancellationToken token)
         {
-            var ffprobeFileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
-            var audioInfo = ffprobeFileInfo.Streams.Find(f => f.IsAudio);
+            var fileInfo = await GetFileInfo(filePath, token).ConfigureAwait(false);
+            if (fileInfo == null)
+            {
+                _logger.Info($"{nameof(TranscodeVideo)}: Couldn't retrieve file info for file = {filePath}");
+                return null;
+            }
+            var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
+            if (audioInfo is null)
+                throw new NullReferenceException($"The file = {filePath} does not have a valid audio stream");
+
             bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
                 !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
                 _settingsService.ForceAudioTranscode;
@@ -377,6 +409,7 @@ namespace CastIt.Services
             var memoryStream = new MemoryStream();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
+
             memoryStream.Position = 0;
             _logger.Info($"{nameof(TranscodeMusic)}: Transcode completed for file = {filePath}");
 
@@ -387,12 +420,13 @@ namespace CastIt.Services
         {
             bool isVideoFile = FileUtils.IsVideoFile(filepath);
             bool isMusicFile = FileUtils.IsMusicFile(filepath);
-
-            if (isVideoFile || isMusicFile)
+            bool isHls = FileUtils.IsHls(filepath);
+            if (isVideoFile || isMusicFile || isHls)
             {
                 //The transcode process generate either of these
-                return isVideoFile ? "video/mp4" : "audio/aac";
+                return isVideoFile || isHls ? "video/mp4" : "audio/aac";
             }
+
             return "video/webm";
         }
 
@@ -408,7 +442,11 @@ namespace CastIt.Services
                 FileUtils.DeleteFilesInDirectory(Path.GetDirectoryName(subtitleFinalPath));
                 var builder = new FFmpegArgsBuilder();
                 builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().TrySetSubTitleEncoding();
-                builder.AddOutputFile(subtitleFinalPath).Seek(Math.Floor(seconds)).SetMap(index).AddArg("muxdelay", 0).SetFormat("webvtt");
+                builder.AddOutputFile(subtitleFinalPath)
+                    .Seek(Math.Floor(seconds))
+                    .SetMap(index)
+                    .SetDelayInSeconds(_settingsService.SubtitleDelayInSeconds)
+                    .SetFormat("webvtt");
 
                 string cmd = builder.GetArgs();
                 _logger.Info($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
@@ -451,37 +489,76 @@ namespace CastIt.Services
             }
         }
 
-        private string BuildVideoTranscodeCmd(
-            FFProbeFileInfo fileInfo,
-            string filePath,
-            double seconds,
-            int videoStreamIndex,
-            int audioStreamIndex,
-            bool useHwAccel = true,
-            double? from = null,
-            double? to = null)
+        public bool VideoNeedsTranscode(int videoStreamIndex, FFProbeFileInfo fileInfo)
         {
-            var videoInfo = fileInfo.Streams.Find(f => f.IsVideo);
-            var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
+            if (fileInfo == null)
+                throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
+
+            var videoInfo = fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex && f.IsVideo);
+            if (videoInfo is null)
+                throw new NullReferenceException("The file does not have a valid video stream");
+
             bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
             bool videoProfileIsValid = videoInfo.VideoProfileIsValid(AllowedVideoProfiles);
 
-            bool videoNeedsTranscode = !videoCodecIsValid ||
-                !videoProfileIsValid ||
-                !videoLevelIsValid ||
-                _settingsService.ForceVideoTranscode ||
-                _settingsService.VideoScale != VideoScaleType.Original;
-            bool audioNeedsTranscode = !audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
-                !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
-                _settingsService.ForceAudioTranscode;
+            return !videoCodecIsValid ||
+               !videoProfileIsValid ||
+               !videoLevelIsValid ||
+               _settingsService.ForceVideoTranscode ||
+               _settingsService.VideoScale != VideoScaleType.Original;
+        }
 
+        public bool AudioNeedsTranscode(int audioStreamIndex, FFProbeFileInfo fileInfo, bool checkIfAudioIsNull = false)
+        {
+            if (fileInfo == null)
+                throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
+
+            var audioInfo = fileInfo.Streams.FirstOrDefault(f => f.Index == audioStreamIndex && f.IsAudio);
+            if (checkIfAudioIsNull && audioInfo is null)
+                throw new NullReferenceException("The file does not have a valid audio stream");
+
+            return audioInfo != null &&
+               (!audioInfo.AudioCodecIsValid(AllowedMusicCodecs) ||
+                !audioInfo.AudioProfileIsValid(AllowedMusicProfiles) ||
+                _settingsService.ForceAudioTranscode);
+        }
+
+        public HwAccelDeviceType GetHwAccelToUse(
+            int videoStreamIndex,
+            FFProbeFileInfo fileInfo,
+            bool shouldUseHwAccel = true,
+            bool isHls = false)
+        {
+            if (fileInfo == null)
+                throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
+
+            var videoInfo = fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex && f.IsVideo);
+            if (videoInfo is null)
+                throw new NullReferenceException($"The file does not have a valid video stream");
+
+            bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             var hwAccelType = GetHwAccelDeviceType();
-            if (!videoCodecIsValid || !useHwAccel)
+            if (!videoCodecIsValid || !shouldUseHwAccel || isHls)
             {
                 hwAccelType = HwAccelDeviceType.None;
             }
 
+            return hwAccelType;
+        }
+
+        private string BuildVideoTranscodeCmd(
+            string filePath,
+            double seconds,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            bool videoNeedsTranscode,
+            bool audioNeedsTranscode,
+            HwAccelDeviceType hwAccelType,
+            string videoWidthAndHeight = null,
+            double? from = null,
+            double? to = null)
+        {
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(filePath)
                 .BeQuiet()
@@ -490,11 +567,15 @@ namespace CastIt.Services
                 .SetHwAccel(hwAccelType)
                 .SetVideoCodec(hwAccelType);
             var outputArgs = builder.AddOutputPipe()
-                .SetMap(videoStreamIndex)
-                .SetMap(audioStreamIndex)
                 .SetPreset(hwAccelType)
                 .AddArg("map_metadata", -1)
                 .AddArg("map_chapters", -1); //for some reason the chromecast doesnt like chapters o.o
+
+            if (videoStreamIndex >= 0)
+                outputArgs.SetMap(videoStreamIndex);
+
+            if (audioStreamIndex >= 0)
+                outputArgs.SetMap(audioStreamIndex);
 
             if (seconds > 0 && !from.HasValue && !to.HasValue)
                 inputArgs.Seek(seconds);
@@ -511,21 +592,25 @@ namespace CastIt.Services
                 if (_settingsService.VideoScale != VideoScaleType.Original)
                 {
                     int videoScale = (int)_settingsService.VideoScale;
-                    if (hwAccelType == HwAccelDeviceType.Intel)
+                    switch (hwAccelType)
                     {
-                        outputArgs.AddArg("global_quality", 25);
-                        outputArgs.AddArg("look_ahead", 1);
-                        outputArgs.SetFilters($"scale_qsv=trunc(oh*a/2)*2:{videoScale}");
-                    }
-                    else if (hwAccelType == HwAccelDeviceType.Nvidia)
-                    {
-                        string scale = _settingsService.VideoScale == VideoScaleType.Hd ? "1280x720" : "1920x1080";
-                        if (scale != videoInfo.WidthAndHeightText)
-                            inputArgs.AddArg("resize", scale);
-                    }
-                    else if (hwAccelType == HwAccelDeviceType.None)
-                    {
-                        outputArgs.SetFilters($"scale=trunc(oh*a/2)*2:{videoScale}");
+                        case HwAccelDeviceType.Intel:
+                            outputArgs.AddArg("global_quality", 25)
+                                .AddArg("look_ahead", 1)
+                                .SetFilters($"scale_qsv=trunc(oh*a/2)*2:{videoScale}");
+                            break;
+                        case HwAccelDeviceType.Nvidia:
+                            string scale = _settingsService.VideoScale == VideoScaleType.Hd ? "1280x720" : "1920x1080";
+                            if (scale != videoWidthAndHeight && !string.IsNullOrWhiteSpace(videoWidthAndHeight))
+                                inputArgs.AddArg("resize", scale);
+                            break;
+                        case HwAccelDeviceType.None:
+                            outputArgs.SetFilters($"scale=trunc(oh*a/2)*2:{videoScale}");
+                            break;
+                        case HwAccelDeviceType.AMD:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
                 }
             }
@@ -578,27 +663,28 @@ namespace CastIt.Services
                 _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Getting available devices..");
                 var objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
                 var adapters = new List<string>();
-                foreach (ManagementObject obj in objvide.Get())
+                foreach (var o in objvide.Get())
                 {
+                    var obj = (ManagementObject)o;
                     adapters.Add(obj["AdapterCompatibility"].ToString());
                 }
 
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
                 {
-                    AvailableHwDevices.Add(HwAccelDeviceType.Nvidia);
+                    _availableHwDevices.Add(HwAccelDeviceType.Nvidia);
                 }
 
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.AMD), StringComparison.OrdinalIgnoreCase)))
                 {
-                    AvailableHwDevices.Add(HwAccelDeviceType.AMD);
+                    _availableHwDevices.Add(HwAccelDeviceType.AMD);
                 }
 
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
                 {
-                    AvailableHwDevices.Add(HwAccelDeviceType.Intel);
+                    _availableHwDevices.Add(HwAccelDeviceType.Intel);
                 }
 
-                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", AvailableHwDevices)}");
+                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", _availableHwDevices)}");
             }
             catch (Exception ex)
             {
@@ -609,16 +695,13 @@ namespace CastIt.Services
 
         private HwAccelDeviceType GetHwAccelDeviceType()
         {
-            if (AvailableHwDevices.Contains(HwAccelDeviceType.Nvidia))
+            if (_availableHwDevices.Contains(HwAccelDeviceType.Nvidia))
                 return HwAccelDeviceType.Nvidia;
 
-            if (AvailableHwDevices.Contains(HwAccelDeviceType.AMD))
+            if (_availableHwDevices.Contains(HwAccelDeviceType.AMD))
                 return HwAccelDeviceType.AMD;
 
-            if (AvailableHwDevices.Contains(HwAccelDeviceType.Intel))
-                return HwAccelDeviceType.Intel;
-
-            return HwAccelDeviceType.None;
+            return _availableHwDevices.Contains(HwAccelDeviceType.Intel) ? HwAccelDeviceType.Intel : HwAccelDeviceType.None;
         }
 
         private string GenerateCmdForThumbnails(string mrl, string thumbnailPath, bool useHwAccel)

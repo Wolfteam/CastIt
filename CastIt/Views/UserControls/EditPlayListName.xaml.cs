@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using CastIt.Common.Extensions;
 
 namespace CastIt.Views.UserControls
 {
@@ -10,5 +11,7 @@ namespace CastIt.Views.UserControls
         {
             InitializeComponent();
         }
+
+        public void FocusTextBox() => PlayListNameTextBox.FocusAndSetPointer();
     }
 }

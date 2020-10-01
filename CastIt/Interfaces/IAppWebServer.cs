@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Enums;
 using CastIt.Interfaces.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,15 @@ namespace CastIt.Interfaces
 
         void Init(IMainViewModel mainViewModel, CancellationToken cancellationToken);
 
-        string GetMediaUrl(string filePath, int videoStreamIndex, int audioStreamIndex, double seconds);
+        string GetMediaUrl(
+            string filePath,
+            int videoStreamIndex,
+            int audioStreamIndex,
+            double seconds,
+            bool videoNeedsTranscode,
+            bool audioNeedsTranscode,
+            HwAccelDeviceType hwAccelToUse,
+            string videoWidthAndHeight = null);
 
         string GetPreviewPath(string filepath);
 

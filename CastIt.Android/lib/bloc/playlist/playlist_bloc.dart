@@ -35,8 +35,21 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
       }
     });
 
+    _serverWsBloc.connected.stream.listen((event) {
+      if (state is PlayListDisconnectedState) {
+        final playListId = (state as PlayListDisconnectedState).playListId;
+        if (playListId != null) {
+          add(PlayListEvent.load(id: playListId));
+        }
+      }
+    });
+
     _serverWsBloc.disconnected.stream.listen((event) {
-      add(const PlayListEvent.disconnected());
+      if (state is PlayListLoadedState) {
+        add(PlayListEvent.disconnected(playListId: currentState.playlistId));
+      } else {
+        add(const PlayListEvent.disconnected());
+      }
     });
 
     _serverWsBloc.refreshPlayList.stream.listen((event) {
@@ -61,7 +74,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     }
 
     final s = event.map(
-      disconnected: (e) async => PlayListState.disconnected(),
+      disconnected: (e) async => PlayListState.disconnected(playListId: e.playListId),
       load: (e) async {
         await _serverWsBloc.loadPlayList(e.id);
         return initialState;

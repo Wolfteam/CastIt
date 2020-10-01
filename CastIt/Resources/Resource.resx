@@ -453,4 +453,79 @@
   <data name="ParseVideoOrPlayList" xml:space="preserve">
     <value>Parse video or playlist ?</value>
   </data>
+  <data name="InvalidFiles" xml:space="preserve">
+    <value>One of the provided files is not valid</value>
+  </data>
+  <data name="UrlCouldntBeParsed" xml:space="preserve">
+    <value>Url couldn't be parsed</value>
+  </data>
+  <data name="SomethingWentWrong" xml:space="preserve">
+    <value>Something went wrong!</value>
+  </data>
+  <data name="InvalidPlayListName" xml:space="preserve">
+    <value>The playlist name is not valid</value>
+  </data>
+  <data name="ByPathAsc" xml:space="preserve">
+    <value>By path asc.</value>
+  </data>
+  <data name="ByPathDesc" xml:space="preserve">
+    <value>By path desc.</value>
+  </data>
+  <data name="NoFilesToBeAdded" xml:space="preserve">
+    <value>There are no files to be added</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Transparent" xml:space="preserve">
+    <value>Transparent</value>
+  </data>
+  <data name="White" xml:space="preserve">
+    <value>White</value>
+  </data>
+  <data name="Yellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Bold" xml:space="preserve">
+    <value>Bold</value>
+  </data>
+  <data name="Italic" xml:space="preserve">
+    <value>Italic</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="FontColor" xml:space="preserve">
+    <value>Font color</value>
+  </data>
+  <data name="BackgroundColor" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+  <data name="FontStyle" xml:space="preserve">
+    <value>Font style</value>
+  </data>
+  <data name="FontFamily" xml:space="preserve">
+    <value>Font family</value>
+  </data>
+  <data name="FontScale" xml:space="preserve">
+    <value>Font scale</value>
+  </data>
+  <data name="SubtitleDelay" xml:space="preserve">
+    <value>Subtitle delay</value>
+  </data>
+  <data name="ShowPlayListTotalDuration" xml:space="preserve">
+    <value>Show playlist total duration</value>
+  </data>
+  <data name="FontBackgroundColor" xml:space="preserve">
+    <value>Font background color</value>
+  </data>
+  <data name="LoadFirstSubtitleFoundAutomatically" xml:space="preserve">
+    <value>Load the first subtitles found automatically</value>
+  </data>
+  <data name="XSeconds" xml:space="preserve">
+    <value>{0} seconds</value>
+  </data>
 </root>

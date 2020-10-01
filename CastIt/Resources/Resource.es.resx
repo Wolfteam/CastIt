@@ -453,4 +453,79 @@
   <data name="ParseVideoOrPlayList" xml:space="preserve">
     <value>¿ Parsear video o lista de reproducción ?</value>
   </data>
+  <data name="InvalidFiles" xml:space="preserve">
+    <value>Uno de los archivos no es válido</value>
+  </data>
+  <data name="UrlCouldntBeParsed" xml:space="preserve">
+    <value>La ruta no pudo ser parseada</value>
+  </data>
+  <data name="SomethingWentWrong" xml:space="preserve">
+    <value>Algo salió mal!</value>
+  </data>
+  <data name="InvalidPlayListName" xml:space="preserve">
+    <value>El nombre de la lista de reproducción no es válido</value>
+  </data>
+  <data name="ByPathAsc" xml:space="preserve">
+    <value>Por ruta asc.</value>
+  </data>
+  <data name="ByPathDesc" xml:space="preserve">
+    <value>Por ruta desc.</value>
+  </data>
+  <data name="NoFilesToBeAdded" xml:space="preserve">
+    <value>No hay archivos para ser agregados</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Transparent" xml:space="preserve">
+    <value>Transparente</value>
+  </data>
+  <data name="White" xml:space="preserve">
+    <value>Blanco</value>
+  </data>
+  <data name="Yellow" xml:space="preserve">
+    <value>Amarillo</value>
+  </data>
+  <data name="Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Bold" xml:space="preserve">
+    <value>Negrita</value>
+  </data>
+  <data name="Italic" xml:space="preserve">
+    <value>Itálica</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="FontColor" xml:space="preserve">
+    <value>Color de la fuente</value>
+  </data>
+  <data name="BackgroundColor" xml:space="preserve">
+    <value>Color de fondo</value>
+  </data>
+  <data name="FontStyle" xml:space="preserve">
+    <value>Estilo de fuente</value>
+  </data>
+  <data name="FontFamily" xml:space="preserve">
+    <value>Familia de la fuente</value>
+  </data>
+  <data name="FontScale" xml:space="preserve">
+    <value>Escala de la fuente</value>
+  </data>
+  <data name="SubtitleDelay" xml:space="preserve">
+    <value>Retraso de los subtítulos</value>
+  </data>
+  <data name="ShowPlayListTotalDuration" xml:space="preserve">
+    <value>Mostrar la duración total de una lista de reproducción</value>
+  </data>
+  <data name="FontBackgroundColor" xml:space="preserve">
+    <value>Color de fondo de la fuente</value>
+  </data>
+  <data name="LoadFirstSubtitleFoundAutomatically" xml:space="preserve">
+    <value>Cargar los primeros subtítulos encontrados automáticamente</value>
+  </data>
+  <data name="XSeconds" xml:space="preserve">
+    <value>{0} segundos</value>
+  </data>
 </root>
