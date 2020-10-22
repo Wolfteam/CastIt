@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MvvmCross" Version="7.0.1" />
+    <PackageReference Include="MvvmCross" Version="7.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="protobuf-net" Version="3.0.29" />
     <PackageReference Include="Zeroconf" Version="3.4.2" />
