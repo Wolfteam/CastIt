@@ -440,7 +440,20 @@ namespace CastIt.Common.Utils
                     .Substring(0, playerConfig.IndexOf("</script>", StringComparison.OrdinalIgnoreCase))
                     .Replace("\\/", "/");
                 var jsMatch = Regex.Match(playerConfig, "(\"js\":.*?.js)");
+                if (!jsMatch.Success)
+                {
+                    _logger.Info($"{nameof(GetFinalUrl)}: Js url was not found in json key = 'js', checking json key = 'jsUrl'...");
+                    jsMatch = Regex.Match(playerConfig, "(\"jsUrl\":.*?.js)");
+                }
+
                 string jsUrl = jsMatch.Value;
+                if (string.IsNullOrWhiteSpace(jsUrl))
+                {
+                    var msg = "Could not retrieve the js url";
+                    _logger.Error($"{nameof(GetFinalUrl)}: {msg}");
+                    throw new InvalidOperationException(msg);
+                }
+
                 jsUrl = YoutubeUrl + jsUrl.Substring(jsUrl.IndexOf("/", StringComparison.Ordinal));
 
                 string cipherPattern = @"(?<=\\""signatureCipher\\"":).+";
