@@ -27,7 +27,7 @@
     <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="Dragablz.NetCore" Version="0.3.3" />
     <PackageReference Include="EmbedIO" Version="3.4.3" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.25" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.26" />
     <PackageReference Include="MaterialDesignThemes" Version="3.2.0-ci1901" />
     <PackageReference Include="Microsoft.AppCenter.Analytics" Version="3.4.3" />
     <PackageReference Include="Microsoft.AppCenter.Crashes" Version="3.4.3" />
