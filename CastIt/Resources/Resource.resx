@@ -528,4 +528,7 @@
   <data name="XSeconds" xml:space="preserve">
     <value>{0} seconds</value>
   </data>
+  <data name="FileCouldntBeOpened" xml:space="preserve">
+    <value>File could not be opened</value>
+  </data>
 </root>

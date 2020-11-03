@@ -239,7 +239,11 @@ namespace CastIt.ViewModels.Items
                 return;
             }
 
-            FileInfo = await _ffmpegService.GetFileInfo(Path, token);
+            var fileInfo = await _ffmpegService.GetFileInfo(Path, token);
+            if (fileInfo != null)
+            {
+                FileInfo = fileInfo;
+            }
 
             var duration = FileInfo?.Format?.Duration ?? -1;
             await SetDuration(duration);
@@ -248,6 +252,9 @@ namespace CastIt.ViewModels.Items
 
         public async Task SetDuration(double seconds, bool update = true)
         {
+            await RaisePropertyChanged(() => IsLocalFile);
+            await RaisePropertyChanged(() => IsUrlFile);
+            await RaisePropertyChanged(() => Exists);
             if (!Exists)
             {
                 TotalSeconds = 0;
@@ -298,12 +305,16 @@ namespace CastIt.ViewModels.Items
                 var psi = new ProcessStartInfo("explorer.exe", "/n /e,/select," + @$"""{Path}""");
                 Process.Start(psi);
             }
-            else
+            else if (IsUrlFile)
             {
                 Process.Start(new ProcessStartInfo(Path)
                 {
                     UseShellExecute = true
                 });
+            }
+            else
+            {
+                Messenger.Publish(new SnackbarMessage(this, GetText("FileCouldntBeOpened")));
             }
         }
     }

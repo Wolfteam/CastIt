@@ -493,6 +493,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File could not be opened.
+        /// </summary>
+        public static string FileCouldntBeOpened {
+            get {
+                return ResourceManager.GetString("FileCouldntBeOpened", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File does not exist.
         /// </summary>
         public static string FileDoesntExist {
