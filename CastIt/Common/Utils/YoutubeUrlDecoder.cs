@@ -400,9 +400,7 @@ namespace CastIt.Common.Utils
             }
 
             if (formatMatch.Length == 0)
-            {
                 _logger.Warn($"{nameof(GetVideoQualities)}: Couldn't retrieve qualities for body = {body}...");
-            }
 
             string streamMap = DecodeUrlString(formatMatch.Value).Replace(@"\\u0026", "&");
 
