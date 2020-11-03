@@ -250,6 +250,7 @@ namespace CastIt.ViewModels.Items
         {
             if (!Exists)
             {
+                TotalSeconds = 0;
                 Duration = GetText("Missing");
                 return;
             }

@@ -38,6 +38,7 @@ namespace CastIt.ViewModels
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
         private readonly IMapper _mapper;
+        private readonly IFileWatcherService _fileWatcherService;
 
         private FileItemViewModel _currentlyPlayedFile;
         private bool _isPaused;
@@ -260,7 +261,8 @@ namespace CastIt.ViewModels
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
-            IMapper mapper)
+            IMapper mapper,
+            IFileWatcherService fileWatcher)
             : base(textProvider, messenger, logger.GetLogFor<MainViewModel>())
         {
             _castService = castService;
@@ -270,6 +272,7 @@ namespace CastIt.ViewModels
             _telemetryService = telemetryService;
             _appWebServer = appWebServer;
             _mapper = mapper;
+            _fileWatcherService = fileWatcher;
         }
 
         #region Methods
@@ -322,6 +325,8 @@ namespace CastIt.ViewModels
                 Logger.Error(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
                 _telemetryService.TrackError(e);
             }
+
+            InitializeOrUpdateFileWatcher(false);
 
             Logger.Info($"{nameof(Initialize)}: Completed");
             await base.Initialize();
@@ -719,6 +724,7 @@ namespace CastIt.ViewModels
             playlist.CleanUp();
             PlayLists.Remove(playlist);
             _appWebServer.OnPlayListDeleted?.Invoke(id);
+            InitializeOrUpdateFileWatcher(true);
         }
 
         private async Task DeleteAllPlayLists(PlayListItemViewModel except)
@@ -741,11 +747,14 @@ namespace CastIt.ViewModels
             {
                 _appWebServer.OnPlayListDeleted?.Invoke(id);
             }
+
+            InitializeOrUpdateFileWatcher(true);
         }
 
         private async Task HandleCloseApp()
         {
             Logger.Info($"{nameof(HandleCloseApp)} App is about to be closed, cleaning them all!");
+            _fileWatcherService.StopListening();
             _appWebServer.OnAppClosing?.Invoke();
             _setDurationTokenSource.Cancel();
             foreach (var playList in PlayLists)
@@ -1322,6 +1331,71 @@ namespace CastIt.ViewModels
             _appWebServer.OnFileLoadingError?.Invoke(GetText("CouldntPlayFile"));
             await StopPlayBack();
             await ShowSnackbarMsg(GetText("CouldntPlayFile"));
+        }
+
+        private void InitializeOrUpdateFileWatcher(bool update)
+        {
+            Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Getting directories to watch...");
+            var dirs = PlayLists.SelectMany(pl => pl.Items)
+                .Where(f => f.IsLocalFile)
+                .Select(f => Path.GetDirectoryName(f.Path))
+                .Distinct()
+                .ToList();
+
+            Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Got = {dirs.Count} directories...");
+            if (!update)
+            {
+                Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Starting to watch for {dirs.Count} directories...");
+                _fileWatcherService.StartListening(dirs);
+                _fileWatcherService.OnFileCreated = OnFileCreated;
+                _fileWatcherService.OnFileChanged = OnFwFileChanged;
+                _fileWatcherService.OnFileDeleted = OnFwFileDeleted;
+                _fileWatcherService.OnFileRenamed = OnFwFileRenamed;
+            }
+            else
+            {
+                Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Updating watched directories...");
+                _fileWatcherService.UpdateWatchers(dirs);
+            }
+        }
+
+        private Task OnFileCreated(string path)
+        {
+            return OnFwFileChanged(path);
+        }
+
+        private async Task OnFwFileChanged(string path)
+        {
+            var files = PlayLists.SelectMany(f => f.Items).Where(f => f.Path == path).ToList();
+            foreach (var file in files)
+            {
+                var playlist = PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
+                if (playlist == null)
+                    continue;
+
+                await playlist.SetFileInfo(file.Id, _setDurationTokenSource.Token);
+                _appWebServer?.OnFileChanged(playlist.Id);
+            }
+        }
+
+        private Task OnFwFileDeleted(string path)
+        {
+            return OnFwFileChanged(path);
+        }
+
+        private async Task OnFwFileRenamed(string oldPath, string newPath)
+        {
+            var files = PlayLists.SelectMany(f => f.Items).Where(f => f.Path == oldPath).ToList();
+            foreach (var file in files)
+            {
+                var playlist = PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
+                if (playlist == null)
+                    continue;
+                await playlist.OnFilesAddedCommand.ExecuteAsync(new[] { newPath });
+                playlist.ExchangeLastFilePosition(file.Id);
+                await playlist.RemoveFile(file.Id);
+                _appWebServer?.OnFileChanged(playlist.Id);
+            }
         }
         #endregion
     }

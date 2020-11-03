@@ -39,6 +39,7 @@ namespace CastIt
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFMpegService, FFMpegService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
 
             var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
             var appSettings = Mvx.IoCProvider.Resolve<IAppSettingsService>();

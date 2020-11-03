@@ -49,6 +49,7 @@ namespace CastIt
                 {$"{typeof(Player).FullName}",  "googlecast_player_.txt"},
                 {$"{typeof(AppWebServer).FullName}",  "web_server_.txt"},
                 {$"{typeof(YoutubeUrlDecoder).FullName}",  "decoder_youtube_.txt"},
+                {$"{typeof(FileWatcherService).FullName}",  "service_file_watcher_.txt"},
             };
 
             foreach (var kvp in logs)
