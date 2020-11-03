@@ -103,12 +103,7 @@ namespace CastIt.ViewModels
         public double PlayedPercentage
         {
             get => _playedPercentage;
-            set
-            {
-                if (value == _playedPercentage)
-                    return;
-                SetProperty(ref _playedPercentage, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref _playedPercentage, value);
         }
 
         public double CurrentFileDuration
@@ -689,12 +684,13 @@ namespace CastIt.ViewModels
             IsBusy = false;
         }
 
-        private Task SetFileDurations()
+        private async Task SetFileDurations()
         {
             Logger.Info($"{nameof(SetFileDurations)}: Setting file duration to all the files");
             var tasks = PlayLists.Select(pl => pl.SetFilesInfo(_setDurationTokenSource.Token)).ToList();
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+            Logger.Info($"{nameof(SetFileDurations)}: File duration was set to all the files");
         }
 
         private async Task AddNewPlayList()
@@ -891,6 +887,9 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = file;
             _appWebServer.OnFileLoading?.Invoke();
+
+            Logger.Info($"{nameof(PlayFile)}: Updating file info for file = {file.Filename}");
+            await playList.SetFileInfo(file.Id, _setDurationTokenSource.Token);
 
             Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 

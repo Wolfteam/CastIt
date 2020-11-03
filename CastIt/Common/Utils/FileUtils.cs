@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace CastIt.Common.Utils
@@ -29,7 +30,8 @@ namespace CastIt.Common.Utils
 
         public static string GetDbConnectionString()
         {
-            return Path.Combine(GetBaseAppFolder(), "CastIt.db");
+            var path = Path.Combine(GetBaseAppFolder(), "CastIt.db");
+            return $"Data Source={path}";
         }
 
         public static string GetDbPath(string connectionString)

@@ -90,6 +90,11 @@ namespace CastIt.Common.Utils
             if (getFinalUrl)
             {
                 var qualities = GetVideoQualities(body);
+                if (!qualities.Any())
+                {
+                    _logger.Warn($"{nameof(Parse)}: Couldn't retrieve any qualities for video = {url} in body = {body}");
+                    throw new InvalidOperationException($"Couldn't retrieve any qualities for video = {url}");
+                }
                 media.Qualities.AddRange(qualities.Select(q => q.Key));
                 int closest = qualities
                     .Select(k => k.Key)
@@ -389,9 +394,16 @@ namespace CastIt.Common.Utils
             var formatMatch = Regex.Match(body, formatPattern);
             if (formatMatch.Length == 0)
             {
+                _logger.Info($"{nameof(GetVideoQualities)}: Couldn't retrieve formats, checking if we have adaptiveFormats...");
                 formatPattern = @"(\\""adaptiveFormats\\"":\[.*?])";
                 formatMatch = Regex.Match(body, formatPattern);
             }
+
+            if (formatMatch.Length == 0)
+            {
+                _logger.Warn($"{nameof(GetVideoQualities)}: Couldn't retrieve qualities for body = {body}...");
+            }
+
             string streamMap = DecodeUrlString(formatMatch.Value).Replace(@"\\u0026", "&");
 
             string heightPattern = @"(?<=\\""height\\"":).+?(?=,)";

@@ -8,7 +8,9 @@ using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,6 +35,7 @@ namespace CastIt.ViewModels.Items
         private bool _isBeingPlayed;
         private bool _loop;
         private string _playedTime;
+        private string _fileName;
         #endregion
 
         #region Properties
@@ -42,6 +45,7 @@ namespace CastIt.ViewModels.Items
         public bool PositionChanged { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public int Position
         {
@@ -76,7 +80,7 @@ namespace CastIt.ViewModels.Items
         public string Duration
         {
             get => _duration;
-            private set => SetProperty(ref _duration, value);
+            private set => this.RaiseAndSetIfChanged(ref _duration, value);
         }
 
         public bool IsSelected
@@ -115,13 +119,19 @@ namespace CastIt.ViewModels.Items
             => FileUtils.IsUrlFile(Path);
         public bool Exists
             => IsLocalFile || IsUrlFile;
+
         public string Filename
-            => IsCached
+        {
+            get => _fileName ??= IsCached
                 ? Name
                 : FileUtils.IsLocalFile(Path)
                     ? FileUtils.GetFileName(Path)
                     : !string.IsNullOrEmpty(Name)
-                        ? Name : Path;
+                        ? Name
+                        : Path;
+            set => this.RaiseAndSetIfChanged(ref _fileName, value);
+        }
+
         public string Size
             => FileUtils.GetFileSizeString(Path);
         public string Extension
@@ -145,7 +155,7 @@ namespace CastIt.ViewModels.Items
         public string PlayedTime
         {
             get => _playedTime ??= AppConstants.FormatDuration(PlayedSeconds);
-            set =>  this.RaiseAndSetIfChanged(ref _playedTime, value);
+            set => this.RaiseAndSetIfChanged(ref _playedTime, value);
         }
         #endregion
 
@@ -223,7 +233,9 @@ namespace CastIt.ViewModels.Items
 
             if (IsCached && !force)
             {
-                await SetDuration(TotalSeconds);
+                var maxDate = DateTime.Now.AddDays(-3);
+                bool update = Exists && File.GetLastAccessTime(Path) < maxDate && UpdatedAt <= maxDate;
+                await SetDuration(TotalSeconds, update);
                 return;
             }
 
@@ -234,7 +246,7 @@ namespace CastIt.ViewModels.Items
             await RaisePropertyChanged(nameof(SubTitle));
         }
 
-        public async Task SetDuration(double seconds)
+        public async Task SetDuration(double seconds, bool update = true)
         {
             if (!Exists)
             {
@@ -243,7 +255,9 @@ namespace CastIt.ViewModels.Items
             }
             TotalSeconds = seconds;
 
-            await _playListsService.UpdateFile(Id, Filename, SubTitle, seconds);
+            if (update)
+                await _playListsService.UpdateFile(Id, Filename, SubTitle, seconds);
+
             if (seconds <= 0)
             {
                 Duration = "N/A";

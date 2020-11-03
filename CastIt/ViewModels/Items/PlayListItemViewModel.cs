@@ -238,6 +238,16 @@ namespace CastIt.ViewModels.Items
             IsBusy = false;
         }
 
+        public async Task SetFileInfo(long fileId, CancellationToken token)
+        {
+            IsBusy = true;
+            var file = Items.FirstOrDefault(f => f.Id == fileId);
+            if (file != null)
+                await file.SetFileInfo(token);
+            await UpdatePlayedTime();
+            IsBusy = false;
+        }
+
         public void CleanUp()
         {
             _cancellationToken.Cancel();
