@@ -68,6 +68,7 @@ namespace CastIt.ViewModels
         private readonly MvxInteraction _closeApp = new MvxInteraction();
         private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
         private readonly MvxInteraction _openSubTitleFileDialog = new MvxInteraction();
+        private readonly MvxInteraction<PlayListItemViewModel> _beforeDeletingPlayList = new MvxInteraction<PlayListItemViewModel>();
         #endregion
 
         #region Properties
@@ -228,7 +229,7 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand<int> SkipCommand { get; private set; }
         public IMvxCommand SwitchPlayListsCommand { get; private set; }
         public IMvxAsyncCommand AddNewPlayListCommand { get; private set; }
-        public IMvxAsyncCommand<PlayListItemViewModel> DeletePlayListCommand { get; private set; }
+        public MvxCommand<PlayListItemViewModel> DeletePlayListCommand { get; private set; }
         public IMvxAsyncCommand<PlayListItemViewModel> DeleteAllPlayListsExceptCommand { get; private set; }
         public IMvxCommand OpenSettingsCommand { get; private set; }
         public IMvxCommand OpenDevicesCommand { get; private set; }
@@ -249,6 +250,8 @@ namespace CastIt.ViewModels
             => _setWindowWidthAndHeight;
         public IMvxInteraction OpenSubTitleFileDialog
             => _openSubTitleFileDialog;
+        public IMvxInteraction<PlayListItemViewModel> BeforeDeletingPlayList
+            => _beforeDeletingPlayList;
         #endregion
 
         public MainViewModel(
@@ -350,11 +353,11 @@ namespace CastIt.ViewModels
 
             SkipCommand = new MvxAsyncCommand<int>(SkipSeconds);
 
-            SwitchPlayListsCommand = new MvxCommand(SwitchPlayLists);
+            SwitchPlayListsCommand = new MvxCommand(() => SwitchPlayLists());
 
             AddNewPlayListCommand = new MvxAsyncCommand(AddNewPlayList);
 
-            DeletePlayListCommand = new MvxAsyncCommand<PlayListItemViewModel>(DeletePlayList);
+            DeletePlayListCommand = new MvxCommand<PlayListItemViewModel>(pl => _beforeDeletingPlayList.Raise(pl));
 
             DeleteAllPlayListsExceptCommand = new MvxAsyncCommand<PlayListItemViewModel>(DeleteAllPlayLists);
 
@@ -547,9 +550,12 @@ namespace CastIt.ViewModels
 
         public Task DeletePlayList(long id)
         {
-            var pl = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (pl != null)
-                return DeletePlayList(pl);
+            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
+            if (playlist != null)
+            {
+                _beforeDeletingPlayList.Raise(playlist);
+                return Task.CompletedTask;
+            }
             Logger.Warn($"{nameof(DeletePlayList)}: Cant delete playlistId = {id} because it doesnt exists");
             return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
         }
@@ -643,7 +649,7 @@ namespace CastIt.ViewModels
             var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
             if (playlist != null)
                 return playlist.SavePlayList(newName);
-            Logger.Warn($"{nameof(DeletePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
+            Logger.Warn($"{nameof(RenamePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
             return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
         }
         #endregion
@@ -715,11 +721,16 @@ namespace CastIt.ViewModels
             _appWebServer.OnPlayListAdded?.Invoke(vm.Id);
         }
 
-        private async Task DeletePlayList(PlayListItemViewModel playlist)
+        public async Task DeletePlayList(int logicalIndex, PlayListItemViewModel playlist)
         {
             if (playlist == null)
                 return;
+
+            long index = PlayLists.IndexOf(playlist);
             long id = playlist.Id;
+            //Remember that if you move the tabs, the SelectedPlayListIndex is not updated
+            if (index == SelectedPlayListIndex)
+                SwitchPlayLists(false, logicalIndex);
             await _playListsService.DeletePlayList(id);
             playlist.CleanUp();
             PlayLists.Remove(playlist);
@@ -776,9 +787,14 @@ namespace CastIt.ViewModels
             _closeApp.Raise();
         }
 
-        private void SwitchPlayLists()
+        private void SwitchPlayLists(bool forward = true, int? playlistIndex = null)
         {
-            int tentativeIndex = SelectedPlayListIndex + 1;
+            int increment = forward ? 1 : -1;
+            int tentativeIndex = SelectedPlayListIndex + increment;
+            if (playlistIndex.HasValue)
+            {
+                tentativeIndex = playlistIndex.Value + increment;
+            }
             SelectedPlayListIndex = PlayLists.ElementAtOrDefault(tentativeIndex) != null ? tentativeIndex : 0;
         }
 

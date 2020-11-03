@@ -20,6 +20,7 @@ namespace CastIt.Views
         private IMvxInteraction _closeAppRequest;
         private IMvxInteraction<(double, double)> _setWindowWithAndHeightRequest;
         private IMvxInteraction _openSubTitleFileDialogRequest;
+        private IMvxInteraction<PlayListItemViewModel> _beforeDeletingPlayListRequest;
 
         public IMvxInteraction CloseAppRequest
         {
@@ -63,6 +64,20 @@ namespace CastIt.Views
             }
         }
 
+        public IMvxInteraction<PlayListItemViewModel> BeforeDeletingPlayListRequest
+        {
+            get => _beforeDeletingPlayListRequest;
+            set
+            {
+                if (_beforeDeletingPlayListRequest != null)
+                    _beforeDeletingPlayListRequest.Requested -= BeforeDeletingPlayList;
+
+                _beforeDeletingPlayListRequest = value;
+                if (value != null)
+                    _beforeDeletingPlayListRequest.Requested += BeforeDeletingPlayList;
+            }
+        }
+
         public MainPage()
         {
             InitializeComponent();
@@ -71,6 +86,7 @@ namespace CastIt.Views
             set.Bind(this).For(v => v.SetWindowWithAndHeightRequest).To(vm => vm.SetWindowWidthAndHeight).OneWay();
             set.Bind(this).For(v => v.CloseAppRequest).To(vm => vm.CloseApp).OneWay();
             set.Bind(this).For(v => v.OpenSubTitleFileDialogRequest).To(vm => vm.OpenSubTitleFileDialog).OneWay();
+            set.Bind(this).For(v => v.BeforeDeletingPlayListRequest).To(vm => vm.BeforeDeletingPlayList).OneWay();
             set.Apply();
         }
 
@@ -104,5 +120,14 @@ namespace CastIt.Views
         }
 
         private void CloseAppHandler(object sender, EventArgs e) => WindowButtons.CloseApp();
+
+        private async void BeforeDeletingPlayList(object sender, MvxValueEventArgs<PlayListItemViewModel> e)
+        {
+            if (e.Value == null)
+                return;
+            var tabs = GetTabsPosition();
+            var (playlist, logicalIndex) = tabs.FirstOrDefault(t => t.Key.Id == e.Value.Id);
+            await ViewModel.DeletePlayList(logicalIndex, playlist);
+        }
     }
 }
