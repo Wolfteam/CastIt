@@ -11,6 +11,7 @@
     d:DesignHeight="100"
     d:DesignWidth="350"
     mc:Ignorable="d">
+
     <Grid
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
@@ -42,7 +43,14 @@
             materialDesign:HintAssist.Hint="{Binding [Name]}"
             Foreground="{DynamicResource FontColorBrush}"
             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-            Text="{Binding Name, Mode=OneWay}" />
+            Text="{Binding Name, Mode=OneWay}">
+            <TextBox.InputBindings>
+                <KeyBinding
+                    Key="Enter"
+                    Command="{Binding RenameCommand}"
+                    CommandParameter="{Binding ElementName=PlayListName, Path=Text}" />
+            </TextBox.InputBindings>
+        </TextBox>
         <Button
             Grid.Row="1"
             Grid.Column="1"

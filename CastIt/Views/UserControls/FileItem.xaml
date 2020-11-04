@@ -87,6 +87,11 @@
                         <materialDesign:PackIcon Kind="Add" />
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Command="{Binding PlacementTarget.Tag.ShowAddUrlPopUpCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddUrl]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="LinkAdd" />
+                    </MenuItem.Icon>
+                </MenuItem>
                 <MenuItem
                     Command="{Binding PlacementTarget.Tag.RemoveFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}"
                     CommandParameter="{Binding}"

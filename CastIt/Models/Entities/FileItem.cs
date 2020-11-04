@@ -25,7 +25,5 @@ namespace CastIt.Models.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public long PlayListId { get; set; }
-
-        public string Hash { get; set; }
     }
 }

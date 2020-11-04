@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace CastIt.Common.Utils
@@ -271,20 +270,21 @@ namespace CastIt.Common.Utils
 
             try
             {
-                using (var textReader = new StreamReader(filePath, encodingVerifier, detectEncodingFromByteOrderMarks: true))
+                using var textReader = new StreamReader(filePath, encodingVerifier, detectEncodingFromByteOrderMarks: true);
+                while (!textReader.EndOfStream)
                 {
-                    while (!textReader.EndOfStream)
-                    {
-                        textReader.ReadLine();   // in order to increment the stream position
-                    }
-
-                    // all text parsed ok
-                    return textReader.CurrentEncoding;
+                    textReader.ReadLine();   // in order to increment the stream position
                 }
-            }
-            catch (Exception ex) { }
 
-            return null;    // 
+                // all text parsed ok
+                return textReader.CurrentEncoding;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return null;
         }
 
         private static bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
