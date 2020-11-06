@@ -18,7 +18,6 @@ namespace CastIt.Views
         //TODO: IF YOU DRAG OUT OF THE WINDOW, THE SEPARATORS ARE SHOWN
 
         private IMvxInteraction _closeAppRequest;
-        private IMvxInteraction<(double, double)> _setWindowWithAndHeightRequest;
         private IMvxInteraction _openSubTitleFileDialogRequest;
         private IMvxInteraction<PlayListItemViewModel> _beforeDeletingPlayListRequest;
 
@@ -33,20 +32,6 @@ namespace CastIt.Views
                 _closeAppRequest = value;
                 if (value != null)
                     _closeAppRequest.Requested += CloseAppHandler;
-            }
-        }
-
-        public IMvxInteraction<(double, double)> SetWindowWithAndHeightRequest
-        {
-            get => _setWindowWithAndHeightRequest;
-            set
-            {
-                if (_setWindowWithAndHeightRequest != null)
-                    _setWindowWithAndHeightRequest.Requested -= SetWindowWidthAndHeight;
-
-                _setWindowWithAndHeightRequest = value;
-                if (value != null)
-                    _setWindowWithAndHeightRequest.Requested += SetWindowWidthAndHeight;
             }
         }
 
@@ -83,7 +68,6 @@ namespace CastIt.Views
             InitializeComponent();
 
             var set = this.CreateBindingSet<MainPage, MainViewModel>();
-            set.Bind(this).For(v => v.SetWindowWithAndHeightRequest).To(vm => vm.SetWindowWidthAndHeight).OneWay();
             set.Bind(this).For(v => v.CloseAppRequest).To(vm => vm.CloseApp).OneWay();
             set.Bind(this).For(v => v.OpenSubTitleFileDialogRequest).To(vm => vm.OpenSubTitleFileDialog).OneWay();
             set.Bind(this).For(v => v.BeforeDeletingPlayListRequest).To(vm => vm.BeforeDeletingPlayList).OneWay();
@@ -93,14 +77,6 @@ namespace CastIt.Views
         public Dictionary<PlayListItemViewModel, int> GetTabsPosition()
             => PlayListTabControl.GetOrderedHeaders()
                 .ToDictionary(a => (a.Content as PlayListItemViewModel), a => a.LogicalIndex);
-
-        private void SetWindowWidthAndHeight(object sender, MvxValueEventArgs<(double, double)> e)
-        {
-            //TODO: SOMETIMES, THE INTERACTION IS NOT BEING RAISED
-            var window = System.Windows.Application.Current.MainWindow;
-            window.Width = e.Value.Item1;
-            window.Height = e.Value.Item2;
-        }
 
         private void OpenSubtitleFileDialog(object sender, EventArgs e)
         {

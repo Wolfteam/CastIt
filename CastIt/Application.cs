@@ -52,7 +52,7 @@ namespace CastIt
             Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(SettingsViewModel));
 
-            RegisterAppStart<MainViewModel>();
+            RegisterAppStart<SplashViewModel>();
         }
 
         private IMapper CreateMapper()

@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    public class MainViewModel : BaseViewModel, IMainViewModel
+    public class MainViewModel : BaseViewModel<List<PlayListItemViewModel>>, IMainViewModel
     {
         #region Members
         private const int NoStreamSelectedId = -1;
@@ -66,7 +66,6 @@ namespace CastIt.ViewModels
         private readonly CancellationTokenSource _webServerCancellationToken = new CancellationTokenSource();
 
         private readonly MvxInteraction _closeApp = new MvxInteraction();
-        private readonly MvxInteraction<(double, double)> _setWindowWidthAndHeight = new MvxInteraction<(double, double)>();
         private readonly MvxInteraction _openSubTitleFileDialog = new MvxInteraction();
         private readonly MvxInteraction<PlayListItemViewModel> _beforeDeletingPlayList = new MvxInteraction<PlayListItemViewModel>();
         #endregion
@@ -246,8 +245,6 @@ namespace CastIt.ViewModels
         #region Interactors
         public IMvxInteraction CloseApp
             => _closeApp;
-        public IMvxInteraction<(double, double)> SetWindowWidthAndHeight
-            => _setWindowWidthAndHeight;
         public IMvxInteraction OpenSubTitleFileDialog
             => _openSubTitleFileDialog;
         public IMvxInteraction<PlayListItemViewModel> BeforeDeletingPlayList
@@ -279,25 +276,18 @@ namespace CastIt.ViewModels
         }
 
         #region Methods
+
+        public override void Prepare(List<PlayListItemViewModel> parameter)
+        {
+            PlayLists.AddRange(parameter.OrderBy(pl => pl.Position));
+        }
+
         public override async Task Initialize()
         {
             IsExpanded = _settingsService.IsPlayListExpanded;
             Logger.Info($"{nameof(Initialize)}: Initializing cast service...");
             _castService.Init();
 
-            Logger.Info($"{nameof(Initialize)}: Getting all playlists...");
-            var playLists = await _playListsService.GetAllPlayLists();
-            PlayLists.AddRange(playLists.OrderBy(pl => pl.Position));
-            foreach (var playlist in playLists)
-            {
-                var files = await _playListsService.GetAllFiles(playlist.Id);
-                playlist.Items.AddRange(files.OrderBy(f => f.Position));
-            }
-
-            foreach (var pl in PlayLists)
-            {
-                pl.SetPositionIfChanged();
-            }
             //This needs to happen after the playlist/files are initialized, otherwise, you will be sending a lot of ws msgs
             Logger.Info($"{nameof(Initialize)}: Initializing web server...");
             _appWebServer.Init(this, _webServerCancellationToken.Token);
@@ -313,21 +303,6 @@ namespace CastIt.ViewModels
             _castService.GetSubTitles = () => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Path;
             _castService.OnVolumeChanged += OnVolumeChanged;
             _castService.OnFileLoadFailed += OnFileLoadFailed;
-
-            Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
-            WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
-
-            Logger.Info($"{nameof(Initialize)}: Deleting old preview / log files...");
-            try
-            {
-                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath(), DateTime.Now.AddDays(-1));
-                FileUtils.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
-                _telemetryService.TrackError(e);
-            }
 
             InitializeOrUpdateFileWatcher(false);
 
@@ -405,9 +380,6 @@ namespace CastIt.ViewModels
         public override void ViewAppeared()
         {
             base.ViewAppeared();
-            var tuple = (_settingsService.WindowWidth, _settingsService.WindowHeight);
-            _setWindowWidthAndHeight.Raise(tuple);
-
             Logger.Info($"{nameof(ViewAppeared)}: Creating the file duration task..");
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations());
             string path = FileUtils.GetFFMpegPath();
