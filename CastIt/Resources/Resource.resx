@@ -237,8 +237,8 @@
   <data name="Minimize" xml:space="preserve">
     <value>Minimize</value>
   </data>
-  <data name="Mazimize" xml:space="preserve">
-    <value>Mazimize</value>
+  <data name="Maximize" xml:space="preserve">
+    <value>Maximize</value>
   </data>
   <data name="Dark" xml:space="preserve">
     <value>Dark</value>
@@ -533,5 +533,8 @@
   </data>
   <data name="Loading" xml:space="preserve">
     <value>Loading</value>
+  </data>
+  <data name="Volume" xml:space="preserve">
+    <value>Volume</value>
   </data>
 </root>

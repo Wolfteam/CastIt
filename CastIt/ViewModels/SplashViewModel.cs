@@ -66,6 +66,7 @@ namespace CastIt.ViewModels
             {
                 FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath(), DateTime.Now.AddDays(-1));
                 FileUtils.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
+                Logger.Info($"{nameof(Initialize)}: Old files were deleted");
             }
             catch (Exception e)
             {
@@ -102,7 +103,7 @@ namespace CastIt.ViewModels
             }
 
             Logger.Info($"{nameof(Initialize)}: Navigating to main view model...");
-            await _navigationService.Navigate<MainViewModel, List<PlayListItemViewModel>>(playLists);
+            await _navigationService.Navigate<MainViewModel, List<PlayListItemViewModel>>(playLists).ConfigureAwait(false);
             _beforeNavigatingToMainViewModel.Raise();
         }
     }

@@ -727,11 +727,11 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mazimize.
+        ///   Looks up a localized string similar to Maximize.
         /// </summary>
-        public static string Mazimize {
+        public static string Maximize {
             get {
-                return ResourceManager.GetString("Mazimize", resourceCulture);
+                return ResourceManager.GetString("Maximize", resourceCulture);
             }
         }
         
@@ -1281,6 +1281,15 @@ namespace CastIt.Resources {
         public static string VideoScale {
             get {
                 return ResourceManager.GetString("VideoScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volume.
+        /// </summary>
+        public static string Volume {
+            get {
+                return ResourceManager.GetString("Volume", resourceCulture);
             }
         }
         
