@@ -185,7 +185,7 @@ namespace CastIt.Services
                 activeTrackIds.Add(SubTitleDefaultTrackId);
             }
 
-            string firstThumbnail = GetFirstThumbnail();
+            string firstThumbnail = await GetFirstThumbnail().ConfigureAwait(false);
             string imgUrl = string.Empty;
             if (isLocal)
             {
@@ -272,22 +272,24 @@ namespace CastIt.Services
             FileLoaded(metadata.Title, imgUrl, _player.CurrentMediaDuration, _player.CurrentVolumeLevel, _player.IsMuted);
         }
 
-        public string GetFirstThumbnail()
+        public Task<string> GetFirstThumbnail()
             => GetThumbnail();
 
-        public string GetFirstThumbnail(string filePath)
+        public Task<string> GetFirstThumbnail(string filePath)
             => GetThumbnail(filePath);
 
-        public string GetThumbnail()
+        public Task<string> GetThumbnail()
             => GetThumbnail(_currentFilePath);
 
-        public string GetThumbnail(string filePath)
-            => _ffmpegService.GetThumbnail(filePath);
+        public Task<string> GetThumbnail(string filePath)
+        {
+            return Task.Run(() =>_ffmpegService.GetThumbnail(filePath));
+        }
 
         public void GenerateThumbnails()
-            => GenerateThumbmnails(_currentFilePath);
+            => GenerateThumbnails(_currentFilePath);
 
-        public async void GenerateThumbmnails(string filePath)
+        public async void GenerateThumbnails(string filePath)
         {
             await Task.Run(() =>
             {

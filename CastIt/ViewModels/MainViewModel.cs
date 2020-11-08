@@ -924,7 +924,7 @@ namespace CastIt.ViewModels
                         file.FileInfo);
                 }
                 _currentlyPlayedFile.ListenEvents();
-                _castService.GenerateThumbmnails(file.Path);
+                _castService.GenerateThumbnails(file.Path);
 
                 Logger.Info($"{nameof(PlayFile)}: File is being played...");
 

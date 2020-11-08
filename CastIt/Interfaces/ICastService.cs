@@ -61,14 +61,14 @@ namespace CastIt.Interfaces
             FFProbeFileInfo fileInfo,
             double seconds = 0);
 
-        string GetFirstThumbnail();
-        string GetFirstThumbnail(string filePath);
-        string GetThumbnail();
-        string GetThumbnail(string filePath);
+        Task<string> GetFirstThumbnail();
+        Task<string> GetFirstThumbnail(string filePath);
+        Task<string> GetThumbnail();
+        Task<string> GetThumbnail(string filePath);
         Task StopPlayback();
         Task TogglePlayback();
         void GenerateThumbnails();
-        void GenerateThumbmnails(string filePath);
+        void GenerateThumbnails(string filePath);
         Task SetCastRenderer(string id);
     }
 }
