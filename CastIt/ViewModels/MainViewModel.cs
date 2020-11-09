@@ -770,32 +770,55 @@ namespace CastIt.ViewModels
             SelectedPlayListIndex = PlayLists.ElementAtOrDefault(tentativeIndex) != null ? tentativeIndex : 0;
         }
 
-        private void GoTo(bool nextTrack)
+        private void GoTo(bool nextTrack, bool isAnAutomaticCall = false)
         {
             if (_currentlyPlayedFile == null || _onSkipOrPrevious)
                 return;
 
             var playlist = PlayLists.FirstOrDefault(p => p.Id == _currentlyPlayedFile.PlayListId);
             if (playlist is null)
+            {
+                Logger.Info($"{nameof(GoTo)}: PlaylistId = {_currentlyPlayedFile.PlayListId} does not exist. It may have been deleted. Playback will stop now");
+                StopPlayBackCommand.Execute();
                 return;
+            }
 
             _onSkipOrPrevious = true;
+            Logger.Info($"{nameof(GoTo)}: Getting the next / previous file to play.... Going to next file = {nextTrack}");
+            int increment = nextTrack ? 1 : -1;
             var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
+            int newIndex = fileIndex + increment;
+            bool random = playlist.Shuffle && playlist.Items.Count > 1;
+            if (random)
+                Logger.Info($"{nameof(GoTo)}: Random is active for playListId = {playlist.Id}, picking a random file ...");
+
+            if (!isAnAutomaticCall && !random && playlist.Items.Count > 1 && playlist.Items.ElementAtOrDefault(newIndex) == null)
+            {
+                Logger.Info($"{nameof(GoTo)}: The new index = {newIndex} does not exist in the playlist, falling back to the first or last item in the list");
+                var nextPreviousFile = nextTrack ? playlist.Items.First() : playlist.Items.Last();
+                nextPreviousFile.PlayCommand.Execute();
+                return;
+            }
+
             if (fileIndex < 0)
             {
-                int nextPosition = _currentlyPlayedFile.Position + 1;
+                Logger.Info(
+                    $"{nameof(GoTo)}: File = {_currentlyPlayedFile.Path} is no longer present in the playlist, " +
+                    "it may have been deleted, getting the closest one...");
+                int nextPosition = _currentlyPlayedFile.Position + increment;
                 int closestPosition = playlist.Items
                     .Select(f => f.Position)
                     .GetClosest(nextPosition);
 
                 var closestFile = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
-                closestFile?.PlayCommand?.Execute();
+
+                Logger.Info($"{nameof(GoTo)}: Closest file is = {closestFile?.Path}, trying to play it");
+                if (closestFile != _currentlyPlayedFile)
+                    closestFile?.PlayCommand?.Execute();
                 return;
             }
 
-            int newIndex = nextTrack ? fileIndex + 1 : fileIndex - 1;
-
-            var file = playlist.Shuffle && playlist.Items.Count > 1
+            var file = random
                 ? playlist.Items.PickRandom(fileIndex)
                 : playlist.Items.ElementAtOrDefault(newIndex);
 
@@ -807,6 +830,7 @@ namespace CastIt.ViewModels
 
                 if (!playlist.Loop)
                 {
+                    Logger.Info($"{nameof(GoTo)}: Since no file was found and playlist is not marked to loop, the playback of this playlist will end here");
                     StopPlayBackCommand.Execute();
                     return;
                 }
@@ -815,6 +839,9 @@ namespace CastIt.ViewModels
                 return;
             }
 
+            Logger.Info(
+                $"{nameof(GoTo)}: The next file to play is = {file.Path} and it's index is = {newIndex} " +
+                $"compared to the old one = {fileIndex}....");
             file.PlayCommand.Execute();
         }
 
@@ -1053,13 +1080,12 @@ namespace CastIt.ViewModels
             if (_settingsService.PlayNextFileAutomatically)
             {
                 Logger.Info($"{nameof(OnFileEndReached)}: Play next file is enabled. Playing the next file...");
-                GoTo(true);
+                GoTo(true, true);
             }
             else
             {
-                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is disabled. Next file wont be played");
-                _currentlyPlayedFile?.CleanUp();
-                _currentlyPlayedFile = null;
+                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is disabled. Next file won't be played, playback will stop now");
+                StopPlayBackCommand.Execute();
             }
         }
 
