@@ -50,12 +50,12 @@ namespace CastIt.Server
             try
             {
                 string filepath = query[AppWebServer.FileQueryParameter];
-                double seconds = double.Parse(query[AppWebServer.SecondsQueryParameter]);
-                int videoStreamIndex = int.Parse(query[AppWebServer.VideoStreamIndexParameter]);
-                int audioStreamIndex = int.Parse(query[AppWebServer.AudioStreamIndexParameter]);
-                bool videoNeedsTranscode = bool.Parse(query[AppWebServer.VideoNeedsTranscode]);
-                bool audioNeedsTranscode = bool.Parse(query[AppWebServer.AudioNeedsTranscode]);
-                var hwAccelType = Enum.Parse<HwAccelDeviceType>(query[AppWebServer.HwAccelTypeToUse], true);
+                double seconds = double.Parse(query[AppWebServer.SecondsQueryParameter]!);
+                int videoStreamIndex = int.Parse(query[AppWebServer.VideoStreamIndexParameter]!);
+                int audioStreamIndex = int.Parse(query[AppWebServer.AudioStreamIndexParameter]!);
+                bool videoNeedsTranscode = bool.Parse(query[AppWebServer.VideoNeedsTranscode]!);
+                bool audioNeedsTranscode = bool.Parse(query[AppWebServer.AudioNeedsTranscode]!);
+                var hwAccelType = Enum.Parse<HwAccelDeviceType>(query[AppWebServer.HwAccelTypeToUse]!, true);
                 string videoWidthAndHeight = query[AppWebServer.VideoWidthAndHeight];
 
                 bool isVideoFile = FileUtils.IsVideoFile(filepath);
