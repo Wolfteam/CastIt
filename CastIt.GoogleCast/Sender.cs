@@ -5,7 +5,7 @@ using CastIt.GoogleCast.Messages;
 using CastIt.GoogleCast.Messages.Receiver;
 using CastIt.GoogleCast.Models;
 using CastIt.GoogleCast.Models.Receiver;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ProtoBuf;
 using System;
@@ -23,7 +23,7 @@ namespace CastIt.GoogleCast
     {
         private const int RECEIVE_TIMEOUT = 30000;
 
-        private readonly IMvxLog _logger;
+        private readonly ILogger _logger;
         private readonly string _senderId;
         private readonly Func<CastMessage, Task> _onResponseMsg;
 
@@ -40,7 +40,7 @@ namespace CastIt.GoogleCast
             => NetworkStream != null;
 
         public Sender(
-            IMvxLog logger,
+            ILogger logger,
             string senderId,
             string host,
             int port,
@@ -56,7 +56,7 @@ namespace CastIt.GoogleCast
         }
 
         public Sender(
-            IMvxLog logger,
+            ILogger logger,
             string senderId,
             IReceiver receiver,
             Func<CastMessage, Task> onResponseMsg)

@@ -1,4 +1,4 @@
-﻿using MvvmCross.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 
@@ -6,9 +6,9 @@ namespace CastIt.GoogleCast.Extensions
 {
     internal static class LogExtensions
     {
-        public static void LogInfo(this IMvxLog logger, string msg)
+        public static void LogInfo(this ILogger logger, string msg)
         {
-            logger?.Info(msg);
+            logger?.LogInformation(msg);
             if (Player.CanLog)
             {
                 Debug.WriteLine(msg, "INFO");
@@ -16,9 +16,9 @@ namespace CastIt.GoogleCast.Extensions
             }
         }
 
-        public static void LogWarn(this IMvxLog logger, string msg)
+        public static void LogWarn(this ILogger logger, string msg)
         {
-            logger?.Warn(msg);
+            logger?.LogWarning(msg);
             if (Player.CanLog)
             {
                 Debug.WriteLine(msg, "WARNING");
@@ -26,9 +26,9 @@ namespace CastIt.GoogleCast.Extensions
             }
         }
 
-        public static void LogError(this IMvxLog logger, string msg, Exception ex)
+        public static void LogError(this ILogger logger, string msg, Exception ex)
         {
-            logger?.Error(ex, msg);
+            logger?.LogError(ex, msg);
             if (Player.CanLog)
             {
                 Debug.WriteLine(msg, "ERROR");
@@ -36,18 +36,14 @@ namespace CastIt.GoogleCast.Extensions
             }
         }
 
-        public static void LogTrace(this IMvxLog logger, string msg)
+        public static void LogTrace(this ILogger logger, string msg)
         {
-            if (!Player.CanLog)
+            if (logger?.IsEnabled(LogLevel.Trace) == false)
             {
                 return;
             }
-            logger?.Trace(msg);
-            if (logger?.IsTraceEnabled() == true)
-            {
-                Debug.WriteLine(msg, "TRACE");
-                Console.WriteLine(msg);
-            }
+            Debug.WriteLine(msg, "TRACE");
+            Console.WriteLine(msg);
         }
     }
 }

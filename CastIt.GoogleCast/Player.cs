@@ -9,7 +9,7 @@ using CastIt.GoogleCast.Messages.Base;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -20,14 +20,14 @@ using System.Threading.Tasks;
 
 namespace CastIt.GoogleCast
 {
-    public class Player : IDisposable
+    public class Player : IPlayer
     {
         #region Members
         private const string ApplicationId = "CC1AD845";
         private const int GetMediaStatusDelay = 150;
         private const int GetReceiverStatusDelay = 1000;
 
-        private readonly IMvxLog _logger;
+        private readonly ILogger _logger;
         private readonly ISender _sender;
 
         private readonly IConnectionChannel _connectionChannel;
@@ -85,12 +85,12 @@ namespace CastIt.GoogleCast
         public Player(
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true): this(null, null, destinationId, senderId, logMsgs)
+            bool logMsgs = true) : this(null, null, destinationId, senderId, logMsgs)
         {
         }
 
         public Player(
-            IMvxLog logger,
+            ILogger logger,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
             bool logMsgs = true)
@@ -99,7 +99,7 @@ namespace CastIt.GoogleCast
         }
 
         public Player(
-            IMvxLog logger,
+            ILogger logger,
             string host,
             int port = 8009,
             string destinationId = AppConstants.DESTINATION_ID,
@@ -129,7 +129,7 @@ namespace CastIt.GoogleCast
         }
 
         public Player(
-            IMvxLog logger,
+            ILogger logger,
             IReceiver receiver,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
@@ -152,7 +152,7 @@ namespace CastIt.GoogleCast
         }
         #endregion
 
-        public void Init()
+        public void ListenForDevices()
         {
             var subscription = DeviceLocator
                 .FindReceiversContinuous()
@@ -216,7 +216,7 @@ namespace CastIt.GoogleCast
             _disposed = true;
         }
 
-        public static Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
+        public Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
         {
             return DeviceLocator.FindReceiversAsync(scanTime);
         }
