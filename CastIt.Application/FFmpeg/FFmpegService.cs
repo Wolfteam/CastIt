@@ -5,7 +5,7 @@ using CastIt.Domain.Exceptions;
 using CastIt.Domain.Models.FFmpeg.Args;
 using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.Domain.Models.FFmpeg.Transcode;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace CastIt.Application.FFMpeg
 {
     public class FFmpegService : IFFmpegService
     {
-        private readonly IMvxLog _logger;
+        private readonly ILogger<FFmpegService> _logger;
         private readonly IFileService _fileService;
         private readonly ITelemetryService _telemetryService;
 
@@ -64,11 +64,11 @@ namespace CastIt.Application.FFMpeg
         private bool _checkGenerateAllThumbnailsProcess;
 
         public FFmpegService(
-            IMvxLogProvider logProvider,
+            ILogger<FFmpegService> logger,
             IFileService fileService,
             ITelemetryService telemetryService)
         {
-            _logger = logProvider.GetLogFor<FFmpegService>();
+            _logger = logger;
             _fileService = fileService;
             _telemetryService = telemetryService;
             _transcodeProcess = new Process
@@ -113,7 +113,7 @@ namespace CastIt.Application.FFMpeg
         {
             if (!_fileService.IsLocalFile(mrl))
             {
-                _logger.Warn($"{nameof(GetThumbnail)}: Cant get thumbnail for file = {mrl}. Its not a local file");
+                _logger.LogWarning($"{nameof(GetThumbnail)}: Cant get thumbnail for file = {mrl}. Its not a local file");
                 return null;
             }
 
@@ -136,21 +136,21 @@ namespace CastIt.Application.FFMpeg
             try
             {
                 string cmd = builder.GetArgs();
-                _logger.Info($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {mrl}. Cmd = {cmd}");
+                _logger.LogInformation($"{nameof(GetThumbnail)}: Generating first thumbnail for file = {mrl}. Cmd = {cmd}");
                 _checkGenerateThumbnailProcess = true;
                 _generateThumbnailProcess.StartInfo.Arguments = cmd;
                 _generateThumbnailProcess.Start();
                 _generateThumbnailProcess.WaitForExit();
                 if (_generateThumbnailProcess.ExitCode != 0)
                 {
-                    _logger.Warn($"{nameof(GetThumbnail)}: Couldn't retrieve the first thumbnail for file = {mrl}.");
+                    _logger.LogWarning($"{nameof(GetThumbnail)}: Couldn't retrieve the first thumbnail for file = {mrl}.");
                     return null;
                 }
-                _logger.Info($"{nameof(GetThumbnail)}: First thumbnail was successfully generated for file = {mrl}");
+                _logger.LogInformation($"{nameof(GetThumbnail)}: First thumbnail was successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
+                _logger.LogError(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
             finally
@@ -164,14 +164,14 @@ namespace CastIt.Application.FFMpeg
         {
             if (!_fileService.IsLocalFile(mrl))
             {
-                _logger.Info($"{nameof(GenerateThumbnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
+                _logger.LogInformation($"{nameof(GenerateThumbnails)}: File = {mrl} is not a local file, so we wont generate thumbnails for it");
                 return;
             }
             var filename = Path.GetFileName(mrl);
 
             if (_fileService.IsMusicFile(mrl))
             {
-                _logger.Info($"{nameof(GenerateThumbnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
+                _logger.LogInformation($"{nameof(GenerateThumbnails)}: File = {mrl} is a music one, so we wont generate thumbnails for it");
                 return;
             }
             var fileInfo = await GetFileInfo(mrl, default).ConfigureAwait(false);
@@ -186,14 +186,14 @@ namespace CastIt.Application.FFMpeg
             string cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, useHwAccel);
             try
             {
-                _logger.Info($"{nameof(GenerateThumbnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
+                _logger.LogInformation($"{nameof(GenerateThumbnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
                 _checkGenerateAllThumbnailsProcess = true;
                 _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
                 _generateAllThumbnailsProcess.Start();
                 await _generateAllThumbnailsProcess.WaitForExitAsync();
                 if (_generateAllThumbnailsProcess.ExitCode != 0 && useHwAccel)
                 {
-                    _logger.Warn(
+                    _logger.LogWarning(
                         $"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl} " +
                         "using hw accel, falling back to sw.");
                     cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, false);
@@ -205,15 +205,15 @@ namespace CastIt.Application.FFMpeg
 
                 if (_generateAllThumbnailsProcess.ExitCode != 0)
                 {
-                    _logger.Error($"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl}.");
+                    _logger.LogError($"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl}.");
                     throw new FFmpegException("Couldn't generate thumbnails", cmd);
                 }
 
-                _logger.Info($"{nameof(GenerateThumbnails)}: All thumbnails were successfully generated for file = {mrl}");
+                _logger.LogInformation($"{nameof(GenerateThumbnails)}: All thumbnails were successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
+                _logger.LogError(ex, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
             finally
@@ -224,13 +224,13 @@ namespace CastIt.Application.FFMpeg
 
         public void KillThumbnailProcess()
         {
-            _logger.Info($"{nameof(KillThumbnailProcess)}: Killing thumbnail process");
+            _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing thumbnail process");
             try
             {
                 if (_checkGenerateAllThumbnailsProcess &&
                     !_generateAllThumbnailsProcess.HasExited)
                 {
-                    _logger.Info($"{nameof(KillThumbnailProcess)}: Killing the generate all thumbnails process");
+                    _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing the generate all thumbnails process");
                     _generateAllThumbnailsProcess.Kill(true);
                     _generateAllThumbnailsProcess.WaitForExit();
                 }
@@ -239,7 +239,7 @@ namespace CastIt.Application.FFMpeg
             {
                 if (ex is InvalidOperationException)
                     return;
-                _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate all thumbnails process");
+                _logger.LogError(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate all thumbnails process");
                 _telemetryService.TrackError(ex);
             }
 
@@ -248,7 +248,7 @@ namespace CastIt.Application.FFMpeg
                 if (_checkGenerateThumbnailProcess &&
                     !_generateThumbnailProcess.HasExited)
                 {
-                    _logger.Info($"{nameof(KillThumbnailProcess)}: Killing the generate thumbnail process");
+                    _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing the generate thumbnail process");
                     _generateThumbnailProcess.Kill(true);
                     _generateThumbnailProcess.WaitForExit();
                 }
@@ -257,14 +257,14 @@ namespace CastIt.Application.FFMpeg
             {
                 if (ex is InvalidOperationException)
                     return;
-                _logger.Error(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate thumbnail process");
+                _logger.LogError(ex, $"{nameof(KillThumbnailProcess)}: Could not stop the generate thumbnail process");
                 _telemetryService.TrackError(ex);
             }
         }
 
         public void KillTranscodeProcess()
         {
-            _logger.Info($"{nameof(KillTranscodeProcess)}: Killing transcode process");
+            _logger.LogInformation($"{nameof(KillTranscodeProcess)}: Killing transcode process");
             try
             {
                 if (!_transcodeProcess.HasExited)
@@ -277,7 +277,7 @@ namespace CastIt.Application.FFMpeg
             {
                 if (e is InvalidOperationException)
                     return;
-                _logger.Error(e, $"{nameof(KillTranscodeProcess)}: Unknown error occurred");
+                _logger.LogError(e, $"{nameof(KillTranscodeProcess)}: Unknown error occurred");
                 _telemetryService.TrackError(e);
             }
         }
@@ -285,7 +285,7 @@ namespace CastIt.Application.FFMpeg
         public Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token)
         {
             string cmd = @$"-v quiet -print_format json -show_streams -show_format -i ""{filePath}""";
-            _logger.Trace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}. Cmd = {cmd}");
+            _logger.LogTrace($"{nameof(GetFileInfo)}: Getting file info for file = {filePath}. Cmd = {cmd}");
             try
             {
                 if (!_fileService.Exists(filePath))
@@ -317,7 +317,7 @@ namespace CastIt.Application.FFMpeg
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"{nameof(GetFileInfo)}: Unknown error");
+                _logger.LogError(e, $"{nameof(GetFileInfo)}: Unknown error");
                 _telemetryService.TrackError(e);
                 return Task.FromResult<FFProbeFileInfo>(null);
             }
@@ -330,7 +330,7 @@ namespace CastIt.Application.FFMpeg
             {
                 cmd = BuildVideoTranscodeCmd(options, 0, 2);
 
-                _logger.Info($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd for hwAccelType = {options.HwAccelDeviceType}...");
+                _logger.LogInformation($"{nameof(TranscodeVideo)}: Checking if we can use the default cmd for hwAccelType = {options.HwAccelDeviceType}...");
                 _transcodeProcess.StartInfo.Arguments = cmd;
                 _transcodeProcess.Start();
                 await using var memStream = new MemoryStream();
@@ -338,7 +338,7 @@ namespace CastIt.Application.FFMpeg
                 await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
                 if (_transcodeProcess.ExitCode != 0)
                 {
-                    _logger.Warn(
+                    _logger.LogWarning(
                         $"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd} for hwAccelType = {options.HwAccelDeviceType}. " +
                         $"Creating a new one with hwAccelType = {HwAccelDeviceType.None}..");
                     options.HwAccelDeviceType = HwAccelDeviceType.None;
@@ -350,12 +350,12 @@ namespace CastIt.Application.FFMpeg
             //https://forums.plex.tv/t/best-format-for-streaming-via-chromecast/49978/6
             //ffmpeg - i[inputfile] - c:v libx264 -profile:v high -level 5 - crf 18 - maxrate 10M - bufsize 16M - pix_fmt yuv420p - vf "scale=iw*sar:ih, scale='if(gt(iw,ih),min(1920,iw),-1)':'if(gt(iw,ih),-1,min(1080,ih))'" - x264opts bframes = 3:cabac = 1 - movflags faststart - strict experimental - c:a aac -b:a 320k - y[outputfile]
             //string cmd = $@"-v quiet -ss {seconds} -y -i ""{filePath}"" -preset superfast -c:v copy -acodec aac -b:a 128k -movflags frag_keyframe+faststart -f mp4 -";
-            _logger.Info($"{nameof(TranscodeVideo)}: Trying to transcode file with CMD = {cmd}");
+            _logger.LogInformation($"{nameof(TranscodeVideo)}: Trying to transcode file with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(outputStream, token).ConfigureAwait(false);
-            _logger.Info($"{nameof(TranscodeVideo)}: Transcode completed for file = {options.FilePath}");
+            _logger.LogInformation($"{nameof(TranscodeVideo)}: Transcode completed for file = {options.FilePath}");
         }
 
         public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token)
@@ -363,7 +363,7 @@ namespace CastIt.Application.FFMpeg
             var fileInfo = await GetFileInfo(options.FilePath, token).ConfigureAwait(false);
             if (fileInfo == null)
             {
-                _logger.Info($"{nameof(TranscodeVideo)}: Couldn't retrieve file info for file = {options.FilePath}");
+                _logger.LogInformation($"{nameof(TranscodeVideo)}: Couldn't retrieve file info for file = {options.FilePath}");
                 return null;
             }
             var audioInfo = fileInfo.Streams.Find(f => f.IsAudio);
@@ -376,7 +376,7 @@ namespace CastIt.Application.FFMpeg
 
             string cmd = BuildAudioTranscodeCmd(options.FilePath, options.Seconds, options.AudioStreamIndex, audioNeedsTranscode);
 
-            _logger.Info($"{nameof(TranscodeMusic)}: Trying to transcode file with CMD = {cmd}");
+            _logger.LogInformation($"{nameof(TranscodeMusic)}: Trying to transcode file with CMD = {cmd}");
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
             var memoryStream = new MemoryStream();
@@ -384,7 +384,7 @@ namespace CastIt.Application.FFMpeg
             await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
 
             memoryStream.Position = 0;
-            _logger.Info($"{nameof(TranscodeMusic)}: Transcode completed for file = {options.FilePath}");
+            _logger.LogInformation($"{nameof(TranscodeMusic)}: Transcode completed for file = {options.FilePath}");
 
             return memoryStream;
         }
@@ -423,7 +423,7 @@ namespace CastIt.Application.FFMpeg
                     .SetFormat("webvtt");
 
                 string cmd = builder.GetArgs();
-                _logger.Info($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
+                _logger.LogInformation($"{nameof(GenerateSubTitles)}: Generating subtitles for file = {filePath}. CMD = {cmd}");
                 return Task.Run(() =>
                 {
                     var process = new Process
@@ -443,21 +443,21 @@ namespace CastIt.Application.FFMpeg
 
                     if (process.ExitCode > 0)
                     {
-                        _logger.Error($"{nameof(GenerateSubTitles)}: Could not generate subs for file = {filePath}.");
+                        _logger.LogError($"{nameof(GenerateSubTitles)}: Could not generate subs for file = {filePath}.");
                     }
                     else if (process.ExitCode < 0)
                     {
-                        _logger.Info($"{nameof(GenerateSubTitles)}: Process was killed for file = {filePath}");
+                        _logger.LogInformation($"{nameof(GenerateSubTitles)}: Process was killed for file = {filePath}");
                     }
                     else
                     {
-                        _logger.Info($"{nameof(GenerateSubTitles)}: Subs where generated for file = {filePath}");
+                        _logger.LogInformation($"{nameof(GenerateSubTitles)}: Subs where generated for file = {filePath}");
                     }
                 }, token);
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"{nameof(GenerateSubTitles)}: Unknown error");
+                _logger.LogError(e, $"{nameof(GenerateSubTitles)}: Unknown error");
                 _telemetryService.TrackError(e);
                 return Task.CompletedTask;
             }
@@ -629,10 +629,10 @@ namespace CastIt.Application.FFMpeg
             {
                 if (!OperatingSystem.IsWindows())
                 {
-                    _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Not running on windows, nothing to do here");
+                    _logger.LogInformation($"{nameof(SetAvailableHwAccelDevices)}: Not running on windows, nothing to do here");
                     return;
                 }
-                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Getting available devices..");
+                _logger.LogInformation($"{nameof(SetAvailableHwAccelDevices)}: Getting available devices..");
                 var objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
                 var adapters = new List<string>();
                 foreach (var o in objvide.Get())
@@ -656,11 +656,11 @@ namespace CastIt.Application.FFMpeg
                     _availableHwDevices.Add(HwAccelDeviceType.Intel);
                 }
 
-                _logger.Info($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", _availableHwDevices)}");
+                _logger.LogInformation($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", _availableHwDevices)}");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(SetAvailableHwAccelDevices)}: Unknown error");
+                _logger.LogError(ex, $"{nameof(SetAvailableHwAccelDevices)}: Unknown error");
                 _telemetryService.TrackError(ex);
             }
         }
