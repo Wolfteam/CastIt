@@ -1,9 +1,15 @@
 ﻿using AutoMapper;
+using CastIt.Application.FFMpeg;
+using CastIt.Application.FilePaths;
+using CastIt.Application.Interfaces;
+using CastIt.Application.Telemetry;
+using CastIt.Application.Youtube;
 using CastIt.Common;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.Resources;
 using CastIt.Server;
+using CastIt.Server.Interfaces;
 using CastIt.Services;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Items;
@@ -14,7 +20,7 @@ using MvvmCross.ViewModels;
 
 namespace CastIt
 {
-    public class Application : MvxApplication
+    public class SetupApplication : MvxApplication
     {
         public override void Initialize()
         {
@@ -30,14 +36,18 @@ namespace CastIt
             //NPI WHY I NEED TO MANUALLY REGISTER THIS ONE
             Mvx.IoCProvider.RegisterSingleton<IMvxMessenger>(new MvxMessengerHub());
 
+            string baseAppFolder = FileUtils.GetBaseAppFolder();
+            var fileService = new FileService(baseAppFolder);
+
+            Mvx.IoCProvider.RegisterSingleton(typeof(IFileService), () => fileService);
+            Mvx.IoCProvider.RegisterSingleton(typeof(ICommonFileService), () => fileService);
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<ITelemetryService, TelemetryService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppSettingsService, AppSettingsService>();
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<IPlayListsService, AppDataService>();
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppDataService, AppDataService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IYoutubeUrlDecoder, YoutubeUrlDecoder>();
 
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<ITelemetryService, TelemetryService>();
-
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFMpegService, FFMpegService>();
+            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
 
@@ -51,6 +61,8 @@ namespace CastIt
             Mvx.IoCProvider.RegisterType<FileItemViewModel>();
             Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(SettingsViewModel));
+
+            Mvx.IoCProvider.Resolve<ITelemetryService>().Init();
 
             RegisterAppStart<SplashViewModel>();
         }

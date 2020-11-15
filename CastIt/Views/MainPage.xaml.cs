@@ -1,4 +1,4 @@
-﻿using CastIt.Common;
+﻿using CastIt.Application.Common;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Items;
 using Microsoft.Win32;
@@ -80,7 +80,7 @@ namespace CastIt.Views
 
         private void OpenSubtitleFileDialog(object sender, EventArgs e)
         {
-            var allowedFormats = AppConstants.AllowedSubtitleFormatsString;
+            var allowedFormats = FileFormatConstants.AllowedSubtitleFormatsString;
             string filter = $"{ViewModel.GetText("Subtitles")} ({allowedFormats})|{allowedFormats}|{ViewModel.GetText("AllFiles")} (*.*)|*.*";
             var openFileDialog = new OpenFileDialog
             {

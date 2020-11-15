@@ -1,10 +1,13 @@
-﻿using CastIt.Common;
+﻿using CastIt.Application.Common;
+using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
+using CastIt.Common;
 using CastIt.Common.Comparers;
-using CastIt.Common.Enums;
-using CastIt.Common.Utils;
+using CastIt.Domain.Entities;
+using CastIt.Domain.Enums;
 using CastIt.Interfaces;
-using CastIt.Models.Entities;
 using CastIt.Models.Messages;
+using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
@@ -23,13 +26,14 @@ namespace CastIt.ViewModels.Items
     public class PlayListItemViewModel : BaseViewModel
     {
         #region Members
-        private readonly IPlayListsService _playListsService;
+        private readonly IAppDataService _playListsService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
         private readonly IMvxNavigationService _navigationService;
         private readonly IAppSettingsService _appSettings;
         private readonly IFileWatcherService _fileWatcherService;
+        private readonly IFileService _fileService;
 
         private string _name;
         private bool _showEditPopUp;
@@ -115,7 +119,7 @@ namespace CastIt.ViewModels.Items
             get
             {
                 var playedSeconds = Items.Sum(i => i.PlayedSeconds);
-                var formatted = AppConstants.FormatDuration(playedSeconds);
+                var formatted = FileFormatConstants.FormatDuration(playedSeconds);
                 return $"{formatted}";
             }
         }
@@ -125,7 +129,7 @@ namespace CastIt.ViewModels.Items
             get
             {
                 var totalSeconds = Items.Where(i => i.TotalSeconds >= 0).Sum(i => i.TotalSeconds);
-                var formatted = AppConstants.FormatDuration(totalSeconds);
+                var formatted = FileFormatConstants.FormatDuration(totalSeconds);
                 return $"{PlayedTime} / {formatted}";
             }
         }
@@ -163,13 +167,14 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             IMvxLogProvider logger,
-            IPlayListsService playListsService,
+            IAppDataService playListsService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
             IMvxNavigationService navigationService,
             IAppSettingsService appSettings,
-            IFileWatcherService fileWatcherService)
+            IFileWatcherService fileWatcherService,
+            IFileService fileService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
@@ -179,6 +184,7 @@ namespace CastIt.ViewModels.Items
             _navigationService = navigationService;
             _appSettings = appSettings;
             _fileWatcherService = fileWatcherService;
+            _fileService = fileService;
         }
 
         #region Methods
@@ -306,7 +312,7 @@ namespace CastIt.ViewModels.Items
             {
                 Logger.Info($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
                 var filesInDir = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
-                    .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
+                    .Where(s => FileFormatConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                     .ToList();
                 files.AddRange(filesInDir);
             }
@@ -334,7 +340,7 @@ namespace CastIt.ViewModels.Items
                 var files = paths.Where(path =>
                 {
                     var ext = Path.GetExtension(path);
-                    return AppConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
+                    return FileFormatConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
                 }).OrderBy(p => p, new WindowsExplorerComparer())
                 .Select((path, index) => new FileItem
                 {
@@ -377,7 +383,7 @@ namespace CastIt.ViewModels.Items
             }
 
             ShowAddUrlPopUp = false;
-            bool isUrlFile = FileUtils.IsUrlFile(url);
+            bool isUrlFile = _fileService.IsUrlFile(url);
             if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlNotSupported")));

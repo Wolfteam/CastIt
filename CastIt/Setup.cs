@@ -1,4 +1,6 @@
-﻿using CastIt.Common.Miscellaneous;
+﻿using CastIt.Application.FFMpeg;
+using CastIt.Application.Youtube;
+using CastIt.Common.Miscellaneous;
 using CastIt.Common.Utils;
 using CastIt.GoogleCast;
 using CastIt.Server;
@@ -17,7 +19,7 @@ using System.Windows.Controls;
 
 namespace CastIt
 {
-    public class Setup : MvxWpfSetup<Application>
+    public class Setup : MvxWpfSetup<SetupApplication>
     {
         protected override IMvxWpfViewPresenter CreateViewPresenter(ContentControl root)
             => new CustomAppPresenter(root);
@@ -46,7 +48,7 @@ namespace CastIt
                 {$"{typeof(SplashViewModel).FullName}",  "vm_splash_.txt"},
                 {$"{typeof(CastService).FullName}",  "service_cast_.txt"},
                 {$"{typeof(AppSettingsService).FullName}",  "service_appsettings_.txt"},
-                {$"{typeof(FFMpegService).FullName}",  "service_ffmpeg_.txt"},
+                {$"{typeof(FFmpegService).FullName}",  "service_ffmpeg_.txt"},
                 {$"{typeof(Player).FullName}",  "googlecast_player_.txt"},
                 {$"{typeof(AppWebServer).FullName}",  "web_server_.txt"},
                 {$"{typeof(YoutubeUrlDecoder).FullName}",  "decoder_youtube_.txt"},

@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
-using CastIt.Common;
-using CastIt.Common.Enums;
-using CastIt.Common.Extensions;
-using CastIt.Common.Utils;
+using CastIt.Application.Common;
+using CastIt.Application.Common.Extensions;
+using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
+using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Enums;
 using CastIt.Interfaces;
-using CastIt.Interfaces.ViewModels;
 using CastIt.Models.Messages;
-using CastIt.Server.Dtos.Responses;
+using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using MvvmCross;
@@ -24,7 +25,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    public class MainViewModel : BaseViewModel<List<PlayListItemViewModel>>, IMainViewModel
+    public class MainViewModel : BaseViewModel<List<PlayListItemViewModel>>, IViewForMediaWebSocket
     {
         #region Members
         private const int NoStreamSelectedId = -1;
@@ -32,13 +33,14 @@ namespace CastIt.ViewModels
         private const int DefaultQualitySelected = 360;
 
         private readonly ICastService _castService;
-        private readonly IPlayListsService _playListsService;
+        private readonly IAppDataService _playListsService;
         private readonly IAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
         private readonly IMapper _mapper;
         private readonly IFileWatcherService _fileWatcherService;
+        private readonly IFileService _fileService;
 
         private FileItemViewModel _currentlyPlayedFile;
         private bool _isPaused;
@@ -256,13 +258,14 @@ namespace CastIt.ViewModels
             IMvxMessenger messenger,
             IMvxLogProvider logger,
             ICastService castService,
-            IPlayListsService playListsService,
+            IAppDataService playListsService,
             IAppSettingsService settingsService,
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
             IMapper mapper,
-            IFileWatcherService fileWatcher)
+            IFileWatcherService fileWatcher,
+            IFileService fileService)
             : base(textProvider, messenger, logger.GetLogFor<MainViewModel>())
         {
             _castService = castService;
@@ -273,6 +276,7 @@ namespace CastIt.ViewModels
             _appWebServer = appWebServer;
             _mapper = mapper;
             _fileWatcherService = fileWatcher;
+            _fileService = fileService;
         }
 
         #region Methods
@@ -290,7 +294,7 @@ namespace CastIt.ViewModels
 
             //This needs to happen after the playlist/files are initialized, otherwise, you will be sending a lot of ws msgs
             Logger.Info($"{nameof(Initialize)}: Initializing web server...");
-            _appWebServer.Init(this, _webServerCancellationToken.Token);
+            _appWebServer.Init(_fileService.GetPreviewsPath(), _fileService.GetSubTitleFolder(), this, _webServerCancellationToken.Token);
 
             Logger.Info($"{nameof(Initialize)}: Setting cast events..");
             _castService.OnFileLoaded += OnFileLoaded;
@@ -382,11 +386,11 @@ namespace CastIt.ViewModels
             base.ViewAppeared();
             Logger.Info($"{nameof(ViewAppeared)}: Creating the file duration task..");
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations());
-            string path = FileUtils.GetFFMpegPath();
-            if (File.Exists(path))
+            string path = _fileService.GetFFmpegPath();
+            if (_fileService.Exists(path))
                 return;
 
-            Logger.Info($"{nameof(ViewAppeared)}: Ffmpeg is not in user folder, showing download dialog...");
+            Logger.Info($"{nameof(ViewAppeared)}: FFmpeg is not in user folder, showing download dialog...");
             ShowDownloadDialogCommand.Execute();
         }
 
@@ -404,6 +408,7 @@ namespace CastIt.ViewModels
                 .Where(f => f.WasPlayed || f.PositionChanged)
                 .ToList();
             _playListsService.SaveChangesBeforeClosingApp(positions, files);
+            _playListsService.Close();
         }
 
         public long TrySetThumbnail(double sliderWidth, double mouseX)
@@ -416,12 +421,12 @@ namespace CastIt.ViewModels
 
             long tentativeSecond = GetMainProgressBarSeconds(sliderWidth, mouseX);
 
-            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path) || FileUtils.IsUrlFile(_currentlyPlayedFile.Path))
+            if (_fileService.IsMusicFile(_currentlyPlayedFile.Path) || _fileService.IsUrlFile(_currentlyPlayedFile.Path))
             {
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
             }
-            PreviewThumbnailImg = FileUtils.GetClosestThumbnail(_currentlyPlayedFile.Path, tentativeSecond);
+            PreviewThumbnailImg = _fileService.GetClosestThumbnail(_currentlyPlayedFile.Path, tentativeSecond);
             return tentativeSecond;
         }
 
@@ -623,6 +628,19 @@ namespace CastIt.ViewModels
                 return playlist.SavePlayList(newName);
             Logger.Warn($"{nameof(RenamePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
             return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
+        }
+
+        public AppSettingsResponseDto GetCurrentAppSettings()
+        {
+            return new AppSettingsResponseDto
+            {
+                ForceVideoTranscode = _settingsService.ForceVideoTranscode,
+                ForceAudioTranscode = _settingsService.ForceAudioTranscode,
+                EnableHardwareAcceleration = _settingsService.EnableHardwareAcceleration,
+                PlayNextFileAutomatically = _settingsService.PlayNextFileAutomatically,
+                StartFilesFromTheStart = _settingsService.StartFilesFromTheStart,
+                VideoScale = _settingsService.VideoScale
+            };
         }
         #endregion
 
@@ -1040,9 +1058,9 @@ namespace CastIt.ViewModels
             CurrentPlayedSeconds = seconds;
 
             var elapsed = TimeSpan.FromSeconds(seconds)
-                .ToString(AppConstants.FullElapsedTimeFormat);
+                .ToString(FileFormatConstants.FullElapsedTimeFormat);
             var total = TimeSpan.FromSeconds(_currentlyPlayedFile.TotalSeconds)
-                .ToString(AppConstants.FullElapsedTimeFormat);
+                .ToString(FileFormatConstants.FullElapsedTimeFormat);
             if (_currentlyPlayedFile.IsUrlFile && _currentlyPlayedFile.TotalSeconds <= 0)
                 ElapsedTimeString = $"{elapsed}";
             else
@@ -1168,10 +1186,10 @@ namespace CastIt.ViewModels
             }
 
             //Subtitles
-            if (!FileUtils.IsVideoFile(_currentlyPlayedFile.Path))
+            if (!_fileService.IsVideoFile(_currentlyPlayedFile.Path))
                 return;
 
-            string localSubsPath = TryGetSubTitlesLocalPath();
+            var (localSubsPath, filename) = TryGetSubTitlesLocalPath();
             bool localSubExists = !string.IsNullOrEmpty(localSubsPath);
             isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 1 || localSubExists;
             CurrentFileSubTitles.Add(new FileItemOptionsViewModel
@@ -1191,7 +1209,7 @@ namespace CastIt.ViewModels
                     IsSubTitle = true,
                     IsSelected = true,
                     IsEnabled = true,
-                    Text = Path.GetFileName(localSubsPath),
+                    Text = filename,
                     Path = localSubsPath
                 });
             }
@@ -1213,31 +1231,18 @@ namespace CastIt.ViewModels
             }
         }
 
-        private string TryGetSubTitlesLocalPath()
+        private (string, string) TryGetSubTitlesLocalPath()
         {
-            if (!FileUtils.IsLocalFile(_currentlyPlayedFile.Path))
-            {
-                return null;
-            }
-
             Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: Checking if subtitle exist in the same dir as file = {_currentlyPlayedFile.Path}");
-            string filename = Path.GetFileNameWithoutExtension(_currentlyPlayedFile.Path);
-            string dir = Path.GetDirectoryName(_currentlyPlayedFile.Path);
-
-            foreach (var format in AppConstants.AllowedSubtitleFormats)
+            var (possibleSubTitlePath, filename) = _fileService.TryGetSubTitlesLocalPath(_currentlyPlayedFile.Path);
+            if (!string.IsNullOrWhiteSpace(possibleSubTitlePath))
             {
-                string possibleSubTitlePath = Path.Combine(dir, filename + format);
-
-                if (!File.Exists(possibleSubTitlePath))
-                    continue;
-
                 Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: Found subtitles in path = {possibleSubTitlePath}");
-                return possibleSubTitlePath;
+                return (possibleSubTitlePath, filename);
             }
 
             Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: No subtitles were found for file = {_currentlyPlayedFile.Path}");
-
-            return null;
+            return (possibleSubTitlePath, filename);
         }
 
         private Task FileOptionsChanged(FileItemOptionsViewModel selectedItem)
@@ -1304,9 +1309,8 @@ namespace CastIt.ViewModels
 
         private Task OnSubTitleFileSelected(string filePath)
         {
-            string filename = Path.GetFileName(filePath);
-            if (!AppConstants.AllowedSubtitleFormats.Contains(Path.GetExtension(filePath).ToLower()) ||
-                CurrentFileSubTitles.Any(f => f.Text == filename))
+            var (isSub, filename) = _fileService.IsSubtitle(filePath);
+            if (!isSub || CurrentFileSubTitles.Any(f => f.Text == filename))
             {
                 Logger.Info($"{nameof(OnSubTitleFileSelected)}: Subtitle = {filePath} is not valid or is already in the current sub files");
                 return Task.CompletedTask;

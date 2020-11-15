@@ -1,4 +1,4 @@
-﻿using CastIt.Common.Enums;
+﻿using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
 
 namespace CastIt.Models

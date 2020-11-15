@@ -1,10 +1,11 @@
 ﻿using CastIt.Common;
-using CastIt.Common.Enums;
 using CastIt.Common.Utils;
+using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.Logging;

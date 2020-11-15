@@ -1,4 +1,4 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Application.Interfaces;
 using CastIt.Interfaces;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
@@ -17,6 +17,7 @@ namespace CastIt.ViewModels.Dialogs
         #region Members
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
+        private readonly IFileService _fileService;
 
         private bool _isDownloading;
         private double _downloadedProgress;
@@ -48,11 +49,13 @@ namespace CastIt.ViewModels.Dialogs
             IMvxMessenger messenger,
             IMvxLogProvider logger,
             IMvxNavigationService navigationService,
-            ITelemetryService telemetryService)
+            ITelemetryService telemetryService,
+            IFileService fileService)
             : base(textProvider, messenger, logger.GetLogFor<DownloadDialogViewModel>())
         {
             _navigationService = navigationService;
             _telemetryService = telemetryService;
+            _fileService = fileService;
         }
 
         public override void Prepare()
@@ -75,7 +78,7 @@ namespace CastIt.ViewModels.Dialogs
             IsDownloading = true;
             try
             {
-                var path = FileUtils.GetFFMpegFolder();
+                var path = _fileService.GetFFmpegFolder();
                 Logger.Info($"{nameof(DownloadMissingFiles)}: Downloading missing files. Save path is = {path}");
                 var progress = new Progress<ProgressInfo>((p) =>
                 {
@@ -84,7 +87,7 @@ namespace CastIt.ViewModels.Dialogs
                         downloaded = 100;
                     if (downloaded > DownloadedProgress)
                     {
-                        DownloadedProgressText = $"{FileUtils.GetBytesReadable(p.DownloadedBytes)} / {FileUtils.GetBytesReadable(p.TotalBytes)}";
+                        DownloadedProgressText = $"{_fileService.GetBytesReadable(p.DownloadedBytes)} / {_fileService.GetBytesReadable(p.TotalBytes)}";
                         DownloadedProgress = downloaded;
                     }
                 });

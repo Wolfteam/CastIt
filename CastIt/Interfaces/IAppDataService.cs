@@ -1,12 +1,13 @@
-﻿using CastIt.Models.Entities;
+﻿using CastIt.Domain.Entities;
 using CastIt.ViewModels.Items;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CastIt.Interfaces
 {
-    public interface IPlayListsService
+    public interface IAppDataService
     {
+        void Close();
         Task<List<PlayListItemViewModel>> GetAllPlayLists();
         Task<PlayListItemViewModel> AddNewPlayList(string name, int position);
         Task UpdatePlayList(long id, string name, int position);

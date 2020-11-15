@@ -1,6 +1,7 @@
-﻿using CastIt.Common;
-using CastIt.Common.Enums;
+﻿using CastIt.Application.Interfaces;
+using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
 using CastIt.Interfaces;
 using CastIt.Models;
@@ -16,10 +17,13 @@ namespace CastIt.Services
         #region Members
         private readonly IMvxLog _logger;
         private readonly ITelemetryService _telemetryService;
+
         private AppSettings _appSettings;
         #endregion
 
         #region Properties
+        public string AppSettingsFilename { get; } = "AppSettings.json";
+
         public AppLanguageType Language
         {
             get => _appSettings.Language;
@@ -196,13 +200,13 @@ namespace CastIt.Services
         {
             try
             {
-                if (!FileUtils.AppSettingsExists())
+                if (!AppSettingsExists())
                 {
                     _logger.Info($"{nameof(LoadSettings)}: Settings does not exist. Creating a default one");
                     SaveSettings();
                     return;
                 }
-                string path = FileUtils.GetAppSettingsPath();
+                string path = GetAppSettingsPath();
                 var text = File.ReadAllText(path);
                 var settings = File.Exists(path) ?
                     JsonConvert.DeserializeObject<AppSettings>(text) :
@@ -227,7 +231,7 @@ namespace CastIt.Services
                 if (settings is null)
                     throw new ArgumentNullException(nameof(settings), "The user settings to be saved cannot be null");
 
-                string path = FileUtils.GetAppSettingsPath();
+                string path = GetAppSettingsPath();
                 string json = JsonConvert.SerializeObject(settings);
                 _logger.Info($"{nameof(SaveSettings)}: Trying to save settings = {json}");
 
@@ -242,6 +246,28 @@ namespace CastIt.Services
                 _logger.Error(ex, $"{nameof(SaveSettings)}: An unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
+        }
+
+        public string GetAppSettingsPath()
+        {
+            string baseAppFolder = FileUtils.GetBaseAppFolder();
+            return Path.Combine(baseAppFolder, AppSettingsFilename);
+        }
+
+        public void DeleteAppSettings()
+        {
+            if (!AppSettingsExists())
+                return;
+
+            string filepath = GetAppSettingsPath();
+            File.Delete(filepath);
+        }
+
+        public bool AppSettingsExists()
+        {
+            string path = GetAppSettingsPath();
+            bool exists = File.Exists(path);
+            return exists;
         }
         #endregion
     }

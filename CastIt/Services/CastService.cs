@@ -1,14 +1,15 @@
-﻿using CastIt.Common;
-using CastIt.Common.Enums;
-using CastIt.Common.Extensions;
-using CastIt.Common.Utils;
+﻿using CastIt.Application.Common.Extensions;
+using CastIt.Application.Interfaces;
+using CastIt.Domain.Enums;
+using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
-using CastIt.Models.FFMpeg;
+using CastIt.Server.Common;
+using CastIt.Server.Interfaces;
 using MvvmCross.Logging;
 using System;
 using System.Collections.Generic;
@@ -25,10 +26,11 @@ namespace CastIt.Services
 
         private readonly IMvxLog _logger;
         private readonly IAppWebServer _appWebServer;
-        private readonly IFFMpegService _ffmpegService;
+        private readonly IFFmpegService _ffmpegService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppSettingsService _appSettings;
+        private readonly IFileService _fileService;
 
         private readonly Player _player;
         private readonly Track _subtitle;
@@ -54,10 +56,11 @@ namespace CastIt.Services
         public CastService(
             IMvxLogProvider logProvider,
             IAppWebServer appWebServer,
-            IFFMpegService ffmpegService,
+            IFFmpegService ffmpegService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
-            IAppSettingsService appSettings)
+            IAppSettingsService appSettings,
+            IFileService fileService)
         {
             _logger = logProvider.GetLogFor<CastService>();
             _appWebServer = appWebServer;
@@ -65,6 +68,7 @@ namespace CastIt.Services
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
             _appSettings = appSettings;
+            _fileService = fileService;
             _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: true);
             _subtitle = new Track
             {
@@ -109,10 +113,10 @@ namespace CastIt.Services
                 throw new ArgumentNullException(nameof(fileInfo), "A file info must be provided");
             }
             _ffmpegService.KillTranscodeProcess();
-            bool isLocal = FileUtils.IsLocalFile(mrl);
-            bool isUrlFile = FileUtils.IsUrlFile(mrl);
-            bool isVideoFile = FileUtils.IsVideoFile(mrl);
-            bool isMusicFile = FileUtils.IsMusicFile(mrl);
+            bool isLocal = _fileService.IsLocalFile(mrl);
+            bool isUrlFile = _fileService.IsUrlFile(mrl);
+            bool isVideoFile = _fileService.IsVideoFile(mrl);
+            bool isMusicFile = _fileService.IsMusicFile(mrl);
 
             if (!isLocal && !isUrlFile)
             {
@@ -131,8 +135,8 @@ namespace CastIt.Services
                 await SetCastRenderer(AvailableDevices.First()).ConfigureAwait(false);
             }
             // create new media
-            bool videoNeedsTranscode = isVideoFile && _ffmpegService.VideoNeedsTranscode(videoStreamIndex, fileInfo);
-            bool audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, fileInfo, isMusicFile);
+            bool videoNeedsTranscode = isVideoFile && _ffmpegService.VideoNeedsTranscode(videoStreamIndex, _appSettings.ForceVideoTranscode, _appSettings.VideoScale, fileInfo);
+            bool audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, _appSettings.ForceAudioTranscode, fileInfo, isMusicFile);
             var hwAccelToUse = isVideoFile ? _ffmpegService.GetHwAccelToUse(videoStreamIndex, fileInfo) : HwAccelDeviceType.None;
 
             _currentFilePath = mrl;
@@ -170,12 +174,13 @@ namespace CastIt.Services
             {
                 _logger.Info($"{nameof(StartPlay)}: Subtitles were specified, generating a compatible one...");
                 string subtitleLocation = useSubTitleStream ? mrl : GetSubTitles.Invoke();
-                string subTitleFilePath = FileUtils.GetSubTitleFilePath();
+                string subTitleFilePath = _fileService.GetSubTitleFilePath();
                 await _ffmpegService.GenerateSubTitles(
                     subtitleLocation,
                     subTitleFilePath,
                     seconds,
                     useSubTitleStream ? subtitleStreamIndex : 0,
+                    _appSettings.SubtitleDelayInSeconds,
                     default);
 
                 _subtitle.TrackContentId = _appWebServer.GetSubTitlePath(subTitleFilePath);
@@ -233,8 +238,8 @@ namespace CastIt.Services
                         ? fileInfo.Audios.Select(a => a.Index).GetClosest(videoStreamIndex)
                         : -1;
 
-                    videoNeedsTranscode = _ffmpegService.VideoNeedsTranscode(videoStreamIndex, fileInfo);
-                    audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, fileInfo);
+                    videoNeedsTranscode = _ffmpegService.VideoNeedsTranscode(videoStreamIndex, _appSettings.ForceVideoTranscode, _appSettings.VideoScale, fileInfo);
+                    audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, _appSettings.ForceAudioTranscode, fileInfo);
                     hwAccelToUse = HwAccelDeviceType.None;
 
                     media.Duration = -1;
@@ -283,7 +288,7 @@ namespace CastIt.Services
 
         public Task<string> GetThumbnail(string filePath)
         {
-            return Task.Run(() =>_ffmpegService.GetThumbnail(filePath));
+            return Task.Run(() => _ffmpegService.GetThumbnail(filePath));
         }
 
         public void GenerateThumbnails()
@@ -294,7 +299,7 @@ namespace CastIt.Services
             await Task.Run(() =>
             {
                 _ffmpegService.KillThumbnailProcess();
-                _ffmpegService.GenerateThumbnails(filePath);
+                _ffmpegService.GenerateThumbnails(filePath, _appSettings.EnableHardwareAcceleration);
             }).ConfigureAwait(false);
         }
 
@@ -322,7 +327,7 @@ namespace CastIt.Services
             if (position >= 0 && position <= 100)
             {
                 double seconds = position * totalSeconds / 100;
-                if (FileUtils.IsLocalFile(filePath))
+                if (_fileService.IsLocalFile(filePath))
                     return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
                 return _player.SeekAsync(seconds);
@@ -353,7 +358,7 @@ namespace CastIt.Services
                 seconds = 0;
             }
 
-            if (FileUtils.IsLocalFile(_currentFilePath))
+            if (_fileService.IsLocalFile(_currentFilePath))
                 return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
             return _player.SeekAsync(seconds);
@@ -388,7 +393,7 @@ namespace CastIt.Services
                     $"they will be set to = {_player.CurrentMediaDuration}");
                 newValue = _player.CurrentMediaDuration;
             }
-            if (!FileUtils.IsLocalFile(_currentFilePath))
+            if (!_fileService.IsLocalFile(_currentFilePath))
                 return _player.SeekAsync(newValue);
             return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
         }

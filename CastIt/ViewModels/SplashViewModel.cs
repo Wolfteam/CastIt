@@ -1,4 +1,5 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Application.Interfaces;
+using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.ViewModels.Items;
 using MvvmCross.Logging;
@@ -18,8 +19,9 @@ namespace CastIt.ViewModels
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppSettingsService _settingsService;
-        private readonly IPlayListsService _playListsService;
+        private readonly IAppDataService _playListsService;
         private readonly Timer _timer;
+        private readonly IFileService _fileService;
 
         private string _loadingText;
 
@@ -41,12 +43,14 @@ namespace CastIt.ViewModels
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
             IAppSettingsService settingsService,
-            IPlayListsService playListsService) : base(textProvider, messenger, logProvider.GetLogFor<SplashViewModel>())
+            IAppDataService playListsService,
+            IFileService fileService) : base(textProvider, messenger, logProvider.GetLogFor<SplashViewModel>())
         {
             _navigationService = navigationService;
             _telemetryService = telemetryService;
             _settingsService = settingsService;
             _playListsService = playListsService;
+            _fileService = fileService;
 
             _timer = new Timer(800)
             {
@@ -64,8 +68,8 @@ namespace CastIt.ViewModels
             Logger.Info($"{nameof(Initialize)}: Deleting old preview / log files...");
             try
             {
-                FileUtils.DeleteFilesInDirectory(FileUtils.GetPreviewsPath(), DateTime.Now.AddDays(-1));
-                FileUtils.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
+                _fileService.DeleteFilesInDirectory(_fileService.GetPreviewsPath(), DateTime.Now.AddDays(-1));
+                _fileService.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
                 Logger.Info($"{nameof(Initialize)}: Old files were deleted");
             }
             catch (Exception e)

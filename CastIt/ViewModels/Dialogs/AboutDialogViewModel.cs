@@ -1,4 +1,5 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Server.Interfaces;
 using MvvmCross.Commands;
 using MvvmCross.Logging;
 using MvvmCross.Navigation;

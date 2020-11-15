@@ -1,5 +1,5 @@
-﻿using CastIt.Common.Enums;
-using CastIt.Common.Extensions;
+﻿using CastIt.Common.Extensions;
+using CastIt.Domain.Enums;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using System;

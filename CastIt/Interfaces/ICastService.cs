@@ -1,9 +1,9 @@
-﻿using CastIt.Common;
+﻿using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.GoogleCast.Interfaces;
+using CastIt.Server.Common;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CastIt.Models.FFMpeg;
 
 namespace CastIt.Interfaces
 {

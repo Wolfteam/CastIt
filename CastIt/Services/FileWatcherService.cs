@@ -1,4 +1,4 @@
-﻿using CastIt.Common;
+﻿using CastIt.Application.Common;
 using CastIt.Interfaces;
 using MvvmCross.Logging;
 using System;
@@ -100,7 +100,7 @@ namespace CastIt.Services
             {
                 NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size
             };
-            foreach (var filter in AppConstants.AllowedFormats)
+            foreach (var filter in FileFormatConstants.AllowedFormats)
             {
                 watcher.Filters.Add($"*{filter}");
             }
