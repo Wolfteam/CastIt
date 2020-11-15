@@ -5,8 +5,8 @@ using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.Server.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -171,14 +171,14 @@ namespace CastIt.ViewModels.Items
         public FileItemViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<FileItemViewModel> logger,
             ICastService castService,
             IAppSettingsService settingsService,
             IFFmpegService ffmpegService,
             IAppWebServer appWebServer,
             IAppDataService playListsService,
             IFileService fileService)
-            : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
+            : base(textProvider, messenger, logger)
         {
             _castService = castService;
             _settingsService = settingsService;

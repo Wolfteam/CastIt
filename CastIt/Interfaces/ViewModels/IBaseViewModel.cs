@@ -1,4 +1,4 @@
-﻿using MvvmCross.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MvvmCross.Plugin.Messenger;
 
 namespace CastIt.Interfaces.ViewModels
@@ -7,7 +7,7 @@ namespace CastIt.Interfaces.ViewModels
     {
         ITextProvider TextProvider { get; }
         IMvxMessenger Messenger { get; }
-        IMvxLog Logger { get; }
+        ILogger Logger { get; }
         string this[string key] { get; }
 
         string GetText(string key);

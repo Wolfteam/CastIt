@@ -1,7 +1,7 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -47,11 +47,11 @@ namespace CastIt.ViewModels.Dialogs
         public DownloadDialogViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<DownloadDialogViewModel> logger,
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
             IFileService fileService)
-            : base(textProvider, messenger, logger.GetLogFor<DownloadDialogViewModel>())
+            : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
             _telemetryService = telemetryService;
@@ -79,7 +79,7 @@ namespace CastIt.ViewModels.Dialogs
             try
             {
                 var path = _fileService.GetFFmpegFolder();
-                Logger.Info($"{nameof(DownloadMissingFiles)}: Downloading missing files. Save path is = {path}");
+                Logger.LogInformation($"{nameof(DownloadMissingFiles)}: Downloading missing files. Save path is = {path}");
                 var progress = new Progress<ProgressInfo>((p) =>
                 {
                     var downloaded = (double)p.DownloadedBytes / p.TotalBytes * 100;
@@ -97,7 +97,7 @@ namespace CastIt.ViewModels.Dialogs
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"{nameof(DownloadMissingFiles)}: An unknown error occurred");
+                Logger.LogError(e, $"{nameof(DownloadMissingFiles)}: An unknown error occurred");
                 _telemetryService.TrackError(e);
             }
             IsDownloading = false;

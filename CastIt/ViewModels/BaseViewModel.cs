@@ -1,7 +1,7 @@
 ﻿using CastIt.Interfaces;
 using CastIt.Interfaces.ViewModels;
 using CastIt.Models.Messages;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -18,7 +18,7 @@ namespace CastIt.ViewModels
         #region Properties
         public ITextProvider TextProvider { get; }
         public IMvxMessenger Messenger { get; }
-        public IMvxLog Logger { get; }
+        public ILogger Logger { get; }
         public string this[string key]
             => TextProvider.GetText(string.Empty, string.Empty, key)
             ?? throw new Exception($"{key} was not found in the resources file");
@@ -27,7 +27,7 @@ namespace CastIt.ViewModels
         protected BaseViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger)
+            ILogger logger)
         {
             TextProvider = textProvider;
             Messenger = messenger;
@@ -85,7 +85,7 @@ namespace CastIt.ViewModels
         #region Properties
         public ITextProvider TextProvider { get; }
         public IMvxMessenger Messenger { get; }
-        public IMvxLog Logger { get; }
+        public ILogger Logger { get; }
         public string this[string key]
             => TextProvider.GetText(string.Empty, string.Empty, key)
             ?? throw new Exception($"{key} was not found in the resources file");
@@ -94,7 +94,7 @@ namespace CastIt.ViewModels
         protected BaseViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger)
+            ILogger logger)
         {
             TextProvider = textProvider;
             Messenger = messenger;
@@ -152,7 +152,7 @@ namespace CastIt.ViewModels
         #region Properties
         public ITextProvider TextProvider { get; }
         public IMvxMessenger Messenger { get; }
-        public IMvxLog Logger { get; }
+        public ILogger Logger { get; }
         public string this[string key]
             => TextProvider.GetText(string.Empty, string.Empty, key)
             ?? throw new Exception($"{key} was not found in the resources file");
@@ -161,7 +161,7 @@ namespace CastIt.ViewModels
         protected BaseViewModelResult(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger)
+            ILogger logger)
         {
             TextProvider = textProvider;
             Messenger = messenger;

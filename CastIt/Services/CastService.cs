@@ -2,7 +2,6 @@
 using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Models.FFmpeg.Info;
-using CastIt.GoogleCast;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Events;
@@ -10,7 +9,7 @@ using CastIt.GoogleCast.Models.Media;
 using CastIt.Interfaces;
 using CastIt.Server.Common;
 using CastIt.Server.Interfaces;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -24,7 +23,7 @@ namespace CastIt.Services
     {
         private const int SubTitleDefaultTrackId = 1;
 
-        private readonly IMvxLog _logger;
+        private readonly ILogger<CastService> _logger;
         private readonly IAppWebServer _appWebServer;
         private readonly IFFmpegService _ffmpegService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
@@ -32,7 +31,7 @@ namespace CastIt.Services
         private readonly IAppSettingsService _appSettings;
         private readonly IFileService _fileService;
 
-        private readonly Player _player;
+        private readonly IPlayer _player;
         private readonly Track _subtitle;
 
         private bool _renderWasSet;
@@ -54,22 +53,23 @@ namespace CastIt.Services
         public Func<string> GetSubTitles { get; set; }
 
         public CastService(
-            IMvxLogProvider logProvider,
+            ILogger<CastService> logger,
             IAppWebServer appWebServer,
             IFFmpegService ffmpegService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
             IAppSettingsService appSettings,
-            IFileService fileService)
+            IFileService fileService,
+            IPlayer player)
         {
-            _logger = logProvider.GetLogFor<CastService>();
+            _logger = logger;
             _appWebServer = appWebServer;
             _ffmpegService = ffmpegService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
             _appSettings = appSettings;
             _fileService = fileService;
-            _player = new Player(logProvider.GetLogFor<Player>(), logMsgs: true);
+            _player = player;
             _subtitle = new Track
             {
                 TrackId = SubTitleDefaultTrackId,
@@ -82,7 +82,7 @@ namespace CastIt.Services
 
         public void Init()
         {
-            _logger.Info($"{nameof(Init)}: Initializing all...");
+            _logger.LogInformation($"{nameof(Init)}: Initializing all...");
             _player.FileLoading += FileLoading;
             _player.DeviceAdded += RendererDiscovererItemAdded;
             _player.EndReached += EndReached;
@@ -93,9 +93,9 @@ namespace CastIt.Services
             _player.VolumeLevelChanged += VolumeLevelChanged;
             _player.IsMutedChanged += IsMutedChanged;
             _player.LoadFailed += LoadFailed;
-            _player.Init();
+            _player.ListenForDevices();
 
-            _logger.Info($"{nameof(Init)}: Initialize completed");
+            _logger.LogInformation($"{nameof(Init)}: Initialize completed");
         }
 
         public async Task StartPlay(
@@ -109,7 +109,7 @@ namespace CastIt.Services
         {
             if (fileInfo == null)
             {
-                _logger.Warn($"{nameof(StartPlay)}: No file info was provided for mrl = {mrl}");
+                _logger.LogWarning($"{nameof(StartPlay)}: No file info was provided for mrl = {mrl}");
                 throw new ArgumentNullException(nameof(fileInfo), "A file info must be provided");
             }
             _ffmpegService.KillTranscodeProcess();
@@ -120,13 +120,13 @@ namespace CastIt.Services
 
             if (!isLocal && !isUrlFile)
             {
-                _logger.Warn($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
+                _logger.LogWarning($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
                 return;
             }
 
             if (AvailableDevices.Count == 0)
             {
-                _logger.Warn($"{nameof(StartPlay)}: No renders were found, file = {mrl}");
+                _logger.LogWarning($"{nameof(StartPlay)}: No renders were found, file = {mrl}");
                 return;
             }
 
@@ -172,7 +172,7 @@ namespace CastIt.Services
             bool useSubTitleStream = subtitleStreamIndex >= 0;
             if (useSubTitleStream || !string.IsNullOrEmpty(GetSubTitles?.Invoke()))
             {
-                _logger.Info($"{nameof(StartPlay)}: Subtitles were specified, generating a compatible one...");
+                _logger.LogInformation($"{nameof(StartPlay)}: Subtitles were specified, generating a compatible one...");
                 string subtitleLocation = useSubTitleStream ? mrl : GetSubTitles.Invoke();
                 string subTitleFilePath = _fileService.GetSubTitleFilePath();
                 await _ffmpegService.GenerateSubTitles(
@@ -184,7 +184,7 @@ namespace CastIt.Services
                     default);
 
                 _subtitle.TrackContentId = _appWebServer.GetSubTitlePath(subTitleFilePath);
-                _logger.Info($"{nameof(StartPlay)}: Subtitles were generated");
+                _logger.LogInformation($"{nameof(StartPlay)}: Subtitles were generated");
                 media.Tracks.Add(_subtitle);
                 media.TextTrackStyle = GetSubtitleStyle();
                 activeTrackIds.Add(SubTitleDefaultTrackId);
@@ -194,7 +194,7 @@ namespace CastIt.Services
             string imgUrl = string.Empty;
             if (isLocal)
             {
-                _logger.Info($"{nameof(StartPlay)}: File is a local one, generating metadata...");
+                _logger.LogInformation($"{nameof(StartPlay)}: File is a local one, generating metadata...");
                 imgUrl = _appWebServer.GetPreviewPath(firstThumbnail);
 
                 if (isVideoFile)
@@ -212,7 +212,7 @@ namespace CastIt.Services
             }
             else if (_youtubeUrlDecoder.IsYoutubeUrl(media.ContentId))
             {
-                _logger.Info($"{nameof(StartPlay)}: File is a youtube link, parsing it...");
+                _logger.LogInformation($"{nameof(StartPlay)}: File is a youtube link, parsing it...");
                 var ytMedia = await _youtubeUrlDecoder.Parse(media.ContentId, quality);
                 QualitiesChanged?.Invoke(ytMedia.SelectedQuality, ytMedia.Qualities);
 
@@ -225,7 +225,7 @@ namespace CastIt.Services
                     fileInfo = await _ffmpegService.GetFileInfo(ytMedia.Url, default);
                     if (fileInfo == null)
                     {
-                        _logger.Warn($"{nameof(StartPlay)}: Couldn't get the file info for url = {ytMedia.Url}");
+                        _logger.LogWarning($"{nameof(StartPlay)}: Couldn't get the file info for url = {ytMedia.Url}");
                         throw new Exception($"File info is null for yt hls = {ytMedia.Url}");
                     }
 
@@ -265,14 +265,14 @@ namespace CastIt.Services
                 });
             }
 
-            _logger.Info($"{nameof(StartPlay)}: Trying to load url = {media.ContentId}");
+            _logger.LogInformation($"{nameof(StartPlay)}: Trying to load url = {media.ContentId}");
             var status = await _player.LoadAsync(media, true, seconds, activeTrackIds.ToArray());
             if (status is null)
             {
-                _logger.Warn($"{nameof(StartPlay)}: Couldn't load url = {media.ContentId}");
+                _logger.LogWarning($"{nameof(StartPlay)}: Couldn't load url = {media.ContentId}");
                 return;
             }
-            _logger.Info($"{nameof(StartPlay)}: Url was successfully loaded");
+            _logger.LogInformation($"{nameof(StartPlay)}: Url was successfully loaded");
 
             FileLoaded(metadata.Title, imgUrl, _player.CurrentMediaDuration, _player.CurrentVolumeLevel, _player.IsMuted);
         }
@@ -333,7 +333,7 @@ namespace CastIt.Services
                 return _player.SeekAsync(seconds);
             }
 
-            _logger.Warn($"{nameof(GoToPosition)} Cant go to position = {position}");
+            _logger.LogWarning($"{nameof(GoToPosition)} Cant go to position = {position}");
             return Task.CompletedTask;
         }
 
@@ -347,14 +347,14 @@ namespace CastIt.Services
         {
             if (seconds >= _player.CurrentMediaDuration)
             {
-                _logger.Warn(
+                _logger.LogWarning(
                     $"{nameof(GoToSeconds)}: Cant go to = {seconds} because is bigger or equal than " +
                     $"the media duration = {_player.CurrentMediaDuration}");
                 return Task.CompletedTask;
             }
             if (seconds < 0)
             {
-                _logger.Warn($"{nameof(GoToSeconds)}: Wont go to = {seconds}, instead we will go to 0");
+                _logger.LogWarning($"{nameof(GoToSeconds)}: Wont go to = {seconds}, instead we will go to 0");
                 seconds = 0;
             }
 
@@ -374,7 +374,7 @@ namespace CastIt.Services
         {
             if (seconds >= _player.CurrentMediaDuration || _player.CurrentMediaDuration + seconds < 0)
             {
-                _logger.Warn(
+                _logger.LogWarning(
                     $"{nameof(AddSeconds)}: Cant add seconds = {seconds} because is bigger or equal than " +
                     $"the media duration = {_player.CurrentMediaDuration} or the diff is less than 0");
                 return Task.CompletedTask;
@@ -383,12 +383,12 @@ namespace CastIt.Services
             var newValue = _player.ElapsedSeconds + seconds;
             if (newValue < 0)
             {
-                _logger.Warn($"{nameof(AddSeconds)}: The seconds to add are = {newValue}. They will be set to 0");
+                _logger.LogWarning($"{nameof(AddSeconds)}: The seconds to add are = {newValue}. They will be set to 0");
                 newValue = 0;
             }
             else if (newValue >= _player.CurrentMediaDuration)
             {
-                _logger.Warn(
+                _logger.LogWarning(
                     $"{nameof(AddSeconds)}: The seconds to add exceeds the media duration, " +
                     $"they will be set to = {_player.CurrentMediaDuration}");
                 newValue = _player.CurrentMediaDuration;
@@ -424,7 +424,7 @@ namespace CastIt.Services
         {
             try
             {
-                _logger.Info($"{nameof(CleanThemAll)} Clean them all started...");
+                _logger.LogInformation($"{nameof(CleanThemAll)} Clean them all started...");
                 _player.FileLoading -= FileLoading;
                 _player.DeviceAdded -= RendererDiscovererItemAdded;
                 _player.EndReached -= EndReached;
@@ -440,11 +440,11 @@ namespace CastIt.Services
 
                 _appWebServer.Dispose();
                 _player.Dispose();
-                _logger.Info($"{nameof(CleanThemAll)} Clean them all completed");
+                _logger.LogInformation($"{nameof(CleanThemAll)} Clean them all completed");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, $"{nameof(CleanThemAll)}: An unknown error occurred");
+                _logger.LogError(ex, $"{nameof(CleanThemAll)}: An unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
         }
@@ -524,7 +524,7 @@ namespace CastIt.Services
 
         private void RendererDiscovererItemAdded(object sender, DeviceAddedArgs e)
         {
-            _logger.Info(
+            _logger.LogInformation(
                 $"{nameof(RendererDiscovererItemAdded)}: New item discovered: " +
                 $"{e.Receiver.FriendlyName} - Ip = {e.Receiver.Host}:{e.Receiver.Port}");
             AvailableDevices.Add(e.Receiver);
@@ -541,7 +541,7 @@ namespace CastIt.Services
         //TODO: CHECK IF WE CAN KNOW WHEN A DEVICE IS REMOVED
         //private void RendererDiscovererItemDeleted(object sender, RendererDiscovererItemDeletedEventArgs e)
         //{
-        //    _logger.Info(
+        //    _logger.LogInformation(
         //        $"{nameof(RendererDiscovererItemAdded)}: Item removed: " +
         //        $"{e.RendererItem.Name} of type {e.RendererItem.Type}");
         //    _rendererItems.Remove(e.RendererItem);

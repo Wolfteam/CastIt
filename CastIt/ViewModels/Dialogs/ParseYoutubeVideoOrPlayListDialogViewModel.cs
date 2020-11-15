@@ -1,6 +1,6 @@
 ﻿using CastIt.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using System.Threading.Tasks;
@@ -23,8 +23,9 @@ namespace CastIt.ViewModels.Dialogs
         public ParseYoutubeVideoOrPlayListDialogViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger,
-            IMvxNavigationService navigationService) : base(textProvider, messenger, logger)
+            ILogger<ParseYoutubeVideoOrPlayListDialogViewModel> logger,
+            IMvxNavigationService navigationService) 
+            : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
         }

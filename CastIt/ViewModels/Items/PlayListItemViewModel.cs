@@ -9,8 +9,8 @@ using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -166,7 +166,7 @@ namespace CastIt.ViewModels.Items
         public PlayListItemViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<PlayListItemViewModel> logger,
             IAppDataService playListsService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
@@ -175,7 +175,7 @@ namespace CastIt.ViewModels.Items
             IAppSettingsService appSettings,
             IFileWatcherService fileWatcherService,
             IFileService fileService)
-            : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
+            : base(textProvider, messenger, logger)
         {
             _playListsService = playListsService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
@@ -283,7 +283,7 @@ namespace CastIt.ViewModels.Items
             var file = Items.FirstOrDefault(f => f.Id == id);
             if (file == null)
             {
-                Logger.Warn($"{nameof(RemoveFile)}: FileId = {id} not found");
+                Logger.LogWarning($"{nameof(RemoveFile)}: FileId = {id} not found");
                 return;
             }
 
@@ -310,7 +310,7 @@ namespace CastIt.ViewModels.Items
             var files = new List<string>();
             foreach (var folder in folders)
             {
-                Logger.Info($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
+                Logger.LogInformation($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
                 var filesInDir = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
                     .Where(s => FileFormatConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                     .ToList();
@@ -365,7 +365,7 @@ namespace CastIt.ViewModels.Items
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("SomethingWentWrong")));
                 _telemetryService.TrackError(e);
-                Logger.Error(e, $"{nameof(OnFilesAdded)}: Couldn't parse the following paths = {string.Join(",", paths)}");
+                Logger.LogError(e, $"{nameof(OnFilesAdded)}: Couldn't parse the following paths = {string.Join(",", paths)}");
             }
             finally
             {
@@ -394,39 +394,39 @@ namespace CastIt.ViewModels.Items
             {
                 IsBusy = true;
 
-                Logger.Info($"{nameof(OnUrlAdded)}: Trying to parse url = {url}");
+                Logger.LogInformation($"{nameof(OnUrlAdded)}: Trying to parse url = {url}");
                 if (!_youtubeUrlDecoder.IsPlayList(url))
                 {
-                    Logger.Info($"{nameof(OnUrlAdded)}: Url is not a playlist, parsing it...");
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is not a playlist, parsing it...");
                     await AddYoutubeUrl(url);
                     return;
                 }
 
                 if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
                 {
-                    Logger.Info($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
                     bool? result = await _navigationService
                         .Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
                     switch (result)
                     {
                         //Only video
                         case true:
-                            Logger.Info($"{nameof(OnUrlAdded)}: Parsing only the video...");
+                            Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
                             await AddYoutubeUrl(url);
                             return;
                         //Cancel
                         case null:
-                            Logger.Info($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
+                            Logger.LogInformation($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
                             return;
                     }
                 }
-                Logger.Info($"{nameof(OnUrlAdded)}: Parsing playlist...");
+                Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist...");
                 var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url, _cancellationToken.Token);
                 foreach (var link in links)
                 {
                     if (_cancellationToken.IsCancellationRequested)
                         break;
-                    Logger.Info($"{nameof(OnUrlAdded)}: Parsing playlist url = {link}");
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist url = {link}");
                     await AddYoutubeUrl(link);
                 }
             }
@@ -434,7 +434,7 @@ namespace CastIt.ViewModels.Items
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
                 _telemetryService.TrackError(e);
-                Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldn't parse url = {url}");
+                Logger.LogError(e, $"{nameof(OnUrlAdded)}: Couldn't parse url = {url}");
             }
             finally
             {
@@ -527,7 +527,7 @@ namespace CastIt.ViewModels.Items
             var media = await _youtubeUrlDecoder.Parse(url, null, false);
             if (media == null)
             {
-                Logger.Info($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
+                Logger.LogInformation($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
                 return;
             }

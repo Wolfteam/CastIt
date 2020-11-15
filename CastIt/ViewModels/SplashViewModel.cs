@@ -2,7 +2,7 @@
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
 using CastIt.ViewModels.Items;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -39,12 +39,12 @@ namespace CastIt.ViewModels
         public SplashViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logProvider,
+            ILogger<SplashViewModel> logger,
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
             IAppSettingsService settingsService,
             IAppDataService playListsService,
-            IFileService fileService) : base(textProvider, messenger, logProvider.GetLogFor<SplashViewModel>())
+            IFileService fileService) : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
             _telemetryService = telemetryService;
@@ -62,19 +62,19 @@ namespace CastIt.ViewModels
         public override Task Initialize()
         {
             LoadingText = $"{GetText("Loading")}...";
-            Logger.Info($"{nameof(Initialize)}: Applying app theme and accent color...");
+            Logger.LogInformation($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
 
-            Logger.Info($"{nameof(Initialize)}: Deleting old preview / log files...");
+            Logger.LogInformation($"{nameof(Initialize)}: Deleting old preview / log files...");
             try
             {
                 _fileService.DeleteFilesInDirectory(_fileService.GetPreviewsPath(), DateTime.Now.AddDays(-1));
                 _fileService.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
-                Logger.Info($"{nameof(Initialize)}: Old files were deleted");
+                Logger.LogInformation($"{nameof(Initialize)}: Old files were deleted");
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
+                Logger.LogError(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
                 _telemetryService.TrackError(e);
             }
             return base.Initialize();
@@ -97,7 +97,7 @@ namespace CastIt.ViewModels
             _timer.Elapsed -= TimerElapsed;
             _timer.Dispose();
 
-            Logger.Info($"{nameof(Initialize)}: Getting all playlists...");
+            Logger.LogInformation($"{nameof(Initialize)}: Getting all playlists...");
             var playLists = await _playListsService.GetAllPlayLists();
             foreach (var playlist in playLists)
             {
@@ -106,7 +106,7 @@ namespace CastIt.ViewModels
                 playlist.SetPositionIfChanged();
             }
 
-            Logger.Info($"{nameof(Initialize)}: Navigating to main view model...");
+            Logger.LogInformation($"{nameof(Initialize)}: Navigating to main view model...");
             await _navigationService.Navigate<MainViewModel, List<PlayListItemViewModel>>(playLists).ConfigureAwait(false);
             _beforeNavigatingToMainViewModel.Raise();
         }

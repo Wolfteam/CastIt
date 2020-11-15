@@ -3,8 +3,8 @@ using CastIt.GoogleCast.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Items;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System.Collections.Generic;
@@ -26,10 +26,10 @@ namespace CastIt.ViewModels
         public DevicesViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<DevicesViewModel> logger,
             ICastService castService,
             IMapper mapper)
-            : base(textProvider, messenger, logger.GetLogFor<DevicesViewModel>())
+            : base(textProvider, messenger, logger)
         {
             _castService = castService;
             _mapper = mapper;
