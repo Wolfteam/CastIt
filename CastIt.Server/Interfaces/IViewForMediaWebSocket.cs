@@ -1,12 +1,10 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using MvvmCross.Commands;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Interfaces
 {
-    //TODO: REMOVE THE COMMANDS PART
     public interface IViewForMediaWebSocket
     {
         int CurrentFileAudioStreamIndex { get; }
@@ -19,28 +17,27 @@ namespace CastIt.Server.Interfaces
         double CurrentPlayedSeconds { get; set; }
         bool IsBusy { get; set; }
         bool IsCurrentlyPlaying { get; set; }
-        bool IsExpanded { get; set; }
         bool IsMuted { get; set; }
         bool IsPaused { get; set; }
         double PlayedPercentage { get; set; }
         string PreviewThumbnailImg { get; set; }
         int SelectedPlayListIndex { get; set; }
         double VolumeLevel { get; set; }
-        IMvxAsyncCommand CloseAppCommand { get; }
-        IMvxAsyncCommand<long> GoToSecondsCommand { get; }
-        IMvxCommand NextCommand { get; }
-        IMvxCommand PreviousCommand { get; }
-        IMvxAsyncCommand SetVolumeCommand { get; }
-        IMvxAsyncCommand<int> SkipCommand { get; }
-        IMvxAsyncCommand StopPlayBackCommand { get; }
-        IMvxCommand SwitchPlayListsCommand { get; }
-        IMvxAsyncCommand ToggleMuteCommand { get; }
-        IMvxAsyncCommand TogglePlayBackCommand { get; }
 
-        List<GetAllPlayListResponseDto> GetAllPlayLists();
-        PlayListItemResponseDto GetPlayList(long playlistId);
-        FileLoadedResponseDto GetCurrentFileLoaded();
-        Task PlayFile(long id, long playlistId, bool force);
+        Task CloseAppFromMediaWebSocket();
+        Task GoToSecondsFromMediaWebSocket(long seconds);
+        void GoToNextFromMediaWebSocket();
+        void GoToPreviousFromMediaWebSocket();
+        Task SetVolumeFromMediaWebSocket();
+        Task SkipFromMediaWebSocket(int seconds);
+        Task StopPlayBackFromMediaWebSocket();
+        Task ToggleMuteFromMediaWebSocket();
+        Task TogglePlayBackFromMediaWebSocket();
+
+        List<GetAllPlayListResponseDto> GetAllPlayListsForMediaWebSocket();
+        PlayListItemResponseDto GetPlayListForMediaWebSocket(long playlistId);
+        FileLoadedResponseDto GetCurrentFileLoadedForMediaWebSocket();
+        Task PlayFileForMediaWebSocket(long id, long playlistId, bool force);
         void SetPlayListOptions(long id, bool loop, bool shuffle);
         Task DeletePlayList(long id);
         Task DeleteFile(long id, long playListId);
@@ -55,7 +52,6 @@ namespace CastIt.Server.Interfaces
             bool enableHardwareAcceleration);
         List<FileItemOptionsResponseDto> GetFileOptions(long id);
         Task RenamePlayList(long id, string newName);
-
         AppSettingsResponseDto GetCurrentAppSettings();
     }
 }

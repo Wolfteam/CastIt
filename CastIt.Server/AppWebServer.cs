@@ -7,7 +7,7 @@ using CastIt.Server.Modules;
 using EmbedIO;
 using EmbedIO.Actions;
 using EmbedIO.WebApi;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +23,7 @@ namespace CastIt.Server
     {
         #region Members
         //public const string SubTitleStreamIndexParameter = "subtitleStream";
-        private readonly IMvxLog _logger;
+        private readonly ILogger<AppWebServer> _logger;
         private readonly ITelemetryService _telemetryService;
         private readonly IFFmpegService _ffmpegService;
         private readonly IFileService _fileService;
@@ -64,12 +64,12 @@ namespace CastIt.Server
         #endregion
 
         public AppWebServer(
-            IMvxLogProvider logger,
+            ILogger<AppWebServer> logger,
             ITelemetryService telemetryService,
             IFFmpegService ffmpegService,
             IFileService fileService)
         {
-            _logger = logger.GetLogFor<AppWebServer>();
+            _logger = logger;
             _telemetryService = telemetryService;
             _ffmpegService = ffmpegService;
             _fileService = fileService;
@@ -83,11 +83,11 @@ namespace CastIt.Server
                 _webServer = BuildServer(previewPath, subtitlesPath, view);
                 _webServer.Start(cancellationToken);
 
-                _logger.Info($"{nameof(Init)}: Server was started");
+                _logger.LogInformation($"{nameof(Init)}: Server was started");
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"{nameof(Init)}: Unknown error");
+                _logger.LogError(e, $"{nameof(Init)}: Unknown error");
                 _telemetryService.TrackError(e);
             }
         }
@@ -156,7 +156,7 @@ namespace CastIt.Server
         {
             if (_webServer != null)
                 return _webServer.Options.UrlPrefixes.First();
-            _logger.Error($"{nameof(GetBaseUrl)}: Web server is null!");
+            _logger.LogError($"{nameof(GetBaseUrl)}: Web server is null!");
             throw new NullReferenceException("Web server is null");
         }
 
@@ -187,7 +187,7 @@ namespace CastIt.Server
         private WebServer BuildServer(string previewPath, string subtitlesPath, IViewForMediaWebSocket view)
         {
             var url = GetIpAddress();
-            _logger.Info($"{nameof(BuildServer)}: Building server on url = {url}");
+            _logger.LogInformation($"{nameof(BuildServer)}: Building server on url = {url}");
             var server = new WebServer(o => o
                     .WithUrlPrefix(url)
                     .WithMode(HttpListenerMode.EmbedIO))
@@ -201,7 +201,7 @@ namespace CastIt.Server
 
             if (view != null)
             {
-                _logger.Info($"{nameof(BuildServer)}: View for socket was provided, adding the media ws");
+                _logger.LogInformation($"{nameof(BuildServer)}: View for socket was provided, adding the media ws");
                 server.WithModule(new MediaWebSocketModule(_logger, this, view, "/socket"));
             }
             //if a clients is disconected this throws an exception

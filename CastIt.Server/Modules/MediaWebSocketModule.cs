@@ -3,7 +3,7 @@ using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Server.Interfaces;
 using EmbedIO.WebSockets;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -60,11 +60,11 @@ namespace CastIt.Server.Modules
         private const string InfoMsgType = "SERVER_INFO_MSG";
         #endregion
 
-        private readonly IMvxLog _logger;
+        private readonly ILogger _logger;
         private readonly IViewForMediaWebSocket _view;
 
         public MediaWebSocketModule(
-            IMvxLog logger,
+            ILogger logger,
             IAppWebServer server,
             IViewForMediaWebSocket view,
             string urlPath)
@@ -99,7 +99,7 @@ namespace CastIt.Server.Modules
 
         protected override async Task OnClientConnectedAsync(IWebSocketContext context)
         {
-            _logger.Info($"{nameof(OnClientConnectedAsync)}: Client connected = {context.Id} - IP = {context.RemoteEndPoint}");
+            _logger.LogInformation($"{nameof(OnClientConnectedAsync)}: Client connected = {context.Id} - IP = {context.RemoteEndPoint}");
             await ClientConnected().ConfigureAwait(false);
             if (_view.IsCurrentlyPlaying)
             {
@@ -117,7 +117,7 @@ namespace CastIt.Server.Modules
             {
                 string msg = Encoding.GetString(buffer);
                 var baseMsg = JsonConvert.DeserializeObject<BaseSocketRequestDto>(msg);
-                _logger.Info(
+                _logger.LogInformation(
                     $"{nameof(HandleMessage)}: Received msgType = {baseMsg.MessageType} " +
                     $"from clientId = {context.Id} - IP = {context.RemoteEndPoint}");
                 switch (baseMsg.MessageType)
@@ -129,25 +129,25 @@ namespace CastIt.Server.Modules
                         return SendPlayList(getPlayListRequest.Id);
                     case PlayMsgType:
                         var playRequest = JsonConvert.DeserializeObject<PlayFileRequestDto>(msg);
-                        return _view.PlayFile(playRequest.Id, playRequest.PlayListId, playRequest.Force);
+                        return _view.PlayFileForMediaWebSocket(playRequest.Id, playRequest.PlayListId, playRequest.Force);
                     case GoToSecondsMsgType:
                         var gotoSecondsRequest = JsonConvert.DeserializeObject<GoToSecondsRequestDto>(msg);
-                        return _view.GoToSecondsCommand.ExecuteAsync(Convert.ToInt64(gotoSecondsRequest.Seconds));
+                        return _view.GoToSecondsFromMediaWebSocket(Convert.ToInt64(gotoSecondsRequest.Seconds));
                     case SkipSecondsMsgType:
                         var skipSecondsRequest = JsonConvert.DeserializeObject<GoToSecondsRequestDto>(msg);
-                        return _view.SkipCommand.ExecuteAsync(Convert.ToInt32(skipSecondsRequest.Seconds));
+                        return _view.SkipFromMediaWebSocket(Convert.ToInt32(skipSecondsRequest.Seconds));
                     case GotoMsgType:
                         var gotoRequest = JsonConvert.DeserializeObject<GoToRequestDto>(msg);
                         if (gotoRequest.Next)
-                            _view.NextCommand.Execute();
+                            _view.GoToNextFromMediaWebSocket();
                         else if (gotoRequest.Previous)
-                            _view.PreviousCommand.Execute();
+                            _view.GoToPreviousFromMediaWebSocket();
                         break;
                     case TogglePlayBackMsgType:
-                        _view.TogglePlayBackCommand.Execute();
+                        _view.TogglePlayBackFromMediaWebSocket();
                         break;
                     case StopMsgType:
-                        return _view.StopPlayBackCommand.ExecuteAsync();
+                        return _view.StopPlayBackFromMediaWebSocket();
                     case SetPlayListOptionsMsgType:
                         var playlistOptions = JsonConvert.DeserializeObject<SetPlayListOptionsRequestDto>(msg);
                         _view.SetPlayListOptions(playlistOptions.Id, playlistOptions.Loop, playlistOptions.Shuffle);
@@ -182,23 +182,23 @@ namespace CastIt.Server.Modules
                         _view.VolumeLevel = setVolumeRequest.VolumeLevel;
                         var tasks = new List<Task>
                         {
-                            _view.SetVolumeCommand.ExecuteAsync()
+                            _view.SetVolumeFromMediaWebSocket()
                         };
                         if (_view.IsMuted != setVolumeRequest.IsMuted)
                         {
-                            tasks.Add(_view.ToggleMuteCommand.ExecuteAsync());
+                            tasks.Add(_view.ToggleMuteFromMediaWebSocket());
                         }
                         return Task.WhenAll(tasks);
                     case RenamePlayListMsgType:
                         var renameRequest = JsonConvert.DeserializeObject<RenamePlayListRequestDto>(msg);
                         return _view.RenamePlayList(renameRequest.Id, renameRequest.Name);
                     case CloseAppMsgType:
-                        return _view.CloseAppCommand.ExecuteAsync();
+                        return _view.CloseAppFromMediaWebSocket();
                 }
             }
             catch (Exception e)
             {
-                _logger.Error(e, "Unknown error occurred handling msg");
+                _logger.LogError(e, "Unknown error occurred handling msg");
             }
 
             return Task.CompletedTask;
@@ -208,13 +208,13 @@ namespace CastIt.Server.Modules
         #region Server Msgs
         private Task SendPlayLists()
         {
-            var playlists = _view.GetAllPlayLists();
+            var playlists = _view.GetAllPlayListsForMediaWebSocket();
             return SendMsg(playlists, PlayListsLoadedMsgType);
         }
 
         private Task SendPlayList(long playlistId)
         {
-            var playlist = _view.GetPlayList(playlistId);
+            var playlist = _view.GetPlayListForMediaWebSocket(playlistId);
             return SendMsg(playlist, PlayListLoadedMsgType);
         }
 
@@ -235,7 +235,7 @@ namespace CastIt.Server.Modules
 
         private Task FileLoadedTask()
         {
-            var file = _view.GetCurrentFileLoaded();
+            var file = _view.GetCurrentFileLoadedForMediaWebSocket();
             return file == null ? Task.CompletedTask : SendMsg(file, FileLoadedMsgType);
         }
 
@@ -388,7 +388,7 @@ namespace CastIt.Server.Modules
                 Succeed = succeed,
             };
             if (msgType != FilePausedMsgType)
-                _logger.Info($"{nameof(SendMsg)}: Sending msg of type = {msgType}");
+                _logger.LogInformation($"{nameof(SendMsg)}: Sending msg of type = {msgType}");
             return SendMsg(response);
         }
 
@@ -400,7 +400,7 @@ namespace CastIt.Server.Modules
                 MessageType = msgType,
                 Result = result
             };
-            _logger.Info($"{nameof(SendMsg)}: Sending msg of type = {msgType} with result");
+            _logger.LogInformation($"{nameof(SendMsg)}: Sending msg of type = {msgType} with result");
             return SendMsg(response);
         }
 
