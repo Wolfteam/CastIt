@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EmbedIO" Version="3.4.3" />
+    <PackageReference Include="MvvmCross" Version="7.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CastIt.Application\CastIt.Application.csproj" />
+    <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
+  </ItemGroup>
+
+</Project>
