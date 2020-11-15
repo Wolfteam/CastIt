@@ -85,6 +85,19 @@ namespace CastIt.GoogleCast
             Receive(CancellationTokenSource.Token);
         }
 
+        public Task ConnectAsync(string host, int port)
+        {
+            CurrentReceiver = new Receiver
+            {
+                Host = host,
+                Port = port,
+                FriendlyName = "N/A",
+                Type = "N/A",
+                Id = "N/A"
+            };
+            return ConnectAsync();
+        }
+
         public Task ConnectAsync(IReceiver receiver)
         {
             CurrentReceiver = receiver;
@@ -218,7 +231,7 @@ namespace CastIt.GoogleCast
                     }
                     var length = BitConverter.ToInt32(buffer, 0);
                     CastMessage castMessage;
-                    using (var ms = new MemoryStream())
+                    await using (var ms = new MemoryStream())
                     {
                         var bytes = await ReadAsync(length, cancellationToken);
                         await ms.WriteAsync(bytes, 0, length, cancellationToken);

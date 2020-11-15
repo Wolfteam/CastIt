@@ -83,6 +83,13 @@ namespace CastIt.GoogleCast
 
         #region Constructors
         public Player(
+            string destinationId = AppConstants.DESTINATION_ID,
+            string senderId = AppConstants.SENDER_ID,
+            bool logMsgs = true): this(null, null, destinationId, senderId, logMsgs)
+        {
+        }
+
+        public Player(
             IMvxLog logger,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
@@ -157,6 +164,13 @@ namespace CastIt.GoogleCast
         public async Task ConnectAsync()
         {
             await _sender.ConnectAsync();
+            await _connectionChannel.ConnectAsync(_sender, _destinationId);
+            await _receiverChannel.LaunchAsync(_sender, ApplicationId);
+        }
+
+        public async Task ConnectAsync(string host, int port)
+        {
+            await _sender.ConnectAsync(host, port);
             await _connectionChannel.ConnectAsync(_sender, _destinationId);
             await _receiverChannel.LaunchAsync(_sender, ApplicationId);
         }

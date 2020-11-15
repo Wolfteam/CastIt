@@ -14,6 +14,8 @@ namespace CastIt.GoogleCast.Interfaces
 
         Task ConnectAsync();
 
+        Task ConnectAsync(string host, int port);
+
         Task ConnectAsync(IReceiver receiver);
 
         void Disconnect(bool triggerDisconnectEvent, bool chromeCastAskedForDisconnection);
