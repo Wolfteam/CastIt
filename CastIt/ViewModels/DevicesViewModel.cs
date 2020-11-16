@@ -20,19 +20,19 @@ namespace CastIt.ViewModels
         private readonly IMapper _mapper;
         private readonly IPlayer _player;
 
-        private bool _isBusy;
-        private string _searchDevicesMsg;
+        private bool _isConnecting;
+        private bool _isRefreshing;
 
-        public bool IsBusy
+        public bool IsConnecting
         {
-            get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
+            get => _isConnecting;
+            set => SetProperty(ref _isConnecting, value);
         }
 
-        public string SearchDevicesMsg
+        public bool IsRefreshing
         {
-            get => _searchDevicesMsg;
-            set => SetProperty(ref _searchDevicesMsg, value);
+            get => _isRefreshing;
+            set => SetProperty(ref _isRefreshing, value);
         }
 
         public MvxObservableCollection<DeviceItemViewModel> Devices { get; set; }
@@ -63,8 +63,6 @@ namespace CastIt.ViewModels
             _castService.OnCastableDeviceAdded += OnCastDeviceAdded;
             _castService.OnCastableDeviceDeleted += OnCastDeviceDeleted;
             _castService.OnDisconnected += DeSelectAllDevices;
-
-            SearchDevicesMsg = GetText("RefreshDevicesMsg");
         }
 
         public override void SetCommands()
@@ -87,8 +85,7 @@ namespace CastIt.ViewModels
 
         private async Task ToggleConnectedDevice(DeviceItemViewModel device)
         {
-            IsBusy = true;
-            SearchDevicesMsg = GetText("Connecting");
+            IsConnecting = true;
 
             DeSelectAllDevices();
             Messenger.Publish(new ManualDisconnectMessage(this));
@@ -101,8 +98,7 @@ namespace CastIt.ViewModels
                 Logger.LogError(ex, $"Couldn't connect to = {device?.FriendlyName}, maybe the device was off ?");
                 Messenger.Publish(new SnackbarMessage(this, GetText("DeviceConnectionFailed")));
             }
-            SearchDevicesMsg = GetText("RefreshDevicesMsg");
-            IsBusy = false;
+            IsConnecting = false;
         }
 
         private void OnCastRendererSet(string id)
@@ -144,8 +140,7 @@ namespace CastIt.ViewModels
         {
             var selected = Devices.FirstOrDefault(d => d.IsSelected);
             Logger.LogInformation($"{nameof(RefreshDevices)}: Refreshing list of devices, currently we got = {Devices.Count} device(s) and the selected one is = {selected?.FriendlyName}...");
-            IsBusy = true;
-            SearchDevicesMsg = GetText("Searching");
+            IsRefreshing = true;
 
             _castService.AvailableDevices.Clear();
             Devices.Clear();
@@ -162,8 +157,7 @@ namespace CastIt.ViewModels
             }
             Logger.LogInformation($"{nameof(RefreshDevices)}: Refresh completed, got = {Devices.Count} device(s)");
 
-            SearchDevicesMsg = GetText("RefreshDevicesMsg");
-            IsBusy = false;
+            IsRefreshing = false;
         }
     }
 }

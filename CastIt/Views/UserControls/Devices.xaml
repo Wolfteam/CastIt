@@ -26,7 +26,8 @@
             <Style.Triggers>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource Self}}" Value="False" />
+                        <Condition Binding="{Binding DataContext.IsConnecting, RelativeSource={RelativeSource Self}}" Value="False" />
+                        <Condition Binding="{Binding DataContext.IsRefreshing, RelativeSource={RelativeSource Self}}" Value="False" />
                         <Condition Binding="{Binding HasItems, RelativeSource={RelativeSource Self}}" Value="False" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Template">
@@ -80,9 +81,21 @@
                     Grid.Column="2"
                     HorizontalAlignment="Right"
                     Foreground="{DynamicResource FontColorOnDarkBackgroundBrush}"
-                    IsIndeterminate="True"
-                    Style="{StaticResource MaterialDesignCircularProgressBar}"
-                    Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    IsIndeterminate="True">
+                    <ProgressBar.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignCircularProgressBar}" TargetType="{x:Type ProgressBar}">
+                            <Setter Property="Visibility" Value="Hidden" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsConnecting}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsRefreshing}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
             </Grid>
         </materialDesign:ColorZone>
         <ScrollViewer
@@ -102,10 +115,25 @@
             d:Content="Don't see your device?"
             BorderBrush="{DynamicResource PrimaryHueDarkBrush}"
             Command="{Binding RefreshDevicesCommand}"
-            Content="{Binding SearchDevicesMsg}"
-            Foreground="{DynamicResource FontColorBrush}"
-            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
-            Style="{StaticResource MaterialDesignOutlinedButton}"
-            ToolTip="{Binding SearchDevicesMsg}" />
+            Foreground="{DynamicResource FontColorBrush}">
+            <Button.Style>
+                <Style BasedOn="{StaticResource MaterialDesignOutlinedButton}" TargetType="{x:Type Button}">
+                    <Setter Property="Content" Value="{Binding [RefreshDevicesMsg]}" />
+                    <Setter Property="ToolTip" Value="{Binding [RefreshDevicesMsg]}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsConnecting}" Value="True">
+                            <Setter Property="Content" Value="{Binding [Connecting]}" />
+                            <Setter Property="ToolTip" Value="{Binding [Connecting]}" />
+                            <Setter Property="IsEnabled" Value="False" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsRefreshing}" Value="True">
+                            <Setter Property="Content" Value="{Binding [Searching]}" />
+                            <Setter Property="ToolTip" Value="{Binding [Searching]}" />
+                            <Setter Property="IsEnabled" Value="False" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
     </Grid>
 </views:MvxWpfView>
