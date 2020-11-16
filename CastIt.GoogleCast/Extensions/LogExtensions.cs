@@ -9,7 +9,7 @@ namespace CastIt.GoogleCast.Extensions
         public static void LogInfo(this ILogger logger, string msg)
         {
             logger?.LogInformation(msg);
-            if (Player.CanLog)
+            if (Player.CanLogToConsole)
             {
                 Debug.WriteLine(msg, "INFO");
                 Console.WriteLine(msg);
@@ -19,7 +19,7 @@ namespace CastIt.GoogleCast.Extensions
         public static void LogWarn(this ILogger logger, string msg)
         {
             logger?.LogWarning(msg);
-            if (Player.CanLog)
+            if (Player.CanLogToConsole)
             {
                 Debug.WriteLine(msg, "WARNING");
                 Console.WriteLine(msg);
@@ -29,7 +29,7 @@ namespace CastIt.GoogleCast.Extensions
         public static void LogError(this ILogger logger, string msg, Exception ex)
         {
             logger?.LogError(ex, msg);
-            if (Player.CanLog)
+            if (Player.CanLogToConsole)
             {
                 Debug.WriteLine(msg, "ERROR");
                 Console.WriteLine(msg);
@@ -38,7 +38,7 @@ namespace CastIt.GoogleCast.Extensions
 
         public static void LogTrace(this ILogger logger, string msg)
         {
-            if (logger?.IsEnabled(LogLevel.Trace) == false)
+            if (!Player.CanLogTrace)
             {
                 return;
             }

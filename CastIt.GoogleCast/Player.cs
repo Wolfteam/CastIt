@@ -59,7 +59,8 @@ namespace CastIt.GoogleCast
         #endregion
 
         #region Properties
-        public static bool CanLog { get; private set; }
+        public static bool CanLogToConsole { get; private set; }
+        public static bool CanLogTrace { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool IsPaused { get; private set; }
         public string CurrentContentId { get; private set; }
@@ -85,7 +86,9 @@ namespace CastIt.GoogleCast
         public Player(
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true) : this(null, null, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(null, null, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -93,8 +96,9 @@ namespace CastIt.GoogleCast
             ILogger logger,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(logger, null, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(logger, null, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -104,8 +108,9 @@ namespace CastIt.GoogleCast
             int port = 8009,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(logger, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(logger, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -113,8 +118,9 @@ namespace CastIt.GoogleCast
             IReceiver receiver,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(null, receiver, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(null, receiver, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -123,8 +129,9 @@ namespace CastIt.GoogleCast
             int port = 8009,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(null, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(null, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -133,11 +140,13 @@ namespace CastIt.GoogleCast
             IReceiver receiver,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
+            bool logToConsole = true,
+            bool logTrace = false)
         {
             _logger = logger;
             _destinationId = destinationId;
-            CanLog = logMsgs;
+            CanLogToConsole = logToConsole;
+            CanLogTrace = logTrace;
 
             _sender = new Sender(_logger, senderId, receiver, HandleResponseMsg);
             _sender.Disconnected += OnDisconnect;
