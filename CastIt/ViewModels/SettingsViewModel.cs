@@ -19,7 +19,7 @@ using System.Text.RegularExpressions;
 
 namespace CastIt.ViewModels
 {
-    public class SettingsViewModel : BaseViewModel
+    public class SettingsViewModel : BasePopupViewModel
     {
         #region Members
         private readonly IAppSettingsService _settingsService;

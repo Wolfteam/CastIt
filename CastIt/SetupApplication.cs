@@ -58,7 +58,7 @@ namespace CastIt
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IPlayer>(() =>
             {
                 var logger = Mvx.IoCProvider.Resolve<ILogger<Player>>();
-                return new Player(logger, logMsgs: true);
+                return new Player(logger, logToConsole: false);
             });
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
@@ -99,21 +99,21 @@ namespace CastIt
             var basePath = FileUtils.GetLogsPath();
             var logs = new List<FileToLog>
             {
-                new FileToLog( typeof(MainViewModel),  "vm_main"),
-                new FileToLog( typeof(DevicesViewModel),  "vm_devices"),
-                new FileToLog( typeof(SettingsViewModel),  "vm_settings"),
-                new FileToLog( typeof(PlayListItemViewModel),  "vm_playlistitem"),
-                new FileToLog( typeof(FileItemViewModel),  "vm_fileitem"),
-                new FileToLog( typeof(DeviceItemViewModel),  "vm_deviceitem"),
-                new FileToLog( typeof(DownloadDialogViewModel),  "vm_download_dialog"),
-                new FileToLog( typeof(SplashViewModel),  "vm_splash"),
-                new FileToLog( typeof(CastService),  "service_cast"),
-                new FileToLog( typeof(AppSettingsService),  "service_appsettings"),
-                new FileToLog( typeof(FFmpegService),  "service_ffmpeg"),
-                new FileToLog( typeof(Player),  "googlecast_player"),
-                new FileToLog( typeof(AppWebServer),  "web_server"),
-                new FileToLog( typeof(YoutubeUrlDecoder),  "decoder_youtube"),
-                new FileToLog( typeof(FileWatcherService),  "service_file_watcher"),
+                new FileToLog(typeof(MainViewModel), "vm_main"),
+                new FileToLog(typeof(DevicesViewModel), "vm_devices"),
+                new FileToLog(typeof(SettingsViewModel), "vm_settings"),
+                new FileToLog(typeof(PlayListItemViewModel), "vm_playlistitem"),
+                new FileToLog(typeof(FileItemViewModel), "vm_fileitem"),
+                new FileToLog(typeof(DeviceItemViewModel), "vm_deviceitem"),
+                new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
+                new FileToLog(typeof(SplashViewModel), "vm_splash"),
+                new FileToLog(typeof(CastService), "service_cast"),
+                new FileToLog(typeof(AppSettingsService), "service_appsettings"),
+                new FileToLog(typeof(FFmpegService), "service_ffmpeg"),
+                new FileToLog(typeof(Player), "googlecast_player"),
+                new FileToLog(typeof(AppWebServer), "web_server"),
+                new FileToLog(typeof(YoutubeUrlDecoder), "decoder_youtube"),
+                new FileToLog(typeof(FileWatcherService), "service_file_watcher"),
             };
 
             logs.SetupLogging(basePath);

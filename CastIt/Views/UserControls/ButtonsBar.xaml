@@ -211,7 +211,7 @@
                         <Binding ElementName="DevicesButton" Path="ActualWidth" />
                     </MultiBinding>
                 </Popup.HorizontalOffset>
-                <uc:DiscoveredDevices x:Name="DevicesUserControl" />
+                <uc:Devices x:Name="DevicesUserControl" />
             </Popup>
             <Button Click="ToggleCollapse">
                 <Button.Style>

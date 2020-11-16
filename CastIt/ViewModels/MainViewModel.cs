@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CastIt.Domain.Exceptions;
 
 namespace CastIt.ViewModels
 {
@@ -732,7 +733,8 @@ namespace CastIt.ViewModels
                     !force &&
                     !_settingsService.StartFilesFromTheStart)
                 {
-                    Logger.LogInformation($"{nameof(PlayFileForMediaWebSocket)}: File will be resumed from = {file.PlayedPercentage} %");
+                    Logger.LogInformation(
+                        $"{nameof(PlayFileForMediaWebSocket)}: File will be resumed from = {file.PlayedPercentage} %");
                     await _castService.GoToPosition(
                         file.Path,
                         CurrentFileVideoStreamIndex,
@@ -754,6 +756,7 @@ namespace CastIt.ViewModels
                         CurrentFileQuality,
                         file.FileInfo);
                 }
+
                 _currentlyPlayedFile.ListenEvents();
                 _castService.GenerateThumbnails(file.Path);
 
@@ -763,12 +766,7 @@ namespace CastIt.ViewModels
             }
             catch (Exception e)
             {
-                Logger.LogError(e, $"{nameof(PlayFileForMediaWebSocket)}: Unknown error occurred");
-                _telemetryService.TrackError(e);
-                playList.SelectedItem = null;
-                _appWebServer.OnFileLoadingError?.Invoke(GetText("CouldntPlayFile"));
-                await StopPlayBack();
-                await ShowSnackbarMsg(GetText("CouldntPlayFile"));
+                await HandlePlayException(playList, e);
                 return false;
             }
             finally
@@ -776,6 +774,31 @@ namespace CastIt.ViewModels
                 IsBusy = false;
                 _onSkipOrPrevious = false;
             }
+        }
+
+        private async Task HandlePlayException(PlayListItemViewModel playList, Exception e)
+        {
+            var msg = GetText("CouldntPlayFile");
+            switch (e)
+            {
+                case NotSupportedException _:
+                    msg = GetText("FileNotSupported");
+                    break;
+                case NoDevicesException _:
+                    msg = GetText("NoDevicesWereFound");
+                    break;
+                case ConnectingException _:
+                    msg = GetText("ConnectionInProgress");
+                    break;
+                default:
+                    Logger.LogError(e, $"{nameof(PlayFileForMediaWebSocket)}: Unknown error occurred");
+                    _telemetryService.TrackError(e);
+                    break;
+            }
+            playList.SelectedItem = null;
+            _appWebServer.OnFileLoadingError?.Invoke(msg);
+            await StopPlayBack();
+            await ShowSnackbarMsg(msg);
         }
 
         private async Task StopPlayBack()

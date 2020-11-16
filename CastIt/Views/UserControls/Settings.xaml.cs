@@ -1,5 +1,6 @@
 ﻿using CastIt.ViewModels;
 using MvvmCross;
+using MvvmCross.Base;
 using MvvmCross.Binding.BindingContext;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
@@ -17,11 +18,11 @@ namespace CastIt.Views.UserControls
             set
             {
                 if (_changeAccentColorRequest != null)
-                    _changeAccentColorRequest.Requested -= (sender, args) => ChangeSelectedAccentColor(args.Value);
+                    _changeAccentColorRequest.Requested -= ChangeSelectedAccentColor;
 
                 _changeAccentColorRequest = value;
                 if (value != null)
-                    _changeAccentColorRequest.Requested += (sender, args) => ChangeSelectedAccentColor(args.Value);
+                    _changeAccentColorRequest.Requested += ChangeSelectedAccentColor;
             }
         }
 
@@ -40,14 +41,20 @@ namespace CastIt.Views.UserControls
             Loaded += (sender, args) => ChangeSelectedAccentColor(ViewModel.CurrentAccentColor);
         }
 
+        private void ChangeSelectedAccentColor(object sender, MvxValueEventArgs<string> e)
+        {
+            string hexColor = e.Value;
+            ChangeSelectedAccentColor(hexColor);
+        }
+
         private void ChangeSelectedAccentColor(string hexColor)
         {
-            for (int i = 0; i < AccentColorsIc.Items.Count; i++)
+            foreach (var t in AccentColorsIc.Items)
             {
-                var c = (ContentPresenter)AccentColorsIc.ItemContainerGenerator.ContainerFromItem(AccentColorsIc.Items[i]);
-                if (c is null)
+                var c = (ContentPresenter)AccentColorsIc.ItemContainerGenerator.ContainerFromItem(t);
+                var tb = c?.ContentTemplate.FindName("AccentColorButton", c) as ToggleButton;
+                if (tb == null)
                     continue;
-                var tb = c.ContentTemplate.FindName("AccentColorButton", c) as ToggleButton;
                 tb.IsChecked = (string)tb.DataContext == hexColor;
             }
         }

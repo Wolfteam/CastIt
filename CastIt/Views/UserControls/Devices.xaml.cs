@@ -4,9 +4,9 @@ using MvvmCross.Platforms.Wpf.Views;
 
 namespace CastIt.Views.UserControls
 {
-    public partial class DiscoveredDevices : MvxWpfView<DevicesViewModel>
+    public partial class Devices : MvxWpfView<DevicesViewModel>
     {
-        public DiscoveredDevices()
+        public Devices()
         {
             InitializeComponent();
             ViewModel = Mvx.IoCProvider.IoCConstruct<DevicesViewModel>();

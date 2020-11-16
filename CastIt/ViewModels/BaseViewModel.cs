@@ -209,4 +209,24 @@ namespace CastIt.ViewModels
             => TextProvider.GetText(string.Empty, string.Empty, key, args)
             ?? throw new Exception($"{key} was not found in the resources file");
     }
+
+    public abstract class BasePopupViewModel : BaseViewModel
+    {
+        protected BasePopupViewModel(
+            ITextProvider textProvider,
+            IMvxMessenger messenger,
+            ILogger logger)
+            : base(textProvider, messenger, logger)
+        {
+        }
+
+        //We override these because a popup will call this methods multiple times and we may loose the subscriptions
+        public override void ViewAppeared()
+        {
+        }
+
+        public override void ViewDestroy(bool viewFinishing = true)
+        {
+        }
+    }
 }

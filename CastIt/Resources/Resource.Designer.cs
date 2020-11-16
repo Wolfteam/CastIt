@@ -313,6 +313,24 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connecting....
+        /// </summary>
+        public static string Connecting {
+            get {
+                return ResourceManager.GetString("Connecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A connection is in progress.
+        /// </summary>
+        public static string ConnectionInProgress {
+            get {
+                return ResourceManager.GetString("ConnectionInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy to clipboard.
         /// </summary>
         public static string CopyToClipboard {
@@ -363,6 +381,15 @@ namespace CastIt.Resources {
         public static string DeleteAllExceptThis {
             get {
                 return ResourceManager.GetString("DeleteAllExceptThis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Couldn&apos;t connect to the device. Make sure it´s on.
+        /// </summary>
+        public static string DeviceConnectionFailed {
+            get {
+                return ResourceManager.GetString("DeviceConnectionFailed", resourceCulture);
             }
         }
         
@@ -525,6 +552,15 @@ namespace CastIt.Resources {
         public static string FileIsNotReadyYet {
             get {
                 return ResourceManager.GetString("FileIsNotReadyYet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File is not supported.
+        /// </summary>
+        public static string FileNotSupported {
+            get {
+                return ResourceManager.GetString("FileNotSupported", resourceCulture);
             }
         }
         
@@ -1015,6 +1051,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t see your device?.
+        /// </summary>
+        public static string RefreshDevicesMsg {
+            get {
+                return ResourceManager.GetString("RefreshDevicesMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove.
         /// </summary>
         public static string Remove {
@@ -1056,6 +1101,15 @@ namespace CastIt.Resources {
         public static string Search {
             get {
                 return ResourceManager.GetString("Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching....
+        /// </summary>
+        public static string Searching {
+            get {
+                return ResourceManager.GetString("Searching", resourceCulture);
             }
         }
         

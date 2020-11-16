@@ -2,7 +2,6 @@
 using CastIt.Interfaces;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 
 namespace CastIt.ViewModels.Dialogs
