@@ -9,7 +9,7 @@ namespace CastIt.Interfaces
 {
     public interface ICastService
     {
-        IList<IReceiver> AvailableDevices { get; }
+        List<IReceiver> AvailableDevices { get; }
         OnCastRendererSetHandler OnCastRendererSet { get; set; }
         OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }

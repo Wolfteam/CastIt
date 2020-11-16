@@ -1,6 +1,7 @@
 ﻿using CastIt.Application.Common.Extensions;
 using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
+using CastIt.Domain.Exceptions;
 using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Interfaces;
@@ -36,8 +37,9 @@ namespace CastIt.Services
 
         private bool _renderWasSet;
         private string _currentFilePath;
+        private bool _connecting;
 
-        public IList<IReceiver> AvailableDevices { get; } = new List<IReceiver>();
+        public List<IReceiver> AvailableDevices { get; } = new List<IReceiver>();
         public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
@@ -120,14 +122,21 @@ namespace CastIt.Services
 
             if (!isLocal && !isUrlFile)
             {
-                _logger.LogWarning($"{nameof(StartPlay)}: Invalid = {mrl}. Its not a local file and its not a url file");
-                return;
+                var msg = "Invalid = {mrl}. Its not a local file and its not a url file";
+                _logger.LogWarning($"{nameof(StartPlay)}: {msg}");
+                throw new NotSupportedException(msg);
             }
 
             if (AvailableDevices.Count == 0)
             {
                 _logger.LogWarning($"{nameof(StartPlay)}: No renders were found, file = {mrl}");
-                return;
+                throw new NoDevicesException();
+            }
+
+            if (_connecting)
+            {
+                _logger.LogWarning($"{nameof(StartPlay)}: We are in the middle of connecting to a device, can't play file = {mrl} right now");
+                throw new ConnectingException();
             }
 
             if (!_renderWasSet && AvailableDevices.Count > 0)
@@ -269,8 +278,9 @@ namespace CastIt.Services
             var status = await _player.LoadAsync(media, true, seconds, activeTrackIds.ToArray());
             if (status is null)
             {
-                _logger.LogWarning($"{nameof(StartPlay)}: Couldn't load url = {media.ContentId}");
-                return;
+                var msg = "Couldn't load url = {media.ContentId}";
+                _logger.LogWarning($"{nameof(StartPlay)}: {msg}");
+                throw new Exception(msg);
             }
             _logger.LogInformation($"{nameof(StartPlay)}: Url was successfully loaded");
 
@@ -552,11 +562,20 @@ namespace CastIt.Services
         //    });
         //}
 
-        private Task SetCastRenderer(IReceiver receiver)
+        private async Task SetCastRenderer(IReceiver receiver)
         {
-            _renderWasSet = true;
-            OnCastRendererSet?.Invoke(receiver.Id);
-            return _player.ConnectAsync(receiver);
+            _connecting = true;
+            _renderWasSet = false;
+            try
+            {
+                await _player.ConnectAsync(receiver);
+                OnCastRendererSet?.Invoke(receiver.Id);
+                _renderWasSet = true;
+            }
+            finally
+            {
+                _connecting = false;
+            }
         }
 
         private Task SetNullCastRenderer()
