@@ -1,27 +1,22 @@
 ﻿using CastIt.Interfaces;
-using SQLite;
 using System;
+using FreeSql.DataAnnotations;
 
 namespace CastIt.Models.Entities
 {
     public class PlayList : IBaseEntity
     {
-        [PrimaryKey, AutoIncrement]
+        [Column(IsIdentity = true, IsPrimary = true)]
         public long Id { get; set; }
 
-        [NotNull]
         public string Name { get; set; }
 
-        [NotNull]
         public int Position { get; set; }
 
-        [NotNull]
         public bool Loop { get; set; }
 
-        [NotNull]
         public bool Shuffle { get; set; }
 
-        [NotNull]
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

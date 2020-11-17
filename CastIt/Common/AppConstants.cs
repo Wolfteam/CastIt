@@ -70,7 +70,7 @@ namespace CastIt.Common
         };
 
         public static string AllowedFormatsString
-                => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
+            => string.Join(";", AllowedFormats.Select(ext => $"*{ext}"));
 
         public static string AllowedSubtitleFormatsString
             => string.Join(";", AllowedSubtitleFormats.Select(ext => $"*{ext}"));

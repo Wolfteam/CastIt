@@ -237,7 +237,7 @@
   <data name="Minimize" xml:space="preserve">
     <value>Minimizar</value>
   </data>
-  <data name="Mazimize" xml:space="preserve">
+  <data name="Maximize" xml:space="preserve">
     <value>Maximixar</value>
   </data>
   <data name="Dark" xml:space="preserve">
@@ -527,5 +527,14 @@
   </data>
   <data name="XSeconds" xml:space="preserve">
     <value>{0} segundos</value>
+  </data>
+  <data name="FileCouldntBeOpened" xml:space="preserve">
+    <value>El archivo no puedo ser abierto</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Cargando</value>
+  </data>
+  <data name="Volume" xml:space="preserve">
+    <value>Volumen</value>
   </data>
 </root>

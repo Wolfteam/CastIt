@@ -56,6 +56,7 @@
                     TextTrimming="CharacterEllipsis"
                     TextWrapping="Wrap" />
                 <Button
+                    Grid.Row="0"
                     Grid.RowSpan="2"
                     Grid.Column="2"
                     VerticalAlignment="Center"
@@ -67,6 +68,7 @@
                     <materialDesign:PackIcon Kind="CastConnected" />
                 </Button>
                 <Button
+                    Grid.Row="0"
                     Grid.RowSpan="2"
                     Grid.Column="2"
                     VerticalAlignment="Center"
@@ -123,7 +125,7 @@
             Grid.Row="1"
             Padding="16"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
-            ScrollViewer.VerticalScrollBarVisibility="Auto">
+            VerticalScrollBarVisibility="Auto">
             <ItemsControl
                 ItemTemplate="{StaticResource DeviceItemTemplate}"
                 ItemsSource="{Binding Devices}"

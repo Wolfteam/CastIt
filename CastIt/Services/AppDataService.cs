@@ -1,31 +1,33 @@
 ﻿using AutoMapper;
 using CastIt.Common.Utils;
 using CastIt.Interfaces;
+using CastIt.Migrations;
 using CastIt.Models.Entities;
 using CastIt.ViewModels.Items;
-using SQLite;
+using FluentMigrator.Runner;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CastIt.Services
 {
-    //We will use the synchronus calls until this gets fixed
-    //https://github.com/praeclarum/sqlite-net/issues/881#issuecomment-569182348
     public class AppDataService : IPlayListsService
     {
         private readonly IMapper _mapper;
         private readonly string _connectionString;
+        private readonly IFreeSql _db;
 
         public AppDataService(IMapper mapper)
         {
             _mapper = mapper;
-
             _connectionString = FileUtils.GetDbConnectionString();
+            _db = new FreeSql.FreeSqlBuilder()
+               .UseConnectionString(FreeSql.DataType.Sqlite, _connectionString)
+               .UseAutoSyncStructure(false)
+               .Build();
 
-            CreateDb();
+            ApplyMigrations();
         }
 
         #region Methods
@@ -37,7 +39,6 @@ namespace CastIt.Services
             string description = null,
             double duration = 0)
         {
-            using var db = new SQLiteConnection(_connectionString);
             var file = new FileItem
             {
                 CreatedAt = DateTime.Now,
@@ -46,20 +47,23 @@ namespace CastIt.Services
                 Position = position,
                 Name = name,
                 Description = description,
-                TotalSeconds = duration
+                TotalSeconds = duration,
             };
-
-            db.Insert(file);
-
+            file.Id = await _db.Insert(file).ExecuteIdentityAsync();
             return _mapper.Map<FileItemViewModel>(file);
         }
 
         public async Task<List<FileItemViewModel>> AddFiles(List<FileItem> files)
         {
-            using var db = new SQLiteConnection(_connectionString);
-            db.InsertAll(files);
+            var list = new List<FileItemViewModel>();
+            foreach (var file in files)
+            {
+                file.Id = await _db.Insert(file).ExecuteIdentityAsync();
+                var mapped = _mapper.Map<FileItemViewModel>(file);
+                list.Add(mapped);
+            }
 
-            return _mapper.Map<List<FileItemViewModel>>(files);
+            return list;
         }
 
         public async Task<PlayListItemViewModel> AddNewPlayList(string name, int position)
@@ -70,63 +74,44 @@ namespace CastIt.Services
                 Name = name,
                 Position = position,
             };
-            using var db = new SQLiteConnection(_connectionString);
-            db.Insert(playlist);
+            playlist.Id = await _db.Insert(playlist).ExecuteIdentityAsync();
             return _mapper.Map<PlayListItemViewModel>(playlist);
         }
 
-        public async Task DeleteFile(long id)
+        public Task DeleteFile(long id)
         {
-            using var db = new SQLiteConnection(_connectionString);
-            db.Delete<FileItem>(id);
+            return _db.Delete<FileItem>().Where(f => f.Id == id).ExecuteAffrowsAsync();
         }
 
-        public async Task DeleteFiles(List<long> ids)
+        public Task DeleteFiles(List<long> ids)
         {
-            if (ids.Count == 0)
-                return;
-            using var db = new SQLiteConnection(_connectionString);
-            var files = db.Table<FileItem>()
-                .Where(f => ids.Contains(f.Id))
-                .ToList();
-            foreach (var file in files)
-            {
-                db.Delete(file);
-            }
+            return ids.Count == 0
+                ? Task.CompletedTask
+                : _db.Delete<FileItem>().Where(f => ids.Contains(f.Id)).ExecuteAffrowsAsync();
         }
 
         public async Task DeletePlayList(long id)
         {
-            using var db = new SQLiteConnection(_connectionString);
-            db.Delete<PlayList>(id);
-            db.Execute($"delete from {nameof(FileItem)} where {nameof(FileItem.PlayListId)} = {id}");
+            await _db.Delete<FileItem>().Where(f => f.PlayListId == id).ExecuteAffrowsAsync();
+            await _db.Delete<PlayList>().Where(p => p.Id == id).ExecuteAffrowsAsync();
         }
 
-        public async Task DeletePlayLists(List<long> ids)
+        public Task DeletePlayLists(List<long> ids)
         {
-            if (ids.Count == 0)
-                return;
-            using var db = new SQLiteConnection(_connectionString);
-            var playlists = db.Table<PlayList>()
-                .Where(f => ids.Contains(f.Id))
-                .ToList();
-            foreach (var playlist in playlists)
-            {
-                db.Delete(playlist);
-            }
+            return ids.Count == 0
+                ? Task.CompletedTask
+                : _db.Delete<PlayList>().Where(p => ids.Contains(p.Id)).ExecuteAffrowsAsync();
         }
 
         public async Task<List<PlayListItemViewModel>> GetAllPlayLists()
         {
-            using var db = new SQLiteConnection(_connectionString);
-            var playlists = db.Table<PlayList>().ToList();
-            return _mapper.Map<List<PlayListItemViewModel>>(playlists);
+            var playLists = await _db.Select<PlayList>().ToListAsync();
+            return _mapper.Map<List<PlayListItemViewModel>>(playLists);
         }
 
         public async Task<List<FileItemViewModel>> GetAllFiles(long playlistId)
         {
-            using var db = new SQLiteConnection(_connectionString);
-            var files = db.Table<FileItem>().Where(f => f.PlayListId == playlistId).ToList();
+            var files = await _db.Select<FileItem>().Where(pl => pl.PlayListId == playlistId).ToListAsync();
             return _mapper.Map<List<FileItemViewModel>>(files);
         }
 
@@ -136,79 +121,67 @@ namespace CastIt.Services
             SaveFileChanges(vms);
         }
 
-        public async Task UpdatePlayList(long id, string name, int position)
+        public Task UpdatePlayList(long id, string name, int position)
         {
-            using var db = new SQLiteConnection(_connectionString);
-            var playlist = db.Table<PlayList>().First(pl => pl.Id == id);
-            playlist.Name = name;
-            playlist.Position = position;
-            playlist.UpdatedAt = DateTime.Now;
-            db.Update(playlist);
+            return _db.Update<PlayList>(id)
+                .Set(p => p.Name, name)
+                .Set(p => p.Position, position)
+                .Set(p => p.UpdatedAt, DateTime.Now)
+                .ExecuteAffrowsAsync();
         }
 
-        public async Task UpdateFile(long id, string name, string description, double duration)
+        public Task UpdateFile(long id, string name, string description, double duration)
         {
-            using var db = new SQLiteConnection(_connectionString);
-            var file = db.Table<FileItem>().First(f => f.Id == id);
-            file.Name = name;
-            file.Description = description;
-            file.TotalSeconds = duration;
-            file.UpdatedAt = DateTime.Now;
-            db.Update(file);
-        }
-
-        private void CreateDb()
-        {
-            bool dbExists = File.Exists(_connectionString);
-            using var db = new SQLiteConnection(_connectionString);
-            db.CreateTable<PlayList>();
-            db.CreateTable<FileItem>();
-            if (dbExists)
-                return;
-            var playList = new PlayList
-            {
-                CreatedAt = DateTime.Now,
-                Name = "Default",
-                Position = 1,
-            };
-            db.Insert(playList);
+            return _db.Update<FileItem>(id)
+                .Set(f => f.Name, name)
+                .Set(f => f.Description, description)
+                .Set(f => f.TotalSeconds, duration)
+                .Set(f => f.UpdatedAt, DateTime.Now)
+                .ExecuteAffrowsAsync();
         }
 
         private void SavePlayListsPositions(Dictionary<PlayListItemViewModel, int> positions)
         {
             if (positions.Count == 0)
                 return;
-            using var db = new SQLiteConnection(_connectionString);
-            var playlists = db.Table<PlayList>().ToList();
-            foreach (var kvp in positions)
-            {
-                var vm = kvp.Key;
-                var playlist = playlists.First(pl => pl.Id == vm.Id);
-                playlist.Position = kvp.Value;
-                playlist.Shuffle = vm.Shuffle;
-                playlist.Loop = vm.Loop;
-            }
 
-            db.UpdateAll(playlists);
+            foreach (var (vm, position) in positions)
+            {
+                _db.Update<PlayList>(vm.Id)
+                    .Set(p => p.Position, position)
+                    .Set(p => p.Shuffle, vm.Shuffle)
+                    .Set(p => p.Loop, vm.Loop)
+                    .ExecuteAffrows();
+            }
         }
 
         private void SaveFileChanges(List<FileItemViewModel> vms)
         {
             if (vms.Count == 0)
                 return;
-            var ids = vms.Select(f => f.Id).ToList();
-            using var db = new SQLiteConnection(_connectionString);
-            var entities = db.Table<FileItem>()
-                .Where(f => ids.Contains(f.Id))
-                .ToList();
+
             foreach (var vm in vms)
             {
-                var file = entities.First(f => f.Id == vm.Id);
-                file.PlayedPercentage = vm.PlayedPercentage;
-                file.Position = vm.Position;
+                _db.Update<FileItem>(vm.Id)
+                    .Set(f => f.PlayedPercentage, vm.PlayedPercentage)
+                    .Set(f => f.Position, vm.Position)
+                    .ExecuteAffrows();
             }
+        }
 
-            db.UpdateAll(entities);
+        private void ApplyMigrations()
+        {
+            var provider = new ServiceCollection()
+                .AddFluentMigratorCore()
+                .ConfigureRunner(rb => rb
+                    .AddSQLite()
+                    .WithGlobalConnectionString(_connectionString)
+                    .ScanIn(typeof(InitPlayList).Assembly).For.Migrations())
+                .AddLogging(lb => lb.AddFluentMigratorConsole())
+                .BuildServiceProvider(false);
+
+            var runner = provider.GetRequiredService<IMigrationRunner>();
+            runner.MigrateUp();
         }
         #endregion
     }

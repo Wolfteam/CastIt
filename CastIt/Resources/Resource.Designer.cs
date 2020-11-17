@@ -493,6 +493,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File could not be opened.
+        /// </summary>
+        public static string FileCouldntBeOpened {
+            get {
+                return ResourceManager.GetString("FileCouldntBeOpened", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File does not exist.
         /// </summary>
         public static string FileDoesntExist {
@@ -691,6 +700,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading.
+        /// </summary>
+        public static string Loading {
+            get {
+                return ResourceManager.GetString("Loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loop this file.
         /// </summary>
         public static string LoopFile {
@@ -709,11 +727,11 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mazimize.
+        ///   Looks up a localized string similar to Maximize.
         /// </summary>
-        public static string Mazimize {
+        public static string Maximize {
             get {
-                return ResourceManager.GetString("Mazimize", resourceCulture);
+                return ResourceManager.GetString("Maximize", resourceCulture);
             }
         }
         
@@ -1263,6 +1281,15 @@ namespace CastIt.Resources {
         public static string VideoScale {
             get {
                 return ResourceManager.GetString("VideoScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volume.
+        /// </summary>
+        public static string Volume {
+            get {
+                return ResourceManager.GetString("Volume", resourceCulture);
             }
         }
         

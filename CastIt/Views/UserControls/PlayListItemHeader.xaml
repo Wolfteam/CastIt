@@ -62,6 +62,7 @@
             TextTrimming="CharacterEllipsis"
             TextWrapping="NoWrap" />
         <Popup
+            Grid.Column="0"
             IsOpen="{Binding ShowEditPopUp, Mode=TwoWay}"
             Placement="Bottom"
             PlacementTarget="{Binding ElementName=PlayListTitle}"

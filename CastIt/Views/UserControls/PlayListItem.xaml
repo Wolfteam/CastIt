@@ -39,7 +39,7 @@
                     <materialDesign:PackIcon VerticalAlignment="Center" Kind="VolumeHigh" />
                     <TextBlock
                         Margin="5,5"
-                        Text="Volumne"
+                        Text="{Binding [Volume]}"
                         TextAlignment="Center" />
                 </StackPanel>
                 <Slider
@@ -596,6 +596,7 @@
         </ListView>
 
         <Popup
+            Grid.Row="0"
             IsOpen="{Binding ShowAddUrlPopUp, Mode=TwoWay}"
             Placement="Center"
             PlacementTarget="{Binding ElementName=PlaylistLv}"
