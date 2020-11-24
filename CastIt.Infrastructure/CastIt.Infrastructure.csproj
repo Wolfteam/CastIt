@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CastIt.Application\CastIt.Application.csproj" />
+    <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
+  </ItemGroup>
+
+</Project>
