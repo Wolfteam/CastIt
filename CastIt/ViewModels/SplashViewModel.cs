@@ -1,5 +1,7 @@
 ﻿using CastIt.Application.Interfaces;
+using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.ViewModels.Items;
 using Microsoft.Extensions.Logging;
@@ -61,7 +63,12 @@ namespace CastIt.ViewModels
 
         public override Task Initialize()
         {
+            _telemetryService.Init();
+            _settingsService.Init(FileUtils.GetBaseAppFolder(), AppConstants.AccentColorVividRed, AppConstants.MinWindowWidth, AppConstants.MinWindowHeight);
+            TextProvider.SetLanguage(_settingsService.Language);
+
             LoadingText = $"{GetText("Loading")}...";
+
             Logger.LogInformation($"{nameof(Initialize)}: Applying app theme and accent color...");
             WindowsUtils.ChangeTheme(_settingsService.AppTheme, _settingsService.AccentColor);
 

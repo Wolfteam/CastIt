@@ -2,6 +2,7 @@
 using CastIt.Application.Common.Extensions;
 using CastIt.Application.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.Server.Interfaces;

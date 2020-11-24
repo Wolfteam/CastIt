@@ -16,12 +16,10 @@ namespace CastIt.Resources
 
         public ResxTextProvider(
             ResourceManager resourceManager,
-            IMvxMessenger messenger,
-            IAppSettingsService appSettings)
+            IMvxMessenger messenger)
             : base(resourceManager)
         {
             _messenger = messenger;
-            SetLanguage(appSettings.Language);
         }
 
         public string Get(string key)

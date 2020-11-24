@@ -3,6 +3,8 @@ using CastIt.Application.Common;
 using CastIt.Application.Common.Extensions;
 using CastIt.Application.Common.Utils;
 using CastIt.Application.Interfaces;
+using CastIt.Domain.Exceptions;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.Server.Interfaces;
@@ -20,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CastIt.Domain.Exceptions;
 
 namespace CastIt.ViewModels
 {
@@ -292,9 +293,9 @@ namespace CastIt.ViewModels
 
             //This needs to happen after the playlist/files are initialized, otherwise, you will be sending a lot of ws msgs
             Logger.LogInformation($"{nameof(Initialize)}: Initializing web server...");
-            _appWebServer.Init(_fileService.GetPreviewsPath(), _fileService.GetSubTitleFolder(), this, _webServerCancellationToken.Token);
+            _appWebServer.Init(_fileService.GetPreviewsPath(), _fileService.GetSubTitleFolder(), this, _castService, _webServerCancellationToken.Token);
 
-            Logger.LogInformation($"{nameof(Initialize)}: Setting cast events..");
+            Logger.LogInformation($"{nameof(Initialize)}: Setting cast events...");
             _castService.OnFileLoaded += OnFileLoaded;
             _castService.OnTimeChanged += OnFileDurationChanged;
             _castService.OnPositionChanged += OnFilePositionChanged;
@@ -663,14 +664,14 @@ namespace CastIt.ViewModels
         {
             if (file is null)
             {
-                Logger.LogWarning($"{nameof(PlayFileForMediaWebSocket)}: Cant play file, it is null !!!");
+                Logger.LogWarning($"{nameof(PlayFile)}: Cant play file, it is null !!!");
                 return false;
             }
 
             DisableLoopForAllFiles(file.Id);
             if (!file.Exists)
             {
-                Logger.LogInformation($"{nameof(PlayFileForMediaWebSocket)}: Cant play file = {file.Path}. It doesnt exist");
+                Logger.LogInformation($"{nameof(PlayFile)}: Cant play file = {file.Path}. It doesnt exist");
                 await ShowSnackbarMsg(GetText("FileDoesntExist"));
                 return false;
             }
@@ -684,7 +685,7 @@ namespace CastIt.ViewModels
             if (string.IsNullOrEmpty(file.Duration))
             {
                 Logger.LogInformation(
-                    $"{nameof(PlayFileForMediaWebSocket)}: Cant play file = {file.Filename} yet, " +
+                    $"{nameof(PlayFile)}: Cant play file = {file.Filename} yet, " +
                     $"because im still setting the duration for some files.");
                 await ShowSnackbarMsg(GetText("FileIsNotReadyYet"));
                 return false;
@@ -717,10 +718,10 @@ namespace CastIt.ViewModels
             _currentlyPlayedFile = file;
             _appWebServer.OnFileLoading?.Invoke();
 
-            Logger.LogInformation($"{nameof(PlayFileForMediaWebSocket)}: Updating file info for file = {file.Filename}");
+            Logger.LogInformation($"{nameof(PlayFile)}: Updating file info for file = {file.Filename}");
             await playList.SetFileInfo(file.Id, _setDurationTokenSource.Token);
 
-            Logger.LogInformation($"{nameof(PlayFileForMediaWebSocket)}: Trying to play file = {file.Filename}");
+            Logger.LogInformation($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             SetCurrentlyPlayingInfo(file.Filename, true);
             if (!fileOptionsChanged)
@@ -734,7 +735,7 @@ namespace CastIt.ViewModels
                     !_settingsService.StartFilesFromTheStart)
                 {
                     Logger.LogInformation(
-                        $"{nameof(PlayFileForMediaWebSocket)}: File will be resumed from = {file.PlayedPercentage} %");
+                        $"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
                     await _castService.GoToPosition(
                         file.Path,
                         CurrentFileVideoStreamIndex,
@@ -747,7 +748,7 @@ namespace CastIt.ViewModels
                 }
                 else
                 {
-                    Logger.LogInformation($"{nameof(PlayFileForMediaWebSocket)}: Playing file from the start");
+                    Logger.LogInformation($"{nameof(PlayFile)}: Playing file from the start");
                     await _castService.StartPlay(
                         file.Path,
                         CurrentFileVideoStreamIndex,
@@ -760,7 +761,7 @@ namespace CastIt.ViewModels
                 _currentlyPlayedFile.ListenEvents();
                 _castService.GenerateThumbnails(file.Path);
 
-                Logger.LogInformation($"{nameof(PlayFileForMediaWebSocket)}: File is being played...");
+                Logger.LogInformation($"{nameof(PlayFile)}: File is being played...");
 
                 return true;
             }
@@ -791,7 +792,7 @@ namespace CastIt.ViewModels
                     msg = GetText("ConnectionInProgress");
                     break;
                 default:
-                    Logger.LogError(e, $"{nameof(PlayFileForMediaWebSocket)}: Unknown error occurred");
+                    Logger.LogError(e, $"{nameof(HandlePlayException)}: Unknown error occurred");
                     _telemetryService.TrackError(e);
                     break;
             }

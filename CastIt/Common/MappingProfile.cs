@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
-using CastIt.GoogleCast.Interfaces;
+using CastIt.Domain.Interfaces;
 using CastIt.ViewModels.Items;
 
 namespace CastIt.Common

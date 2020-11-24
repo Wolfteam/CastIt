@@ -5,6 +5,7 @@ using CastIt.Common;
 using CastIt.Common.Comparers;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.Server.Interfaces;

@@ -46,7 +46,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
     <ProjectReference Include="..\CastIt.Server\CastIt.Server.csproj" />
     <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
   </ItemGroup>

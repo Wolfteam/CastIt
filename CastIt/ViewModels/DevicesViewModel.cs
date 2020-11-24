@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using CastIt.GoogleCast.Interfaces;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Items;
 using Microsoft.Extensions.Logging;
+using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -111,18 +113,22 @@ namespace CastIt.ViewModels
             renderer.IsSelected = true;
         }
 
-        private void OnCastDeviceAdded(IReceiver receiver)
+        private void OnCastDeviceAdded(string id, string friendlyName, string type, string host, int port)
         {
-            if (Devices.Any(d => d.Id == receiver.Id))
+            if (Devices.Any(d => d.Id == id))
                 return;
 
-            var vm = _mapper.Map<DeviceItemViewModel>(receiver);
+            var vm = Mvx.IoCProvider.Resolve<DeviceItemViewModel>();
+            vm.Id = id;
+            vm.FriendlyName = friendlyName;
+            vm.Host = vm.Host;
+            vm.Port = port;
             Devices.Add(vm);
         }
 
-        private void OnCastDeviceDeleted(IReceiver receiver)
+        private void OnCastDeviceDeleted(string id)
         {
-            var toDelete = Devices.FirstOrDefault(d => d.Id == receiver.Id);
+            var toDelete = Devices.FirstOrDefault(d => d.Id == id);
             if (toDelete == null)
                 return;
             Devices.Remove(toDelete);

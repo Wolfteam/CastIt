@@ -2,6 +2,7 @@
 using CastIt.Common.Utils;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;

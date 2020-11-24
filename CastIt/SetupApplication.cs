@@ -6,15 +6,17 @@ using CastIt.Application.Telemetry;
 using CastIt.Application.Youtube;
 using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.Domain.Models.Logging;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Interfaces;
+using CastIt.Infrastructure.Interfaces;
+using CastIt.Infrastructure.Services;
 using CastIt.Interfaces;
 using CastIt.Resources;
 using CastIt.Server;
 using CastIt.Server.Interfaces;
 using CastIt.Services;
 using CastIt.Shared.Extensions;
-using CastIt.Shared.Models.Logging;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
@@ -60,14 +62,21 @@ namespace CastIt
                 var logger = Mvx.IoCProvider.Resolve<ILogger<Player>>();
                 return new Player(logger, logToConsole: false);
             });
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
+
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
+            var webServer = new AppWebServer(
+                Mvx.IoCProvider.Resolve<ILoggerFactory>(),
+                Mvx.IoCProvider.Resolve<ITelemetryService>(),
+                Mvx.IoCProvider.Resolve<IFFmpegService>(),
+                fileService,
+                Mvx.IoCProvider.Resolve<IPlayer>());
+            Mvx.IoCProvider.RegisterSingleton(typeof(IBaseWebServer), () => webServer);
+            Mvx.IoCProvider.RegisterSingleton(typeof(IAppWebServer), () => webServer);
 
             var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
-            var appSettings = Mvx.IoCProvider.Resolve<IAppSettingsService>();
-            var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger, appSettings);
+            var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger);
             Mvx.IoCProvider.RegisterSingleton<ITextProvider>(textProvider);
 
             //since im using automapper to resolve this one, i need to explicit register it
@@ -75,8 +84,6 @@ namespace CastIt
             Mvx.IoCProvider.RegisterType<FileItemViewModel>();
             Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(SettingsViewModel));
-
-            Mvx.IoCProvider.Resolve<ITelemetryService>().Init();
 
             RegisterAppStart<SplashViewModel>();
         }
@@ -99,6 +106,7 @@ namespace CastIt
             var basePath = FileUtils.GetLogsPath();
             var logs = new List<FileToLog>
             {
+                //ViewModels
                 new FileToLog(typeof(MainViewModel), "vm_main"),
                 new FileToLog(typeof(DevicesViewModel), "vm_devices"),
                 new FileToLog(typeof(SettingsViewModel), "vm_settings"),
@@ -106,15 +114,12 @@ namespace CastIt
                 new FileToLog(typeof(FileItemViewModel), "vm_fileitem"),
                 new FileToLog(typeof(DeviceItemViewModel), "vm_deviceitem"),
                 new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
-                new FileToLog(typeof(SplashViewModel), "vm_splash"),
-                new FileToLog(typeof(CastService), "service_cast"),
-                new FileToLog(typeof(AppSettingsService), "service_appsettings"),
-                new FileToLog(typeof(FFmpegService), "service_ffmpeg"),
-                new FileToLog(typeof(Player), "googlecast_player"),
-                new FileToLog(typeof(AppWebServer), "web_server"),
-                new FileToLog(typeof(YoutubeUrlDecoder), "decoder_youtube"),
-                new FileToLog(typeof(FileWatcherService), "service_file_watcher"),
+                new FileToLog(typeof(SplashViewModel), "vm_splash")
             };
+
+            logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
+            logs.AddRange(Infrastructure.DependencyInjection.GetInfrastructureLogs());
+            logs.AddRange(Server.DependencyInjection.GetServerLogs());
 
             logs.SetupLogging(basePath);
             var loggerFactory = new LoggerFactory()
