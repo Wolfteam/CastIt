@@ -1,4 +1,6 @@
-﻿using CastIt.GoogleCast.Channels;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.Domain.Models.Device;
+using CastIt.GoogleCast.Channels;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Interfaces;
@@ -110,7 +112,7 @@ namespace CastIt.GoogleCast
             string senderId = AppConstants.SENDER_ID,
             bool logToConsole = true,
             bool logTrace = false)
-            : this(logger, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logToConsole, logTrace)
+            : this(logger, Receiver.Default(host, port), destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -131,7 +133,7 @@ namespace CastIt.GoogleCast
             string senderId = AppConstants.SENDER_ID,
             bool logToConsole = true,
             bool logTrace = false)
-            : this(null, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logToConsole, logTrace)
+            : this(null, Receiver.Default(host, port), destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -454,7 +456,7 @@ namespace CastIt.GoogleCast
                             _logger.LogInfo(
                                 $"{nameof(ListenForMediaChanges)}: End reached because the " +
                                 $"ElapsedSeconds = {ElapsedSeconds} is greater / equal to " +
-                                $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = { CurrentContentId}");
+                                $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = {CurrentContentId}");
                             IsPlaying = false;
                             CancelAndSetListenerToken(false);
                             EndReached?.Invoke(this, EventArgs.Empty);

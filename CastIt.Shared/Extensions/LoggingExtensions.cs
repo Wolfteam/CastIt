@@ -1,4 +1,4 @@
-﻿using CastIt.Shared.Models.Logging;
+﻿using CastIt.Domain.Models.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Filters;
@@ -6,6 +6,7 @@ using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace CastIt.Shared.Extensions
 {
@@ -15,6 +16,8 @@ namespace CastIt.Shared.Extensions
 
         public static void SetupLogging(this List<FileToLog> logs, string logsPath = null)
         {
+            logs = logs.GroupBy(l => l.AssemblyFullName).Select(g => g.First()).ToList();
+
             string basePath = logsPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
 
             if (string.IsNullOrWhiteSpace(basePath))

@@ -1,10 +1,11 @@
-﻿using CastIt.GoogleCast.Extensions;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.Domain.Models.Device;
+using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Messages;
 using CastIt.GoogleCast.Messages.Receiver;
 using CastIt.GoogleCast.Models;
-using CastIt.GoogleCast.Models.Receiver;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ProtoBuf;

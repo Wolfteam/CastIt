@@ -1,4 +1,5 @@
-﻿using CastIt.GoogleCast.Interfaces.Messages;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Models;
 using System;
 using System.Collections.Concurrent;

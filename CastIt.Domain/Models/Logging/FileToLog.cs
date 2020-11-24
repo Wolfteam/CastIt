@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CastIt.Shared.Models.Logging
+namespace CastIt.Domain.Models.Logging
 {
     public class FileToLog
     {

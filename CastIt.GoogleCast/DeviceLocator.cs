@@ -1,5 +1,5 @@
-﻿using CastIt.GoogleCast.Interfaces;
-using CastIt.GoogleCast.Models.Receiver;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.Domain.Models.Device;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,4 @@
-﻿namespace CastIt.GoogleCast.Interfaces
+﻿namespace CastIt.Domain.Interfaces
 {
     public interface IReceiver
     {

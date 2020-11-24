@@ -1,4 +1,5 @@
-﻿using CastIt.GoogleCast.Models.Events;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
 using System;
