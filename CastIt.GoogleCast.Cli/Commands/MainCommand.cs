@@ -3,11 +3,19 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace CastIt.GoogleCast.Cli
+namespace CastIt.GoogleCast.Cli.Commands
 {
     [Command(Name = "castit", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]
-    [Subcommand(typeof(ConnectCommand), typeof(ListDevicesCommand))]
+    [Subcommand(
+        typeof(ConnectCommand),
+        typeof(DisconnectCommand),
+        typeof(ListDevicesCommand),
+        typeof(PlayCommand),
+        typeof(TogglePlaybackCommand),
+        typeof(StopCommand),
+        typeof(VolumeCommand)
+        )]
     public class MainCommand : BaseCommand
     {
         protected override Task<int> OnExecute(CommandLineApplication app)

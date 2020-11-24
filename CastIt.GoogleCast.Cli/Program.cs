@@ -1,17 +1,18 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using CastIt.Application;
+using CastIt.GoogleCast.Cli.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace CastIt.GoogleCast.Cli
 {
     public static class Program
     {
+        //TODO: CHECK IF WE CAN REMOVE THE DEPENDENCY TO GOOGLECAST AND THE SERVER PROJECTS
         private static async Task<int> Main(string[] args)
         {
             //var configuration = new ConfigurationBuilder()
@@ -27,7 +28,7 @@ namespace CastIt.GoogleCast.Cli
             var builder = new HostBuilder()
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddSingleton(_ => new Player());
+                    services.AddApplicationForCli();
                     services.AddLogging(config =>
                     {
                         config.ClearProviders();
@@ -39,9 +40,10 @@ namespace CastIt.GoogleCast.Cli
             {
                 return await builder.RunCommandLineApplicationAsync<MainCommand>(args);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.InnerException?.Message);
                 return 1;
             }
         }

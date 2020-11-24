@@ -20,8 +20,8 @@ namespace CastIt.Server
     {
         #region Members
         //public const string SubTitleStreamIndexParameter = "subtitleStream";
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<AppWebServer> _logger;
-        private readonly ILogger<CastItController> _castItControllerLogger;
         private readonly ITelemetryService _telemetryService;
         private readonly IFFmpegService _ffmpegService;
         private readonly IFileService _fileService;
@@ -40,8 +40,8 @@ namespace CastIt.Server
             IFileService fileService,
             IPlayer player)
         {
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<AppWebServer>();
-            _castItControllerLogger = loggerFactory.CreateLogger<CastItController>();
             _telemetryService = telemetryService;
             _ffmpegService = ffmpegService;
             _fileService = fileService;
@@ -64,10 +64,10 @@ namespace CastIt.Server
                 {
                     _logger.LogInformation($"{nameof(Init)}: Port = {port} was provided, it will be used to start this web server...");
                 }
-                port ??= WebServerUtils.GetOpenPort(AppWebServerConstants.DefaultPort);
+                port ??= WebServerUtils.GetOpenPort();
                 _logger.LogInformation($"{nameof(Init)}: Starting web server on url = {WebServerUtils.GetWebServerIpAddress(port.Value)}...");
 
-                _castItController = new CastItController(_castItControllerLogger, _fileService, castService, _ffmpegService, _player);
+                _castItController = new CastItController(_loggerFactory.CreateLogger<CastItController>(), _fileService, castService, _ffmpegService, _player);
                 _webServer = BuildServer(previewPath, subtitlesPath, view, port.Value);
                 _webServer.Start(cancellationToken);
 
@@ -130,7 +130,7 @@ namespace CastIt.Server
             if (view != null)
             {
                 _logger.LogInformation($"{nameof(BuildServer)}: View for socket was provided, adding the media ws");
-                server.WithModule(new MediaWebSocketModule(_logger, this, view, "/socket"));
+                server.WithModule(new MediaWebSocketModule(_loggerFactory.CreateLogger<MediaWebSocketModule>(), this, view, "/socket"));
             }
 
             server.WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));

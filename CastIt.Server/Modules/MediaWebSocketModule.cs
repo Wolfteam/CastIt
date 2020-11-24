@@ -60,11 +60,11 @@ namespace CastIt.Server.Modules
         private const string InfoMsgType = "SERVER_INFO_MSG";
         #endregion
 
-        private readonly ILogger _logger;
+        private readonly ILogger<MediaWebSocketModule> _logger;
         private readonly IViewForMediaWebSocket _view;
 
         public MediaWebSocketModule(
-            ILogger logger,
+            ILogger<MediaWebSocketModule> logger,
             IAppWebServer server,
             IViewForMediaWebSocket view,
             string urlPath)

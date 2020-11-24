@@ -1,7 +1,7 @@
-﻿using McMaster.Extensions.CommandLineUtils;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using McMaster.Extensions.CommandLineUtils;
 
-namespace CastIt.GoogleCast.Cli
+namespace CastIt.GoogleCast.Cli.Commands
 {
     [HelpOption("--help", ShortName = "h")]
     public abstract class BaseCommand
