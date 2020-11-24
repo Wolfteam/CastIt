@@ -1,7 +1,7 @@
 ﻿using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Models.FFmpeg.Transcode;
-using CastIt.Server.Common;
 using EmbedIO;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

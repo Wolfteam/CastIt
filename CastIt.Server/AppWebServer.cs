@@ -1,5 +1,7 @@
 ﻿using CastIt.Application.Interfaces;
-using CastIt.Domain.Enums;
+using CastIt.Application.Server;
+using CastIt.GoogleCast.Interfaces;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Server.Common;
 using CastIt.Server.Controllers;
 using CastIt.Server.Interfaces;
@@ -9,93 +11,80 @@ using EmbedIO.Actions;
 using EmbedIO.WebApi;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Threading;
 
 namespace CastIt.Server
 {
-    public class AppWebServer : IAppWebServer
+    public class AppWebServer : BaseWebServer, IAppWebServer
     {
         #region Members
         //public const string SubTitleStreamIndexParameter = "subtitleStream";
         private readonly ILogger<AppWebServer> _logger;
+        private readonly ILogger<CastItController> _castItControllerLogger;
         private readonly ITelemetryService _telemetryService;
         private readonly IFFmpegService _ffmpegService;
         private readonly IFileService _fileService;
+        private readonly IPlayer _player;
+        private readonly MediaModule _mediaModule;
 
+        private CastItController _castItController;
         private WebServer _webServer;
         private bool _disposed;
         #endregion
 
-        #region Events
-        public OnFileLoadingHandler OnFileLoading { get; set; }
-        public OnFileLoadedWsHandler OnFileLoaded { get; set; }
-        public OnFileLoadingErrorHandler OnFileLoadingError { get; set; }
-        public OnPositionChangedHandler OnPositionChanged { get; set; }
-        public OnTimeChangedHandler OnTimeChanged { get; set; }
-        public OnEndReachedHandler OnEndReached { get; set; }
-        public OnPausedHandler OnPaused { get; set; }
-        public OnDisconnectedHandler OnDisconnected { get; set; }
-        public OnVolumeChangedHandler OnVolumeChanged { get; set; }
-        public OnAppClosingHandler OnAppClosing { get; set; }
-        public OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
-
-        public OnPlayListAddedHandler OnPlayListAdded { get; set; }
-        public OnPlayListChangedHandler OnPlayListChanged { get; set; }
-        public OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
-
-        public OnFileAddedHandler OnFileAdded { get; set; }
-        public OnFileChangedHandler OnFileChanged { get; set; }
-        public OnFileDeletedHandler OnFileDeleted { get; set; }
-
-        public OnServerMsgHandler OnServerMsg { get; set; }
-        #endregion
-
-        #region Properties
-        public static IReadOnlyList<string> AllowedQueryParameters => AppWebServerConstants.AllowedQueryParameters;
-
-        public string BaseUrl
-            => GetBaseUrl();
-        #endregion
-
         public AppWebServer(
-            ILogger<AppWebServer> logger,
+            ILoggerFactory loggerFactory,
             ITelemetryService telemetryService,
             IFFmpegService ffmpegService,
-            IFileService fileService)
+            IFileService fileService,
+            IPlayer player)
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger<AppWebServer>();
+            _castItControllerLogger = loggerFactory.CreateLogger<CastItController>();
             _telemetryService = telemetryService;
             _ffmpegService = ffmpegService;
             _fileService = fileService;
+            _player = player;
+            _mediaModule = new MediaModule(_logger, ffmpegService, telemetryService, fileService, AppWebServerConstants.MediaPath);
         }
 
         #region Methods
-        public void Init(string previewPath, string subtitlesPath, IViewForMediaWebSocket view, CancellationToken cancellationToken)
+        public void Init(
+            string previewPath,
+            string subtitlesPath,
+            IViewForMediaWebSocket view,
+            ICastService castService,
+            CancellationToken cancellationToken,
+            int? port = null)
         {
             try
             {
-                _webServer = BuildServer(previewPath, subtitlesPath, view);
+                if (port.HasValue)
+                {
+                    _logger.LogInformation($"{nameof(Init)}: Port = {port} was provided, it will be used to start this web server...");
+                }
+                port ??= WebServerUtils.GetOpenPort(AppWebServerConstants.DefaultPort);
+                _logger.LogInformation($"{nameof(Init)}: Starting web server on url = {WebServerUtils.GetWebServerIpAddress(port.Value)}...");
+
+                _castItController = new CastItController(_castItControllerLogger, _fileService, castService, _ffmpegService, _player);
+                _webServer = BuildServer(previewPath, subtitlesPath, view, port.Value);
                 _webServer.Start(cancellationToken);
 
-                _logger.LogInformation($"{nameof(Init)}: Server was started");
+                _logger.LogInformation($"{nameof(Init)}: Server was successfully started");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"{nameof(Init)}: Unknown error");
                 _telemetryService.TrackError(e);
+                throw;
             }
         }
 
-        public void Init(string previewPath, string subtitlesPath, CancellationToken cancellationToken)
-            => Init(previewPath, subtitlesPath, null, cancellationToken);
+        public void Init(string previewPath, string subtitlesPath, ICastService castService, CancellationToken cancellationToken, int? port = null)
+            => Init(previewPath, subtitlesPath, null, castService, cancellationToken, port);
 
-        public void Dispose()
+        public override void Dispose()
             => Dispose(true);
 
         protected virtual void Dispose(bool disposing)
@@ -114,45 +103,7 @@ namespace CastIt.Server
             _disposed = true;
         }
 
-        public string GetMediaUrl(
-            string filePath,
-            int videoStreamIndex,
-            int audioStreamIndex,
-            double seconds,
-            bool videoNeedsTranscode,
-            bool audioNeedsTranscode,
-            HwAccelDeviceType hwAccelToUse,
-            string videoWidthAndHeight = null)
-        {
-            var baseUrl = GetBaseUrl();
-            return $"{baseUrl}{AppWebServerConstants.MediaPath}?" +
-                $"{AppWebServerConstants.VideoStreamIndexParameter}={videoStreamIndex}" +
-                $"&{AppWebServerConstants.AudioStreamIndexParameter}={audioStreamIndex}" +
-                $"&{AppWebServerConstants.SecondsQueryParameter}={seconds}" +
-                $"&{AppWebServerConstants.FileQueryParameter}={Uri.EscapeDataString(filePath)}" +
-                $"&{AppWebServerConstants.VideoNeedsTranscode}={videoNeedsTranscode}" +
-                $"&{AppWebServerConstants.AudioNeedsTranscode}={audioNeedsTranscode}" +
-                $"&{AppWebServerConstants.HwAccelTypeToUse}={hwAccelToUse}" +
-                $"&{AppWebServerConstants.VideoWidthAndHeight}={videoWidthAndHeight}";
-        }
-
-        public string GetPreviewPath(string filepath)
-        {
-            if (string.IsNullOrEmpty(filepath))
-                return null;
-            var baseUrl = GetBaseUrl();
-            string filename = Path.GetFileName(filepath);
-            return $"{baseUrl}{AppWebServerConstants.ImagesPath}/{Uri.EscapeDataString(filename)}";
-        }
-
-        public string GetSubTitlePath(string filepath)
-        {
-            var baseUrl = GetBaseUrl();
-            string filename = Path.GetFileName(filepath);
-            return $"{baseUrl}{AppWebServerConstants.SubTitlesPath}/{Uri.EscapeDataString(filename)}";
-        }
-
-        private string GetBaseUrl()
+        protected override string GetBaseUrl()
         {
             if (_webServer != null)
                 return _webServer.Options.UrlPrefixes.First();
@@ -160,34 +111,12 @@ namespace CastIt.Server
             throw new NullReferenceException("Web server is null");
         }
 
-        private string GetIpAddress()
+        private WebServer BuildServer(string previewPath, string subtitlesPath, IViewForMediaWebSocket view, int port)
         {
-            string localIp = null;
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-            {
-                socket.Connect("8.8.8.8", 65530);
-                var endPoint = socket.LocalEndPoint as IPEndPoint;
-                localIp = endPoint.Address.ToString();
-            }
-
-            var port = GetOpenPort();
-
-            return $"http://{localIp}:{port}";
-        }
-
-        private int GetOpenPort(int startPort = AppWebServerConstants.DefaultPort)
-        {
-            var properties = IPGlobalProperties.GetIPGlobalProperties();
-            var tcpEndPoints = properties.GetActiveTcpListeners();
-            var usedPorts = tcpEndPoints.Select(p => p.Port).ToList();
-
-            return Enumerable.Range(startPort, 99).FirstOrDefault(port => !usedPorts.Contains(port));
-        }
-
-        private WebServer BuildServer(string previewPath, string subtitlesPath, IViewForMediaWebSocket view)
-        {
-            var url = GetIpAddress();
-            _logger.LogInformation($"{nameof(BuildServer)}: Building server on url = {url}");
+            var url = WebServerUtils.GetWebServerIpAddress(port);
+            _logger.LogInformation(
+                $"{nameof(BuildServer)}: Building server on url = {url}, " +
+                $"using path for previews = {previewPath} and for subs = {subtitlesPath}");
             var server = new WebServer(o => o
                     .WithUrlPrefix(url)
                     .WithMode(HttpListenerMode.EmbedIO))
@@ -195,15 +124,17 @@ namespace CastIt.Server
                 .WithCors()
                 .WithStaticFolder(AppWebServerConstants.ImagesPath, previewPath, false)
                 .WithStaticFolder(AppWebServerConstants.SubTitlesPath, subtitlesPath, false)
-                .WithWebApi("/api", m => m.WithController(() => new CastItController(_fileService)))
-                .WithModule(new MediaModule(_logger, _ffmpegService, _telemetryService, _fileService, AppWebServerConstants.MediaPath))
-                .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));
+                .WithWebApi("/api", m => m.WithController(() => _castItController))
+                .WithModule(_mediaModule);
 
             if (view != null)
             {
                 _logger.LogInformation($"{nameof(BuildServer)}: View for socket was provided, adding the media ws");
                 server.WithModule(new MediaWebSocketModule(_logger, this, view, "/socket"));
             }
+
+            server.WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Server initialized" })));
+
             //if a clients is disconected this throws an exception
             server.Listener.IgnoreWriteExceptions = false;
             return server;

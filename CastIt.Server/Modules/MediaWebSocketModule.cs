@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Server.Modules
 {
-    public class MediaWebSocketModule : WebSocketModule
+    internal class MediaWebSocketModule : WebSocketModule
     {
         #region Client Constants
         private const string GetPlayListsMsgType = "CLIENT_PLAYLISTS_ALL";
