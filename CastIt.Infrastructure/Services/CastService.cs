@@ -149,7 +149,7 @@ namespace CastIt.Infrastructure.Services
             // create new media
             bool videoNeedsTranscode = isVideoFile && _ffmpegService.VideoNeedsTranscode(videoStreamIndex, _appSettings.ForceVideoTranscode, _appSettings.VideoScale, fileInfo);
             bool audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, _appSettings.ForceAudioTranscode, fileInfo, isMusicFile);
-            var hwAccelToUse = isVideoFile ? _ffmpegService.GetHwAccelToUse(videoStreamIndex, fileInfo) : HwAccelDeviceType.None;
+            var hwAccelToUse = isVideoFile ? _ffmpegService.GetHwAccelToUse(videoStreamIndex, fileInfo, _appSettings.EnableHardwareAcceleration) : HwAccelDeviceType.None;
 
             _currentFilePath = mrl;
             string title = isLocal ? Path.GetFileName(mrl) : mrl;
@@ -162,7 +162,8 @@ namespace CastIt.Infrastructure.Services
                     videoNeedsTranscode,
                     audioNeedsTranscode,
                     hwAccelToUse,
-                    fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex)?.WidthAndHeightText)
+                    _appSettings.VideoScale,
+                    fileInfo.Videos.Find(f => f.Index == videoStreamIndex)?.WidthAndHeightText)
                 : mrl;
 
             var metadata = isVideoFile ? new MovieMetadata
@@ -252,7 +253,6 @@ namespace CastIt.Infrastructure.Services
 
                     videoNeedsTranscode = _ffmpegService.VideoNeedsTranscode(videoStreamIndex, _appSettings.ForceVideoTranscode, _appSettings.VideoScale, fileInfo);
                     audioNeedsTranscode = _ffmpegService.AudioNeedsTranscode(audioStreamIndex, _appSettings.ForceAudioTranscode, fileInfo);
-                    hwAccelToUse = HwAccelDeviceType.None;
 
                     media.Duration = -1;
                     media.StreamType = StreamType.Live;
@@ -263,7 +263,8 @@ namespace CastIt.Infrastructure.Services
                         seconds,
                         videoNeedsTranscode,
                         audioNeedsTranscode,
-                        hwAccelToUse,
+                        HwAccelDeviceType.None,
+                        VideoScaleType.Original,
                         videoInfo.WidthAndHeightText);
                     media.ContentType = _ffmpegService.GetOutputTranscodeMimeType(media.ContentId);
                 }

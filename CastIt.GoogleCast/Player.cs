@@ -428,12 +428,13 @@ namespace CastIt.GoogleCast
                             IsPlaying = false;
                             checkMediaStatus = false;
                             _logger.LogInfo(
-                                $"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {contentIsBeingPlayed} and player was paused = {IsPaused}. " +
+                                $"{nameof(ListenForMediaChanges)}: Media is null, content was being played = {contentIsBeingPlayed}, " +
+                                $"player was paused = {IsPaused} and we are connected = {_sender.IsConnected}. " +
                                 $"CurrentContentId = {CurrentContentId}");
                             CancelAndSetListenerToken(false);
 
-                            //Only call the end reached if we were playing something and the player was not paused
-                            if (contentIsBeingPlayed && !IsPaused)
+                            //Only call the end reached if we were playing something, the player was not paused and we are connected
+                            if (contentIsBeingPlayed && !IsPaused && _sender.IsConnected)
                                 EndReached?.Invoke(this, EventArgs.Empty);
                             IsPaused = false;
                             break;

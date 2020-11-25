@@ -662,7 +662,7 @@ namespace CastIt.ViewModels
 
         private async Task<bool> PlayFile(FileItemViewModel file, bool force, bool fileOptionsChanged = false)
         {
-            if (file is null)
+            if (file == null)
             {
                 Logger.LogWarning($"{nameof(PlayFile)}: Cant play file, it is null !!!");
                 return false;
@@ -813,10 +813,10 @@ namespace CastIt.ViewModels
 
         private void OnStoppedPlayBack()
         {
-            _appWebServer.OnEndReached?.Invoke();
-            _castService.StopRunningProcess();
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = null;
+            _appWebServer.OnEndReached?.Invoke();
+            _castService.StopRunningProcess();
             SetCurrentlyPlayingInfo(null, false);
             IsPaused = false;
             DisableLoopForAllFiles();

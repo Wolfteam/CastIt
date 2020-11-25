@@ -66,14 +66,9 @@ namespace CastIt
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
-            var webServer = new AppWebServer(
-                Mvx.IoCProvider.Resolve<ILoggerFactory>(),
-                Mvx.IoCProvider.Resolve<ITelemetryService>(),
-                Mvx.IoCProvider.Resolve<IFFmpegService>(),
-                fileService,
-                Mvx.IoCProvider.Resolve<IPlayer>());
-            Mvx.IoCProvider.RegisterSingleton(typeof(IBaseWebServer), () => webServer);
-            Mvx.IoCProvider.RegisterSingleton(typeof(IAppWebServer), () => webServer);
+
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
+            Mvx.IoCProvider.RegisterSingleton(typeof(IBaseWebServer), () => Mvx.IoCProvider.Resolve<IAppWebServer>());
 
             var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
             var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger);
@@ -114,7 +109,9 @@ namespace CastIt
                 new FileToLog(typeof(FileItemViewModel), "vm_fileitem"),
                 new FileToLog(typeof(DeviceItemViewModel), "vm_deviceitem"),
                 new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
-                new FileToLog(typeof(SplashViewModel), "vm_splash")
+                new FileToLog(typeof(SplashViewModel), "vm_splash"),
+                //Others
+                new FileToLog(typeof(Player), "cast_player"),
             };
 
             logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
