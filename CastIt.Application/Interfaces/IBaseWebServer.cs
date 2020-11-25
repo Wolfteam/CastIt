@@ -33,7 +33,7 @@ namespace CastIt.Application.Interfaces
         public string BaseUrl { get; }
         static IReadOnlyList<string> AllowedQueryParameters { get; }
 
-        string GetMediaUrl(
+        public string GetMediaUrl(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -41,6 +41,7 @@ namespace CastIt.Application.Interfaces
             bool videoNeedsTranscode,
             bool audioNeedsTranscode,
             HwAccelDeviceType hwAccelToUse,
+            VideoScaleType videoScale,
             string videoWidthAndHeight = null);
 
         string GetPreviewPath(string filepath);

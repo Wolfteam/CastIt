@@ -50,6 +50,7 @@ namespace CastIt.Application.Server
             bool videoNeedsTranscode,
             bool audioNeedsTranscode,
             HwAccelDeviceType hwAccelToUse,
+            VideoScaleType videoScale,
             string videoWidthAndHeight = null)
         {
             var baseUrl = GetBaseUrl();
@@ -61,7 +62,8 @@ namespace CastIt.Application.Server
                    $"&{AppWebServerConstants.VideoNeedsTranscode}={videoNeedsTranscode}" +
                    $"&{AppWebServerConstants.AudioNeedsTranscode}={audioNeedsTranscode}" +
                    $"&{AppWebServerConstants.HwAccelTypeToUse}={hwAccelToUse}" +
-                   $"&{AppWebServerConstants.VideoWidthAndHeight}={videoWidthAndHeight}";
+                   $"&{AppWebServerConstants.VideoWidthAndHeight}={videoWidthAndHeight}" +
+                   $"&{AppWebServerConstants.VideoScaleParameter}={videoScale}";
         }
 
         public string GetPreviewPath(string filepath)

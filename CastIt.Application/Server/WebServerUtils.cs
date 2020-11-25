@@ -1,11 +1,10 @@
-﻿using CastIt.Application.Server;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
-namespace CastIt.Server.Common
+namespace CastIt.Application.Server
 {
     public static class WebServerUtils
     {
@@ -57,10 +56,8 @@ namespace CastIt.Server.Common
             return process?.PortNumber;
         }
 
-        public static bool StartServer(string escapedArgs)
+        public static bool StartServer(string escapedArgs, string exePath)
         {
-            //TODO: CHANGE THIS PATH
-            string exePath = "E:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
             var process = new Process
             {
                 EnableRaisingEvents = true,
@@ -70,8 +67,8 @@ namespace CastIt.Server.Common
                     FileName = exePath,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    Arguments = escapedArgs
-                }
+                    Arguments = escapedArgs,
+                },
             };
 
             return process.Start();

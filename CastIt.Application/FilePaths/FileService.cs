@@ -42,7 +42,7 @@ namespace CastIt.Application.FilePaths
                 throw new ArgumentException($"Path = {_ffmpegBasePath} does not exist");
 
             if (!IsLocalFile(_ffprobeBasePath))
-                throw new ArgumentException($"Path = {_ffmpegBasePath} does not exist");
+                throw new ArgumentException($"Path = {_ffprobeBasePath} does not exist");
         }
 
         public string GetFFmpegFolder()

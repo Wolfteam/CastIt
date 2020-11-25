@@ -290,6 +290,7 @@ namespace CastIt.Application.FFMpeg
             {
                 if (!_fileService.Exists(filePath))
                 {
+                    _logger.LogWarning($"{nameof(GetFileInfo)}: File = {filePath} does not exist");
                     return Task.FromResult<FFProbeFileInfo>(null);
                 }
 

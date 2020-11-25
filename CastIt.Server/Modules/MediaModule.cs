@@ -118,8 +118,9 @@ namespace CastIt.Server.Modules
             bool audioNeedsTranscode = bool.Parse(query[AppWebServerConstants.AudioNeedsTranscode]!);
             var hwAccelType = Enum.Parse<HwAccelDeviceType>(query[AppWebServerConstants.HwAccelTypeToUse]!, true);
             string videoWidthAndHeight = query[AppWebServerConstants.VideoWidthAndHeight];
+            var videoScale = Enum.Parse<VideoScaleType>(query[AppWebServerConstants.VideoScaleParameter]!, true);
             return new TranscodeVideoFileBuilder()
-                .WithDefaults(hwAccelType, VideoScaleType.Original, videoWidthAndHeight)
+                .WithDefaults(hwAccelType, videoScale, videoWidthAndHeight)
                 .WithStreams(videoStreamIndex, audioStreamIndex)
                 .WithFile(filepath)
                 .ForceTranscode(videoNeedsTranscode, audioNeedsTranscode)

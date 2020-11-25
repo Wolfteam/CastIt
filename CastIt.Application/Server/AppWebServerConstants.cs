@@ -17,6 +17,7 @@ namespace CastIt.Application.Server
         public const string AudioNeedsTranscode = "audioNeedsTranscode";
         public const string HwAccelTypeToUse = "hwAccelTypeToUse";
         public const string VideoWidthAndHeight = "videoWidthAndHeight";
+        public const string VideoScaleParameter = "videoScale";
 
         public const string PortArgument = "--port";
         public const string FFmpegPathArgument = "--ffmpegBasePath";
@@ -31,7 +32,8 @@ namespace CastIt.Application.Server
             VideoNeedsTranscode,
             AudioNeedsTranscode,
             HwAccelTypeToUse,
-            VideoWidthAndHeight
+            VideoWidthAndHeight,
+            VideoScaleParameter
         };
     }
 }

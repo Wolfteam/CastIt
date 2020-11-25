@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-namespace CastIt.Server.Common
+namespace CastIt.Application.Server
 {
     /// <summary>
     /// https://stackoverflow.com/questions/1675077/how-do-i-get-process-name-of-an-open-port-in-c
     /// </summary>
-    public static class ProcessPorts
+    internal static class ProcessPorts
     {
         public static List<ProcessPort> ProcessPortMap => GetNetStatPorts();
 
@@ -104,7 +104,7 @@ namespace CastIt.Server.Common
         }
     }
 
-    public class ProcessPort
+    internal class ProcessPort
     {
         public string ProcessPortDescription => $"{ProcessName} ({Protocol} port {PortNumber} pid {ProcessId})";
 

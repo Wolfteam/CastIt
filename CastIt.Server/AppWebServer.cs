@@ -2,7 +2,6 @@
 using CastIt.Application.Server;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.Infrastructure.Interfaces;
-using CastIt.Server.Common;
 using CastIt.Server.Controllers;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Modules;
@@ -26,6 +25,7 @@ namespace CastIt.Server
         private readonly IFFmpegService _ffmpegService;
         private readonly IFileService _fileService;
         private readonly IPlayer _player;
+        private readonly IAppSettingsService _appSettings;
         private readonly MediaModule _mediaModule;
 
         private CastItController _castItController;
@@ -38,7 +38,8 @@ namespace CastIt.Server
             ITelemetryService telemetryService,
             IFFmpegService ffmpegService,
             IFileService fileService,
-            IPlayer player)
+            IPlayer player,
+            IAppSettingsService appSettings)
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<AppWebServer>();
@@ -46,6 +47,7 @@ namespace CastIt.Server
             _ffmpegService = ffmpegService;
             _fileService = fileService;
             _player = player;
+            _appSettings = appSettings;
             _mediaModule = new MediaModule(_logger, ffmpegService, telemetryService, fileService, AppWebServerConstants.MediaPath);
         }
 
@@ -67,7 +69,7 @@ namespace CastIt.Server
                 port ??= WebServerUtils.GetOpenPort();
                 _logger.LogInformation($"{nameof(Init)}: Starting web server on url = {WebServerUtils.GetWebServerIpAddress(port.Value)}...");
 
-                _castItController = new CastItController(_loggerFactory.CreateLogger<CastItController>(), _fileService, castService, _ffmpegService, _player);
+                _castItController = new CastItController(_loggerFactory.CreateLogger<CastItController>(), _fileService, castService, _ffmpegService, _player, _appSettings);
                 _webServer = BuildServer(previewPath, subtitlesPath, view, port.Value);
                 _webServer.Start(cancellationToken);
 

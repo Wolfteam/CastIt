@@ -1,6 +1,7 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.GoogleCast.Interfaces;
@@ -23,19 +24,22 @@ namespace CastIt.Server.Controllers
         private readonly ICastService _castService;
         private readonly IFFmpegService _ffmpegService;
         private readonly IPlayer _player;
+        private readonly IAppSettingsService _appSettings;
 
         public CastItController(
             ILogger<CastItController> logger,
             IFileService fileService,
             ICastService castService,
             IFFmpegService ffmpegService,
-            IPlayer player)
+            IPlayer player,
+            IAppSettingsService appSettings)
         {
             _logger = logger;
             _fileService = fileService;
             _castService = castService;
             _ffmpegService = ffmpegService;
             _player = player;
+            _appSettings = appSettings;
         }
 
         [Route(HttpVerbs.Get, "/image")]
@@ -244,6 +248,54 @@ namespace CastIt.Server.Controllers
             catch (Exception e)
             {
                 _logger.LogError(e, $"{nameof(SetVolume)}: Unknown error occurred");
+                return new EmptyResponseDto(false, e.Message);
+            }
+        }
+
+        [Route(HttpVerbs.Get, "/settings")]
+        public AppResponseDto<CliAppSettingsResponseDto> GetCurrentSettings()
+        {
+            return new AppResponseDto<CliAppSettingsResponseDto>
+            {
+                Succeed = true,
+                Result = new CliAppSettingsResponseDto
+                {
+                    FFmpegBasePath = _fileService.GetFFmpegPath(),
+                    FFprobeBasePath = _fileService.GetFFprobePath(),
+                    ForceAudioTranscode = _appSettings.ForceAudioTranscode,
+                    VideoScale = _appSettings.VideoScale,
+                    EnableHardwareAcceleration = _appSettings.EnableHardwareAcceleration,
+                    ForceVideoTranscode = _appSettings.EnableHardwareAcceleration
+                }
+            };
+        }
+
+        [Route(HttpVerbs.Post, "/settings")]
+        public async Task<EmptyResponseDto> UpdateSettings()
+        {
+            try
+            {
+                var request = await HttpContext.GetRequestDataAsync<UpdateCliAppSettingsRequestDto>();
+                if (request == null)
+                {
+                    _logger.LogWarning($"{nameof(UpdateSettings)}: Nothing will be updated since no settings were provided");
+                    return new EmptyResponseDto(false, "Invalid request. You need to provide the settings request object");
+                }
+
+                _appSettings.EnableHardwareAcceleration = request.EnableHardwareAcceleration;
+                _appSettings.ForceAudioTranscode = request.ForceAudioTranscode;
+                _appSettings.ForceVideoTranscode = request.ForceVideoTranscode;
+                _appSettings.VideoScale = request.VideoScale;
+
+                _logger.LogInformation($"{nameof(UpdateSettings)}: Saving settings...");
+                _appSettings.SaveSettings();
+
+                _logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
+                return new EmptyResponseDto(true);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(UpdateSettings)}: Unknown error occurred");
                 return new EmptyResponseDto(false, e.Message);
             }
         }
