@@ -22,11 +22,35 @@
                     <MenuItem.Icon>
                         <materialDesign:PackIcon Kind="Play" />
                     </MenuItem.Icon>
+                    <MenuItem.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Exists}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
                 </MenuItem>
                 <MenuItem Command="{Binding PlayFromTheBeginingCommand}" Header="{Binding [PlayFromTheBegining]}">
                     <MenuItem.Icon>
                         <materialDesign:PackIcon Kind="Refresh" />
                     </MenuItem.Icon>
+                    <MenuItem.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Exists}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
                 </MenuItem>
                 <MenuItem Command="{Binding ToggleLoopCommand}" Visibility="{Binding IsBeingPlayed, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Style>
@@ -61,6 +85,11 @@
                 <MenuItem Command="{Binding PlacementTarget.Tag.AddFilesCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddFiles]}">
                     <MenuItem.Icon>
                         <materialDesign:PackIcon Kind="Add" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding PlacementTarget.Tag.ShowAddUrlPopUpCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddUrl]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="LinkAdd" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -100,6 +129,12 @@
                                         </Setter.Value>
                                     </Setter>
                                 </DataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Exists}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </MenuItem.Style>

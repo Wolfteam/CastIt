@@ -9,6 +9,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+
     <Grid
         Width="260"
         Height="120"
@@ -49,7 +50,14 @@
             VerticalAlignment="Top"
             materialDesign:HintAssist.Hint="URL"
             Foreground="{DynamicResource FontColorBrush}"
-            Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+            Style="{StaticResource MaterialDesignFloatingHintTextBox}">
+            <TextBox.InputBindings>
+                <KeyBinding
+                    Key="Enter"
+                    Command="{Binding AddUrlCommand}"
+                    CommandParameter="{Binding ElementName=UrlTextBox, Path=Text}" />
+            </TextBox.InputBindings>
+        </TextBox>
         <Button
             Grid.Row="1"
             Grid.Column="1"

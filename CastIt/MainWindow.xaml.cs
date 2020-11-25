@@ -74,6 +74,8 @@ namespace CastIt
         private void AppMainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             var view = Content as MainPage;
+            if (view == null)
+                return;
 
             if (e.NewSize.Height <= AppConstants.MinWindowHeight &&
                 view.ViewModel.IsExpanded)

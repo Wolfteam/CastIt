@@ -61,7 +61,7 @@
                 <Button
                     Click="Maximize_Clicked"
                     Style="{StaticResource WindowButtonStyle}"
-                    ToolTip="{Binding [Mazimize]}">
+                    ToolTip="{Binding [Maximize]}">
                     <materialDesign:PackIcon
                         Width="18"
                         Height="18"

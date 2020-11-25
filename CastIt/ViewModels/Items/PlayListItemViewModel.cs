@@ -29,6 +29,7 @@ namespace CastIt.ViewModels.Items
         private readonly IAppWebServer _appWebServer;
         private readonly IMvxNavigationService _navigationService;
         private readonly IAppSettingsService _appSettings;
+        private readonly IFileWatcherService _fileWatcherService;
 
         private string _name;
         private bool _showEditPopUp;
@@ -167,7 +168,8 @@ namespace CastIt.ViewModels.Items
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
             IMvxNavigationService navigationService,
-            IAppSettingsService appSettings)
+            IAppSettingsService appSettings,
+            IFileWatcherService fileWatcherService)
             : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
         {
             _playListsService = playListsService;
@@ -176,6 +178,7 @@ namespace CastIt.ViewModels.Items
             _appWebServer = appWebServer;
             _navigationService = navigationService;
             _appSettings = appSettings;
+            _fileWatcherService = fileWatcherService;
         }
 
         #region Methods
@@ -238,6 +241,16 @@ namespace CastIt.ViewModels.Items
             IsBusy = false;
         }
 
+        public async Task SetFileInfo(long fileId, CancellationToken token)
+        {
+            IsBusy = true;
+            var file = Items.FirstOrDefault(f => f.Id == fileId);
+            if (file != null)
+                await file.SetFileInfo(token);
+            await UpdatePlayedTime();
+            IsBusy = false;
+        }
+
         public void CleanUp()
         {
             _cancellationToken.Cancel();
@@ -278,6 +291,11 @@ namespace CastIt.ViewModels.Items
 
         public Task UpdatePlayedTime()
         {
+            var dirs = Items.Where(f => f.IsLocalFile)
+                .Select(f => Path.GetDirectoryName(f.Path))
+                .Distinct()
+                .ToList();
+            _fileWatcherService.UpdateWatchers(dirs, false);
             return !_appSettings.ShowPlayListTotalDuration ? Task.CompletedTask : RaisePropertyChanged(() => TotalDuration);
         }
 
@@ -545,6 +563,27 @@ namespace CastIt.ViewModels.Items
                 int newIndex = sortedItems.IndexOf(item);
                 Items.Move(currentIndex, newIndex);
             }
+            SetPositionIfChanged();
+        }
+
+        public void ExchangeLastFilePosition(long toFileId)
+        {
+            var newFile = Items.LastOrDefault();
+            if (newFile == null)
+                return;
+            ExchangeFilePosition(newFile.Id, toFileId);
+        }
+
+        public void ExchangeFilePosition(long fromFileId, long toFileId)
+        {
+            var fromFile = Items.FirstOrDefault(f => f.Id == fromFileId);
+            var toFile = Items.FirstOrDefault(f => f.Id == toFileId);
+            if (fromFile == null || toFile == null)
+            {
+                return;
+            }
+
+            Items.Move(Items.IndexOf(fromFile), Items.IndexOf(toFile));
             SetPositionIfChanged();
         }
         #endregion

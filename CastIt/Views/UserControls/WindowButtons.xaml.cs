@@ -1,4 +1,5 @@
 ﻿using CastIt.ViewModels;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -14,6 +15,8 @@ namespace CastIt.Views.UserControls
         private void Minimize_Clicked(object sender, RoutedEventArgs e)
         {
             var window = System.Windows.Application.Current.MainWindow;
+            if (window == null)
+                return;
             if (window.WindowState == WindowState.Normal ||
                 window.WindowState == WindowState.Maximized)
             {
@@ -28,6 +31,8 @@ namespace CastIt.Views.UserControls
         private void Maximize_Clicked(object sender, RoutedEventArgs e)
         {
             var window = System.Windows.Application.Current.MainWindow;
+            if (window == null)
+                return;
             if (window.WindowState == WindowState.Normal)
             {
                 window.WindowState = WindowState.Maximized;
@@ -43,11 +48,16 @@ namespace CastIt.Views.UserControls
             Dispatcher.Invoke(() =>
             {
                 var window = System.Windows.Application.Current.MainWindow as MainWindow;
-                var view = window.Content as MainPage;
-                var positions = view.GetTabsPosition();
-                var vm = DataContext as MainViewModel;
-                vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
-                view.ButtonsBar.DisposeViewModels();
+                if (window?.Content is MainPage view)
+                {
+                    var vm = DataContext as MainViewModel;
+                    if (vm?.PlayLists.Any() == true)
+                    {
+                        var positions = view.GetTabsPosition();
+                        vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
+                    }
+                    view.ButtonsBar.DisposeViewModels();
+                }
                 System.Windows.Application.Current.Shutdown();
             });
         }

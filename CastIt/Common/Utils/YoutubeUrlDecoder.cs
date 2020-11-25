@@ -20,7 +20,7 @@ namespace CastIt.Common.Utils
     internal class YoutubeUrlDecoder : IYoutubeUrlDecoder
     {
         private const string UrlEncodedStreamMap = "\"url_encoded_fmt_stream_map\":";
-        private const string TitleKeyWord = "<meta name=\"title\"";
+        private const string TitleKeyWord = "<meta property=\"og:title\"";
         private const string DescriptionKeyWord = "<meta name=\"description\"";
         private const string ThumbnailKeyWord = "<meta property=\"og:image\"";
         private const string ContentValueKeyWord = "content=\"";
@@ -72,7 +72,6 @@ namespace CastIt.Common.Utils
         {
             desiredQuality ??= DefaultQuality;
             _logger.Info($"{nameof(Parse)}: Trying to parse url = {url}");
-            var media = new YoutubeMedia();
             using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -82,14 +81,22 @@ namespace CastIt.Common.Utils
             body = body.Replace("\\/", "/");
 
             var (isHls, _) = IsHls(body);
-            media.IsHls = isHls;
-            media.Title = GetVideoKeywordValue(body, TitleKeyWord);
-            media.Description = GetVideoKeywordValue(body, DescriptionKeyWord);
-            media.ThumbnailUrl = GetVideoKeywordValue(body, ThumbnailKeyWord);
+            var media = new YoutubeMedia
+            {
+                IsHls = isHls,
+                Title = GetVideoKeywordValue(body, TitleKeyWord),
+                Description = GetVideoKeywordValue(body, DescriptionKeyWord),
+                ThumbnailUrl = GetVideoKeywordValue(body, ThumbnailKeyWord)
+            };
 
             if (getFinalUrl)
             {
                 var qualities = GetVideoQualities(body);
+                if (!qualities.Any())
+                {
+                    _logger.Warn($"{nameof(Parse)}: Couldn't retrieve any qualities for video = {url} in body = {body}");
+                    throw new InvalidOperationException($"Couldn't retrieve any qualities for video = {url}");
+                }
                 media.Qualities.AddRange(qualities.Select(q => q.Key));
                 int closest = qualities
                     .Select(k => k.Key)
@@ -208,13 +215,24 @@ namespace CastIt.Common.Utils
         private async Task<string> GetUrlFromCipher(string cipher, string jsUrl)
         {
             string urlPattern = @"(?<=url[^&]+).*?(?=\\"")";
-            string url = DecodeUrlString(Regex.Match(cipher, urlPattern).Value.Replace("\\/", "/"));
+            var urlMatch = Regex.Match(cipher, urlPattern);
+            if (string.IsNullOrEmpty(urlMatch.Value))
+            {
+                var msg = $"Couldn't retrieve url from cipher = {cipher}";
+                _logger.Warn($"{nameof(GetUrlFromCipher)}: {msg}");
+                throw new Exception(msg);
+            }
+
+            string url = DecodeUrlString(urlMatch.Value.Replace("\\/", "/"));
 
             //Descramble any scrambled signature and append it to URL
             string sPattern = @"(?<=\\""s=)([^&]+)";
             string s = DecodeUrlString(Regex.Match(cipher, sPattern).Value);
             if (string.IsNullOrEmpty(s))
+            {
+                _logger.Warn($"Couldn't find the sPattern in cipher = {cipher}");
                 return url;
+            }
 
             s = await JsDescramble(s, jsUrl);
 
@@ -230,10 +248,14 @@ namespace CastIt.Common.Utils
         private async Task<string> JsDescramble(string s, string jsUrl)
         {
             //Fetch javascript code
+            _logger.Info($"{nameof(JsDescramble)}: Fetching js code from jsUrl = {jsUrl}");
             using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(jsUrl).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                return string.Empty;
+            {
+                _logger.Info($"{nameof(JsDescramble)}: Status code does not indicate success. = {response.StatusCode}");
+                return s;
+            }
 
             string js = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
@@ -244,28 +266,59 @@ namespace CastIt.Common.Utils
             //"signature" or "sig") to set with the output, descrambled signature
             string descramblerPattern = @"(?<=[,&|]).(=).+(?=\(decodeURIComponent)";
             var descramblerMatch = Regex.Match(js, descramblerPattern);
+            if (string.IsNullOrEmpty(descramblerMatch.Value))
+            {
+                _logger.Info($"{nameof(JsDescramble)}: Coudln't retrieve the descrambler function");
+                return s;
+            }
+
             string descrambler = descramblerMatch.Value.Substring(descramblerMatch.Value.IndexOf("=", StringComparison.Ordinal) + 1);
+            if (SpecialCharsExists(descrambler))
+            {
+                _logger.Info($"{nameof(JsDescramble)}: Descrambler = {descrambler} contains special chars, escaping the first one");
+                descrambler = @$"\{descrambler}";
+            }
 
             //Fetch the code of the descrambler function
             //Go = function(a){ a = a.split(""); Fo.sH(a, 2); Fo.TU(a, 28); Fo.TU(a, 44); Fo.TU(a, 26); Fo.TU(a, 40); Fo.TU(a, 64); Fo.TR(a, 26); Fo.sH(a, 1); return a.join("")};
             string rulesPattern = $"{descrambler}=function.+(?=;)";
+            _logger.Info($"{nameof(JsDescramble)}: Getting the rules by using the following pattern = {rulesPattern}");
+
             string rules = Regex.Match(js, rulesPattern).Value;
+            if (string.IsNullOrEmpty(rules))
+            {
+                _logger.Info($"{nameof(JsDescramble)}: Couldn't retrieve the rules function");
+                return s;
+            }
 
             //Get the name of the helper object providing transformation definitions
             string helperPattern = @"(?<=;).*?(?=\.)";
-            string helper = Regex.Split(Regex.Match(rules, helperPattern).Value, @"\W+")
+            var helperMatch = Regex.Match(rules, helperPattern);
+            if (string.IsNullOrEmpty(helperMatch.Value))
+            {
+                _logger.Info($"{nameof(JsDescramble)}: Couldn't retrieve signature transformation helper name");
+                return s;
+            }
+
+            string helper = Regex.Split(helperMatch.Value, @"\W+")
                 .GroupBy(g => g)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
                 .FirstOrDefault();
 
+            if (string.IsNullOrEmpty(helper))
+            {
+                _logger.Info($"{nameof(JsDescramble)}: Couldn't retrieve signature transformation helper name from = {helperMatch.Value}");
+                return s;
+            }
+
             //Fetch the helper object code
             //var Fo ={ TR: function(a){ a.reverse()},TU: function(a, b){ var c = a[0]; a[0] = a[b % a.length]; a[b] = c},sH: function(a, b){ a.splice(0, b)} };
             string transformationsPattern = "var " + helper + @"=(.*?)+\n.+\n.+(?=};)";
-            string transfromations = Regex.Match(js, transformationsPattern).Value;
+            string transformations = Regex.Match(js, transformationsPattern).Value;
 
             //Parse the helper object to map available transformations
-            var methods = Regex.Matches(transfromations, "(..):.*?(?=})");
+            var methods = Regex.Matches(transformations, "(..):.*?(?=})");
             var trans = new Dictionary<string, string>();
 
             foreach (var method in methods)
@@ -385,13 +438,40 @@ namespace CastIt.Common.Utils
 
         private Dictionary<int, string> GetVideoQualities(string body)
         {
+            _logger.Info($"{nameof(GetVideoQualities)}: Getting video qualities...");
             var formatPattern = @"(\\""formats\\"":\[.*?])";
             var formatMatch = Regex.Match(body, formatPattern);
             if (formatMatch.Length == 0)
             {
+                _logger.Info($"{nameof(GetVideoQualities)}: Couldn't retrieve formats, checking if we have adaptiveFormats...");
                 formatPattern = @"(\\""adaptiveFormats\\"":\[.*?])";
                 formatMatch = Regex.Match(body, formatPattern);
             }
+
+            if (formatMatch.Length == 0)
+            {
+                _logger.Info(
+                    $"{nameof(GetVideoQualities)}: Couldn't retrieve formats, " +
+                    "checking if the formats is not between slashes using the format keyword...");
+                formatPattern = @"(\""formats\"":\[.*?])";
+                formatMatch = Regex.Match(body, formatPattern);
+            }
+
+            if (formatMatch.Length == 0)
+            {
+                _logger.Info(
+                    $"{nameof(GetVideoQualities)}: Couldn't retrieve formats, " +
+                    "checking if the formats is not between slashes using the adaptiveFormats keyword...");
+                formatPattern = @"(\""adaptiveFormats\"":\[.*?])";
+                formatMatch = Regex.Match(body, formatPattern);
+            }
+
+            if (formatMatch.Length == 0)
+            {
+                _logger.Warn($"{nameof(GetVideoQualities)}: Couldn't retrieve qualities for body = {body}...");
+                throw new Exception("Couldn't retrieve video qualities");
+            }
+
             string streamMap = DecodeUrlString(formatMatch.Value).Replace(@"\\u0026", "&");
 
             string heightPattern = @"(?<=\\""height\\"":).+?(?=,)";
@@ -402,25 +482,15 @@ namespace CastIt.Common.Utils
                 return int.Parse(string.IsNullOrEmpty(val) ? "-1" : val);
             }, v => v.ToString());
 
-            return qualities.Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var qualitiesDictionary = qualities.Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            _logger.Info($"{nameof(GetVideoQualities)}: Got = {qualitiesDictionary.Count} video qualities");
+
+            return qualitiesDictionary;
         }
 
         private async Task<string> GetFinalUrl(string body, string pickedQualityUrl)
         {
-            if (body.Contains(UrlEncodedStreamMap))
-            {
-                _logger.Info($"{nameof(GetFinalUrl)}: Body contains old parameters...");
-                //TODO: COMPLETE THIS CASE
-                int start = body.IndexOf(UrlEncodedStreamMap, StringComparison.OrdinalIgnoreCase) + UrlEncodedStreamMap.Length + 1;  // is the opening "
-                string urlMap = body.Substring(start);
-                int end = urlMap.IndexOf("\"", StringComparison.Ordinal);
-                if (end > 0)
-                {
-                    urlMap = urlMap.Substring(0, end);
-                }
-                return GetURLEncodedStream(urlMap);
-            }
-
             if (body.Contains(YoutubePlayerConfig))
             {
                 _logger.Info($"{nameof(GetFinalUrl)}: Body contains yt player config js...");
@@ -440,11 +510,44 @@ namespace CastIt.Common.Utils
                     .Substring(0, playerConfig.IndexOf("</script>", StringComparison.OrdinalIgnoreCase))
                     .Replace("\\/", "/");
                 var jsMatch = Regex.Match(playerConfig, "(\"js\":.*?.js)");
+                if (!jsMatch.Success)
+                {
+                    _logger.Info($"{nameof(GetFinalUrl)}: Js url was not found in json key = 'js', checking json key = 'jsUrl'...");
+                    jsMatch = Regex.Match(playerConfig, "(\"jsUrl\":.*?.js)");
+                }
+
                 string jsUrl = jsMatch.Value;
+                if (string.IsNullOrWhiteSpace(jsUrl))
+                {
+                    var msg = "Could not retrieve the js url";
+                    _logger.Error($"{nameof(GetFinalUrl)}: {msg}");
+                    throw new InvalidOperationException(msg);
+                }
+
                 jsUrl = YoutubeUrl + jsUrl.Substring(jsUrl.IndexOf("/", StringComparison.Ordinal));
+
+                if (body.Contains(UrlEncodedStreamMap))
+                {
+                    _logger.Info($"{nameof(GetFinalUrl)}: Body contains old parameters... Body = {body}");
+                    //TODO: COMPLETE THIS CASE
+                    int startIndex = body.IndexOf(UrlEncodedStreamMap, StringComparison.OrdinalIgnoreCase) + UrlEncodedStreamMap.Length + 1;  // is the opening "
+                    string urlMap = body.Substring(startIndex);
+                    int end = urlMap.IndexOf("\"", StringComparison.Ordinal);
+                    if (end > 0)
+                    {
+                        urlMap = urlMap.Substring(0, end);
+                    }
+                    return GetURLEncodedStream(urlMap);
+                }
 
                 string cipherPattern = @"(?<=\\""signatureCipher\\"":).+";
                 string cipher = Regex.Match(pickedQualityUrl, cipherPattern).Value;
+                if (string.IsNullOrEmpty(cipher))
+                {
+                    _logger.Info($"{nameof(GetFinalUrl)}: SignatureUrl key was not found, checking for any other cipher...");
+                    cipher = Regex.Match(pickedQualityUrl, @"(?<=\""[a-zA-Z]*[Cc]ipher\"":).+").Value;
+                }
+
                 if (string.IsNullOrEmpty(cipher))
                 {
                     _logger.Info($"{nameof(GetFinalUrl)}: Body doesn't contain a cipher...");
@@ -467,6 +570,23 @@ namespace CastIt.Common.Utils
             string livePattern = @"(?<=hlsManifestUrl\\"":\\"").*?(?=\\)";
             var liveMatch = Regex.Match(body, livePattern);
             return (liveMatch.Success, liveMatch.Value);
+        }
+
+        private bool SpecialCharsExists(string input)
+        {
+            char[] one = input.ToCharArray();
+            char[] two = new char[one.Length];
+            int c = 0;
+            foreach (var t in one)
+            {
+                if (char.IsLetterOrDigit(t))
+                    continue;
+                two[c] = t;
+                c++;
+            }
+
+            Array.Resize(ref two, c);
+            return two.Length > 0;
         }
     }
 }

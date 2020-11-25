@@ -186,30 +186,28 @@ namespace CastIt.Services
             {
                 _logger.Info($"{nameof(GenerateThumbnails)}: Generating all thumbnails for file = {mrl}. Cmd = {cmd}");
                 _checkGenerateAllThumbnailsProcess = true;
-                _generateThumbnailProcess.StartInfo.Arguments = cmd;
+                _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
                 _generateAllThumbnailsProcess.Start();
                 _generateAllThumbnailsProcess.WaitForExit();
-                if (_generateAllThumbnailsProcess.ExitCode > 0 && useHwAccel)
+                if (_generateAllThumbnailsProcess.ExitCode != 0 && useHwAccel)
                 {
                     _logger.Warn(
                         $"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl} " +
                         "using hw accel, falling back to sw.");
                     cmd = GenerateCmdForThumbnails(mrl, thumbnailPath, false);
 
-                    _generateThumbnailProcess.StartInfo.Arguments = cmd;
+                    _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
                     _generateAllThumbnailsProcess.Start();
                     _generateAllThumbnailsProcess.WaitForExit();
                 }
 
-                if (_generateAllThumbnailsProcess.ExitCode > 0)
+                if (_generateAllThumbnailsProcess.ExitCode != 0)
                 {
                     _logger.Error($"{nameof(GenerateThumbnails)}: Could not generate thumbnails for file = {mrl}.");
                     throw new FFMpegException("Couldn't generate thumbnails", cmd);
                 }
 
-                _logger.Info(_generateAllThumbnailsProcess.ExitCode < 0
-                    ? $"{nameof(GenerateThumbnails)}: Process was killed for file = {mrl}"
-                    : $"{nameof(GenerateThumbnails)}: All thumbnails were successfully generated for file = {mrl}");
+                _logger.Info($"{nameof(GenerateThumbnails)}: All thumbnails were successfully generated for file = {mrl}");
             }
             catch (Exception ex)
             {
@@ -355,7 +353,7 @@ namespace CastIt.Services
                 await using var memStream = new MemoryStream();
                 var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
                 await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
-                if (_transcodeProcess.ExitCode > 0)
+                if (_transcodeProcess.ExitCode != 0)
                 {
                     _logger.Warn(
                         $"{nameof(TranscodeVideo)}: We cant use the default cmd = {cmd} for hwAccelType = {hwAccelType}. " +
@@ -712,6 +710,7 @@ namespace CastIt.Services
 
             if (useHwAccel)
             {
+                //This might fail sometimes because the device does not qsv or because the main display is not connected to the Intel GPU
                 inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel);
                 outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters($"fps=1/5,scale_qsv={ThumbnailScale}");
             }

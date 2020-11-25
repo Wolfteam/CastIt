@@ -61,6 +61,7 @@ namespace CastIt.GoogleCast
         #region Properties
         public static bool CanLog { get; private set; }
         public bool IsPlaying { get; private set; }
+        public bool IsPaused { get; private set; }
         public string CurrentContentId { get; private set; }
         public double CurrentMediaDuration { get; private set; }
         public double ElapsedSeconds { get; private set; }
@@ -262,6 +263,7 @@ namespace CastIt.GoogleCast
 
             TriggerTimeEvents();
             IsPlaying = true;
+            IsPaused = false;
             ListenForMediaChanges(_listenerToken.Token);
             ListenForReceiverChanges(_listenerToken.Token);
 
@@ -278,6 +280,7 @@ namespace CastIt.GoogleCast
         public Task<MediaStatus> PlayAsync()
         {
             IsPlaying = true;
+            IsPaused = false;
             return _mediaChannel.PlayAsync(_sender);
         }
 
@@ -400,23 +403,27 @@ namespace CastIt.GoogleCast
                             IsPlaying = false;
                             checkMediaStatus = false;
                             _logger.LogInfo(
-                                $"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {contentIsBeingPlayed}. " +
+                                $"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {contentIsBeingPlayed} and player was paused = {IsPaused}. " +
                                 $"CurrentContentId = {CurrentContentId}");
                             CancelAndSetListenerToken(false);
 
-                            if (contentIsBeingPlayed)
+                            //Only call the end reached if we were playing something and the player was not paused
+                            if (contentIsBeingPlayed && !IsPaused)
                                 EndReached?.Invoke(this, EventArgs.Empty);
+                            IsPaused = false;
                             break;
                         }
 
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
                         if (mediaStatus.PlayerState == PlayerState.Paused)
                         {
+                            IsPaused = true;
                             IsPlaying = false;
                             Paused?.Invoke(this, EventArgs.Empty);
                             continue;
                         }
                         IsPlaying = true;
+                        IsPaused = false;
                         TriggerTimeEvents();
                         //If CurrentMediaDuration  <= 0, that means that a live streaming is being played
                         if (CurrentMediaDuration > 0 && Math.Round(ElapsedSeconds, 4) >= Math.Round(CurrentMediaDuration, 4))
