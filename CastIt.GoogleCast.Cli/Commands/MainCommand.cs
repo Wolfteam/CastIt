@@ -14,7 +14,8 @@ namespace CastIt.GoogleCast.Cli.Commands
         typeof(PlayCommand),
         typeof(TogglePlaybackCommand),
         typeof(StopCommand),
-        typeof(VolumeCommand)
+        typeof(VolumeCommand),
+        typeof(SettingsCommand)
         )]
     public class MainCommand : BaseCommand
     {

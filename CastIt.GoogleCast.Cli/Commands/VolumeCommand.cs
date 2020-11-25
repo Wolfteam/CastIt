@@ -1,6 +1,6 @@
-﻿using CastIt.GoogleCast.Cli.Common.Utils;
+﻿using CastIt.Application.Server;
+using CastIt.GoogleCast.Cli.Common.Utils;
 using CastIt.GoogleCast.Cli.Interfaces.Api;
-using CastIt.Server.Common;
 using McMaster.Extensions.CommandLineUtils;
 using Refit;
 using System;

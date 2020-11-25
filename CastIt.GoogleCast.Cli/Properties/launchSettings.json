@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CastIt.GoogleCast.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "connect 192.168.1.100:8009 --ffmpeg_path=\"C:\\\\ffmpeg\\\\ffmpeg.exe\" --ffprobe_path=\"C:\\\\ffmpeg\\\\ffprobe.exe\""
+    }
+  }
+}

@@ -3,6 +3,7 @@ using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Models.Device;
 using Refit;
 using System.Threading.Tasks;
+using CastIt.Domain.Dtos.Responses;
 
 namespace CastIt.GoogleCast.Cli.Interfaces.Api
 {
@@ -31,5 +32,11 @@ namespace CastIt.GoogleCast.Cli.Interfaces.Api
 
         [Post("/api/volume")]
         Task<EmptyResponseDto> SetVolume([Query] double newLevel, [Query] bool isMuted);
+
+        [Get("/api/settings")]
+        Task<AppResponseDto<CliAppSettingsResponseDto>> GetCurrentSettings();
+
+        [Post("/api/settings")]
+        Task<EmptyResponseDto> UpdateAppSettings([Body] UpdateCliAppSettingsRequestDto dto);
     }
 }

@@ -1,4 +1,5 @@
-﻿using CastIt.GoogleCast.Cli.Common.Utils;
+﻿using CastIt.Application.Server;
+using CastIt.GoogleCast.Cli.Common.Utils;
 using CastIt.GoogleCast.Cli.Interfaces.Api;
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
@@ -27,6 +28,12 @@ namespace CastIt.GoogleCast.Cli.Commands
 
             try
             {
+                if (!WebServerUtils.IsServerAlive())
+                {
+                    _console.WriteLine("Server is not running");
+                    return -1;
+                }
+
                 var url = ServerUtils.StartServerIfNotStarted(_console);
                 if (string.IsNullOrWhiteSpace(url))
                     return -1;

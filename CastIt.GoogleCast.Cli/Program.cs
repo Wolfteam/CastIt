@@ -1,5 +1,7 @@
 ﻿using CastIt.Application;
 using CastIt.GoogleCast.Cli.Commands;
+using CastIt.GoogleCast.Cli.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,15 +14,8 @@ namespace CastIt.GoogleCast.Cli
 {
     public static class Program
     {
-        //TODO: CHECK IF WE CAN REMOVE THE DEPENDENCY TO GOOGLECAST AND THE SERVER PROJECTS
         private static async Task<int> Main(string[] args)
         {
-            //var configuration = new ConfigurationBuilder()
-            //    .SetBasePath(Directory.GetCurrentDirectory())
-            //    .AddJsonFile(AppDomain.CurrentDomain.BaseDirectory + "\\appsettings.json", optional: true, reloadOnChange: true)
-            //    .AddEnvironmentVariables()
-            //    .Build();
-
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .CreateLogger();
@@ -28,13 +23,21 @@ namespace CastIt.GoogleCast.Cli
             var builder = new HostBuilder()
                 .ConfigureServices((hostContext, services) =>
                 {
+                    var config = hostContext.Configuration;
+
+                    var appSettings = config.GetSection(nameof(AppSettings)).Get<AppSettings>();
+                    if (appSettings == null)
+                        throw new NullReferenceException("App Settings should not be null, but was");
+
+                    services.AddSingleton(appSettings);
+
                     services.AddApplicationForCli();
-                    services.AddLogging(config =>
+                    services.AddLogging(c =>
                     {
-                        config.ClearProviders();
-                        config.AddProvider(new SerilogLoggerProvider(Log.Logger));
+                        c.ClearProviders();
+                        c.AddProvider(new SerilogLoggerProvider(Log.Logger));
                     });
-                });
+                }).ConfigureAppConfiguration(b => b.AddJsonFile("appsettings.json"));
 
             try
             {

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Refit;
 using System;
 using System.Threading.Tasks;
+using CastIt.Application.Server;
 
 namespace CastIt.GoogleCast.Cli.Commands
 {
@@ -23,8 +24,6 @@ namespace CastIt.GoogleCast.Cli.Commands
             _console = console;
             _fileService = fileService;
         }
-
-        //TODO: HOW ARE WE SUPPOSED TO EDIT THE SETTINGS ?
 
         [Argument(0, Description = "The file's full path or url", ShowInHelpText = true)]
         public string Mrl { get; set; }
@@ -48,12 +47,18 @@ namespace CastIt.GoogleCast.Cli.Commands
         {
             try
             {
+                if (!WebServerUtils.IsServerAlive())
+                {
+                    _console.WriteLine("Server is not running");
+                    return -1;
+                }
+
                 var url = ServerUtils.StartServerIfNotStarted(_console);
                 if (string.IsNullOrWhiteSpace(url))
                     return -1;
 
                 bool isLocal = _fileService.IsLocalFile(Mrl);
-                if (isLocal && !_fileService.Exists(Mrl))
+                if (!_fileService.Exists(Mrl))
                 {
                     _console.WriteLine($"File = {Mrl} does not exist");
                     return -1;
