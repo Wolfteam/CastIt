@@ -20,10 +20,10 @@ namespace CastIt.GoogleCast.Cli.Common.Utils
 
             var dir = Directory.GetCurrentDirectory();
             var path = Path.Combine(dir, "Server", WebServerUtils.ServerProcessName);
-
-#if DEBUG
-            path = "E:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
-#endif
+            console.WriteLine($"Trying to start process located in = {path}");
+//#if DEBUG
+//            path = "E:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
+//#endif
 
             console.WriteLine("Web server is not running, starting it...");
             var openPort = WebServerUtils.GetOpenPort();

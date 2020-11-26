@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <!--The name here matters, we set it like this so we can type castit in the cmd-->
+    <AssemblyName>CastIt</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.GoogleCast.Cli.Commands
 {
-    [Command(Name = "settings", Description = "Updates the settings of the web server. The updated settings will take effect starting from the next played file")]
+    [Command(Name = "settings", Description = "Updates or retrieves the settings of the web server. The updated settings will take effect starting from the next played file")]
     public class SettingsCommand : BaseCommand
     {
         private readonly IConsole _console;

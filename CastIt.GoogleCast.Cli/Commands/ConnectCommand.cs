@@ -1,8 +1,6 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Application.Server;
+﻿using CastIt.Application.Server;
 using CastIt.GoogleCast.Cli.Common.Utils;
 using CastIt.GoogleCast.Cli.Interfaces.Api;
-using CastIt.GoogleCast.Cli.Models;
 using McMaster.Extensions.CommandLineUtils;
 using Refit;
 using System;
@@ -15,31 +13,13 @@ namespace CastIt.GoogleCast.Cli.Commands
     public class ConnectCommand : BaseCommand
     {
         private readonly IConsole _console;
-        private readonly ICommonFileService _fileService;
-        private readonly AppSettings _appSettings;
 
         [Argument(0, Description = "The device´s ip address", ShowInHelpText = true)]
         public string IpAddress { get; set; }
 
-        [Option(
-            CommandOptionType.SingleOrNoValue,
-            Description = "The ffmpeg executable path that will be used by the server. If not provided, the default one in the app settings will be used",
-            LongName = "ffmpeg_path",
-            ShortName = "ffmpeg")]
-        public string FFmpegPath { get; set; }
-
-        [Option(
-            CommandOptionType.SingleOrNoValue,
-            Description = "The ffprobe executable path that will be used by the server. If not provided, the default one in the app settings will be used",
-            LongName = "ffprobe_path",
-            ShortName = "ffprobe")]
-        public string FFprobePath { get; set; }
-
-        public ConnectCommand(IConsole console, ICommonFileService fileService, AppSettings appSettings)
+        public ConnectCommand(IConsole console)
         {
             _console = console;
-            _appSettings = appSettings;
-            _fileService = fileService;
         }
 
         protected override async Task<int> OnExecute(CommandLineApplication app)
@@ -47,6 +27,12 @@ namespace CastIt.GoogleCast.Cli.Commands
             _console.WriteLine($"Connecting to {IpAddress}...");
             try
             {
+                if (!WebServerUtils.IsServerAlive())
+                {
+                    _console.WriteLine("Server is not running");
+                    return -1;
+                }
+
                 if (string.IsNullOrWhiteSpace(IpAddress) || !IpAddress.Contains(":"))
                 {
                     _console.WriteLine($"The provided ip address = {IpAddress} is not valid");
@@ -62,34 +48,7 @@ namespace CastIt.GoogleCast.Cli.Commands
                     return await base.OnExecute(app);
                 }
 
-                _console.WriteLine("Killing any existing server process...");
-                WebServerUtils.KillServerProcess();
-
-                if (string.IsNullOrWhiteSpace(FFmpegPath))
-                {
-                    _console.WriteLine($"Using the default path for ffmpeg = {_appSettings.FFmpegPath}...");
-                    FFmpegPath = _appSettings.FFmpegPath;
-                }
-
-                if (string.IsNullOrWhiteSpace(FFprobePath))
-                {
-                    _console.WriteLine($"Using the default path for ffprobe = {_appSettings.FFprobePath}...");
-                    FFprobePath = _appSettings.FFprobePath;
-                }
-
-                if (!_fileService.IsLocalFile(FFmpegPath))
-                {
-                    _console.WriteLine($"FFmpegPath = {FFmpegPath} is not valid ");
-                    return -1;
-                }
-
-                if (!_fileService.IsLocalFile(FFprobePath))
-                {
-                    _console.WriteLine($"FFprobePath = {FFprobePath} is not valid ");
-                    return -1;
-                }
-
-                var url = ServerUtils.StartServerIfNotStarted(_console, FFmpegPath, FFprobePath);
+                var url = ServerUtils.StartServerIfNotStarted(_console);
                 if (string.IsNullOrWhiteSpace(url))
                     return -1;
 

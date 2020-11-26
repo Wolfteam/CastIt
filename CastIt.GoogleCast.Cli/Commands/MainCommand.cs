@@ -8,6 +8,7 @@ namespace CastIt.GoogleCast.Cli.Commands
     [Command(Name = "castit", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]
     [Subcommand(
+        typeof(StartServerCommand),
         typeof(ConnectCommand),
         typeof(DisconnectCommand),
         typeof(ListDevicesCommand),
