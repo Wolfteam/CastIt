@@ -19,5 +19,9 @@
         string GetSubTitleFolder();
 
         string GetSubTitleFilePath(string subsFilename = "subs.vtt");
+
+        void DeleteAppLogsAndPreviews();
+
+        void DeleteServerLogsAndPreviews();
     }
 }

@@ -1,4 +1,5 @@
-﻿using CastIt.Application.Interfaces;
+﻿using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
 using System;
 using System.IO;
 using System.Linq;
@@ -119,6 +120,18 @@ namespace CastIt.Application.FilePaths
         {
             var basePath = GetSubTitleFolder();
             return Path.Combine(basePath, subsFilename);
+        }
+
+        public void DeleteAppLogsAndPreviews()
+        {
+            DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
+            DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-3));
+        }
+
+        public void DeleteServerLogsAndPreviews()
+        {
+            DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
+            DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-3));
         }
     }
 }

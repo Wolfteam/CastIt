@@ -102,11 +102,7 @@ namespace CastIt.Application.FFMpeg
             {
                 StartInfo = startInfo
             };
-        }
-
-        public void Init(bool isHwAccelIsEnabled)
-        {
-            SetAvailableHwAccelDevices(isHwAccelIsEnabled);
+            SetAvailableHwAccelDevices();
         }
 
         public string GetThumbnail(string mrl)
@@ -621,11 +617,9 @@ namespace CastIt.Application.FFMpeg
             return builder.GetArgs();
         }
 
-        private void SetAvailableHwAccelDevices(bool isHwAccelIsEnabled)
+        private void SetAvailableHwAccelDevices()
         {
             //TODO: IMPROVE THIS
-            if (!isHwAccelIsEnabled)
-                return;
             try
             {
                 if (!OperatingSystem.IsWindows())
@@ -685,7 +679,7 @@ namespace CastIt.Application.FFMpeg
 
             if (useHwAccel)
             {
-                //This might fail sometimes because the device does not qsv or because the main display is not connected to the Intel GPU
+                //This might fail sometimes because the device does not support qsv or because the main display is not connected to the Intel GPU
                 inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel);
                 outputArgs.SetVideoCodec("mjpeg_qsv").SetFilters($"fps=1/5,scale_qsv={ThumbnailScale}");
             }

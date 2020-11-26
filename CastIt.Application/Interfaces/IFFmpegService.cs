@@ -9,7 +9,6 @@ namespace CastIt.Application.Interfaces
 {
     public interface IFFmpegService
     {
-        void Init(bool isHwAccelIsEnabled);
         string GetThumbnail(string mrl);
         Task GenerateThumbnails(string mrl, bool hwAccelIsEnabled);
         void KillThumbnailProcess();

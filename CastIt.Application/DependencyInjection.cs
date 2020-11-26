@@ -1,4 +1,5 @@
-﻿using CastIt.Application.FFMpeg;
+﻿using CastIt.Application.Common.Utils;
+using CastIt.Application.FFMpeg;
 using CastIt.Application.FilePaths;
 using CastIt.Application.Interfaces;
 using CastIt.Application.Telemetry;
@@ -6,15 +7,16 @@ using CastIt.Application.Youtube;
 using CastIt.Domain.Models.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
-using System.IO;
 
 namespace CastIt.Application
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddApplication(this IServiceCollection services, string ffmpegPath, string ffprobePath)
+        public static IServiceCollection AddApplication(this IServiceCollection services, string ffmpegPath, string ffprobePath, string generatedFilesFolderPath = null)
         {
-            var fileService = new FileService(ffmpegPath, ffprobePath, Directory.GetCurrentDirectory());
+            if (string.IsNullOrWhiteSpace(generatedFilesFolderPath))
+                generatedFilesFolderPath = AppFileUtils.GetBaseAppFolder();
+            var fileService = new FileService(ffmpegPath, ffprobePath, generatedFilesFolderPath);
             services.AddSingleton<ICommonFileService>(fileService);
             services.AddSingleton<IFileService>(fileService);
             return services.AddCommonServices().AddFFmpegService();
