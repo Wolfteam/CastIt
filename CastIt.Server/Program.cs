@@ -1,4 +1,6 @@
 ﻿using CastIt.Application;
+using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
 using CastIt.Application.Server;
 using CastIt.Domain.Models.Logging;
 using CastIt.Infrastructure;
@@ -28,8 +30,8 @@ namespace CastIt.Server
             logs.AddRange(DependencyInjection.GetServerLogs());
             logs.AddRange(Infrastructure.DependencyInjection.GetInfrastructureLogs());
             logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
+            logs.SetupLogging(AppFileUtils.GetServerLogsPath());
 
-            logs.SetupLogging();
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
             CreateHostBuilder(args).Build().Run();
         }
@@ -90,7 +92,8 @@ namespace CastIt.Server
                 var webServer = provider.GetRequiredService<IAppWebServer>();
                 var castService = provider.GetRequiredService<ICastService>();
                 var appSettingsService = provider.GetRequiredService<IAppSettingsService>();
-                return new MainService(logger, webServer, castService, appSettingsService, startingPort);
+                var fileService = provider.GetRequiredService<IFileService>();
+                return new MainService(logger, webServer, castService, appSettingsService, fileService, startingPort);
             });
         }
     }
