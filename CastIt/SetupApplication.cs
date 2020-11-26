@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
+using CastIt.Application.Common.Utils;
 using CastIt.Application.FFMpeg;
 using CastIt.Application.FilePaths;
 using CastIt.Application.Interfaces;
 using CastIt.Application.Telemetry;
 using CastIt.Application.Youtube;
 using CastIt.Common;
-using CastIt.Common.Utils;
 using CastIt.Domain.Models.Logging;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Interfaces;
@@ -47,7 +47,7 @@ namespace CastIt
             //NPI WHY I NEED TO MANUALLY REGISTER THIS ONE
             Mvx.IoCProvider.RegisterSingleton<IMvxMessenger>(new MvxMessengerHub());
 
-            string baseAppFolder = FileUtils.GetBaseAppFolder();
+            string baseAppFolder = AppFileUtils.GetBaseAppFolder();
             var fileService = new FileService(baseAppFolder);
 
             Mvx.IoCProvider.RegisterSingleton(typeof(IFileService), () => fileService);
@@ -98,7 +98,7 @@ namespace CastIt
 
         private static void SetupLogging()
         {
-            var basePath = FileUtils.GetLogsPath();
+            var basePath = AppFileUtils.GetLogsPath();
             var logs = new List<FileToLog>
             {
                 //ViewModels

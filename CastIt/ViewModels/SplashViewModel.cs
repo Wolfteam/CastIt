@@ -1,4 +1,5 @@
-﻿using CastIt.Application.Interfaces;
+﻿using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
 using CastIt.Common;
 using CastIt.Common.Utils;
 using CastIt.Infrastructure.Interfaces;
@@ -64,7 +65,7 @@ namespace CastIt.ViewModels
         public override Task Initialize()
         {
             _telemetryService.Init();
-            _settingsService.Init(FileUtils.GetBaseAppFolder(), AppConstants.AccentColorVividRed, AppConstants.MinWindowWidth, AppConstants.MinWindowHeight);
+            _settingsService.Init(AppFileUtils.GetBaseAppFolder(), AppConstants.AccentColorVividRed, AppConstants.MinWindowWidth, AppConstants.MinWindowHeight);
             TextProvider.SetLanguage(_settingsService.Language);
 
             LoadingText = $"{GetText("Loading")}...";
@@ -75,8 +76,7 @@ namespace CastIt.ViewModels
             Logger.LogInformation($"{nameof(Initialize)}: Deleting old preview / log files...");
             try
             {
-                _fileService.DeleteFilesInDirectory(_fileService.GetPreviewsPath(), DateTime.Now.AddDays(-1));
-                _fileService.DeleteFilesInDirectory(FileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
+                _fileService.DeleteAppLogsAndPreviews();
                 Logger.LogInformation($"{nameof(Initialize)}: Old files were deleted");
             }
             catch (Exception e)

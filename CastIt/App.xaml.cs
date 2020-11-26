@@ -1,5 +1,5 @@
-﻿using CastIt.Common;
-using CastIt.Common.Utils;
+﻿using CastIt.Application.Common.Utils;
+using CastIt.Common;
 using MvvmCross.Platforms.Wpf.Views;
 using System;
 using System.Runtime;
@@ -22,7 +22,7 @@ namespace CastIt
         {
             //https://docs.devexpress.com/WPF/400286/common-concepts/performance-improvement/reducing-the-application-launch-time
             // Defines where to store JIT profiles
-            ProfileOptimization.SetProfileRoot(FileUtils.GetBaseAppFolder());
+            ProfileOptimization.SetProfileRoot(AppFileUtils.GetBaseAppFolder());
             // Enables Multicore JIT with the specified profile
             ProfileOptimization.StartProfile("Startup.Profile");
         }

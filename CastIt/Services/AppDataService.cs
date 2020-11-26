@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using CastIt.Common.Utils;
+using CastIt.Application.Common.Utils;
 using CastIt.Domain.Entities;
 using CastIt.Interfaces;
 using CastIt.Migrations;
@@ -21,7 +21,7 @@ namespace CastIt.Services
         public AppDataService(IMapper mapper)
         {
             _mapper = mapper;
-            _connectionString = FileUtils.GetDbConnectionString();
+            _connectionString = AppFileUtils.GetDbConnectionString();
             _db = new FreeSql.FreeSqlBuilder()
                .UseConnectionString(FreeSql.DataType.Sqlite, _connectionString)
                .UseAutoSyncStructure(false)
