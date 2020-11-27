@@ -34,7 +34,7 @@
     <PackageReference Include="EmbedIO" Version="3.4.3" />
     <PackageReference Include="FluentMigrator" Version="3.2.9" />
     <PackageReference Include="FluentMigrator.Runner" Version="3.2.9" />
-    <PackageReference Include="FreeSql.Provider.Sqlite" Version="1.10.1" />
+    <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.0.101" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.26" />
     <PackageReference Include="MaterialDesignThemes" Version="3.2.0-ci1901" />
     <PackageReference Include="Microsoft.AppCenter.Analytics" Version="3.4.3" />
