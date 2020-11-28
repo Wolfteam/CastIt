@@ -1,15 +1,15 @@
 ﻿using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
+using CastIt.Cli.Common.Utils;
+using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Dtos.Requests;
-using CastIt.GoogleCast.Cli.Common.Utils;
-using CastIt.GoogleCast.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Refit;
 using System;
 using System.Threading.Tasks;
-using CastIt.Application.Server;
 
-namespace CastIt.GoogleCast.Cli.Commands
+namespace CastIt.Cli.Commands
 {
     [Command(Name = "play", Description = "Plays a particular file to the connected device")]
     public class PlayCommand : BaseCommand

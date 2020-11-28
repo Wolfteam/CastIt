@@ -1,6 +1,6 @@
 ﻿using CastIt.Application;
-using CastIt.GoogleCast.Cli.Commands;
-using CastIt.GoogleCast.Cli.Models;
+using CastIt.Cli.Commands;
+using CastIt.Cli.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,7 +11,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CastIt.GoogleCast.Cli
+namespace CastIt.Cli
 {
     public static class Program
     {

@@ -1,4 +1,4 @@
-﻿namespace CastIt.GoogleCast.Cli.Models
+﻿namespace CastIt.Cli.Models
 {
     public class AppSettings
     {

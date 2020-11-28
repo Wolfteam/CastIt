@@ -1,8 +1,8 @@
-﻿using CastIt.Application.Server;
+﻿using System.IO;
+using CastIt.Application.Server;
 using McMaster.Extensions.CommandLineUtils;
-using System.IO;
 
-namespace CastIt.GoogleCast.Cli.Common.Utils
+namespace CastIt.Cli.Common.Utils
 {
     public static class ServerUtils
     {

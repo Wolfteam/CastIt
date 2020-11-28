@@ -1,12 +1,12 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Application.Server;
-using CastIt.GoogleCast.Cli.Common.Utils;
-using CastIt.GoogleCast.Cli.Models;
+using CastIt.Cli.Common.Utils;
+using CastIt.Cli.Models;
 using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Threading.Tasks;
 
-namespace CastIt.GoogleCast.Cli.Commands
+namespace CastIt.Cli.Commands
 {
     [Command(Name = "start-server", Description = "Starts the web server. This command should be called first before using any other command")]
     public class StartServerCommand : BaseCommand

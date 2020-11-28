@@ -67,15 +67,15 @@
     <!--First we clean delete the bin directories-->
     <Exec Command="if exist Source rd /s /q Source">
     </Exec>
-    <Exec Command="rd /s /q ..\CastIt.GoogleCast.Cli\bin\">
+    <Exec Command="rd /s /q ..\CastIt.Cli\bin\">
     </Exec>
     <Exec Command="rd /s /q ..\CastIt.Server\bin\">
     </Exec>
     <!--Then, we publish our apps-->
     <!--First the cli-->
-    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.GoogleCast.Cli/CastIt.GoogleCast.Cli.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Source">
+    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Cli/CastIt.Cli.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Source">
     </Exec>
-    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.GoogleCast.Cli/CastIt.GoogleCast.Cli.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -o Source">
+    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Cli/CastIt.Cli.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -o Source">
     </Exec>
     <!--Then the server-->
     <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Source\Server">

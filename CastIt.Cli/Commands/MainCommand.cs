@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace CastIt.GoogleCast.Cli.Commands
+namespace CastIt.Cli.Commands
 {
     [Command(Name = "castit", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]

@@ -1,11 +1,11 @@
 ﻿using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
 using Refit;
 using System.Threading.Tasks;
-using CastIt.Domain.Dtos.Responses;
 
-namespace CastIt.GoogleCast.Cli.Interfaces.Api
+namespace CastIt.Cli.Interfaces.Api
 {
     public interface ICastItApi
     {

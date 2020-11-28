@@ -1,15 +1,15 @@
 ﻿using CastIt.Application.Server;
+using CastIt.Cli.Common.Utils;
+using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Enums;
-using CastIt.GoogleCast.Cli.Common.Utils;
-using CastIt.GoogleCast.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Refit;
 using System;
 using System.Threading.Tasks;
 
-namespace CastIt.GoogleCast.Cli.Commands
+namespace CastIt.Cli.Commands
 {
     [Command(Name = "settings", Description = "Updates or retrieves the settings of the web server. The updated settings will take effect starting from the next played file")]
     public class SettingsCommand : BaseCommand

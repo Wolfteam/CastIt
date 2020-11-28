@@ -1,12 +1,12 @@
 ﻿using CastIt.Application.Server;
-using CastIt.GoogleCast.Cli.Common.Utils;
-using CastIt.GoogleCast.Cli.Interfaces.Api;
+using CastIt.Cli.Common.Utils;
+using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using Refit;
 using System;
 using System.Threading.Tasks;
 
-namespace CastIt.GoogleCast.Cli.Commands
+namespace CastIt.Cli.Commands
 {
     [Command(Name = "toggle-playback", Description = "Toggles the playback of the current played file")]
     public class TogglePlaybackCommand : BaseCommand
