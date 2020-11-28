@@ -8,10 +8,10 @@ namespace CastIt.Application.Interfaces
     {
         IReadOnlyList<string> PathsToWatch { get; }
         bool IsListening { get; }
-        Func<string, Task> OnFileCreated { get; set; }
-        Func<string, Task> OnFileChanged { get; set; }
-        Func<string, Task> OnFileDeleted { get; set; }
-        Func<string, string, Task> OnFileRenamed { get; set; }
+        Func<string, bool, Task> OnFileCreated { get; set; }
+        Func<string, bool, Task> OnFileChanged { get; set; }
+        Func<string, bool, Task> OnFileDeleted { get; set; }
+        Func<string, string, bool, Task> OnFileRenamed { get; set; }
 
         void StartListening();
 
