@@ -290,10 +290,7 @@ namespace CastIt.ViewModels.Items
 
             await _playListsService.DeleteFile(id);
             Items.Remove(file);
-            SelectedItems.Clear();
-            SetPositionIfChanged();
-            _appWebServer.OnFileDeleted?.Invoke(Id);
-            await UpdatePlayedTime();
+            await AfterRemovingFiles();
         }
 
         public Task UpdatePlayedTime()
@@ -304,6 +301,24 @@ namespace CastIt.ViewModels.Items
                 .ToList();
             _fileWatcherService.UpdateWatchers(dirs, false);
             return !_appSettings.ShowPlayListTotalDuration ? Task.CompletedTask : RaisePropertyChanged(() => TotalDuration);
+        }
+
+        public async Task RemoveFilesThatStartsWith(string path)
+        {
+            var toDelete = Items.Where(f => f.Path.StartsWith(path)).ToList();
+            if (!toDelete.Any())
+                return;
+            await _playListsService.DeleteFiles(toDelete.Select(f => f.Id).ToList());
+            Items.RemoveItems(toDelete);
+            await AfterRemovingFiles();
+        }
+
+        private async Task AfterRemovingFiles()
+        {
+            SelectedItems.Clear();
+            SetPositionIfChanged();
+            _appWebServer.OnFileDeleted?.Invoke(Id);
+            await UpdatePlayedTime();
         }
 
         private Task OnFolderAdded(string[] folders)
