@@ -2,7 +2,7 @@
 
 namespace CastIt.Domain.Models.FFmpeg.Args
 {
-    public class FFmpegOutputArgs : FFmpegArgs
+    public class FFmpegOutputArgs : FFmpegArgs<FFmpegOutputArgs>
     {
         private readonly string _output;
 
@@ -13,16 +13,6 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public override string GetArgs()
             => @$"{base.GetArgs()} ""{_output}""";
-
-        public FFmpegOutputArgs AddArg(string arg)
-        {
-            Args.Add($"-{arg}");
-
-            return this;
-        }
-
-        public FFmpegOutputArgs AddArg<T>(string key, T value)
-            => AddArg($"{key} {value}");
 
         public FFmpegOutputArgs SetVideoCodec(string codec)
             => AddArg("c:v", codec);

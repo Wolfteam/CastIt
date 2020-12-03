@@ -282,7 +282,7 @@ namespace CastIt.Infrastructure.Services
             var status = await _player.LoadAsync(media, true, seconds, activeTrackIds.ToArray());
             if (status is null)
             {
-                var msg = "Couldn't load url = {media.ContentId}";
+                var msg = $"Couldn't load url = {media.ContentId}";
                 _logger.LogWarning($"{nameof(StartPlay)}: {msg}");
                 throw new Exception(msg);
             }

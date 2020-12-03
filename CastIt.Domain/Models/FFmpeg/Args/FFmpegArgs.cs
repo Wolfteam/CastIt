@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 
 namespace CastIt.Domain.Models.FFmpeg.Args
 {
-    public abstract class FFmpegArgs
+    public abstract class FFmpegArgs<TArgs> where TArgs : class
     {
         public const string NvidiaHwAccel = "cuvid";
         public const string NvidiaH264VideoDecoder = "h264_cuvid";
@@ -21,6 +22,25 @@ namespace CastIt.Domain.Models.FFmpeg.Args
         public virtual string GetArgs()
         {
             return string.Join(" ", Args);
+        }
+
+        public TArgs AddArg(string arg)
+        {
+            Args.Add($"-{arg}");
+
+            return this as TArgs;
+        }
+
+        public TArgs AddArg<T>(string key, T value)
+        {
+            //This is to avoid something like 10,21 instead of 10.21
+            var arg = value switch
+            {
+                double v => v.ToString(CultureInfo.InvariantCulture),
+                float v => v.ToString(CultureInfo.InvariantCulture),
+                _ => $"{value}"
+            };
+            return AddArg($"{key} {arg}");
         }
     }
 }

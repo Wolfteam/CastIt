@@ -7,7 +7,7 @@ using System.Text;
 
 namespace CastIt.Domain.Models.FFmpeg.Args
 {
-    public class FFmpegInputArgs : FFmpegArgs
+    public class FFmpegInputArgs : FFmpegArgs<FFmpegInputArgs>
     {
         private readonly string _input;
 
@@ -18,16 +18,6 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public override string GetArgs()
             => @$"{base.GetArgs()} -i ""{_input}""";
-
-        public FFmpegInputArgs AddArg(string arg)
-        {
-            Args.Add($"-{arg}");
-
-            return this;
-        }
-
-        public FFmpegInputArgs AddArg<T>(string key, T value)
-            => AddArg($"{key} {value}");
 
         public FFmpegInputArgs SetHwAccel(string type)
             => AddArg("hwaccel", type);
