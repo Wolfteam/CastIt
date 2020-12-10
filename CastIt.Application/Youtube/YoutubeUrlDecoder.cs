@@ -166,7 +166,7 @@ namespace CastIt.Application.Youtube
             {
                 _logger.LogInformation($"{nameof(ParseYouTubePlayList)}: Body contains pure javascript, parsing it...");
                 string pattern = @"(\/watch).*?(?="")";
-                body = body.Replace("\\u0026", "&").Replace("\\/", "/");
+                body = ReplaceWithAmpersand(body).Replace("\\/", "/");
                 links = Regex.Matches(body, pattern)
                     .Select(match => RemoveNotNeededParams(YoutubeUrl + match.Value))
                     .Where(link => link.StartsWith(YoutubeUrl, StringComparison.OrdinalIgnoreCase))
@@ -198,8 +198,7 @@ namespace CastIt.Application.Youtube
 
         private string GetURLEncodedStream(string stream)
         {
-            // replace all the \u0026 with &
-            string str = DecodeUrlString(stream).Replace("\\u0026", "&");
+            string str = ReplaceWithAmpersand(DecodeUrlString(stream));
             string urlMap = str.Substring(str.IndexOf("url=http", StringComparison.OrdinalIgnoreCase) + 4);
             // search urlMap until we see either a & or ,
             var sb = new StringBuilder();
@@ -214,8 +213,17 @@ namespace CastIt.Application.Youtube
 
         private async Task<string> GetUrlFromCipher(string cipher, string jsUrl)
         {
+            jsUrl = ReplaceWithAmpersand(jsUrl);
+            cipher = ReplaceWithAmpersand(cipher);
+
             string urlPattern = @"(?<=url[^&]+).*?(?=\\"")";
             var urlMatch = Regex.Match(cipher, urlPattern);
+            if (!urlMatch.Success)
+            {
+                _logger.LogInformation($"{nameof(GetUrlFromCipher)}: No match was found, trying without the backslash in the pattern...");
+                urlMatch = Regex.Match(cipher, @"(?<=url[^&]+).*?(?=\"")");
+            }
+
             if (string.IsNullOrEmpty(urlMatch.Value))
             {
                 var msg = $"Couldn't retrieve url from cipher = {cipher}";
@@ -230,13 +238,19 @@ namespace CastIt.Application.Youtube
             string s = DecodeUrlString(Regex.Match(cipher, sPattern).Value);
             if (string.IsNullOrEmpty(s))
             {
-                _logger.LogWarning($"Couldn't find the sPattern in cipher = {cipher}");
+                _logger.LogInformation($"{nameof(GetUrlFromCipher)}: Couldn't find the sPattern in cipher, trying without the backslash in the pattern...");
+                s = DecodeUrlString(Regex.Match(cipher, @"(?<=\""s=)([^&]+)").Value);
+            }
+
+            if (string.IsNullOrEmpty(s))
+            {
+                _logger.LogWarning($"{nameof(GetUrlFromCipher)}: Couldn't find the sPattern in cipher = {cipher}");
                 return url;
             }
 
             s = await JsDescramble(s, jsUrl);
 
-            string sp = Regex.Match(cipher, "sp=([^&]+)").Value?.Split("=".ToCharArray())?.Last();
+            string sp = Regex.Match(cipher, "sp=([^&]+)").Value.Split("=".ToCharArray()).Last();
             if (string.IsNullOrEmpty(sp))
             {
                 sp = "signature";
@@ -472,13 +486,25 @@ namespace CastIt.Application.Youtube
                 throw new Exception("Couldn't retrieve video qualities");
             }
 
-            string streamMap = DecodeUrlString(formatMatch.Value).Replace(@"\\u0026", "&");
+            string streamMap = ReplaceWithAmpersand(DecodeUrlString(formatMatch.Value));
 
-            string heightPattern = @"(?<=\\""height\\"":).+?(?=,)";
+            string heightPatternA = @"(?<=\\""height\\"":).+?(?=,)";
+            string heightPatternB = @"(?<=\""height\"":).+?(?=,)";
             var streams = Regex.Matches(streamMap, "{(.*?)}").AsQueryable().OfType<Match>().ToList();
             var qualities = streams.ToDictionary(k =>
             {
-                var val = Regex.Match(k.ToString(), heightPattern).Value;
+                var val = Regex.Match(k.ToString(), heightPatternA).Value;
+                if (string.IsNullOrEmpty(val))
+                {
+                    _logger.LogInformation($"Couldn't retrieve height, trying now without backslashes in the pattern");
+                    val = Regex.Match(k.ToString(), heightPatternB).Value;
+                }
+
+                if (string.IsNullOrEmpty(val))
+                {
+                    _logger.LogWarning($"Couldn't retrieve height from = {k}");
+                }
+
                 return int.Parse(string.IsNullOrEmpty(val) ? "-1" : val);
             }, v => v.ToString());
 
@@ -514,6 +540,12 @@ namespace CastIt.Application.Youtube
                 {
                     _logger.LogInformation($"{nameof(GetFinalUrl)}: Js url was not found in json key = 'js', checking json key = 'jsUrl'...");
                     jsMatch = Regex.Match(playerConfig, "(\"jsUrl\":.*?.js)");
+                }
+
+                if (!jsMatch.Success)
+                {
+                    _logger.LogInformation($"{nameof(GetFinalUrl)}: Js url was not found in player config, checking if we have a jsUrl key in the body...");
+                    jsMatch = Regex.Match(body, "(\"jsUrl\":.*?.js)");
                 }
 
                 string jsUrl = jsMatch.Value;
@@ -588,5 +620,9 @@ namespace CastIt.Application.Youtube
             Array.Resize(ref two, c);
             return two.Length > 0;
         }
+
+        // replace all the \u0026 with &
+        private string ReplaceWithAmpersand(string val)
+            => val.Replace("\\u0026", "&").Replace("\u0026", "&");
     }
 }
