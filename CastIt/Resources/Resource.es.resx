@@ -537,4 +537,22 @@
   <data name="Volume" xml:space="preserve">
     <value>Volumen</value>
   </data>
+  <data name="RefreshDevicesMsg" xml:space="preserve">
+    <value>¿ No ves tu dispositivo ?</value>
+  </data>
+  <data name="Searching" xml:space="preserve">
+    <value>Buscando...</value>
+  </data>
+  <data name="DeviceConnectionFailed" xml:space="preserve">
+    <value>No fue posible conectarse al dispositivo. Asegúrate de que el mismo esta encendido</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Conectando...</value>
+  </data>
+  <data name="FileNotSupported" xml:space="preserve">
+    <value>Este tipo de archivo no es soportado</value>
+  </data>
+  <data name="ConnectionInProgress" xml:space="preserve">
+    <value>Una conexión esta en proceso</value>
+  </data>
 </root>

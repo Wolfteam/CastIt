@@ -1,4 +1,5 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Application.Interfaces;
+using MvvmCross;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -12,15 +13,23 @@ namespace CastIt.Common.Converters
 {
     public class StringToImgConverter : IValueConverter
     {
+        private static readonly ImageSource NoImgFound = System.Windows.Application.Current.Resources["NoImgFound"] as ImageSource;
+        private IFileService _fileService;
+
+        private IFileService FileService => _fileService ??= Mvx.IoCProvider.Resolve<IFileService>();
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string path = value as string;
-            if (FileUtils.IsUrlFile(path))
+            if (string.IsNullOrWhiteSpace(path))
+                return NoImgFound;
+            //TODO: IMPROVE THIS
+            if (FileService.IsUrlFile(path))
             {
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
-                bitmap.DecodePixelWidth = (int)AppConstants.ThumbnailWidth;
-                bitmap.DecodePixelHeight = (int)AppConstants.ThumbnailHeight;
+                bitmap.DecodePixelWidth = (int)Application.Common.FileFormatConstants.ThumbnailWidth;
+                bitmap.DecodePixelHeight = (int)Application.Common.FileFormatConstants.ThumbnailHeight;
                 bitmap.UriSource = new Uri(path, UriKind.Absolute);
                 bitmap.EndInit();
 
@@ -28,12 +37,7 @@ namespace CastIt.Common.Converters
             }
 
             var bm = LoadImage(path);
-            if (bm is null)
-            {
-                var img = System.Windows.Application.Current.Resources["NoImgFound"] as ImageSource;
-                return img;
-            }
-            return ConvertBitmapToBitmapImage(bm);
+            return bm is null ? NoImgFound : ConvertBitmapToBitmapImage(bm);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

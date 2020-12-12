@@ -1,4 +1,4 @@
-﻿using CastIt.Models.Entities;
+﻿using CastIt.Domain.Entities;
 using FluentMigrator;
 
 namespace CastIt.Migrations

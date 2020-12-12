@@ -183,6 +183,7 @@
         <TextBlock
             Grid.Row="1"
             Grid.Column="1"
+            d:Text="Cupid's Chocolate Opening.mp4"
             Text="{Binding Filename}">
             <TextBlock.Style>
                 <Style BasedOn="{StaticResource FileItemTextStyleWithTriggers}" TargetType="{x:Type TextBlock}">
@@ -198,6 +199,7 @@
         <TextBlock
             Grid.Row="2"
             Grid.Column="1"
+            d:Text=".MP4 | 40.67MB | 1360x768"
             Style="{StaticResource FileItemSubTextStyleWithTriggers}"
             Text="{Binding SubTitle}"
             Visibility="{Binding ShowFileDetails, Converter={StaticResource BooleanToVisibilityConverter}}" />
@@ -205,6 +207,7 @@
             Grid.Row="3"
             Grid.Column="1"
             Margin="0,0,10,0"
+            d:Text="E:\Videos\Cupid's Chocolates Opening.mp4"
             Style="{StaticResource FileItemSubTextStyleWithTriggers}"
             Text="{Binding Path}"
             Visibility="{Binding ShowFileDetails, Converter={StaticResource BooleanToVisibilityConverter}}" />
@@ -221,6 +224,7 @@
             Grid.Row="0"
             Grid.RowSpan="5"
             Grid.Column="2"
+            d:Text="00:30 / 1:40"
             Style="{StaticResource FileItemTextStyleWithTriggers}"
             TextAlignment="Right">
             <TextBlock.Text>
@@ -237,6 +241,7 @@
             Grid.ColumnSpan="3"
             Margin="0,5"
             VerticalAlignment="Center"
+            d:Value="50"
             Maximum="100"
             Minimum="0"
             Value="{Binding PlayedPercentage, Mode=OneWay}">
@@ -254,6 +259,7 @@
 
         <Separator
             Grid.Row="5"
+            Grid.Column="0"
             Grid.ColumnSpan="3"
             VerticalAlignment="Center"
             Style="{StaticResource FileItemSeparatorStyle}"

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="CliComponentsGroup" Directory="CliInstallFolder">
+      <!--First we create a system variable-->
+      <Component Id="PathComponent" Guid="{E417C171-2B6A-4814-874C-DE3D75C92432}" KeyPath="yes">
+        <!--CreateFolder is necessary to ensure the block is executed-->
+        <CreateFolder />
+        <!--Here the value will look like C:\Program Files\CastIt\Cli, so you can type castit-->
+        <Environment Id="ExePath" Name="CASTIT_CLI_PATH" Value="[CliInstallFolder]" Permanent="no" Part="last" Action="set" System="yes" />
+      </Component>
+
+      <!--Then we append that system variable to the PATH variable-->
+      <Component>
+        <RegistryValue Action="write" Type="integer" Root="HKLM" Key="SOFTWARE\!(loc.ProductName)" Name="AddExeToPath" Value="1" KeyPath="yes" />
+        <Environment Id="AddToPath" Name="PATH" Value="%CASTIT_CLI_PATH%" Action="set" Part="last" System="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

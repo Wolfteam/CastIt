@@ -1,4 +1,4 @@
-﻿using CastIt.Common.Enums;
+﻿using CastIt.Domain.Enums;
 using MvvmCross.Plugin.Messenger;
 
 namespace CastIt.Models.Messages

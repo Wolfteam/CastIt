@@ -1,30 +1,29 @@
 ﻿using AutoMapper;
-using CastIt.Common;
-using CastIt.Common.Enums;
-using CastIt.Common.Extensions;
-using CastIt.Common.Utils;
+using CastIt.Application.Common.Extensions;
+using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
+using CastIt.Domain.Exceptions;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
-using CastIt.Interfaces.ViewModels;
 using CastIt.Models.Messages;
-using CastIt.Server.Dtos.Responses;
+using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
+using Microsoft.Extensions.Logging;
 using MvvmCross;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    public class MainViewModel : BaseViewModel<List<PlayListItemViewModel>>, IMainViewModel
+    public partial class MainViewModel : BaseViewModel<List<PlayListItemViewModel>>, IViewForMediaWebSocket
     {
         #region Members
         private const int NoStreamSelectedId = -1;
@@ -32,13 +31,14 @@ namespace CastIt.ViewModels
         private const int DefaultQualitySelected = 360;
 
         private readonly ICastService _castService;
-        private readonly IPlayListsService _playListsService;
+        private readonly IAppDataService _playListsService;
         private readonly IAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
         private readonly IMapper _mapper;
         private readonly IFileWatcherService _fileWatcherService;
+        private readonly IFileService _fileService;
 
         private FileItemViewModel _currentlyPlayedFile;
         private bool _isPaused;
@@ -254,16 +254,17 @@ namespace CastIt.ViewModels
         public MainViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<MainViewModel> logger,
             ICastService castService,
-            IPlayListsService playListsService,
+            IAppDataService playListsService,
             IAppSettingsService settingsService,
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
             IMapper mapper,
-            IFileWatcherService fileWatcher)
-            : base(textProvider, messenger, logger.GetLogFor<MainViewModel>())
+            IFileWatcherService fileWatcher,
+            IFileService fileService)
+            : base(textProvider, messenger, logger)
         {
             _castService = castService;
             _playListsService = playListsService;
@@ -273,10 +274,10 @@ namespace CastIt.ViewModels
             _appWebServer = appWebServer;
             _mapper = mapper;
             _fileWatcherService = fileWatcher;
+            _fileService = fileService;
         }
 
         #region Methods
-
         public override void Prepare(List<PlayListItemViewModel> parameter)
         {
             PlayLists.AddRange(parameter.OrderBy(pl => pl.Position));
@@ -285,28 +286,17 @@ namespace CastIt.ViewModels
         public override async Task Initialize()
         {
             IsExpanded = _settingsService.IsPlayListExpanded;
-            Logger.Info($"{nameof(Initialize)}: Initializing cast service...");
+            Logger.LogInformation($"{nameof(Initialize)}: Initializing cast service...");
             _castService.Init();
 
             //This needs to happen after the playlist/files are initialized, otherwise, you will be sending a lot of ws msgs
-            Logger.Info($"{nameof(Initialize)}: Initializing web server...");
-            _appWebServer.Init(this, _webServerCancellationToken.Token);
+            Logger.LogInformation($"{nameof(Initialize)}: Initializing web server...");
+            _appWebServer.Init(_fileService.GetPreviewsPath(), _fileService.GetSubTitleFolder(), this, _castService, _webServerCancellationToken.Token);
 
-            Logger.Info($"{nameof(Initialize)}: Setting cast events..");
-            _castService.OnFileLoaded += OnFileLoaded;
-            _castService.OnTimeChanged += OnFileDurationChanged;
-            _castService.OnPositionChanged += OnFilePositionChanged;
-            _castService.OnEndReached += OnFileEndReached;
-            _castService.QualitiesChanged += OnQualitiesChanged;
-            _castService.OnPaused += OnPaused;
-            _castService.OnDisconnected += OnDisconnected;
-            _castService.GetSubTitles = () => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Path;
-            _castService.OnVolumeChanged += OnVolumeChanged;
-            _castService.OnFileLoadFailed += OnFileLoadFailed;
-
+            InitializeCastHandlers();
             InitializeOrUpdateFileWatcher(false);
 
-            Logger.Info($"{nameof(Initialize)}: Completed");
+            Logger.LogInformation($"{nameof(Initialize)}: Completed");
             await base.Initialize();
         }
 
@@ -380,13 +370,13 @@ namespace CastIt.ViewModels
         public override void ViewAppeared()
         {
             base.ViewAppeared();
-            Logger.Info($"{nameof(ViewAppeared)}: Creating the file duration task..");
+            Logger.LogInformation($"{nameof(ViewAppeared)}: Creating the file duration task..");
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations());
-            string path = FileUtils.GetFFMpegPath();
-            if (File.Exists(path))
+            string path = _fileService.GetFFmpegPath();
+            if (_fileService.Exists(path))
                 return;
 
-            Logger.Info($"{nameof(ViewAppeared)}: Ffmpeg is not in user folder, showing download dialog...");
+            Logger.LogInformation($"{nameof(ViewAppeared)}: FFmpeg is not in user folder, showing download dialog...");
             ShowDownloadDialogCommand.Execute();
         }
 
@@ -404,6 +394,7 @@ namespace CastIt.ViewModels
                 .Where(f => f.WasPlayed || f.PositionChanged)
                 .ToList();
             _playListsService.SaveChangesBeforeClosingApp(positions, files);
+            _playListsService.Close();
         }
 
         public long TrySetThumbnail(double sliderWidth, double mouseX)
@@ -416,223 +407,25 @@ namespace CastIt.ViewModels
 
             long tentativeSecond = GetMainProgressBarSeconds(sliderWidth, mouseX);
 
-            if (FileUtils.IsMusicFile(_currentlyPlayedFile.Path) || FileUtils.IsUrlFile(_currentlyPlayedFile.Path))
+            if (_fileService.IsMusicFile(_currentlyPlayedFile.Path) || _fileService.IsUrlFile(_currentlyPlayedFile.Path))
             {
                 PreviewThumbnailImg = CurrentFileThumbnail;
                 return tentativeSecond;
             }
-            PreviewThumbnailImg = FileUtils.GetClosestThumbnail(_currentlyPlayedFile.Path, tentativeSecond);
+            PreviewThumbnailImg = _fileService.GetClosestThumbnail(_currentlyPlayedFile.Path, tentativeSecond);
             return tentativeSecond;
         }
 
         public long GetMainProgressBarSeconds(double sliderWidth, double mouseX)
             => Convert.ToInt64(mouseX * _currentlyPlayedFile.TotalSeconds / sliderWidth);
 
-        #region Web Socket methods
-        public List<GetAllPlayListResponseDto> GetAllPlayLists()
-        {
-            return PlayLists.Select(pl => new GetAllPlayListResponseDto
-            {
-                Id = pl.Id,
-                Loop = pl.Loop,
-                Name = pl.Name,
-                NumberOfFiles = pl.Items.Count,
-                Position = pl.Position,
-                Shuffle = pl.Shuffle,
-                TotalDuration = pl.TotalDuration
-            }).ToList();
-        }
-
-        public PlayListItemResponseDto GetPlayList(long playlistId)
-        {
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
-            if (playlist == null)
-                return null;
-
-            return new PlayListItemResponseDto
-            {
-                Id = playlist.Id,
-                Loop = playlist.Loop,
-                Name = playlist.Name,
-                NumberOfFiles = playlist.Items.Count,
-                Position = playlist.Position,
-                Shuffle = playlist.Shuffle,
-                TotalDuration = playlist.TotalDuration,
-                Files = _mapper.Map<List<FileItemResponseDto>>(playlist.Items)
-            };
-        }
-
-        public FileLoadedResponseDto GetCurrentFileLoaded()
-        {
-            if (_currentlyPlayedFile == null)
-                return null;
-
-            var response = new FileLoadedResponseDto
-            {
-                Id = _currentlyPlayedFile.Id,
-                Duration = _currentlyPlayedFile.TotalSeconds,
-                Filename = _currentlyPlayedFile.Filename,
-                LoopFile = _currentlyPlayedFile.Loop,
-                CurrentSeconds = CurrentPlayedSeconds,
-                IsPaused = IsPaused,
-                IsMuted = IsMuted,
-                VolumeLevel = VolumeLevel,
-                ThumbnailUrl = CurrentFileThumbnail
-            };
-
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
-            response.PlayListId = playlist?.Id ?? 0;
-            response.PlayListName = playlist?.Name ?? "N/A";
-            response.LoopPlayList = playlist?.Loop ?? false;
-            response.ShufflePlayList = playlist?.Shuffle ?? false;
-            return response;
-        }
-
-        public Task PlayFile(long id, long playlistId, bool force)
-        {
-            var playList = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
-            if (playList == null)
-            {
-                Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because playlistId = {playlistId} doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
-                return Task.CompletedTask;
-            }
-
-            var file = playList.Items.FirstOrDefault(f => f.Id == id);
-            if (file != null)
-                return PlayFile(file, force);
-            Logger.Warn($"{nameof(PlayFile)}: Couldnt play fileId = {id} because it doesnt exists");
-            _appWebServer.OnServerMsg?.Invoke(GetText("FileDoesntExist"));
-            return Task.CompletedTask;
-        }
-
-        public void SetPlayListOptions(long id, bool loop, bool shuffle)
-        {
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (playlist == null)
-            {
-                Logger.Warn($"{nameof(SetPlayListOptions)}: PlaylistId = {id} doesnt exists");
-                _appWebServer.OnServerMsg?.Invoke(GetText("PlayListDoesntExist"));
-                return;
-            }
-
-            playlist.Loop = loop;
-            playlist.Shuffle = shuffle;
-        }
-
-        public Task DeletePlayList(long id)
-        {
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (playlist != null)
-            {
-                _beforeDeletingPlayList.Raise(playlist);
-                return Task.CompletedTask;
-            }
-            Logger.Warn($"{nameof(DeletePlayList)}: Cant delete playlistId = {id} because it doesnt exists");
-            return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-        }
-
-        public Task DeleteFile(long id, long playListId)
-        {
-            var playList = PlayLists.FirstOrDefault(pl => pl.Id == playListId);
-            if (playList != null)
-                return playList.RemoveFile(id);
-            Logger.Warn($"{nameof(DeleteFile)}: Couldnt delete fileId = {id} because playlistId = {playListId} doesnt exists");
-            return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-        }
-
-        public Task SetFileLoop(long id, long playlistId, bool loop)
-        {
-            var pl = PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
-            if (pl == null)
-            {
-                Logger.Warn($"{nameof(SetFileLoop)}: Couldnt update fileId = {id} because playlistId = {playlistId} doesnt exists");
-                return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-            }
-
-            var file = pl.Items.FirstOrDefault(f => f.Id == id);
-            if (file == null)
-            {
-                Logger.Warn($"{nameof(SetFileLoop)}: Couldnt update fileId = {id} because it doesnt exists");
-                return ShowSnackbarMsg(GetText("FileDoesntExist"));
-            }
-
-            file.Loop = loop;
-            return Task.CompletedTask;
-        }
-
-        public List<FileItemOptionsResponseDto> GetFileOptions(long id)
-        {
-            var fileOptions = new List<FileItemOptionsResponseDto>();
-            if (_currentlyPlayedFile == null || _currentlyPlayedFile.Id != id)
-                return fileOptions;
-
-            fileOptions.AddRange(_mapper.Map<List<FileItemOptionsResponseDto>>(CurrentFileAudios));
-            fileOptions.AddRange(_mapper.Map<List<FileItemOptionsResponseDto>>(CurrentFileQualities));
-            fileOptions.AddRange(_mapper.Map<List<FileItemOptionsResponseDto>>(CurrentFileSubTitles));
-            fileOptions.AddRange(_mapper.Map<List<FileItemOptionsResponseDto>>(CurrentFileVideos));
-            return fileOptions;
-        }
-
-        public Task SetFileOptions(int streamIndex, bool isAudio, bool isSubtitle, bool isQuality)
-        {
-            if (!isAudio && !isSubtitle && !isQuality)
-                return Task.CompletedTask;
-
-            if (_currentlyPlayedFile == null)
-                return Task.CompletedTask;
-
-            var options = isAudio
-                ? CurrentFileAudios.FirstOrDefault(a => a.Id == streamIndex)
-                : isSubtitle
-                    ? CurrentFileSubTitles.FirstOrDefault(s => s.Id == streamIndex)
-                    : CurrentFileQualities.FirstOrDefault(q => q.Id == streamIndex);
-            return FileOptionsChanged(options);
-        }
-
-        public void UpdateSettings(
-            bool startFilesFromTheStart,
-            bool playNextFileAutomatically,
-            bool forceVideoTranscode,
-            bool forceAudioTranscode,
-            VideoScaleType videoScale,
-            bool enableHardwareAcceleration)
-        {
-            Messenger.Publish(new SettingsExternallyUpdatedMessage(
-                this,
-                startFilesFromTheStart,
-                playNextFileAutomatically,
-                forceVideoTranscode,
-                forceAudioTranscode,
-                videoScale,
-                enableHardwareAcceleration));
-            //TODO: IMPROVE THIS. The settings subscription sometimes gets lost... thats why i do this
-            _settingsService.StartFilesFromTheStart = startFilesFromTheStart;
-            _settingsService.PlayNextFileAutomatically = playNextFileAutomatically;
-            _settingsService.ForceAudioTranscode = forceAudioTranscode;
-            _settingsService.ForceVideoTranscode = forceVideoTranscode;
-            _settingsService.VideoScale = videoScale;
-            _settingsService.EnableHardwareAcceleration = enableHardwareAcceleration;
-            _appWebServer.OnAppSettingsChanged?.Invoke();
-        }
-
-        public Task RenamePlayList(long id, string newName)
-        {
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == id);
-            if (playlist != null)
-                return playlist.SavePlayList(newName);
-            Logger.Warn($"{nameof(RenamePlayList)}: Cant rename playlistId = {id} because it doesnt exists");
-            return ShowSnackbarMsg(GetText("PlayListDoesntExist"));
-        }
-        #endregion
-
         private async Task GoToSeconds(long seconds)
         {
-            Logger.Info($"{nameof(GoToSeconds)}: Trying to go to seconds = {seconds}");
+            Logger.LogInformation($"{nameof(GoToSeconds)}: Trying to go to seconds = {seconds}");
 
             if (_currentlyPlayedFile == null)
             {
-                Logger.Warn($"{nameof(GoToSeconds)}: Can't go to seconds = {seconds} because the current played file is null");
+                Logger.LogWarning($"{nameof(GoToSeconds)}: Can't go to seconds = {seconds} because the current played file is null");
                 return;
             }
 
@@ -649,10 +442,10 @@ namespace CastIt.ViewModels
 
         private async Task SkipSeconds(int seconds)
         {
-            Logger.Info($"{nameof(SkipSeconds)}: Trying to skip {seconds} seconds");
+            Logger.LogInformation($"{nameof(SkipSeconds)}: Trying to skip {seconds} seconds");
             if (_currentlyPlayedFile == null)
             {
-                Logger.Warn($"{nameof(SkipSeconds)}: Can't go skip seconds = {seconds} because the current played file is null");
+                Logger.LogWarning($"{nameof(SkipSeconds)}: Can't go skip seconds = {seconds} because the current played file is null");
                 return;
             }
 
@@ -669,11 +462,11 @@ namespace CastIt.ViewModels
 
         private async Task SetFileDurations()
         {
-            Logger.Info($"{nameof(SetFileDurations)}: Setting file duration to all the files");
+            Logger.LogInformation($"{nameof(SetFileDurations)}: Setting file duration to all the files");
             var tasks = PlayLists.Select(pl => pl.SetFilesInfo(_setDurationTokenSource.Token)).ToList();
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
-            Logger.Info($"{nameof(SetFileDurations)}: File duration was set to all the files");
+            Logger.LogInformation($"{nameof(SetFileDurations)}: File duration was set to all the files");
         }
 
         private async Task AddNewPlayList()
@@ -736,7 +529,7 @@ namespace CastIt.ViewModels
 
         private async Task HandleCloseApp()
         {
-            Logger.Info($"{nameof(HandleCloseApp)} App is about to be closed, cleaning them all!");
+            Logger.LogInformation($"{nameof(HandleCloseApp)} App is about to be closed, cleaning them all!");
             _fileWatcherService.StopListening();
             _appWebServer.OnAppClosing?.Invoke();
             _setDurationTokenSource.Cancel();
@@ -748,14 +541,7 @@ namespace CastIt.ViewModels
             _castService.CleanThemAll();
             _webServerCancellationToken.Cancel();
             _currentlyPlayedFile?.CleanUp();
-            _castService.OnFileLoaded -= OnFileLoaded;
-            _castService.OnTimeChanged -= OnFileDurationChanged;
-            _castService.OnPositionChanged -= OnFilePositionChanged;
-            _castService.OnEndReached -= OnFileEndReached;
-            _castService.OnPaused -= OnPaused;
-            _castService.OnDisconnected -= OnDisconnected;
-            _castService.OnVolumeChanged -= OnVolumeChanged;
-            _castService.OnFileLoadFailed -= OnFileLoadFailed;
+            RemoveCastHandlers();
             _closeApp.Raise();
         }
 
@@ -778,23 +564,23 @@ namespace CastIt.ViewModels
             var playlist = PlayLists.FirstOrDefault(p => p.Id == _currentlyPlayedFile.PlayListId);
             if (playlist is null)
             {
-                Logger.Info($"{nameof(GoTo)}: PlaylistId = {_currentlyPlayedFile.PlayListId} does not exist. It may have been deleted. Playback will stop now");
+                Logger.LogInformation($"{nameof(GoTo)}: PlaylistId = {_currentlyPlayedFile.PlayListId} does not exist. It may have been deleted. Playback will stop now");
                 StopPlayBackCommand.Execute();
                 return;
             }
 
             _onSkipOrPrevious = true;
-            Logger.Info($"{nameof(GoTo)}: Getting the next / previous file to play.... Going to next file = {nextTrack}");
+            Logger.LogInformation($"{nameof(GoTo)}: Getting the next / previous file to play.... Going to next file = {nextTrack}");
             int increment = nextTrack ? 1 : -1;
             var fileIndex = playlist.Items.IndexOf(_currentlyPlayedFile);
             int newIndex = fileIndex + increment;
             bool random = playlist.Shuffle && playlist.Items.Count > 1;
             if (random)
-                Logger.Info($"{nameof(GoTo)}: Random is active for playListId = {playlist.Id}, picking a random file ...");
+                Logger.LogInformation($"{nameof(GoTo)}: Random is active for playListId = {playlist.Id}, picking a random file ...");
 
             if (!isAnAutomaticCall && !random && playlist.Items.Count > 1 && playlist.Items.ElementAtOrDefault(newIndex) == null)
             {
-                Logger.Info($"{nameof(GoTo)}: The new index = {newIndex} does not exist in the playlist, falling back to the first or last item in the list");
+                Logger.LogInformation($"{nameof(GoTo)}: The new index = {newIndex} does not exist in the playlist, falling back to the first or last item in the list");
                 var nextPreviousFile = nextTrack ? playlist.Items.First() : playlist.Items.Last();
                 nextPreviousFile.PlayCommand.Execute();
                 return;
@@ -802,7 +588,7 @@ namespace CastIt.ViewModels
 
             if (fileIndex < 0)
             {
-                Logger.Info(
+                Logger.LogInformation(
                     $"{nameof(GoTo)}: File = {_currentlyPlayedFile.Path} is no longer present in the playlist, " +
                     "it may have been deleted, getting the closest one...");
                 int nextPosition = _currentlyPlayedFile.Position + increment;
@@ -812,7 +598,7 @@ namespace CastIt.ViewModels
 
                 var closestFile = playlist.Items.FirstOrDefault(f => f.Position == closestPosition);
 
-                Logger.Info($"{nameof(GoTo)}: Closest file is = {closestFile?.Path}, trying to play it");
+                Logger.LogInformation($"{nameof(GoTo)}: Closest file is = {closestFile?.Path}, trying to play it");
                 if (closestFile != _currentlyPlayedFile)
                     closestFile?.PlayCommand?.Execute();
                 return;
@@ -824,22 +610,22 @@ namespace CastIt.ViewModels
 
             if (file is null)
             {
-                Logger.Info(
+                Logger.LogInformation(
                     $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playlist.Id} was not found. " +
                     "Probably an end of playlist");
 
                 if (!playlist.Loop)
                 {
-                    Logger.Info($"{nameof(GoTo)}: Since no file was found and playlist is not marked to loop, the playback of this playlist will end here");
+                    Logger.LogInformation($"{nameof(GoTo)}: Since no file was found and playlist is not marked to loop, the playback of this playlist will end here");
                     StopPlayBackCommand.Execute();
                     return;
                 }
-                Logger.Info($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
+                Logger.LogInformation($"{nameof(GoTo)}: Looping playlistId = {playlist.Id}");
                 playlist.Items.FirstOrDefault()?.PlayCommand?.Execute();
                 return;
             }
 
-            Logger.Info(
+            Logger.LogInformation(
                 $"{nameof(GoTo)}: The next file to play is = {file.Path} and it's index is = {newIndex} " +
                 $"compared to the old one = {fileIndex}....");
             file.PlayCommand.Execute();
@@ -856,16 +642,16 @@ namespace CastIt.ViewModels
 
         private async Task<bool> PlayFile(FileItemViewModel file, bool force, bool fileOptionsChanged = false)
         {
-            if (file is null)
+            if (file == null)
             {
-                Logger.Warn($"{nameof(PlayFile)}: Cant play file, it is null !!!");
+                Logger.LogWarning($"{nameof(PlayFile)}: Cant play file, it is null !!!");
                 return false;
             }
 
             DisableLoopForAllFiles(file.Id);
             if (!file.Exists)
             {
-                Logger.Info($"{nameof(PlayFile)}: Cant play file = {file.Path}. It doesnt exist");
+                Logger.LogInformation($"{nameof(PlayFile)}: Cant play file = {file.Path}. It doesnt exist");
                 await ShowSnackbarMsg(GetText("FileDoesntExist"));
                 return false;
             }
@@ -878,7 +664,7 @@ namespace CastIt.ViewModels
 
             if (string.IsNullOrEmpty(file.Duration))
             {
-                Logger.Info(
+                Logger.LogInformation(
                     $"{nameof(PlayFile)}: Cant play file = {file.Filename} yet, " +
                     $"because im still setting the duration for some files.");
                 await ShowSnackbarMsg(GetText("FileIsNotReadyYet"));
@@ -897,6 +683,8 @@ namespace CastIt.ViewModels
                 return false;
             }
 
+            await StopPlayBack();
+
             IsBusy = true;
             IsPaused = false;
 
@@ -906,16 +694,15 @@ namespace CastIt.ViewModels
                 await ShowSnackbarMsg(GetText("PlayListDoesntExist"));
                 return false;
             }
-            playList.SelectedItem = file;
 
-            _currentlyPlayedFile?.CleanUp();
+            playList.SelectedItem = file;
             _currentlyPlayedFile = file;
             _appWebServer.OnFileLoading?.Invoke();
 
-            Logger.Info($"{nameof(PlayFile)}: Updating file info for file = {file.Filename}");
+            Logger.LogInformation($"{nameof(PlayFile)}: Updating file info for file = {file.Filename}");
             await playList.SetFileInfo(file.Id, _setDurationTokenSource.Token);
 
-            Logger.Info($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
+            Logger.LogInformation($"{nameof(PlayFile)}: Trying to play file = {file.Filename}");
 
             SetCurrentlyPlayingInfo(file.Filename, true);
             if (!fileOptionsChanged)
@@ -928,7 +715,8 @@ namespace CastIt.ViewModels
                     !force &&
                     !_settingsService.StartFilesFromTheStart)
                 {
-                    Logger.Info($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
+                    Logger.LogInformation(
+                        $"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage} %");
                     await _castService.GoToPosition(
                         file.Path,
                         CurrentFileVideoStreamIndex,
@@ -941,7 +729,7 @@ namespace CastIt.ViewModels
                 }
                 else
                 {
-                    Logger.Info($"{nameof(PlayFile)}: Playing file from the start");
+                    Logger.LogInformation($"{nameof(PlayFile)}: Playing file from the start");
                     await _castService.StartPlay(
                         file.Path,
                         CurrentFileVideoStreamIndex,
@@ -950,21 +738,17 @@ namespace CastIt.ViewModels
                         CurrentFileQuality,
                         file.FileInfo);
                 }
+
                 _currentlyPlayedFile.ListenEvents();
                 _castService.GenerateThumbnails(file.Path);
 
-                Logger.Info($"{nameof(PlayFile)}: File is being played...");
+                Logger.LogInformation($"{nameof(PlayFile)}: File is being played...");
 
                 return true;
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"{nameof(PlayFile)}: Unknown error occurred");
-                _telemetryService.TrackError(e);
-                playList.SelectedItem = null;
-                _appWebServer.OnFileLoadingError?.Invoke(GetText("CouldntPlayFile"));
-                await StopPlayBack();
-                await ShowSnackbarMsg(GetText("CouldntPlayFile"));
+                await HandlePlayException(playList, e);
                 return false;
             }
             finally
@@ -972,6 +756,31 @@ namespace CastIt.ViewModels
                 IsBusy = false;
                 _onSkipOrPrevious = false;
             }
+        }
+
+        private async Task HandlePlayException(PlayListItemViewModel playList, Exception e)
+        {
+            var msg = GetText("CouldntPlayFile");
+            switch (e)
+            {
+                case NotSupportedException _:
+                    msg = GetText("FileNotSupported");
+                    break;
+                case NoDevicesException _:
+                    msg = GetText("NoDevicesWereFound");
+                    break;
+                case ConnectingException _:
+                    msg = GetText("ConnectionInProgress");
+                    break;
+                default:
+                    Logger.LogError(e, $"{nameof(HandlePlayException)}: Unknown error occurred");
+                    _telemetryService.TrackError(e);
+                    break;
+            }
+            playList.SelectedItem = null;
+            _appWebServer.OnFileLoadingError?.Invoke(msg);
+            await StopPlayBack();
+            await ShowSnackbarMsg(msg);
         }
 
         private async Task StopPlayBack()
@@ -985,10 +794,10 @@ namespace CastIt.ViewModels
 
         private void OnStoppedPlayBack()
         {
-            _appWebServer.OnEndReached?.Invoke();
-            _castService.StopRunningProcess();
             _currentlyPlayedFile?.CleanUp();
             _currentlyPlayedFile = null;
+            _appWebServer.OnEndReached?.Invoke();
+            _castService.StopRunningProcess();
             SetCurrentlyPlayingInfo(null, false);
             IsPaused = false;
             DisableLoopForAllFiles();
@@ -1007,86 +816,6 @@ namespace CastIt.ViewModels
             IsCurrentlyPlaying = isPlaying;
             CurrentPlayedSeconds = playedSeconds;
             RaisePropertyChanged(() => CurrentFileDuration);
-        }
-
-        private async void OnFileLoaded(
-            string title,
-            string thumbUrl,
-            double duration,
-            double volumeLevel,
-            bool isMuted)
-        {
-            CurrentFileThumbnail = thumbUrl;
-            VolumeLevel = volumeLevel;
-            IsMuted = isMuted;
-            if (_currentlyPlayedFile?.IsUrlFile == true)
-            {
-                CurrentlyPlayingFilename = title;
-                _currentlyPlayedFile.Name = title;
-                await _currentlyPlayedFile.SetDuration(duration);
-                await RaisePropertyChanged(() => CurrentFileDuration);
-            }
-
-            _appWebServer.OnFileLoaded?.Invoke();
-        }
-
-        private void OnFileDurationChanged(double seconds)
-        {
-            IsPaused = false;
-
-            if (_currentlyPlayedFile is null)
-                return;
-
-            CurrentPlayedSeconds = seconds;
-
-            var elapsed = TimeSpan.FromSeconds(seconds)
-                .ToString(AppConstants.FullElapsedTimeFormat);
-            var total = TimeSpan.FromSeconds(_currentlyPlayedFile.TotalSeconds)
-                .ToString(AppConstants.FullElapsedTimeFormat);
-            if (_currentlyPlayedFile.IsUrlFile && _currentlyPlayedFile.TotalSeconds <= 0)
-                ElapsedTimeString = $"{elapsed}";
-            else
-                ElapsedTimeString = $"{elapsed} / {total}";
-
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
-            playlist?.UpdatePlayedTime();
-        }
-
-        private void OnFilePositionChanged(double playedPercentage)
-            => PlayedPercentage = playedPercentage;
-
-        private void OnFileEndReached()
-        {
-            Logger.Info($"{nameof(OnFileEndReached)}: End reached for file = {_currentlyPlayedFile?.Path}");
-
-            SetCurrentlyPlayingInfo(null, false);
-
-            IsPaused = false;
-
-            if (_currentlyPlayedFile != null)
-            {
-                var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
-                playlist?.UpdatePlayedTime();
-            }
-
-            if (_currentlyPlayedFile?.Loop == true)
-            {
-                Logger.Info($"{nameof(OnFileEndReached)}: Looping file = {_currentlyPlayedFile?.Path}");
-                _currentlyPlayedFile.PlayedPercentage = 0;
-                _currentlyPlayedFile.PlayCommand.Execute();
-                return;
-            }
-
-            if (_settingsService.PlayNextFileAutomatically)
-            {
-                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is enabled. Playing the next file...");
-                GoTo(true, true);
-            }
-            else
-            {
-                Logger.Info($"{nameof(OnFileEndReached)}: Play next file is disabled. Next file won't be played, playback will stop now");
-                StopPlayBackCommand.Execute();
-            }
         }
 
         private async Task ShowSnackbarMsg(string msg, string actionContent = null)
@@ -1111,7 +840,7 @@ namespace CastIt.ViewModels
 
         private async Task SetAvailableAudiosAndSubTitles()
         {
-            Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Cleaning current file videos, audios and subs streams");
+            Logger.LogInformation($"{nameof(SetAvailableAudiosAndSubTitles)}: Cleaning current file videos, audios and subs streams");
             CurrentFileVideos.Clear();
             CurrentFileAudios.Clear();
             CurrentFileSubTitles.Clear();
@@ -1119,7 +848,7 @@ namespace CastIt.ViewModels
 
             if (_currentlyPlayedFile == null)
             {
-                Logger.Warn($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file is null");
+                Logger.LogWarning($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file is null");
                 return;
             }
 
@@ -1128,12 +857,12 @@ namespace CastIt.ViewModels
                 await _currentlyPlayedFile.SetFileInfo(_setDurationTokenSource.Token);
                 if (_currentlyPlayedFile.FileInfo == null)
                 {
-                    Logger.Warn($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file = {_currentlyPlayedFile.Path} doesnt have a fileinfo");
+                    Logger.LogWarning($"{nameof(SetAvailableAudiosAndSubTitles)}: Current file = {_currentlyPlayedFile.Path} doesnt have a fileinfo");
                     return;
                 }
             }
 
-            Logger.Info($"{nameof(SetAvailableAudiosAndSubTitles)}: Setting available file videos, audios and subs streams");
+            Logger.LogInformation($"{nameof(SetAvailableAudiosAndSubTitles)}: Setting available file videos, audios and subs streams");
 
             //Videos
             bool isSelected = true;
@@ -1168,10 +897,10 @@ namespace CastIt.ViewModels
             }
 
             //Subtitles
-            if (!FileUtils.IsVideoFile(_currentlyPlayedFile.Path))
+            if (!_fileService.IsVideoFile(_currentlyPlayedFile.Path))
                 return;
 
-            string localSubsPath = TryGetSubTitlesLocalPath();
+            var (localSubsPath, filename) = TryGetSubTitlesLocalPath();
             bool localSubExists = !string.IsNullOrEmpty(localSubsPath);
             isEnabled = _currentlyPlayedFile.FileInfo.SubTitles.Count > 1 || localSubExists;
             CurrentFileSubTitles.Add(new FileItemOptionsViewModel
@@ -1191,7 +920,7 @@ namespace CastIt.ViewModels
                     IsSubTitle = true,
                     IsSelected = true,
                     IsEnabled = true,
-                    Text = Path.GetFileName(localSubsPath),
+                    Text = filename,
                     Path = localSubsPath
                 });
             }
@@ -1213,38 +942,25 @@ namespace CastIt.ViewModels
             }
         }
 
-        private string TryGetSubTitlesLocalPath()
+        private (string, string) TryGetSubTitlesLocalPath()
         {
-            if (!FileUtils.IsLocalFile(_currentlyPlayedFile.Path))
+            Logger.LogInformation($"{nameof(TryGetSubTitlesLocalPath)}: Checking if subtitle exist in the same dir as file = {_currentlyPlayedFile.Path}");
+            var (possibleSubTitlePath, filename) = _fileService.TryGetSubTitlesLocalPath(_currentlyPlayedFile.Path);
+            if (!string.IsNullOrWhiteSpace(possibleSubTitlePath))
             {
-                return null;
+                Logger.LogInformation($"{nameof(TryGetSubTitlesLocalPath)}: Found subtitles in path = {possibleSubTitlePath}");
+                return (possibleSubTitlePath, filename);
             }
 
-            Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: Checking if subtitle exist in the same dir as file = {_currentlyPlayedFile.Path}");
-            string filename = Path.GetFileNameWithoutExtension(_currentlyPlayedFile.Path);
-            string dir = Path.GetDirectoryName(_currentlyPlayedFile.Path);
-
-            foreach (var format in AppConstants.AllowedSubtitleFormats)
-            {
-                string possibleSubTitlePath = Path.Combine(dir, filename + format);
-
-                if (!File.Exists(possibleSubTitlePath))
-                    continue;
-
-                Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: Found subtitles in path = {possibleSubTitlePath}");
-                return possibleSubTitlePath;
-            }
-
-            Logger.Info($"{nameof(TryGetSubTitlesLocalPath)}: No subtitles were found for file = {_currentlyPlayedFile.Path}");
-
-            return null;
+            Logger.LogInformation($"{nameof(TryGetSubTitlesLocalPath)}: No subtitles were found for file = {_currentlyPlayedFile.Path}");
+            return (possibleSubTitlePath, filename);
         }
 
         private Task FileOptionsChanged(FileItemOptionsViewModel selectedItem)
         {
             if (selectedItem == null)
             {
-                Logger.Warn($"{nameof(FileOptionsChanged)}: Selected option is null");
+                Logger.LogWarning($"{nameof(FileOptionsChanged)}: Selected option is null");
                 return Task.CompletedTask;
             }
 
@@ -1271,44 +987,18 @@ namespace CastIt.ViewModels
                     item.IsSelected = false;
             }
 
-            Logger.Info($"{nameof(FileOptionsChanged)}: StreamId = {selectedItem.Id}  was selected. Text = {selectedItem.Text}");
+            Logger.LogInformation($"{nameof(FileOptionsChanged)}: StreamId = {selectedItem.Id}  was selected. Text = {selectedItem.Text}");
             selectedItem.IsSelected = true;
 
             return PlayFile(_currentlyPlayedFile, false, true);
         }
 
-        private void OnQualitiesChanged(int selectedQuality, List<int> qualities)
-        {
-            var vms = qualities.OrderBy(q => q).Select(q => new FileItemOptionsViewModel
-            {
-                Id = q,
-                IsSelected = selectedQuality == q,
-                IsEnabled = qualities.Count > 1,
-                IsQuality = true,
-                Text = $"{q}"
-            }).ToList();
-            CurrentFileQualities.ReplaceWith(vms);
-        }
-
-        private void OnPaused()
-            => IsPaused = true;
-
-        private void OnDisconnected()
-            => OnStoppedPlayBack();
-
-        private void OnVolumeChanged(double level, bool isMuted)
-        {
-            VolumeLevel = level;
-            IsMuted = isMuted;
-        }
-
         private Task OnSubTitleFileSelected(string filePath)
         {
-            string filename = Path.GetFileName(filePath);
-            if (!AppConstants.AllowedSubtitleFormats.Contains(Path.GetExtension(filePath).ToLower()) ||
-                CurrentFileSubTitles.Any(f => f.Text == filename))
+            var (isSub, filename) = _fileService.IsSubtitle(filePath);
+            if (!isSub || CurrentFileSubTitles.Any(f => f.Text == filename))
             {
-                Logger.Info($"{nameof(OnSubTitleFileSelected)}: Subtitle = {filePath} is not valid or is already in the current sub files");
+                Logger.LogInformation($"{nameof(OnSubTitleFileSelected)}: Subtitle = {filePath} is not valid or is already in the current sub files");
                 return Task.CompletedTask;
             }
 
@@ -1338,78 +1028,6 @@ namespace CastIt.ViewModels
 
             foreach (var file in files)
                 file.Loop = false;
-        }
-
-        private async void OnFileLoadFailed()
-        {
-            _appWebServer.OnFileLoadingError?.Invoke(GetText("CouldntPlayFile"));
-            await StopPlayBack();
-            await ShowSnackbarMsg(GetText("CouldntPlayFile"));
-        }
-
-        private void InitializeOrUpdateFileWatcher(bool update)
-        {
-            Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Getting directories to watch...");
-            var dirs = PlayLists.SelectMany(pl => pl.Items)
-                .Where(f => f.IsLocalFile)
-                .Select(f => Path.GetDirectoryName(f.Path))
-                .Distinct()
-                .ToList();
-
-            Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Got = {dirs.Count} directories...");
-            if (!update)
-            {
-                Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Starting to watch for {dirs.Count} directories...");
-                _fileWatcherService.StartListening(dirs);
-                _fileWatcherService.OnFileCreated = OnFileCreated;
-                _fileWatcherService.OnFileChanged = OnFwFileChanged;
-                _fileWatcherService.OnFileDeleted = OnFwFileDeleted;
-                _fileWatcherService.OnFileRenamed = OnFwFileRenamed;
-            }
-            else
-            {
-                Logger.Info($"{nameof(InitializeOrUpdateFileWatcher)}: Updating watched directories...");
-                _fileWatcherService.UpdateWatchers(dirs);
-            }
-        }
-
-        private Task OnFileCreated(string path)
-        {
-            return OnFwFileChanged(path);
-        }
-
-        private async Task OnFwFileChanged(string path)
-        {
-            var files = PlayLists.SelectMany(f => f.Items).Where(f => f.Path == path).ToList();
-            foreach (var file in files)
-            {
-                var playlist = PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
-                if (playlist == null)
-                    continue;
-
-                await playlist.SetFileInfo(file.Id, _setDurationTokenSource.Token);
-                _appWebServer?.OnFileChanged(playlist.Id);
-            }
-        }
-
-        private Task OnFwFileDeleted(string path)
-        {
-            return OnFwFileChanged(path);
-        }
-
-        private async Task OnFwFileRenamed(string oldPath, string newPath)
-        {
-            var files = PlayLists.SelectMany(f => f.Items).Where(f => f.Path == oldPath).ToList();
-            foreach (var file in files)
-            {
-                var playlist = PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
-                if (playlist == null)
-                    continue;
-                await playlist.OnFilesAddedCommand.ExecuteAsync(new[] { newPath });
-                playlist.ExchangeLastFilePosition(file.Id);
-                await playlist.RemoveFile(file.Id);
-                _appWebServer?.OnFileChanged(playlist.Id);
-            }
         }
         #endregion
     }

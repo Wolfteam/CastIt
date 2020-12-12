@@ -1,4 +1,4 @@
-﻿using CastIt.Common;
+﻿using CastIt.Application.Common;
 using CastIt.ViewModels;
 using System;
 using System.Windows;
@@ -17,15 +17,17 @@ namespace CastIt.Views.UserControls
             InitializeComponent();
 
             var window = System.Windows.Application.Current.MainWindow;
+            if (window == null)
+                throw new Exception("Window should not be null");
             window.MouseMove += (sender, args) => ClosePopUpIfOpened();
             window.Deactivated += (sender, args) => ClosePopUpIfOpened();
         }
 
-        private void MainSilder_MouseLeave(object sender, MouseEventArgs e)
+        private void MainSlider_MouseLeave(object sender, MouseEventArgs e)
         {
-            var mousePosition = e.GetPosition(this.MainSilder);
+            var mousePosition = e.GetPosition(MainSlider);
             var mouseRect = new Rect(mousePosition, new Size(5, 5));
-            var sliderRect = LayoutInformation.GetLayoutSlot(this.MainSilder);
+            var sliderRect = LayoutInformation.GetLayoutSlot(MainSlider);
             bool intersect = sliderRect.IntersectsWith(mouseRect);
             if (!intersect)
             {
@@ -34,7 +36,7 @@ namespace CastIt.Views.UserControls
             e.Handled = true;
         }
 
-        private void MainSilder_MouseMove(object sender, MouseEventArgs e)
+        private void MainSlider_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
@@ -44,19 +46,19 @@ namespace CastIt.Views.UserControls
             if (!SliderPopup.IsOpen)
                 SliderPopup.IsOpen = true;
 
-            var mousePosition = e.GetPosition(this.MainSilder);
-            var seconds = MainViewModel.TrySetThumbnail(MainSilder.ActualWidth, mousePosition.X);
+            var mousePosition = e.GetPosition(MainSlider);
+            var seconds = MainViewModel.TrySetThumbnail(MainSlider.ActualWidth, mousePosition.X);
             if (seconds >= 0)
-                SliderPopupText.Text = TimeSpan.FromSeconds(seconds).ToString(AppConstants.FullElapsedTimeFormat);
+                SliderPopupText.Text = TimeSpan.FromSeconds(seconds).ToString(FileFormatConstants.FullElapsedTimeFormat);
 
-            SliderPopup.HorizontalOffset = mousePosition.X - (SliderPopup.Child as FrameworkElement).ActualWidth / 2;
+            SliderPopup.HorizontalOffset = mousePosition.X - (SliderPopup.Child as FrameworkElement)?.ActualWidth / 2 ?? 0;
             e.Handled = true;
         }
 
-        private void MainSilder_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        private void MainSlider_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
-            var mousePosition = e.GetPosition(this.MainSilder);
-            var seconds = MainViewModel.GetMainProgressBarSeconds(MainSilder.ActualWidth, mousePosition.X);
+            var mousePosition = e.GetPosition(MainSlider);
+            var seconds = MainViewModel.GetMainProgressBarSeconds(MainSlider.ActualWidth, mousePosition.X);
             MainViewModel.GoToSecondsCommand.Execute(seconds);
         }
 

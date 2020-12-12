@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CastIt.Server": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 9696 --ffmpegBasePath \"C:\\\\ffmpeg\\\\ffmpeg.exe\" --ffprobeBasePath \"C:\\\\ffmpeg\\\\ffprobe.exe\""
+    }
+  }
+}

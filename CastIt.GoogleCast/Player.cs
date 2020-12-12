@@ -1,4 +1,6 @@
-﻿using CastIt.GoogleCast.Channels;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.Domain.Models.Device;
+using CastIt.GoogleCast.Channels;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Interfaces;
@@ -9,7 +11,7 @@ using CastIt.GoogleCast.Messages.Base;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -20,14 +22,14 @@ using System.Threading.Tasks;
 
 namespace CastIt.GoogleCast
 {
-    public class Player : IDisposable
+    public class Player : IPlayer
     {
         #region Members
         private const string ApplicationId = "CC1AD845";
         private const int GetMediaStatusDelay = 150;
         private const int GetReceiverStatusDelay = 1000;
 
-        private readonly IMvxLog _logger;
+        private readonly ILogger _logger;
         private readonly ISender _sender;
 
         private readonly IConnectionChannel _connectionChannel;
@@ -59,7 +61,8 @@ namespace CastIt.GoogleCast
         #endregion
 
         #region Properties
-        public static bool CanLog { get; private set; }
+        public static bool CanLogToConsole { get; private set; }
+        public static bool CanLogTrace { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool IsPaused { get; private set; }
         public string CurrentContentId { get; private set; }
@@ -83,22 +86,33 @@ namespace CastIt.GoogleCast
 
         #region Constructors
         public Player(
-            IMvxLog logger,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(logger, null, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(null, null, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
         public Player(
-            IMvxLog logger,
+            ILogger logger,
+            string destinationId = AppConstants.DESTINATION_ID,
+            string senderId = AppConstants.SENDER_ID,
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(logger, null, destinationId, senderId, logToConsole, logTrace)
+        {
+        }
+
+        public Player(
+            ILogger logger,
             string host,
             int port = 8009,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(logger, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(logger, Receiver.Default(host, port), destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -106,8 +120,9 @@ namespace CastIt.GoogleCast
             IReceiver receiver,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(null, receiver, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(null, receiver, destinationId, senderId, logToConsole, logTrace)
         {
         }
 
@@ -116,21 +131,24 @@ namespace CastIt.GoogleCast
             int port = 8009,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
-            : this(null, new Receiver { Host = host, Port = port, FriendlyName = "N/A", Type = "N/A" }, destinationId, senderId, logMsgs)
+            bool logToConsole = true,
+            bool logTrace = false)
+            : this(null, Receiver.Default(host, port), destinationId, senderId, logToConsole, logTrace)
         {
         }
 
         public Player(
-            IMvxLog logger,
+            ILogger logger,
             IReceiver receiver,
             string destinationId = AppConstants.DESTINATION_ID,
             string senderId = AppConstants.SENDER_ID,
-            bool logMsgs = true)
+            bool logToConsole = true,
+            bool logTrace = false)
         {
             _logger = logger;
             _destinationId = destinationId;
-            CanLog = logMsgs;
+            CanLogToConsole = logToConsole;
+            CanLogTrace = logTrace;
 
             _sender = new Sender(_logger, senderId, receiver, HandleResponseMsg);
             _sender.Disconnected += OnDisconnect;
@@ -145,7 +163,7 @@ namespace CastIt.GoogleCast
         }
         #endregion
 
-        public void Init()
+        public void ListenForDevices()
         {
             var subscription = DeviceLocator
                 .FindReceiversContinuous()
@@ -157,6 +175,13 @@ namespace CastIt.GoogleCast
         public async Task ConnectAsync()
         {
             await _sender.ConnectAsync();
+            await _connectionChannel.ConnectAsync(_sender, _destinationId);
+            await _receiverChannel.LaunchAsync(_sender, ApplicationId);
+        }
+
+        public async Task ConnectAsync(string host, int port)
+        {
+            await _sender.ConnectAsync(host, port);
             await _connectionChannel.ConnectAsync(_sender, _destinationId);
             await _receiverChannel.LaunchAsync(_sender, ApplicationId);
         }
@@ -202,7 +227,7 @@ namespace CastIt.GoogleCast
             _disposed = true;
         }
 
-        public static Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
+        public Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
         {
             return DeviceLocator.FindReceiversAsync(scanTime);
         }
@@ -391,7 +416,6 @@ namespace CastIt.GoogleCast
                     bool checkMediaStatus = true;
                     while (checkMediaStatus || !token.IsCancellationRequested)
                     {
-                        bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                         await Task.Delay(GetMediaStatusDelay, token);
 
                         var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
@@ -400,15 +424,17 @@ namespace CastIt.GoogleCast
 
                         if (mediaStatus is null)
                         {
+                            bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                             IsPlaying = false;
                             checkMediaStatus = false;
                             _logger.LogInfo(
-                                $"{nameof(ListenForMediaChanges)}: Media is null, end is reached = {contentIsBeingPlayed} and player was paused = {IsPaused}. " +
+                                $"{nameof(ListenForMediaChanges)}: Media is null, content was being played = {contentIsBeingPlayed}, " +
+                                $"player was paused = {IsPaused} and we are connected = {_sender.IsConnected}. " +
                                 $"CurrentContentId = {CurrentContentId}");
                             CancelAndSetListenerToken(false);
 
-                            //Only call the end reached if we were playing something and the player was not paused
-                            if (contentIsBeingPlayed && !IsPaused)
+                            //Only call the end reached if we were playing something, the player was not paused and we are connected
+                            if (contentIsBeingPlayed && !IsPaused && _sender.IsConnected)
                                 EndReached?.Invoke(this, EventArgs.Empty);
                             IsPaused = false;
                             break;
@@ -431,7 +457,7 @@ namespace CastIt.GoogleCast
                             _logger.LogInfo(
                                 $"{nameof(ListenForMediaChanges)}: End reached because the " +
                                 $"ElapsedSeconds = {ElapsedSeconds} is greater / equal to " +
-                                $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = { CurrentContentId}");
+                                $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = {CurrentContentId}");
                             IsPlaying = false;
                             CancelAndSetListenerToken(false);
                             EndReached?.Invoke(this, EventArgs.Empty);

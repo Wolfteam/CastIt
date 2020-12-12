@@ -1,7 +1,7 @@
-﻿using CastIt.Common.Utils;
+﻿using CastIt.Application.Interfaces;
 using CastIt.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -17,6 +17,7 @@ namespace CastIt.ViewModels.Dialogs
         #region Members
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
+        private readonly IFileService _fileService;
 
         private bool _isDownloading;
         private double _downloadedProgress;
@@ -46,13 +47,15 @@ namespace CastIt.ViewModels.Dialogs
         public DownloadDialogViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<DownloadDialogViewModel> logger,
             IMvxNavigationService navigationService,
-            ITelemetryService telemetryService)
-            : base(textProvider, messenger, logger.GetLogFor<DownloadDialogViewModel>())
+            ITelemetryService telemetryService,
+            IFileService fileService)
+            : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
             _telemetryService = telemetryService;
+            _fileService = fileService;
         }
 
         public override void Prepare()
@@ -75,8 +78,8 @@ namespace CastIt.ViewModels.Dialogs
             IsDownloading = true;
             try
             {
-                var path = FileUtils.GetFFMpegFolder();
-                Logger.Info($"{nameof(DownloadMissingFiles)}: Downloading missing files. Save path is = {path}");
+                var path = _fileService.GetFFmpegFolder();
+                Logger.LogInformation($"{nameof(DownloadMissingFiles)}: Downloading missing files. Save path is = {path}");
                 var progress = new Progress<ProgressInfo>((p) =>
                 {
                     var downloaded = (double)p.DownloadedBytes / p.TotalBytes * 100;
@@ -84,7 +87,7 @@ namespace CastIt.ViewModels.Dialogs
                         downloaded = 100;
                     if (downloaded > DownloadedProgress)
                     {
-                        DownloadedProgressText = $"{FileUtils.GetBytesReadable(p.DownloadedBytes)} / {FileUtils.GetBytesReadable(p.TotalBytes)}";
+                        DownloadedProgressText = $"{_fileService.GetBytesReadable(p.DownloadedBytes)} / {_fileService.GetBytesReadable(p.TotalBytes)}";
                         DownloadedProgress = downloaded;
                     }
                 });
@@ -94,7 +97,7 @@ namespace CastIt.ViewModels.Dialogs
             }
             catch (Exception e)
             {
-                Logger.Error(e, $"{nameof(DownloadMissingFiles)}: An unknown error occurred");
+                Logger.LogError(e, $"{nameof(DownloadMissingFiles)}: An unknown error occurred");
                 _telemetryService.TrackError(e);
             }
             IsDownloading = false;

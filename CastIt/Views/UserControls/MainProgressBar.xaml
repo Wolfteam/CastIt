@@ -2,7 +2,7 @@
     x:Class="CastIt.Views.UserControls.MainProgressBar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:common="clr-namespace:CastIt.Common"
+    xmlns:common="clr-namespace:CastIt.Application.Common;assembly=CastIt.Application"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,15 +11,15 @@
     mc:Ignorable="d">
     <Grid>
         <Slider
-            x:Name="MainSilder"
+            x:Name="MainSlider"
             Focusable="True"
             Foreground="{DynamicResource PrimaryHueDarkBrush}"
             IsMoveToPointEnabled="True"
             Maximum="{Binding CurrentFileDuration, Mode=OneWay}"
             Minimum="0"
-            MouseLeave="MainSilder_MouseLeave"
-            MouseMove="MainSilder_MouseMove"
-            PreviewMouseUp="MainSilder_PreviewMouseUp"
+            MouseLeave="MainSlider_MouseLeave"
+            MouseMove="MainSlider_MouseMove"
+            PreviewMouseUp="MainSlider_PreviewMouseUp"
             Value="{Binding CurrentPlayedSeconds, Mode=OneWay}">
             <Slider.Style>
                 <Style BasedOn="{StaticResource CustomSliderStyle}" TargetType="{x:Type Slider}">
@@ -49,20 +49,23 @@
 
         <Popup
             Name="SliderPopup"
+            Width="350"
+            Height="230"
             AllowsTransparency="True"
             HorizontalOffset="0"
             IsOpen="False"
             Placement="Bottom"
-            PlacementTarget="{Binding ElementName=MainSilder}"
+            PlacementTarget="{Binding ElementName=MainSlider}"
             StaysOpen="True">
-            <Grid Width="{x:Static common:AppConstants.ThumbnailWidth}" Height="{x:Static common:AppConstants.ThumbnailHeight}">
-                <Image
-                    RenderOptions.BitmapScalingMode="HighQuality"
-                    Source="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}"
-                    Stretch="Fill" />
+            <Grid>
+                <Rectangle RadiusX="30" RadiusY="30">
+                    <Rectangle.Fill>
+                        <ImageBrush ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}" />
+                    </Rectangle.Fill>
+                </Rectangle>
                 <TextBlock
                     x:Name="SliderPopupText"
-                    Margin="0,0,5,10"
+                    Margin="0,0,15,15"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     FontWeight="Bold"

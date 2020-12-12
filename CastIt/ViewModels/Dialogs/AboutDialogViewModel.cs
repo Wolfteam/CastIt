@@ -1,6 +1,7 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Server.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 
@@ -17,10 +18,10 @@ namespace CastIt.ViewModels.Dialogs
         public AboutDialogViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<AboutDialogViewModel> logger,
             IMvxNavigationService navigationService,
             IAppWebServer appWebServer)
-            : base(textProvider, messenger, logger.GetLogFor<AboutDialogViewModel>())
+            : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
             _appWebServer = appWebServer;

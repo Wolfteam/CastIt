@@ -47,6 +47,7 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Margin="0,0,0,5"
+                    d:Text="Now playing"
                     TextTrimming="CharacterEllipsis">
                     <TextBlock.Style>
                         <Style BasedOn="{StaticResource MaterialDesignHeadline6TextBlock}" TargetType="TextBlock">
@@ -86,6 +87,7 @@
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,5,0"
+                    d:Text="Cupid's Chocolate Opening.mp4"
                     Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
                     Text="{Binding CurrentlyPlayingFilename}"
                     TextTrimming="CharacterEllipsis"
@@ -93,6 +95,7 @@
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
+                    d:Text="00:30 / 1:40"
                     Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
                     Text="{Binding ElapsedTimeString}"
                     ToolTip="{Binding ElapsedTimeString}"
@@ -211,7 +214,7 @@
                         <Binding ElementName="DevicesButton" Path="ActualWidth" />
                     </MultiBinding>
                 </Popup.HorizontalOffset>
-                <uc:DiscoveredDevices x:Name="DevicesUserControl" />
+                <uc:Devices x:Name="DevicesUserControl" />
             </Popup>
             <Button Click="ToggleCollapse">
                 <Button.Style>

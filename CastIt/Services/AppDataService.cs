@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using CastIt.Common.Utils;
+using CastIt.Application.Common.Utils;
+using CastIt.Domain.Entities;
 using CastIt.Interfaces;
 using CastIt.Migrations;
-using CastIt.Models.Entities;
 using CastIt.ViewModels.Items;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Services
 {
-    public class AppDataService : IPlayListsService
+    public class AppDataService : IAppDataService
     {
         private readonly IMapper _mapper;
         private readonly string _connectionString;
@@ -21,16 +21,24 @@ namespace CastIt.Services
         public AppDataService(IMapper mapper)
         {
             _mapper = mapper;
-            _connectionString = FileUtils.GetDbConnectionString();
+            _connectionString = AppFileUtils.GetDbConnectionString();
             _db = new FreeSql.FreeSqlBuilder()
                .UseConnectionString(FreeSql.DataType.Sqlite, _connectionString)
                .UseAutoSyncStructure(false)
                .Build();
 
+            _db.CodeFirst.ConfigEntity<PlayList>(pl => pl.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
+            _db.CodeFirst.ConfigEntity<FileItem>(f => f.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
             ApplyMigrations();
         }
 
         #region Methods
+
+        public void Close()
+        {
+            _db.Dispose();
+        }
+
         public async Task<FileItemViewModel> AddFile(
             long playListId,
             string path,

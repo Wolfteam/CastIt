@@ -9,6 +9,7 @@
   <String Id="Keywords">Desktop, .Net Core</String>
   <String Id="Languages">1033</String>
   <String Id="Ok">Ok</String>
+  <String Id="Launch">Launch</String>
 
-  <String Id="DowngradeErrorMsg">A newer version of EbppBatchUpload is already installed.</String>
+  <String Id="DowngradeErrorMsg">A newer version of CastIt is already installed.</String>
 </WixLocalization>

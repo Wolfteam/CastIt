@@ -1,5 +1,5 @@
 ﻿using CastIt.Interfaces;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Plugin.Messenger;
 
 namespace CastIt.ViewModels.Items
@@ -12,7 +12,7 @@ namespace CastIt.ViewModels.Items
         public string Host { get; set; }
         public int Port { get; set; }
         public string FriendlyName { get; set; }
-        public string IpAdress 
+        public string IpAdress
             => $"{Host}:{Port}";
 
         public bool IsSelected
@@ -24,8 +24,8 @@ namespace CastIt.ViewModels.Items
         public DeviceItemViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger)
-            : base(textProvider, messenger, logger.GetLogFor<DeviceItemViewModel>())
+            ILogger<DeviceItemViewModel> logger)
+            : base(textProvider, messenger, logger)
         {
         }
     }

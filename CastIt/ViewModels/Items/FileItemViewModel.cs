@@ -1,11 +1,13 @@
-﻿using CastIt.Common;
-using CastIt.Common.Extensions;
-using CastIt.Common.Utils;
+﻿using CastIt.Application.Common;
+using CastIt.Application.Common.Extensions;
+using CastIt.Application.Interfaces;
+using CastIt.Domain.Models.FFmpeg.Info;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
-using CastIt.Models.FFMpeg;
 using CastIt.Models.Messages;
+using CastIt.Server.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -21,9 +23,10 @@ namespace CastIt.ViewModels.Items
         #region Members
         private readonly ICastService _castService;
         private readonly IAppSettingsService _settingsService;
-        private readonly IFFMpegService _ffmpegService;
+        private readonly IFFmpegService _ffmpegService;
         private readonly IAppWebServer _appWebServer;
-        private readonly IPlayListsService _playListsService;
+        private readonly IAppDataService _playListsService;
+        private readonly IFileService _fileService;
 
         private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
@@ -114,9 +117,9 @@ namespace CastIt.ViewModels.Items
         public bool ShowFileDetails
             => _settingsService.ShowFileDetails;
         public bool IsLocalFile
-            => FileUtils.IsLocalFile(Path);
+            => _fileService.IsLocalFile(Path);
         public bool IsUrlFile
-            => FileUtils.IsUrlFile(Path);
+            => _fileService.IsUrlFile(Path);
         public bool Exists
             => IsLocalFile || IsUrlFile;
 
@@ -124,8 +127,8 @@ namespace CastIt.ViewModels.Items
         {
             get => _fileName ??= IsCached
                 ? Name
-                : FileUtils.IsLocalFile(Path)
-                    ? FileUtils.GetFileName(Path)
+                : _fileService.IsLocalFile(Path)
+                    ? _fileService.GetFileName(Path)
                     : !string.IsNullOrEmpty(Name)
                         ? Name
                         : Path;
@@ -133,15 +136,15 @@ namespace CastIt.ViewModels.Items
         }
 
         public string Size
-            => FileUtils.GetFileSizeString(Path);
+            => _fileService.GetFileSizeString(Path);
         public string Extension
-            => FileUtils.GetExtension(Path);
+            => _fileService.GetExtension(Path);
         public string Resolution
             => !IsLocalFile
                 ? string.Empty
                 : FileInfo?.GetVideoResolution();
         public string SubTitle
-            => IsCached ? Description : Extension.AppendDelimitator("|", Size, Resolution);
+            => IsCached ? Description : Extension.AppendDelimiter("|", Size, Resolution);
 
         public bool IsCached
             => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Path);
@@ -154,7 +157,7 @@ namespace CastIt.ViewModels.Items
         //had to do it this way, so the ui does not call this prop each time i scroll
         public string PlayedTime
         {
-            get => _playedTime ??= AppConstants.FormatDuration(PlayedSeconds);
+            get => _playedTime ??= FileFormatConstants.FormatDuration(PlayedSeconds);
             set => this.RaiseAndSetIfChanged(ref _playedTime, value);
         }
         #endregion
@@ -169,19 +172,21 @@ namespace CastIt.ViewModels.Items
         public FileItemViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<FileItemViewModel> logger,
             ICastService castService,
             IAppSettingsService settingsService,
-            IFFMpegService ffmpegService,
+            IFFmpegService ffmpegService,
             IAppWebServer appWebServer,
-            IPlayListsService playListsService)
-            : base(textProvider, messenger, logger.GetLogFor<FileItemViewModel>())
+            IAppDataService playListsService,
+            IFileService fileService)
+            : base(textProvider, messenger, logger)
         {
             _castService = castService;
             _settingsService = settingsService;
             _ffmpegService = ffmpegService;
             _appWebServer = appWebServer;
             _playListsService = playListsService;
+            _fileService = fileService;
         }
 
         public override void SetCommands()
@@ -271,7 +276,7 @@ namespace CastIt.ViewModels.Items
                 Duration = "N/A";
                 return;
             }
-            Duration = AppConstants.FormatDuration(seconds);
+            Duration = FileFormatConstants.FormatDuration(seconds);
         }
 
         public void ListenEvents()
@@ -292,7 +297,7 @@ namespace CastIt.ViewModels.Items
         private void OnPositionChanged(double position)
         {
             PlayedPercentage = position;
-            PlayedTime = AppConstants.FormatDuration(PlayedSeconds);
+            PlayedTime = FileFormatConstants.FormatDuration(PlayedSeconds);
         }
 
         private void OnEndReached()

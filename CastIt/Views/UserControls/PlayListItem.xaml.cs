@@ -1,4 +1,4 @@
-﻿using CastIt.Common;
+﻿using CastIt.Application.Common;
 using CastIt.Common.Utils;
 using CastIt.ViewModels.Items;
 using Microsoft.Win32;
@@ -14,7 +14,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace CastIt.Views.UserControls
 {
@@ -94,7 +93,7 @@ namespace CastIt.Views.UserControls
 
         private void OpenFileDialogHandler(object sender, EventArgs e)
         {
-            var allowedFormats = AppConstants.AllowedFormatsString;
+            var allowedFormats = FileFormatConstants.AllowedFormatsString;
             string filter = $"{ViewModel.GetText("VideoOrMusicFiles")} ({allowedFormats})|{allowedFormats}|{ViewModel.GetText("AllFiles")} (*.*)|*.*";
             var openFileDialog = new OpenFileDialog
             {
@@ -136,7 +135,8 @@ namespace CastIt.Views.UserControls
                 return;
 
             // Get the dragged ListViewItem
-            var listView = sender as ListView;
+            if (!(sender is ListView listView))
+                return;
             var listViewItem = WindowsUtils.FindAnchestor<ListViewItem>((DependencyObject)e.OriginalSource);
             if (listViewItem == null)
                 return;

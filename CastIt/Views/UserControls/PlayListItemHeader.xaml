@@ -10,8 +10,8 @@
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="70"
+    d:DesignWidth="120"
     mc:Ignorable="d">
     <Grid Width="120" Tag="{Binding Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
         <Grid.ContextMenu>
@@ -57,6 +57,7 @@
             Grid.Column="1"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
+            d:Text="Playlist 1"
             Foreground="{DynamicResource FontColorBrush}"
             Text="{Binding Name}"
             TextTrimming="CharacterEllipsis"

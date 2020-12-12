@@ -1,11 +1,12 @@
-﻿using CastIt.GoogleCast.Extensions;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.Domain.Models.Device;
+using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Messages;
 using CastIt.GoogleCast.Messages.Receiver;
 using CastIt.GoogleCast.Models;
-using CastIt.GoogleCast.Models.Receiver;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ProtoBuf;
 using System;
@@ -23,7 +24,7 @@ namespace CastIt.GoogleCast
     {
         private const int RECEIVE_TIMEOUT = 30000;
 
-        private readonly IMvxLog _logger;
+        private readonly ILogger _logger;
         private readonly string _senderId;
         private readonly Func<CastMessage, Task> _onResponseMsg;
 
@@ -40,7 +41,7 @@ namespace CastIt.GoogleCast
             => NetworkStream != null;
 
         public Sender(
-            IMvxLog logger,
+            ILogger logger,
             string senderId,
             string host,
             int port,
@@ -56,7 +57,7 @@ namespace CastIt.GoogleCast
         }
 
         public Sender(
-            IMvxLog logger,
+            ILogger logger,
             string senderId,
             IReceiver receiver,
             Func<CastMessage, Task> onResponseMsg)
@@ -83,6 +84,19 @@ namespace CastIt.GoogleCast
 
             CancellationTokenSource = new CancellationTokenSource();
             Receive(CancellationTokenSource.Token);
+        }
+
+        public Task ConnectAsync(string host, int port)
+        {
+            CurrentReceiver = new Receiver
+            {
+                Host = host,
+                Port = port,
+                FriendlyName = "N/A",
+                Type = "N/A",
+                Id = "N/A"
+            };
+            return ConnectAsync();
         }
 
         public Task ConnectAsync(IReceiver receiver)
@@ -218,7 +232,7 @@ namespace CastIt.GoogleCast
                     }
                     var length = BitConverter.ToInt32(buffer, 0);
                     CastMessage castMessage;
-                    using (var ms = new MemoryStream())
+                    await using (var ms = new MemoryStream())
                     {
                         var bytes = await ReadAsync(length, cancellationToken);
                         await ms.WriteAsync(bytes, 0, length, cancellationToken);

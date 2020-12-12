@@ -27,11 +27,23 @@
     <Property Id="ARPPRODUCTICON">icon.ico</Property>
     <Property Id="ARPURLINFOABOUT">https://github.com/Wolfteam/CastIt</Property>
 
+    <!--Launch after install-->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.Launch)" />
+    <Property Id="WixShellExecTarget" Value="[DesktopInstallFolder]CastIt.exe" />
+    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+
     <!--Custom actions-->
     <Binary Id="CustomActionBinary" SourceFile="../CastIt.Setup.CustomActions/bin/$(var.Platform)/$(var.Configuration)/CastIt.Setup.CustomActions.CA.dll"/>
     <CustomAction Id="DeleteUserData" BinaryKey="CustomActionBinary" DllEntry="DeleteUserData"/>
 
-    <UIRef Id="WixUI_Minimal" />
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+      <!--This publish is required to make the 'launch after install' work-->
+      <Publish Dialog="ExitDialog"
+               Control="Finish"
+               Event="DoAction"
+               Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
     <MediaTemplate EmbedCab="yes"/>
     <MajorUpgrade AllowSameVersionUpgrades="no" DowngradeErrorMessage="!(loc.DowngradeErrorMsg)" />
     <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />

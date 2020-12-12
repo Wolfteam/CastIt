@@ -2,7 +2,7 @@
     x:Class="CastIt.Views.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:common="clr-namespace:CastIt.Common"
+    xmlns:common="clr-namespace:CastIt.Application.Common;assembly=CastIt.Application"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     xmlns:local="clr-namespace:CastIt.Views"
@@ -75,14 +75,14 @@
         <Image
             Grid.Row="1"
             Grid.Column="0"
-            Width="{x:Static common:AppConstants.ThumbnailWidth}"
-            Height="{x:Static common:AppConstants.ThumbnailHeight}"
+            Width="{x:Static common:FileFormatConstants.ThumbnailWidth}"
+            Height="{x:Static common:FileFormatConstants.ThumbnailHeight}"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
+            VerticalAlignment="Stretch"
             Focusable="False"
             RenderOptions.BitmapScalingMode="HighQuality"
             Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}"
-            Stretch="UniformToFill"
+            Stretch="Fill"
             ToolTip="{Binding CurrentlyPlayingFilename}" />
 
         <uc:ButtonsBar

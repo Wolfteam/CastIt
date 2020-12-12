@@ -1,13 +1,17 @@
-﻿using CastIt.Common;
+﻿using CastIt.Application.Common;
+using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
+using CastIt.Common;
 using CastIt.Common.Comparers;
-using CastIt.Common.Enums;
-using CastIt.Common.Utils;
+using CastIt.Domain.Entities;
+using CastIt.Domain.Enums;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
-using CastIt.Models.Entities;
 using CastIt.Models.Messages;
+using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -23,13 +27,14 @@ namespace CastIt.ViewModels.Items
     public class PlayListItemViewModel : BaseViewModel
     {
         #region Members
-        private readonly IPlayListsService _playListsService;
+        private readonly IAppDataService _playListsService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
         private readonly IAppWebServer _appWebServer;
         private readonly IMvxNavigationService _navigationService;
         private readonly IAppSettingsService _appSettings;
         private readonly IFileWatcherService _fileWatcherService;
+        private readonly IFileService _fileService;
 
         private string _name;
         private bool _showEditPopUp;
@@ -115,7 +120,7 @@ namespace CastIt.ViewModels.Items
             get
             {
                 var playedSeconds = Items.Sum(i => i.PlayedSeconds);
-                var formatted = AppConstants.FormatDuration(playedSeconds);
+                var formatted = FileFormatConstants.FormatDuration(playedSeconds);
                 return $"{formatted}";
             }
         }
@@ -125,7 +130,7 @@ namespace CastIt.ViewModels.Items
             get
             {
                 var totalSeconds = Items.Where(i => i.TotalSeconds >= 0).Sum(i => i.TotalSeconds);
-                var formatted = AppConstants.FormatDuration(totalSeconds);
+                var formatted = FileFormatConstants.FormatDuration(totalSeconds);
                 return $"{PlayedTime} / {formatted}";
             }
         }
@@ -162,15 +167,16 @@ namespace CastIt.ViewModels.Items
         public PlayListItemViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
-            IPlayListsService playListsService,
+            ILogger<PlayListItemViewModel> logger,
+            IAppDataService playListsService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
             IAppWebServer appWebServer,
             IMvxNavigationService navigationService,
             IAppSettingsService appSettings,
-            IFileWatcherService fileWatcherService)
-            : base(textProvider, messenger, logger.GetLogFor<PlayListItemViewModel>())
+            IFileWatcherService fileWatcherService,
+            IFileService fileService)
+            : base(textProvider, messenger, logger)
         {
             _playListsService = playListsService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
@@ -179,6 +185,7 @@ namespace CastIt.ViewModels.Items
             _navigationService = navigationService;
             _appSettings = appSettings;
             _fileWatcherService = fileWatcherService;
+            _fileService = fileService;
         }
 
         #region Methods
@@ -277,16 +284,13 @@ namespace CastIt.ViewModels.Items
             var file = Items.FirstOrDefault(f => f.Id == id);
             if (file == null)
             {
-                Logger.Warn($"{nameof(RemoveFile)}: FileId = {id} not found");
+                Logger.LogWarning($"{nameof(RemoveFile)}: FileId = {id} not found");
                 return;
             }
 
             await _playListsService.DeleteFile(id);
             Items.Remove(file);
-            SelectedItems.Clear();
-            SetPositionIfChanged();
-            _appWebServer.OnFileDeleted?.Invoke(Id);
-            await UpdatePlayedTime();
+            await AfterRemovingFiles();
         }
 
         public Task UpdatePlayedTime()
@@ -299,14 +303,32 @@ namespace CastIt.ViewModels.Items
             return !_appSettings.ShowPlayListTotalDuration ? Task.CompletedTask : RaisePropertyChanged(() => TotalDuration);
         }
 
+        public async Task RemoveFilesThatStartsWith(string path)
+        {
+            var toDelete = Items.Where(f => f.Path.StartsWith(path)).ToList();
+            if (!toDelete.Any())
+                return;
+            await _playListsService.DeleteFiles(toDelete.Select(f => f.Id).ToList());
+            Items.RemoveItems(toDelete);
+            await AfterRemovingFiles();
+        }
+
+        private async Task AfterRemovingFiles()
+        {
+            SelectedItems.Clear();
+            SetPositionIfChanged();
+            _appWebServer.OnFileDeleted?.Invoke(Id);
+            await UpdatePlayedTime();
+        }
+
         private Task OnFolderAdded(string[] folders)
         {
             var files = new List<string>();
             foreach (var folder in folders)
             {
-                Logger.Info($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
+                Logger.LogInformation($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
                 var filesInDir = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
-                    .Where(s => AppConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
+                    .Where(s => FileFormatConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                     .ToList();
                 files.AddRange(filesInDir);
             }
@@ -334,7 +356,7 @@ namespace CastIt.ViewModels.Items
                 var files = paths.Where(path =>
                 {
                     var ext = Path.GetExtension(path);
-                    return AppConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
+                    return FileFormatConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
                 }).OrderBy(p => p, new WindowsExplorerComparer())
                 .Select((path, index) => new FileItem
                 {
@@ -359,7 +381,7 @@ namespace CastIt.ViewModels.Items
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("SomethingWentWrong")));
                 _telemetryService.TrackError(e);
-                Logger.Error(e, $"{nameof(OnFilesAdded)}: Couldn't parse the following paths = {string.Join(",", paths)}");
+                Logger.LogError(e, $"{nameof(OnFilesAdded)}: Couldn't parse the following paths = {string.Join(",", paths)}");
             }
             finally
             {
@@ -377,7 +399,7 @@ namespace CastIt.ViewModels.Items
             }
 
             ShowAddUrlPopUp = false;
-            bool isUrlFile = FileUtils.IsUrlFile(url);
+            bool isUrlFile = _fileService.IsUrlFile(url);
             if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlNotSupported")));
@@ -388,39 +410,39 @@ namespace CastIt.ViewModels.Items
             {
                 IsBusy = true;
 
-                Logger.Info($"{nameof(OnUrlAdded)}: Trying to parse url = {url}");
+                Logger.LogInformation($"{nameof(OnUrlAdded)}: Trying to parse url = {url}");
                 if (!_youtubeUrlDecoder.IsPlayList(url))
                 {
-                    Logger.Info($"{nameof(OnUrlAdded)}: Url is not a playlist, parsing it...");
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is not a playlist, parsing it...");
                     await AddYoutubeUrl(url);
                     return;
                 }
 
                 if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
                 {
-                    Logger.Info($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
                     bool? result = await _navigationService
                         .Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
                     switch (result)
                     {
                         //Only video
                         case true:
-                            Logger.Info($"{nameof(OnUrlAdded)}: Parsing only the video...");
+                            Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
                             await AddYoutubeUrl(url);
                             return;
                         //Cancel
                         case null:
-                            Logger.Info($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
+                            Logger.LogInformation($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
                             return;
                     }
                 }
-                Logger.Info($"{nameof(OnUrlAdded)}: Parsing playlist...");
+                Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist...");
                 var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url, _cancellationToken.Token);
                 foreach (var link in links)
                 {
                     if (_cancellationToken.IsCancellationRequested)
                         break;
-                    Logger.Info($"{nameof(OnUrlAdded)}: Parsing playlist url = {link}");
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist url = {link}");
                     await AddYoutubeUrl(link);
                 }
             }
@@ -428,7 +450,7 @@ namespace CastIt.ViewModels.Items
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
                 _telemetryService.TrackError(e);
-                Logger.Error(e, $"{nameof(OnUrlAdded)}: Couldn't parse url = {url}");
+                Logger.LogError(e, $"{nameof(OnUrlAdded)}: Couldn't parse url = {url}");
             }
             finally
             {
@@ -521,7 +543,7 @@ namespace CastIt.ViewModels.Items
             var media = await _youtubeUrlDecoder.Parse(url, null, false);
             if (media == null)
             {
-                Logger.Info($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
+                Logger.LogInformation($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
                 return;
             }

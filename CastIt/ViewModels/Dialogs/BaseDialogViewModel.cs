@@ -1,7 +1,7 @@
 ﻿using CastIt.Common;
 using CastIt.Interfaces;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Plugin.Messenger;
 
 namespace CastIt.ViewModels.Dialogs
@@ -52,7 +52,7 @@ namespace CastIt.ViewModels.Dialogs
         protected BaseDialogViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger)
+            ILogger logger)
             : base(textProvider, messenger, logger)
         {
         }
@@ -104,7 +104,7 @@ namespace CastIt.ViewModels.Dialogs
         protected BaseDialogViewModelResult(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLog logger)
+            ILogger logger)
             : base(textProvider, messenger, logger)
         {
         }

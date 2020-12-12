@@ -1,13 +1,15 @@
 ﻿using CastIt.Common;
-using CastIt.Common.Enums;
 using CastIt.Common.Utils;
+using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
+using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
@@ -18,7 +20,7 @@ using System.Text.RegularExpressions;
 
 namespace CastIt.ViewModels
 {
-    public class SettingsViewModel : BaseViewModel
+    public class SettingsViewModel : BasePopupViewModel
     {
         #region Members
         private readonly IAppSettingsService _settingsService;
@@ -285,11 +287,11 @@ namespace CastIt.ViewModels
         public SettingsViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            IMvxLogProvider logger,
+            ILogger<SettingsViewModel> logger,
             IAppSettingsService settingsService,
             IMvxNavigationService navigationService,
             IAppWebServer appWebServer)
-            : base(textProvider, messenger, logger.GetLogFor<SettingsViewModel>())
+            : base(textProvider, messenger, logger)
         {
             _settingsService = settingsService;
             _navigationService = navigationService;

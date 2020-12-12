@@ -1,6 +1,6 @@
-﻿using CastIt.Common.Enums;
-using CastIt.Common.Extensions;
-using CastIt.Interfaces;
+﻿using CastIt.Common.Extensions;
+using CastIt.Domain.Enums;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.ViewModels;
 using CastIt.Views;
 using MaterialDesignThemes.Wpf;

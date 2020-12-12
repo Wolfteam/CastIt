@@ -1,4 +1,5 @@
-﻿using CastIt.GoogleCast.Interfaces.Messages;
+﻿using CastIt.Domain.Interfaces;
+using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Models;
 using System;
 using System.Collections.Concurrent;
@@ -13,6 +14,8 @@ namespace CastIt.GoogleCast.Interfaces
         bool IsConnected { get; }
 
         Task ConnectAsync();
+
+        Task ConnectAsync(string host, int port);
 
         Task ConnectAsync(IReceiver receiver);
 

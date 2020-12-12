@@ -16,13 +16,14 @@ namespace CastIt.Views.UserControls
         public void DisposeViewModels()
         {
             var devicesVm = DevicesUserControl.DataContext as DevicesViewModel;
-            devicesVm.CleanUp();
+            devicesVm?.CleanUp();
         }
 
         private void ToggleCollapse(object sender, RoutedEventArgs e)
         {
             var window = System.Windows.Application.Current.MainWindow as MainWindow;
-            var view = window.Content as MainPage;
+            if (!(window?.Content is MainPage view))
+                return;
             var currentTab = view.PlayListTabControl;
             view.ViewModel.IsExpanded = !view.ViewModel.IsExpanded;
             if (view.ViewModel.IsExpanded && _currentTabHeight < 50)
