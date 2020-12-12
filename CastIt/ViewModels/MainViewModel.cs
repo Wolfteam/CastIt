@@ -683,6 +683,8 @@ namespace CastIt.ViewModels
                 return false;
             }
 
+            await StopPlayBack();
+
             IsBusy = true;
             IsPaused = false;
 
@@ -692,9 +694,8 @@ namespace CastIt.ViewModels
                 await ShowSnackbarMsg(GetText("PlayListDoesntExist"));
                 return false;
             }
-            playList.SelectedItem = file;
 
-            _currentlyPlayedFile?.CleanUp();
+            playList.SelectedItem = file;
             _currentlyPlayedFile = file;
             _appWebServer.OnFileLoading?.Invoke();
 

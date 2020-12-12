@@ -416,7 +416,6 @@ namespace CastIt.GoogleCast
                     bool checkMediaStatus = true;
                     while (checkMediaStatus || !token.IsCancellationRequested)
                     {
-                        bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                         await Task.Delay(GetMediaStatusDelay, token);
 
                         var mediaStatus = await _mediaChannel.GetStatusAsync(_sender);
@@ -425,6 +424,7 @@ namespace CastIt.GoogleCast
 
                         if (mediaStatus is null)
                         {
+                            bool contentIsBeingPlayed = !string.IsNullOrEmpty(CurrentContentId);
                             IsPlaying = false;
                             checkMediaStatus = false;
                             _logger.LogInfo(
