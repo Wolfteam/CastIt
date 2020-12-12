@@ -20,12 +20,13 @@
 
   <ItemGroup>
     <None Remove="Resources\AppIcon.png" />
+    <None Remove="Resources\NoImg.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Resources\AppIcon.png" />
     <Resource Include="Resources\favicon.ico" />
-    <Resource Include="Resources\NoImg.jpg" />
+    <Resource Include="Resources\NoImg.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,7 +34,7 @@
     <PackageReference Include="Dragablz.NetCore" Version="0.3.3" />
     <PackageReference Include="FluentMigrator" Version="3.2.9" />
     <PackageReference Include="FluentMigrator.Runner" Version="3.2.9" />
-    <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.0.101" />
+    <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.0.105" />
     <PackageReference Include="MaterialDesignThemes" Version="3.2.0-ci1901" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />

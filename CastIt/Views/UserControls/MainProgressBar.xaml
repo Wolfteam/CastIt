@@ -49,20 +49,23 @@
 
         <Popup
             Name="SliderPopup"
+            Width="350"
+            Height="230"
             AllowsTransparency="True"
             HorizontalOffset="0"
             IsOpen="False"
             Placement="Bottom"
             PlacementTarget="{Binding ElementName=MainSlider}"
             StaysOpen="True">
-            <Grid Width="{x:Static common:FileFormatConstants.ThumbnailWidth}" Height="{x:Static common:FileFormatConstants.ThumbnailHeight}">
-                <Image
-                    RenderOptions.BitmapScalingMode="HighQuality"
-                    Source="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}"
-                    Stretch="Fill" />
+            <Grid>
+                <Rectangle RadiusX="30" RadiusY="30">
+                    <Rectangle.Fill>
+                        <ImageBrush ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}" />
+                    </Rectangle.Fill>
+                </Rectangle>
                 <TextBlock
                     x:Name="SliderPopupText"
-                    Margin="0,0,5,10"
+                    Margin="0,0,15,15"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     FontWeight="Bold"

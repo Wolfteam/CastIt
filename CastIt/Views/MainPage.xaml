@@ -78,11 +78,11 @@
             Width="{x:Static common:FileFormatConstants.ThumbnailWidth}"
             Height="{x:Static common:FileFormatConstants.ThumbnailHeight}"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
+            VerticalAlignment="Stretch"
             Focusable="False"
             RenderOptions.BitmapScalingMode="HighQuality"
             Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}"
-            Stretch="UniformToFill"
+            Stretch="Fill"
             ToolTip="{Binding CurrentlyPlayingFilename}" />
 
         <uc:ButtonsBar

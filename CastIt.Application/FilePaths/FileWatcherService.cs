@@ -55,13 +55,13 @@ namespace CastIt.Application.FilePaths
                 foreach (var (path, watcher) in _watchers)
                 {
                     if (!newPaths.Contains(path))
-                        StopListening(watcher);
+                        StopListening(watcher, false);
                 }
 
                 foreach (var (path, watcher) in _dirWatchers)
                 {
                     if (!newPaths.Contains(path))
-                        StopListening(watcher);
+                        StopListening(watcher, true);
                 }
             }
 
@@ -77,19 +77,19 @@ namespace CastIt.Application.FilePaths
             foreach (var (path, watcher) in _watchers)
             {
                 _logger.LogInformation($"{nameof(StopListening)}: Stopping the watcher for path = {path}");
-                StopListening(watcher);
+                StopListening(watcher, false);
             }
 
             foreach (var (path, watcher) in _dirWatchers)
             {
                 _logger.LogInformation($"{nameof(StopListening)}: Stopping the watcher for dir path = {path}");
-                StopListening(watcher);
+                StopListening(watcher, true);
             }
             _watchers.Clear();
             _dirWatchers.Clear();
         }
 
-        private void StopListening(FileSystemWatcher watcher)
+        private void StopListening(FileSystemWatcher watcher, bool isAFolder)
         {
             _logger.LogInformation($"{nameof(StopListening)}: Stopping watcher for path = {watcher.Path}");
             watcher.Created -= OnChanged;
@@ -98,6 +98,10 @@ namespace CastIt.Application.FilePaths
             watcher.Renamed -= OnRenamed;
             watcher.EnableRaisingEvents = false;
             watcher.Dispose();
+            if (isAFolder)
+                _dirWatchers.Remove(watcher.Path);
+            else
+                _watchers.Remove(watcher.Path);
         }
 
         private void WatchPath(string path)
@@ -105,7 +109,7 @@ namespace CastIt.Application.FilePaths
             _logger.LogInformation($"{nameof(WatchPath)}: Starting the watcher for path = {path}");
             if (_watchers.ContainsKey(path))
             {
-                StopListening(_watchers[path]);
+                StopListening(_watchers[path], false);
                 _watchers.Remove(path);
             }
 
@@ -138,10 +142,10 @@ namespace CastIt.Application.FilePaths
             _logger.LogInformation($"{nameof(WatchFolder)}: Starting the watcher for dir path = {path}");
             if (_dirWatchers.ContainsKey(path))
             {
-                StopListening(_dirWatchers[path]);
+                StopListening(_dirWatchers[path], true);
                 _dirWatchers.Remove(path);
             }
-
+            //TODO: NOT WORKING..
             var watcher = new FileSystemWatcher(path)
             {
                 NotifyFilter = NotifyFilters.DirectoryName
@@ -182,7 +186,7 @@ namespace CastIt.Application.FilePaths
 
         private async Task OnChanged(string fullPath, WatcherChangeTypes changeType, bool isAFolder)
         {
-            _logger.LogInformation($"{nameof(OnChanged)}: Handling change = {changeType} for = ${fullPath} which is a folder = {isAFolder}");
+            _logger.LogInformation($"{nameof(OnChanged)}: Handling change = {changeType} for = {fullPath} which is a folder = {isAFolder}");
             switch (changeType)
             {
                 case WatcherChangeTypes.Deleted:

@@ -43,7 +43,7 @@
             <converters:BooleanOrConverter x:Key="BooleanOrConverter" />
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
-            <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.jpg" />
+            <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.png" />
         </ResourceDictionary>
     </Application.Resources>
 
