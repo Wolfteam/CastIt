@@ -582,10 +582,18 @@ namespace CastIt.Application.Youtube
 
                 if (string.IsNullOrEmpty(cipher))
                 {
-                    _logger.LogInformation($"{nameof(GetFinalUrl)}: Body doesn't contain a cipher...");
+                    _logger.LogInformation($"{nameof(GetFinalUrl)}: Body doesn't contain a cipher, checking if the url is already unscrambled...");
                     //Unscrambled signature, already included in ready-to-use URL
                     string urlPattern = @"(?<=url\\"":\\"").*?(?=\\"")";
-                    return DecodeUrlString(Regex.Match(pickedQualityUrl, urlPattern).Value);
+                    if (!Regex.Match(pickedQualityUrl, urlPattern).Success)
+                    {
+                        urlPattern = "(?<=url\":\").*?(?=\")";
+                        _logger.LogInformation($"{nameof(GetFinalUrl)}: Url not found, checking with another pattern...");
+                    }
+
+                    var url = Regex.Match(pickedQualityUrl, urlPattern).Value;
+
+                    return DecodeUrlString(url);
                 }
 
                 _logger.LogInformation($"{nameof(GetFinalUrl)}: Body contains a cipher...");
