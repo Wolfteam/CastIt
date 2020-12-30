@@ -21,6 +21,8 @@ namespace CastIt.Infrastructure.Models
         public bool EnableHardwareAcceleration { get; set; }
         public bool MinimizeToTray { get; set; }
         public bool ShowPlayListTotalDuration { get; set; }
+        public bool UseGridViewForPlayLists { get; set; }
+
         public SubtitleFgColorType CurrentSubtitleFgColor { get; set; }
         public SubtitleBgColorType CurrentSubtitleBgColor { get; set; }
         public SubtitleFontScaleType CurrentSubtitleFontScale { get; set; }

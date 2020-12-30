@@ -21,6 +21,7 @@ namespace CastIt.Infrastructure.Interfaces
         bool EnableHardwareAcceleration { get; set; }
         bool MinimizeToTray { get; set; }
         bool ShowPlayListTotalDuration { get; set; }
+        bool UseGridViewForPlayLists { get; set; }
 
         SubtitleFgColorType CurrentSubtitleFgColor { get; set; }
         SubtitleBgColorType CurrentSubtitleBgColor { get; set; }

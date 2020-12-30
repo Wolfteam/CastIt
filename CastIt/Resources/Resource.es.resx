@@ -555,4 +555,7 @@
   <data name="ConnectionInProgress" xml:space="preserve">
     <value>Una conexión esta en proceso</value>
   </data>
+  <data name="UseGridViewForPlayLists" xml:space="preserve">
+    <value>Usar una grilla para la listas de reproducción</value>
+  </data>
 </root>

@@ -1303,6 +1303,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use a grid view for playlists.
+        /// </summary>
+        public static string UseGridViewForPlayLists {
+            get {
+                return ResourceManager.GetString("UseGridViewForPlayLists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use this option if you have playback issues.
         /// </summary>
         public static string UseIfPlaybackIssues {
