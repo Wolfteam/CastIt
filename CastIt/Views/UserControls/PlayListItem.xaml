@@ -11,9 +11,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:selectors="clr-namespace:CastIt.Common.Selectors"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vm="clr-namespace:CastIt.ViewModels"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
+    d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:TypeArguments="vmis:PlayListItemViewModel"
@@ -52,10 +54,10 @@
                     Maximum="1"
                     Minimum="0"
                     TickFrequency="0.1"
-                    Value="{Binding DataContext.VolumeLevel, Mode=TwoWay, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                    Value="{Binding ViewModel.VolumeLevel, Mode=TwoWay, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}">
                     <behaviours:Interaction.Triggers>
                         <behaviours:EventTrigger EventName="ValueChanged">
-                            <behaviours:InvokeCommandAction Command="{Binding DataContext.SetVolumeCommand, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" />
+                            <behaviours:InvokeCommandAction Command="{Binding ViewModel.SetVolumeCommand, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" />
                         </behaviours:EventTrigger>
                     </behaviours:Interaction.Triggers>
                 </Slider>
@@ -65,7 +67,7 @@
                     Width="24"
                     Height="24"
                     Margin="0,0,5,0"
-                    Command="{Binding DataContext.ToggleMuteCommand, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                    Command="{Binding ViewModel.ToggleMuteCommand, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource MaterialDesignIconButton}" TargetType="{x:Type Button}">
                             <Setter Property="Content">
@@ -74,7 +76,7 @@
                                 </Setter.Value>
                             </Setter>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.IsMuted, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True">
+                                <DataTrigger Binding="{Binding ViewModel.IsMuted, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" Value="True">
                                     <Setter Property="Content">
                                         <Setter.Value>
                                             <materialDesign:PackIcon Kind="VolumeMute" />
@@ -120,7 +122,7 @@
             </Style.Triggers>
         </Style>
 
-        <!--  Had to use a style, because a datatemplate produce weird issues  -->
+        <!--  Had to use a style, because a data template produce weird issues  -->
         <Style
             x:Key="FileOptionsItemContainerStyle"
             BasedOn="{StaticResource MaterialDesignMenuItem}"
@@ -128,7 +130,7 @@
             <Setter Property="IsCheckable" Value="True" />
             <Setter Property="Header" Value="{Binding Text}" />
             <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
-            <Setter Property="Command" Value="{Binding DataContext.FileOptionsChangedCommand, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" />
+            <Setter Property="Command" Value="{Binding ViewModel.FileOptionsChangedCommand, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" />
             <Setter Property="CommandParameter" Value="{Binding}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected, Mode=OneWay}" Value="True">
@@ -142,7 +144,7 @@
             </Style.Triggers>
         </Style>
 
-        <CollectionViewSource x:Key="SubTitlesItems" Source="{Binding DataContext.CurrentFileSubTitles, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" />
+        <CollectionViewSource x:Key="SubTitlesItems" Source="{Binding ViewModel.CurrentFileSubTitles, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" />
     </UserControl.Resources>
 
     <Grid HorizontalAlignment="Stretch">
@@ -150,6 +152,116 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <!--
+            Setting ScrollViewer.CanContentScroll="False" disables virtualization
+            but makes a smooth scroll while dragging
+            Setting ScrollViewer.HorizontalScrollBarVisibility="Disabled" fixes the width problem on resizes
+            https://stackoverflow.com/questions/40013780/wpf-textblock-texttrimming-not-working-inside-a-grid-with-gridsplitter
+            Btw ScrollViewer.HorizontalScrollBarVisibility="Disabled" + ScrollViewer.CanContentScroll="True" lags while resizing...
+        -->
+        <ListView
+            x:Name="PlaylistLv"
+            Grid.Row="0"
+            Margin="0,5"
+            cb:DragDropExtension.ScrollOnDragDrop="True"
+            materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
+            DragEnter="PlaylistLv_DragEnter"
+            DragLeave="PlaylistLv_DragLeave"
+            Drop="PlaylistLv_Drop"
+            FocusVisualStyle="{x:Null}"
+            ItemsSource="{Binding Items}"
+            KeyboardNavigation.TabNavigation="Cycle"
+            MouseMove="PlaylistLv_MouseMove"
+            PreviewMouseLeftButtonDown="PlaylistLv_PreviewMouseLeftButtonDown"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+            Style="{StaticResource PlayListLvStyle}"
+            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}">
+            <behaviours:Interaction.Behaviors>
+                <cb:MultiSelectionBehavior SelectedItems="{Binding SelectedItems}" />
+            </behaviours:Interaction.Behaviors>
+            <ListView.ContextMenu>
+                <ContextMenu x:Name="PlayListContextMenu">
+                    <MenuItem Command="{Binding AddFolderCommand}" Header="{Binding [AddFolder]}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon Kind="Folder" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding AddFilesCommand}" Header="{Binding [AddFiles]}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon Kind="Add" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ShowAddUrlPopUpCommand}" Header="{Binding [AddUrl]}">
+                        <MenuItem.Icon>
+                            <materialDesign:PackIcon Kind="LinkAdd" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </ListView.ContextMenu>
+            <ListView.InputBindings>
+                <KeyBinding
+                    Key="F"
+                    Command="{Binding AddFolderCommand}"
+                    Modifiers="Ctrl" />
+                <KeyBinding
+                    Key="S"
+                    Command="{Binding AddFilesCommand}"
+                    Modifiers="Ctrl" />
+                <KeyBinding
+                    Command="{Binding PlayFileCommand}"
+                    CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
+                    Gesture="Enter" />
+                <KeyBinding
+                    Command="{Binding RemoveFileCommand}"
+                    CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
+                    Gesture="Delete" />
+                <KeyBinding Key="F1" Command="{Binding ViewModel.PreviousCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type uv:MainPage}}}" />
+                <KeyBinding Key="F2" Command="{Binding ViewModel.NextCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type uv:MainPage}}}" />
+                <KeyBinding Key="Space" Command="{Binding ViewModel.TogglePlayBackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type uv:MainPage}}}" />
+            </ListView.InputBindings>
+            <ListView.ItemContainerStyle>
+                <Style BasedOn="{StaticResource MaterialDesignListBoxItem}" TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="5,0,5,0" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <!--  This removes the dots  -->
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="true">
+                            <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type vmis:FileItemViewModel}">
+                    <uc:FileItem DataContext="{Binding}" Tag="{Binding Source={x:Reference Name=PlaylistLv}, Path=DataContext}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <Popup
+            Grid.Row="0"
+            IsOpen="{Binding ShowAddUrlPopUp, Mode=TwoWay}"
+            Placement="Center"
+            PlacementTarget="{Binding ElementName=PlaylistLv}"
+            StaysOpen="False">
+            <behaviours:Interaction.Triggers>
+                <behaviours:EventTrigger EventName="Opened">
+                    <behaviours:CallMethodAction MethodName="FocusUrl" TargetObject="{Binding ElementName=AddFromUrlUserControl}" />
+                </behaviours:EventTrigger>
+                <behaviours:EventTrigger EventName="Closed">
+                    <behaviours:ChangePropertyAction
+                        PropertyName="Text"
+                        TargetObject="{Binding ElementName=AddFromUrlUserControl, Path=UrlText}"
+                        Value="" />
+                </behaviours:EventTrigger>
+            </behaviours:Interaction.Triggers>
+            <uc:AddFromUrl x:Name="AddFromUrlUserControl" />
+        </Popup>
+
         <materialDesign:ColorZone
             Grid.Row="1"
             HorizontalAlignment="Stretch"
@@ -292,7 +404,7 @@
                                             <Condition Value="True">
                                                 <Condition.Binding>
                                                     <MultiBinding Converter="{StaticResource BooleanOrConverter}">
-                                                        <Binding Path="DataContext.IsBusy" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                                        <Binding Path="ViewModel.IsBusy" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
                                                         <Binding Path="IsBusy" />
                                                     </MultiBinding>
                                                 </Condition.Binding>
@@ -403,8 +515,8 @@
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding DataContext.IsCurrentlyPlaying, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
-                                            <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="False" />
+                                            <Condition Binding="{Binding ViewModel.IsCurrentlyPlaying, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" Value="True" />
+                                            <Condition Binding="{Binding ViewModel.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" Value="False" />
                                         </MultiDataTrigger.Conditions>
                                         <MultiDataTrigger.Setters>
                                             <Setter Property="Visibility" Value="Visible" />
@@ -412,7 +524,7 @@
                                     </MultiDataTrigger>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}" Value="True" />
+                                            <Condition Binding="{Binding ViewModel.IsBusy, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" Value="True" />
                                         </MultiDataTrigger.Conditions>
                                         <MultiDataTrigger.Setters>
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -443,11 +555,11 @@
                             <MenuItem
                                 Header="{Binding [Audio]}"
                                 ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
-                                ItemsSource="{Binding DataContext.CurrentFileAudios, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                                ItemsSource="{Binding ViewModel.CurrentFileAudios, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}">
                                 <MenuItem.IsEnabled>
                                     <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
-                                        <Binding Path="DataContext.CurrentFileAudios.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                        <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                        <Binding Path="ViewModel.CurrentFileAudios.Count" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
+                                        <Binding Path="ViewModel.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
                                     </MultiBinding>
                                 </MenuItem.IsEnabled>
                                 <MenuItem.Icon>
@@ -475,8 +587,8 @@
                                 </MenuItem.ItemContainerStyleSelector>
                                 <MenuItem.IsEnabled>
                                     <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
-                                        <Binding Path="DataContext.CurrentFileSubTitles.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                        <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                        <Binding Path="ViewModel.CurrentFileSubTitles.Count" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
+                                        <Binding Path="ViewModel.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
                                     </MultiBinding>
                                 </MenuItem.IsEnabled>
                                 <MenuItem.Icon>
@@ -486,11 +598,11 @@
                             <MenuItem
                                 Header="{Binding [Quality]}"
                                 ItemContainerStyle="{StaticResource FileOptionsItemContainerStyle}"
-                                ItemsSource="{Binding DataContext.CurrentFileQualities, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
+                                ItemsSource="{Binding ViewModel.CurrentFileQualities, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}">
                                 <MenuItem.IsEnabled>
                                     <MultiBinding Converter="{StaticResource FileOptionsMultiConverter}">
-                                        <Binding Path="DataContext.CurrentFileQualities.Count" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
-                                        <Binding Path="DataContext.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}" />
+                                        <Binding Path="ViewModel.CurrentFileQualities.Count" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
+                                        <Binding Path="ViewModel.IsCurrentlyPlaying" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}" />
                                     </MultiBinding>
                                 </MenuItem.IsEnabled>
                                 <MenuItem.Icon>
@@ -506,113 +618,5 @@
 
         </materialDesign:ColorZone>
 
-        <!--
-            Setting ScrollViewer.CanContentScroll="False" disables virtualization
-            but makes a smooth scroll while dragging
-            Setting ScrollViewer.HorizontalScrollBarVisibility="Disabled" fixes the width problem on resizes
-            https://stackoverflow.com/questions/40013780/wpf-textblock-texttrimming-not-working-inside-a-grid-with-gridsplitter
-            Btw ScrollViewer.HorizontalScrollBarVisibility="Disabled" + ScrollViewer.CanContentScroll="True" lags while resizing...
-        -->
-        <ListView
-            x:Name="PlaylistLv"
-            Grid.Row="0"
-            Margin="0,5"
-            cb:DragDropExtension.ScrollOnDragDrop="True"
-            materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
-            DragEnter="PlaylistLv_DragEnter"
-            DragLeave="PlaylistLv_DragLeave"
-            Drop="PlaylistLv_Drop"
-            FocusVisualStyle="{x:Null}"
-            ItemsSource="{Binding Items}"
-            KeyboardNavigation.TabNavigation="Cycle"
-            MouseMove="PlaylistLv_MouseMove"
-            PreviewMouseLeftButtonDown="PlaylistLv_PreviewMouseLeftButtonDown"
-            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-            Style="{StaticResource PlayListLvStyle}"
-            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type dragablz:TabablzControl}, Mode=FindAncestor}}">
-            <behaviours:Interaction.Behaviors>
-                <cb:MultiSelectionBehavior SelectedItems="{Binding SelectedItems}" />
-            </behaviours:Interaction.Behaviors>
-            <ListView.ContextMenu>
-                <ContextMenu x:Name="PlayListContextMenu">
-                    <MenuItem Command="{Binding AddFolderCommand}" Header="{Binding [AddFolder]}">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon Kind="Folder" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Command="{Binding AddFilesCommand}" Header="{Binding [AddFiles]}">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon Kind="Add" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Command="{Binding ShowAddUrlPopUpCommand}" Header="{Binding [AddUrl]}">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon Kind="LinkAdd" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </ContextMenu>
-            </ListView.ContextMenu>
-            <ListView.InputBindings>
-                <KeyBinding
-                    Key="F"
-                    Command="{Binding AddFolderCommand}"
-                    Modifiers="Ctrl" />
-                <KeyBinding
-                    Key="S"
-                    Command="{Binding AddFilesCommand}"
-                    Modifiers="Ctrl" />
-                <KeyBinding
-                    Command="{Binding PlayFileCommand}"
-                    CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
-                    Gesture="Enter" />
-                <KeyBinding
-                    Command="{Binding RemoveFileCommand}"
-                    CommandParameter="{Binding ElementName=PlaylistLv, Path=SelectedItem}"
-                    Gesture="Delete" />
-                <KeyBinding Key="F1" Command="{Binding DataContext.PreviousCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
-                <KeyBinding Key="F2" Command="{Binding DataContext.NextCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
-                <KeyBinding Key="Space" Command="{Binding DataContext.TogglePlayBackCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}" />
-            </ListView.InputBindings>
-            <ListView.ItemContainerStyle>
-                <Style BasedOn="{StaticResource MaterialDesignListBoxItem}" TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="5,0,5,0" />
-                    <Setter Property="Margin" Value="0" />
-                    <Setter Property="BorderThickness" Value="0" />
-                    <!--  This removes the dots  -->
-                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="true">
-                            <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.ItemTemplate>
-                <DataTemplate DataType="{x:Type vmis:FileItemViewModel}">
-                    <uc:FileItem DataContext="{Binding}" Tag="{Binding Source={x:Reference Name=PlaylistLv}, Path=DataContext}" />
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-
-        <Popup
-            Grid.Row="0"
-            IsOpen="{Binding ShowAddUrlPopUp, Mode=TwoWay}"
-            Placement="Center"
-            PlacementTarget="{Binding ElementName=PlaylistLv}"
-            StaysOpen="False">
-            <behaviours:Interaction.Triggers>
-                <behaviours:EventTrigger EventName="Opened">
-                    <behaviours:CallMethodAction MethodName="FocusUrl" TargetObject="{Binding ElementName=AddFromUrlUserControl}" />
-                </behaviours:EventTrigger>
-                <behaviours:EventTrigger EventName="Closed">
-                    <behaviours:ChangePropertyAction
-                        PropertyName="Text"
-                        TargetObject="{Binding ElementName=AddFromUrlUserControl, Path=UrlText}"
-                        Value="" />
-                </behaviours:EventTrigger>
-            </behaviours:Interaction.Triggers>
-            <uc:AddFromUrl x:Name="AddFromUrlUserControl" />
-        </Popup>
     </Grid>
 </views:MvxWpfView>

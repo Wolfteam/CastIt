@@ -75,8 +75,15 @@ namespace CastIt.Views
         }
 
         public Dictionary<PlayListItemViewModel, int> GetTabsPosition()
-            => PlayListTabControl.GetOrderedHeaders()
-                .ToDictionary(a => (a.Content as PlayListItemViewModel), a => a.LogicalIndex);
+        {
+            if (ContentFrame.Content is PlayListsPage page)
+            {
+                return page.PlayListTabControl
+                    .GetOrderedHeaders()
+                    .ToDictionary(a => (a.Content as PlayListItemViewModel), a => a.LogicalIndex);
+            }
+            return new Dictionary<PlayListItemViewModel, int>();
+        }
 
         private void OpenSubtitleFileDialog(object sender, EventArgs e)
         {

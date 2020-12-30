@@ -1,4 +1,5 @@
 ﻿using CastIt.Common;
+using CastIt.Common.Miscellaneous;
 using CastIt.ViewModels;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
@@ -7,6 +8,7 @@ using System.Windows;
 
 namespace CastIt.Views
 {
+    [CustomMvxContentPresentation(typeof(SplashViewModel), NoHistory = true)]
     [MvxViewFor(typeof(SplashViewModel))]
     public partial class Splash : MvxWpfView<SplashViewModel>
     {

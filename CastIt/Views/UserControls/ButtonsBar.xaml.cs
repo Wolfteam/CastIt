@@ -24,7 +24,7 @@ namespace CastIt.Views.UserControls
             var window = System.Windows.Application.Current.MainWindow as MainWindow;
             if (!(window?.Content is MainPage view))
                 return;
-            var currentTab = view.PlayListTabControl;
+            var currentTab = view.ContentFrame;
             view.ViewModel.IsExpanded = !view.ViewModel.IsExpanded;
             if (view.ViewModel.IsExpanded && _currentTabHeight < 50)
             {

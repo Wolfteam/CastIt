@@ -6,11 +6,12 @@ namespace CastIt.Common.Miscellaneous
     public class CustomMvxContentPresentationAttribute : MvxContentPresentationAttribute
     {
         public string ContentFrame { get; set; } = "ContentFrame";
+        public bool NoHistory { get; set; }
 
-        public CustomMvxContentPresentationAttribute(Type type)
+        public CustomMvxContentPresentationAttribute(Type type, bool stackNavigation = false)
         {
             ViewModelType = type;
-            StackNavigation = false;
+            StackNavigation = stackNavigation;
         }
     }
 }

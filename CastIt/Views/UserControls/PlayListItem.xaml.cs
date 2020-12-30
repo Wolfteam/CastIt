@@ -178,6 +178,9 @@ namespace CastIt.Views.UserControls
         private void PlaylistLv_Drop(object sender, DragEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine("Drop");
+            if (ViewModel == null)
+                return;
+
             HideAllSeparatorsLines();
             if (sender != e.Source)
                 return;
@@ -215,7 +218,7 @@ namespace CastIt.Views.UserControls
         private void ToggleSeparatorLine(ListView listView, DragEventArgs e)
         {
             var listViewItem = WindowsUtils.FindAnchestor<ListViewItem>((DependencyObject)e.OriginalSource);
-            if (listViewItem == null)
+            if (listViewItem == null || ViewModel == null)
             {
                 return;
             }

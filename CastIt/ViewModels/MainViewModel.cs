@@ -240,6 +240,7 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand<string> SetSubTitlesCommand { get; private set; }
         public IMvxAsyncCommand SetVolumeCommand { get; private set; }
         public IMvxAsyncCommand ToggleMuteCommand { get; private set; }
+        public IMvxAsyncCommand GoBackCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -352,6 +353,8 @@ namespace CastIt.ViewModels
             SetVolumeCommand = new MvxAsyncCommand(async () => VolumeLevel = await _castService.SetVolume(VolumeLevel));
 
             ToggleMuteCommand = new MvxAsyncCommand(async () => IsMuted = await _castService.SetIsMuted(!IsMuted));
+
+            GoBackCommand = new MvxAsyncCommand(GoToPlayLists);
         }
 
         public override void RegisterMessages()
@@ -363,13 +366,16 @@ namespace CastIt.ViewModels
                 Messenger.Subscribe<ManualDisconnectMessage>(_ => OnStoppedPlayBack()),
                 Messenger.Subscribe<LoopFileMessage>(msg => DisableLoopForAllFiles(msg.File.Id)),
                 Messenger.Subscribe<SnackbarMessage>(async msg => await ShowSnackbarMsg(msg.Message)),
-                Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy)
+                Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy),
+                Messenger.Subscribe<UseGridViewMessage>(async (_) => await GoToPlayLists())
             });
         }
 
         public override void ViewAppeared()
         {
             base.ViewAppeared();
+            GoToPlayLists().GetAwaiter().GetResult();
+
             Logger.LogInformation($"{nameof(ViewAppeared)}: Creating the file duration task..");
             DurationTaskNotifier = MvxNotifyTask.Create(SetFileDurations());
             string path = _fileService.GetFFmpegPath();
@@ -1028,6 +1034,24 @@ namespace CastIt.ViewModels
 
             foreach (var file in files)
                 file.Loop = false;
+        }
+
+        public Task GoToPlayLists()
+        {
+            foreach (var pl in PlayLists)
+            {
+                pl.SelectedItems.Clear();
+                pl.SelectedItem = null;
+            }
+
+            return _settingsService.UseGridViewForPlayLists
+                ? _navigationService.Navigate<PlayListsGridViewModel,List<PlayListItemViewModel>>(PlayLists.ToList())
+                : _navigationService.Navigate<PlayListsViewModel, List<PlayListItemViewModel>>(PlayLists.ToList());
+        }
+
+        public async Task GoToPlayList(PlayListItemViewModel vm)
+        {
+            await _navigationService.Navigate<PlayListGridItemViewModel, PlayListItemViewModel>(vm);
         }
         #endregion
     }

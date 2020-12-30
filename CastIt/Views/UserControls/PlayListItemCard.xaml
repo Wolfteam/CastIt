@@ -1,0 +1,82 @@
+﻿<views:MvxWpfView
+    x:Class="CastIt.Views.UserControls.PlayListItemCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CastIt.Views.UserControls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
+    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
+    d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="200"
+    mc:Ignorable="d">
+
+    <materialDesign:Card Width="190" Margin="5" MouseDoubleClick="Control_OnMouseDoubleClick">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="120" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!--<Image
+                Margin="20,10,10,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Focusable="False"
+                RenderOptions.BitmapScalingMode="HighQuality"
+                Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}"
+                Stretch="Fill"
+                ToolTip="{Binding CurrentlyPlayingFilename}" />-->
+            <!--<Button
+                Grid.Row="0"
+                Margin="0,0,5,100"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Content="10"
+                Foreground="White"
+                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" />-->
+            <!--<Button
+                Grid.Row="0"
+                Margin="0,0,5,-20"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Foreground="White"
+                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}">
+                <materialDesign:PackIcon Kind="Plus" />
+            </Button>-->
+            <StackPanel Grid.Row="1" Margin="20,24,20,0">
+                <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+            </StackPanel>
+            <StackPanel
+                Grid.Row="2"
+                Margin="8"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <Button
+                    Width="30"
+                    Padding="2,0,2,0"
+                    materialDesign:RippleAssist.IsCentered="True"
+                    Foreground="White"
+                    Style="{StaticResource MaterialDesignToolButton}">
+                    <materialDesign:PackIcon Kind="Plus" />
+                </Button>
+                <Button
+                    Width="30"
+                    Padding="2,0,2,0"
+                    materialDesign:RippleAssist.IsCentered="True"
+                    Foreground="{DynamicResource PrimaryHueDarkBrush}"
+                    Style="{StaticResource MaterialDesignToolButton}">
+                    <materialDesign:PackIcon Kind="Delete" />
+                </Button>
+                <materialDesign:PopupBox Padding="2,0,2,0">
+                    <StackPanel>
+                        <Button Content="More" />
+                        <Button Content="Delete" />
+                    </StackPanel>
+                </materialDesign:PopupBox>
+            </StackPanel>
+        </Grid>
+    </materialDesign:Card>
+</views:MvxWpfView>
