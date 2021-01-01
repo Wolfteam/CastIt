@@ -11,32 +11,51 @@ namespace CastIt.Common.Behaviours
     /// </summary>
     public class MultiSelectionBehavior : Behavior<ListBox>
     {
-        protected override void OnAttached()
-        {
-            base.OnAttached();
-            if (SelectedItems != null)
-            {
-                AssociatedObject.SelectedItems.Clear();
-                foreach (var item in SelectedItems)
-                {
-                    AssociatedObject.SelectedItems.Add(item);
-                }
-            }
-        }
-
-        public IList SelectedItems
-        {
-            get { return (IList)GetValue(SelectedItemsProperty); }
-            set { SetValue(SelectedItemsProperty, value); }
-        }
+        private bool _isUpdatingTarget;
+        private bool _isUpdatingSource;
 
         public static readonly DependencyProperty SelectedItemsProperty =
             DependencyProperty.Register("SelectedItems", typeof(IList), typeof(MultiSelectionBehavior), new UIPropertyMetadata(null, SelectedItemsChanged));
 
+        public IList SelectedItems
+        {
+            get => (IList)GetValue(SelectedItemsProperty);
+            set => SetValue(SelectedItemsProperty, value);
+        }
+
+        protected override void OnAttached()
+        {
+            AssociatedObject.Unloaded += OnUnloaded;
+            base.OnAttached();
+            if (SelectedItems == null)
+                return;
+            AssociatedObject.SelectedItems.Clear();
+            foreach (var item in SelectedItems)
+            {
+                AssociatedObject.SelectedItems.Add(item);
+            }
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            OnDetaching();
+        }
+
+        protected override void OnDetaching()
+        {
+            base.OnDetaching();
+            AssociatedObject.Unloaded -= OnUnloaded;
+            AssociatedObject.SelectionChanged -= ListBoxSelectionChanged;
+
+            if (AssociatedObject.SelectedItems is INotifyCollectionChanged val)
+            {
+                val.CollectionChanged -= SourceCollectionChanged;
+            }
+        }
+
         private static void SelectedItemsChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
-            var behavior = o as MultiSelectionBehavior;
-            if (behavior == null)
+            if (!(o is MultiSelectionBehavior behavior))
                 return;
 
             var oldValue = e.OldValue as INotifyCollectionChanged;
@@ -47,29 +66,35 @@ namespace CastIt.Common.Behaviours
                 oldValue.CollectionChanged -= behavior.SourceCollectionChanged;
                 behavior.AssociatedObject.SelectionChanged -= behavior.ListBoxSelectionChanged;
             }
-            if (newValue != null)
-            {
-                behavior.AssociatedObject.SelectedItems.Clear();
-                foreach (var item in (IEnumerable)newValue)
-                {
-                    behavior.AssociatedObject.SelectedItems.Add(item);
-                }
 
-                behavior.AssociatedObject.SelectionChanged += behavior.ListBoxSelectionChanged;
-                newValue.CollectionChanged += behavior.SourceCollectionChanged;
+            if (newValue == null)
+                return;
+
+            behavior.AssociatedObject.SelectedItems.Clear();
+            foreach (var item in (IEnumerable)newValue)
+            {
+                behavior.AssociatedObject.SelectedItems.Add(item);
             }
+
+            behavior.AssociatedObject.SelectionChanged += behavior.ListBoxSelectionChanged;
+            newValue.CollectionChanged += behavior.SourceCollectionChanged;
         }
 
-        private bool _isUpdatingTarget;
-        private bool _isUpdatingSource;
-
-        void SourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void SourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (_isUpdatingSource)
                 return;
 
+            if (AssociatedObject is null)
+            {
+                System.Diagnostics.Debug.WriteLine("Collection associated object is null");
+                return;
+            }
+
             try
             {
+                //TODO: TRY TO FIX THE CRASH WHEN SWITCHING VIEWS
+                System.Diagnostics.Debug.WriteLine("Collection changed started....");
                 _isUpdatingTarget = true;
 
                 if (e.OldItems != null)
@@ -96,6 +121,7 @@ namespace CastIt.Common.Behaviours
             finally
             {
                 _isUpdatingTarget = false;
+                System.Diagnostics.Debug.WriteLine("Collection changed completed");
             }
         }
 
@@ -111,7 +137,7 @@ namespace CastIt.Common.Behaviours
             try
             {
                 _isUpdatingSource = true;
-
+                System.Diagnostics.Debug.WriteLine("Selection changed started....");
                 foreach (var item in e.RemovedItems)
                 {
                     selectedItems.Remove(item);
@@ -125,8 +151,8 @@ namespace CastIt.Common.Behaviours
             finally
             {
                 _isUpdatingSource = false;
+                System.Diagnostics.Debug.WriteLine("Selection changed completed");
             }
         }
-
     }
 }

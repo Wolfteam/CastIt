@@ -489,11 +489,17 @@ namespace CastIt.ViewModels.Items
             await UpdatePlayedTime();
         }
 
-        private void SelectAll()
+        public void SelectAll()
+            => ChangeSelection(true);
+
+        public void UnSelectAll()
+            => ChangeSelection(false);
+
+        private void ChangeSelection(bool allSelected)
         {
             foreach (var file in Items)
             {
-                file.IsSelected = true;
+                file.IsSelected = allSelected;
             }
         }
 

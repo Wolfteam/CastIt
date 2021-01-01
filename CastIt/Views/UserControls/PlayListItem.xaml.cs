@@ -79,13 +79,18 @@ namespace CastIt.Views.UserControls
             set.Bind(this).For(v => v.ScrollToSelectedItemRequest).To(vm => vm.ScrollToSelectedItem).OneWay();
             set.Apply();
 
-            Loaded += SetViewModelHandler;
+            Loaded += OnLoaded;
         }
 
-        private void SetViewModelHandler(object sender, EventArgs e)
+        private void OnLoaded(object sender, EventArgs e)
         {
-            Loaded -= SetViewModelHandler;
+            Loaded -= OnLoaded;
+
             ViewModel = DataContext as PlayListItemViewModel;
+            if (ViewModel == null)
+            {
+                throw new InvalidOperationException("The view model should not be null");
+            }
 
             var view = CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource);
             view.Filter = FilterFiles;

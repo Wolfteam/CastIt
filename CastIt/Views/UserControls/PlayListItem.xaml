@@ -315,57 +315,8 @@
                         materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryHueDarkBrush}"
                         TextChanged="PlayListFilter_TextChanged" />
 
-                    <ToggleButton
-                        Grid.Column="2"
-                        Width="30"
-                        Height="30"
-                        Margin="5,0"
-                        FocusVisualStyle="{x:Null}"
-                        IsChecked="{Binding Loop, Mode=TwoWay}"
-                        IsTabStop="False"
-                        ToolTip="{Binding [LoopPlayList]}">
-                        <materialDesign:PackIcon
-                            Width="16"
-                            Height="16"
-                            Kind="Repeat" />
-                        <ToggleButton.Style>
-                            <Style BasedOn="{StaticResource MaterialDesignFlatPrimaryToggleButton}" TargetType="{x:Type ToggleButton}">
-                                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
-                                <Style.Triggers>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ToggleButton.Style>
-                    </ToggleButton>
-
-                    <ToggleButton
-                        Grid.Column="3"
-                        Width="30"
-                        Height="30"
-                        Margin="5,0"
-                        FocusVisualStyle="{x:Null}"
-                        IsChecked="{Binding Shuffle, Mode=TwoWay}"
-                        IsTabStop="False"
-                        ToolTip="{Binding [Shuffle]}">
-                        <materialDesign:PackIcon
-                            Width="16"
-                            Height="16"
-                            Kind="Shuffle" />
-                        <ToggleButton.Style>
-                            <Style BasedOn="{StaticResource MaterialDesignFlatPrimaryToggleButton}" TargetType="{x:Type ToggleButton}">
-                                <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
-                                <Style.Triggers>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ToggleButton.Style>
-                    </ToggleButton>
+                    <uc:LoopPlayListToggleButton Grid.Column="2" />
+                    <uc:ShufflePlayListToggleButton Grid.Column="3" />
 
                     <Button
                         Grid.Column="4"

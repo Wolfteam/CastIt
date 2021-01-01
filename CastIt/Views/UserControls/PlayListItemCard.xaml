@@ -2,10 +2,12 @@
     x:Class="CastIt.Views.UserControls.PlayListItemCard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviours="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
     d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
@@ -13,70 +15,166 @@
     d:DesignWidth="200"
     mc:Ignorable="d">
 
-    <materialDesign:Card Width="190" Margin="5" MouseDoubleClick="Control_OnMouseDoubleClick">
+    <materialDesign:Card
+        x:Name="PlayListCard"
+        Margin="8,10"
+        materialDesign:ShadowAssist.Darken="True"
+        materialDesign:ShadowAssist.ShadowDepth="Depth5"
+        materialDesign:ShadowAssist.ShadowEdges="All"
+        MouseDoubleClick="Control_OnMouseDoubleClick">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="120" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="140" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <!--<Image
-                Margin="20,10,10,0"
+            <Image
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Focusable="False"
                 RenderOptions.BitmapScalingMode="HighQuality"
-                Source="{Binding CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}}"
+                Source="{Binding ViewModel.CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}}}"
                 Stretch="Fill"
-                ToolTip="{Binding CurrentlyPlayingFilename}" />-->
-            <!--<Button
-                Grid.Row="0"
-                Margin="0,0,5,100"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Content="10"
-                Foreground="White"
-                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" />-->
-            <!--<Button
+                ToolTip="{Binding ViewModel.CurrentlyPlayingFilename, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}}}" />
+            <Button
                 Grid.Row="0"
                 Margin="0,0,5,-20"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
+                Content="{Binding Items.Count}"
                 Foreground="White"
-                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}">
-                <materialDesign:PackIcon Kind="Plus" />
-            </Button>-->
-            <StackPanel Grid.Row="1" Margin="20,24,20,0">
-                <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" />
+            <StackPanel
+                Grid.Row="1"
+                Margin="0,20,0,0"
+                HorizontalAlignment="Stretch"
+                ToolTip="{Binding Name}">
+                <TextBlock
+                    FontWeight="Bold"
+                    Text="{Binding Name}"
+                    TextAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap" />
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Visibility="{Binding ShowTotalDuration, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <materialDesign:PackIcon Kind="TimerSand" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        Text="{Binding TotalDuration, Mode=OneWay}" />
+                </StackPanel>
             </StackPanel>
             <StackPanel
                 Grid.Row="2"
                 Margin="8"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
-                <Button
-                    Width="30"
-                    Padding="2,0,2,0"
-                    materialDesign:RippleAssist.IsCentered="True"
-                    Foreground="White"
-                    Style="{StaticResource MaterialDesignToolButton}">
-                    <materialDesign:PackIcon Kind="Plus" />
-                </Button>
-                <Button
-                    Width="30"
-                    Padding="2,0,2,0"
-                    materialDesign:RippleAssist.IsCentered="True"
-                    Foreground="{DynamicResource PrimaryHueDarkBrush}"
-                    Style="{StaticResource MaterialDesignToolButton}">
-                    <materialDesign:PackIcon Kind="Delete" />
-                </Button>
+                <materialDesign:PopupBox Padding="2,0,2,0">
+                    <materialDesign:PopupBox.ToggleContent>
+                        <materialDesign:PackIcon Foreground="{DynamicResource FontColorBrush}" Kind="Plus" />
+                    </materialDesign:PopupBox.ToggleContent>
+                    <StackPanel>
+                        <Button Command="{Binding AddFolderCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    Foreground="{DynamicResource FontColorBrush}"
+                                    Kind="Folder" />
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding [AddFolder]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding AddFilesCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    Foreground="{DynamicResource FontColorBrush}"
+                                    Kind="Add" />
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding [AddFiles]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding AddUrlCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    Foreground="{DynamicResource FontColorBrush}"
+                                    Kind="LinkAdd" />
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding [AddUrl]}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </materialDesign:PopupBox>
+                <local:LoopPlayListToggleButton />
+                <local:ShufflePlayListToggleButton />
+
                 <materialDesign:PopupBox Padding="2,0,2,0">
                     <StackPanel>
-                        <Button Content="More" />
-                        <Button Content="Delete" />
+                        <Button Command="{Binding OpenEditPopUpCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    Foreground="{DynamicResource FontColorBrush}"
+                                    Kind="Edit" />
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding [Rename]}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding ViewModel.DeletePlayListCommand, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    Foreground="{DynamicResource FontColorBrush}"
+                                    Kind="Delete" />
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding [Delete]}" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </materialDesign:PopupBox>
             </StackPanel>
+            <Popup
+                Grid.Row="2"
+                IsOpen="{Binding ShowEditPopUp, Mode=TwoWay}"
+                Placement="Bottom"
+                PlacementTarget="{Binding ElementName=PlayListCard}"
+                StaysOpen="False">
+                <behaviours:Interaction.Triggers>
+                    <behaviours:EventTrigger EventName="Opened">
+                        <behaviours:ChangePropertyAction
+                            PropertyName="Text"
+                            TargetObject="{Binding ElementName=EditPlayListNameUserControl, Path=PlayListNameTextBox}"
+                            Value="{Binding Name}" />
+                        <behaviours:CallMethodAction MethodName="FocusTextBox" TargetObject="{Binding ElementName=EditPlayListNameUserControl}" />
+                    </behaviours:EventTrigger>
+                </behaviours:Interaction.Triggers>
+
+                <Popup.HorizontalOffset>
+                    <MultiBinding Converter="{StaticResource CenterPopUpConverter}" ConverterParameter="False">
+                        <Binding ElementName="EditPlayListNameUserControl" Path="Width" />
+                        <Binding ElementName="PlayListCard" Path="ActualWidth" />
+                    </MultiBinding>
+                </Popup.HorizontalOffset>
+                <local:EditPlayListName x:Name="EditPlayListNameUserControl" />
+            </Popup>
         </Grid>
     </materialDesign:Card>
 </views:MvxWpfView>

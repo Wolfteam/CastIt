@@ -3,7 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:cb="clr-namespace:CastIt.Common.Behaviours"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
-    xmlns:local="clr-namespace:CastIt.XamlResources"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <Style
@@ -101,7 +100,7 @@
                                         Grid.Column="2"
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Center"
-                                        Command="{Binding DataContext.DeletePlayListCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}"
+                                        Command="{Binding Tag.DeletePlayListCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type dragablz:TabablzControl}}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource CustomCloseItemTabButtonStyle}"
                                         ToolTip="{Binding [Delete]}" />

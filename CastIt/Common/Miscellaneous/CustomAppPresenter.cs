@@ -1,5 +1,4 @@
 ﻿using CastIt.Common.Utils;
-using MvvmCross.Base;
 using MvvmCross.Platforms.Wpf.Presenters;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;

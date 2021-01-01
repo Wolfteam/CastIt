@@ -109,8 +109,17 @@ namespace CastIt.Views
             if (e.Value == null)
                 return;
             var tabs = GetTabsPosition();
-            var (playlist, logicalIndex) = tabs.FirstOrDefault(t => t.Key.Id == e.Value.Id);
-            await ViewModel.DeletePlayList(logicalIndex, playlist);
+            //If we are in tab mode
+            if (tabs.Count > 0)
+            {
+                var (playlist, logicalIndex) = tabs.FirstOrDefault(t => t.Key.Id == e.Value.Id);
+                await ViewModel.DeletePlayList(logicalIndex, playlist);
+            }
+            //else we are in grid view mode
+            else
+            {
+                await ViewModel.DeletePlayList(ViewModel.PlayLists.IndexOf(e.Value), e.Value);
+            }
         }
     }
 }

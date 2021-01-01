@@ -6,8 +6,10 @@
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
     Width="260"
     Height="120"
+    d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
     d:DesignHeight="100"
     d:DesignWidth="350"
     mc:Ignorable="d">

@@ -28,21 +28,27 @@
             VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <Button
-                    Width="30"
-                    Height="30"
+                    Height="32"
                     Command="{Binding ViewModel.GoBackCommand, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}"
-                    Style="{StaticResource MainButtonStyle}"
-                    ToolTip="Go back">
-                    <materialDesign:PackIcon
-                        Width="20"
-                        Height="20"
-                        Kind="ArrowLeft" />
+                    Foreground="{StaticResource FontColorBrush}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    ToolTip="{Binding Item.Name}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            Kind="ArrowLeft" />
+                        <TextBlock
+                            MaxWidth="120"
+                            Margin="5,0"
+                            VerticalAlignment="Center"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource FontColorBrush}"
+                            Text="{Binding Item.Name}"
+                            TextTrimming="WordEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
                 </Button>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontWeight="Bold"
-                    Foreground="{DynamicResource FontColorBrush}"
-                    Text="{Binding Item.Name}" />
             </StackPanel>
             <ToggleButton
                 HorizontalAlignment="Right"

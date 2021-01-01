@@ -1038,15 +1038,9 @@ namespace CastIt.ViewModels
 
         public Task GoToPlayLists()
         {
-            foreach (var pl in PlayLists)
-            {
-                pl.SelectedItems.Clear();
-                pl.SelectedItem = null;
-            }
-
             return _settingsService.UseGridViewForPlayLists
-                ? _navigationService.Navigate<PlayListsGridViewModel,List<PlayListItemViewModel>>(PlayLists.ToList())
-                : _navigationService.Navigate<PlayListsViewModel, List<PlayListItemViewModel>>(PlayLists.ToList());
+                ? _navigationService.Navigate<PlayListsGridViewModel>()
+                : _navigationService.Navigate<PlayListsViewModel>();
         }
 
         public async Task GoToPlayList(PlayListItemViewModel vm)
