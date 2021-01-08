@@ -3,18 +3,15 @@ using CastIt.Domain.Enums;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using System;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace CastIt.Common.Utils
 {
     public static class WindowsUtils
     {
-        public static T FindAnchestor<T>(DependencyObject current)
+        public static T FindAncestor<T>(DependencyObject current)
             where T : DependencyObject
         {
             do
@@ -124,50 +121,6 @@ namespace CastIt.Common.Utils
 
             if (currentTheme != null)
                 themeDictionary.MergedDictionaries.Remove(currentTheme);
-        }
-
-        //https://gist.github.com/Phyxion/160a6f04e6083016d4b2a3aed3c4fe71
-        public static Image GetImage(
-            PackIconKind iconKind,
-            System.Windows.Media.Brush brush,
-            System.Windows.Media.Pen pen)
-        {
-            var icon = new PackIcon
-            {
-                Kind = iconKind
-            };
-
-            var geometryDrawing = new GeometryDrawing
-            {
-                Geometry = Geometry.Parse(icon.Data),
-                Brush = brush,
-                Pen = pen
-            };
-
-            var drawingGroup = new DrawingGroup { Children = { geometryDrawing } };
-
-            var img = new DrawingImage { Drawing = drawingGroup };
-            var stream = DrawingImageToStream(img);
-            return Image.FromStream(stream);
-        }
-
-        //https://stackoverflow.com/questions/41916147/how-to-convert-system-windows-media-drawingimage-into-stream
-        private static MemoryStream DrawingImageToStream(DrawingImage drawingImage)
-        {
-            var visual = new DrawingVisual();
-            using (DrawingContext dc = visual.RenderOpen())
-            {
-                dc.DrawDrawing(drawingImage.Drawing);
-            }
-            var target = new RenderTargetBitmap((int)visual.Drawing.Bounds.Right, (int)visual.Drawing.Bounds.Bottom, 96.0, 96.0, PixelFormats.Pbgra32);
-            target.Render(visual);
-
-            var stream = new MemoryStream();
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(target));
-            encoder.Save(stream);
-
-            return stream;
         }
     }
 }

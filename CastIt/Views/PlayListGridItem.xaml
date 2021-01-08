@@ -50,19 +50,6 @@
                     </StackPanel>
                 </Button>
             </StackPanel>
-            <ToggleButton
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                materialDesign:ToggleButtonAssist.OnContent="{Binding Item.Items.Count}"
-                Background="{DynamicResource DarkestColorBrush}"
-                Content="{Binding Item.Items.Count}"
-                Cursor="{x:Null}"
-                Focusable="False"
-                Foreground="{DynamicResource FontColorBrush}"
-                IsChecked="True"
-                IsTabStop="False"
-                Style="{StaticResource MaterialDesignActionLightToggleButton}"
-                ToolTip="There are 127 items in this playlist" />
         </Grid>
         <uc:PlayListItem
             Grid.Row="1"

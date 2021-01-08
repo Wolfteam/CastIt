@@ -1,14 +1,22 @@
 ﻿using CastIt.ViewModels.Items;
-using MvvmCross.Platforms.Wpf.Views;
+using MvvmCross.Binding.BindingContext;
 using System.Windows.Input;
 
 namespace CastIt.Views.UserControls
 {
-    public partial class PlayListItemCard : MvxWpfView
+    public partial class PlayListItemCard : BasePlayListItem
     {
         public PlayListItemCard()
         {
             InitializeComponent();
+
+            this.DelayBind(() =>
+            {
+                var set = this.CreateBindingSet<PlayListItemCard, PlayListItemViewModel>();
+                set.Bind(this).For(v => v.OpenFileDialogRequest).To(vm => vm.OpenFileDialog).OneWay();
+                set.Bind(this).For(v => v.OpenFolderDialogRequest).To(vm => vm.OpenFolderDialog).OneWay();
+                set.Apply();
+            });
         }
 
         private async void Control_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -17,8 +25,7 @@ namespace CastIt.Views.UserControls
             if (!(window?.Content is MainPage view))
                 return;
 
-            var vm = DataContext as PlayListItemViewModel;
-            await view.ViewModel.GoToPlayList(vm);
+            await view.ViewModel.GoToPlayList(Vm);
         }
     }
 }

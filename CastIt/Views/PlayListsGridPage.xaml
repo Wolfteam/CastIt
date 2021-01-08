@@ -42,7 +42,6 @@
             AddCard="{StaticResource AddNewPlayListItemTemplate}"
             Card="{StaticResource PlayListItemCardTemplate}" />
 
-
         <CollectionViewSource x:Key="PlayListsItems" Source="{Binding ViewModel.PlayLists, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}" />
     </views:MvxWpfView.Resources>
 

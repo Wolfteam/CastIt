@@ -8,6 +8,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:up="clr-namespace:CastIt.Views.Popups"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
     d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
@@ -63,29 +64,11 @@
             Text="{Binding Name}"
             TextTrimming="CharacterEllipsis"
             TextWrapping="NoWrap" />
-        <Popup
-            Grid.Column="0"
-            IsOpen="{Binding ShowEditPopUp, Mode=TwoWay}"
-            Placement="Bottom"
-            PlacementTarget="{Binding ElementName=PlayListTitle}"
-            StaysOpen="False">
-            <behaviours:Interaction.Triggers>
-                <behaviours:EventTrigger EventName="Opened">
-                    <behaviours:ChangePropertyAction
-                        PropertyName="Text"
-                        TargetObject="{Binding ElementName=EditPlayListNameUserControl, Path=PlayListNameTextBox}"
-                        Value="{Binding Name}" />
-                    <behaviours:CallMethodAction MethodName="FocusTextBox" TargetObject="{Binding ElementName=EditPlayListNameUserControl}" />
-                </behaviours:EventTrigger>
-            </behaviours:Interaction.Triggers>
 
-            <Popup.HorizontalOffset>
-                <MultiBinding Converter="{StaticResource CenterPopUpConverter}" ConverterParameter="False">
-                    <Binding ElementName="EditPlayListNameUserControl" Path="Width" />
-                    <Binding ElementName="PlayListTitle" Path="ActualWidth" />
-                </MultiBinding>
-            </Popup.HorizontalOffset>
-            <uc:EditPlayListName x:Name="EditPlayListNameUserControl" />
-        </Popup>
+        <up:RenamePlayListPopup
+            Grid.Column="0"
+            CurrentName="{Binding Name}"
+            IsOpen="{Binding ShowEditPopUp, Mode=TwoWay}"
+            PlacementTarget="{Binding ElementName=PlayListTitle}" />
     </Grid>
 </UserControl>

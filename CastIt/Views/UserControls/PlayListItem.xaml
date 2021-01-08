@@ -1,9 +1,10 @@
-﻿<views:MvxWpfView
+﻿<local:BasePlayListItem
     x:Class="CastIt.Views.UserControls.PlayListItem"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviours="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:cb="clr-namespace:CastIt.Common.Behaviours"
+    xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     xmlns:enums="clr-namespace:CastIt.Domain.Enums;assembly=CastIt.Domain"
@@ -11,6 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:selectors="clr-namespace:CastIt.Common.Selectors"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:up="clr-namespace:CastIt.Views.Popups"
     xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vm="clr-namespace:CastIt.ViewModels"
@@ -18,7 +20,6 @@
     d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    x:TypeArguments="vmis:PlayListItemViewModel"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -241,26 +242,10 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-
-        <Popup
+        <up:AddFromUrlPopup
             Grid.Row="0"
             IsOpen="{Binding ShowAddUrlPopUp, Mode=TwoWay}"
-            Placement="Center"
-            PlacementTarget="{Binding ElementName=PlaylistLv}"
-            StaysOpen="False">
-            <behaviours:Interaction.Triggers>
-                <behaviours:EventTrigger EventName="Opened">
-                    <behaviours:CallMethodAction MethodName="FocusUrl" TargetObject="{Binding ElementName=AddFromUrlUserControl}" />
-                </behaviours:EventTrigger>
-                <behaviours:EventTrigger EventName="Closed">
-                    <behaviours:ChangePropertyAction
-                        PropertyName="Text"
-                        TargetObject="{Binding ElementName=AddFromUrlUserControl, Path=UrlText}"
-                        Value="" />
-                </behaviours:EventTrigger>
-            </behaviours:Interaction.Triggers>
-            <uc:AddFromUrl x:Name="AddFromUrlUserControl" />
-        </Popup>
+            PlacementTarget="{Binding ElementName=PlaylistLv}" />
 
         <materialDesign:ColorZone
             Grid.Row="1"
@@ -570,4 +555,4 @@
         </materialDesign:ColorZone>
 
     </Grid>
-</views:MvxWpfView>
+</local:BasePlayListItem>

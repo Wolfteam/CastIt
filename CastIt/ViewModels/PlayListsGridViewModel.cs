@@ -9,7 +9,7 @@ namespace CastIt.ViewModels
         public PlayListsGridViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
-            ILogger<PlayListsGridViewModel> logger) 
+            ILogger<PlayListsGridViewModel> logger)
             : base(textProvider, messenger, logger)
         {
         }

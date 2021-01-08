@@ -1,4 +1,4 @@
-﻿<views:MvxWpfView
+﻿<local:BasePlayListItem
     x:Class="CastIt.Views.UserControls.PlayListItemCard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -7,6 +7,7 @@
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:up="clr-namespace:CastIt.Views.Popups"
     xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
@@ -33,9 +34,16 @@
                 VerticalAlignment="Stretch"
                 Focusable="False"
                 RenderOptions.BitmapScalingMode="HighQuality"
-                Source="{Binding ViewModel.CurrentFileThumbnail, Converter={StaticResource StringToImgConverter}, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}}}"
                 Stretch="Fill"
-                ToolTip="{Binding ViewModel.CurrentlyPlayingFilename, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}}}" />
+                ToolTip="{Binding ViewModel.CurrentlyPlayingFilename, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}}}">
+                <Image.Source>
+                    <MultiBinding Converter="{StaticResource PlayListCardItemMultiConverter}">
+                        <Binding Path="ViewModel.CurrentFileThumbnail" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}}" />
+                        <Binding Path="ViewModel.CurrentlyPlayingFilename" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}}" />
+                        <Binding />
+                    </MultiBinding>
+                </Image.Source>
+            </Image>
             <Button
                 Grid.Row="0"
                 Margin="0,0,5,-20"
@@ -102,7 +110,7 @@
                                     Text="{Binding [AddFiles]}" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding AddUrlCommand}">
+                        <Button Command="{Binding ShowAddUrlPopUpCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon
                                     Width="20"
@@ -119,7 +127,6 @@
                 </materialDesign:PopupBox>
                 <local:LoopPlayListToggleButton />
                 <local:ShufflePlayListToggleButton />
-
                 <materialDesign:PopupBox Padding="2,0,2,0">
                     <StackPanel>
                         <Button Command="{Binding OpenEditPopUpCommand}">
@@ -148,33 +155,23 @@
                                     Text="{Binding [Delete]}" />
                             </StackPanel>
                         </Button>
+
                     </StackPanel>
                 </materialDesign:PopupBox>
+                <ProgressBar
+                    IsIndeterminate="True"
+                    Style="{StaticResource MaterialDesignCircularProgressBar}"
+                    Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </StackPanel>
-            <Popup
+            <up:RenamePlayListPopup
                 Grid.Row="2"
+                CurrentName="{Binding Name}"
                 IsOpen="{Binding ShowEditPopUp, Mode=TwoWay}"
-                Placement="Bottom"
-                PlacementTarget="{Binding ElementName=PlayListCard}"
-                StaysOpen="False">
-                <behaviours:Interaction.Triggers>
-                    <behaviours:EventTrigger EventName="Opened">
-                        <behaviours:ChangePropertyAction
-                            PropertyName="Text"
-                            TargetObject="{Binding ElementName=EditPlayListNameUserControl, Path=PlayListNameTextBox}"
-                            Value="{Binding Name}" />
-                        <behaviours:CallMethodAction MethodName="FocusTextBox" TargetObject="{Binding ElementName=EditPlayListNameUserControl}" />
-                    </behaviours:EventTrigger>
-                </behaviours:Interaction.Triggers>
-
-                <Popup.HorizontalOffset>
-                    <MultiBinding Converter="{StaticResource CenterPopUpConverter}" ConverterParameter="False">
-                        <Binding ElementName="EditPlayListNameUserControl" Path="Width" />
-                        <Binding ElementName="PlayListCard" Path="ActualWidth" />
-                    </MultiBinding>
-                </Popup.HorizontalOffset>
-                <local:EditPlayListName x:Name="EditPlayListNameUserControl" />
-            </Popup>
+                PlacementTarget="{Binding ElementName=PlayListCard}" />
+            <up:AddFromUrlPopup
+                Grid.Row="2"
+                IsOpen="{Binding ShowAddUrlPopUp, Mode=TwoWay}"
+                PlacementTarget="{Binding ElementName=PlayListCard}" />
         </Grid>
     </materialDesign:Card>
-</views:MvxWpfView>
+</local:BasePlayListItem>

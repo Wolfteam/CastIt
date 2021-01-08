@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using CastIt.Common.Extensions;
 
-namespace CastIt.Views.UserControls
+namespace CastIt.Views.Popups
 {
     public partial class AddFromUrl : UserControl
     {

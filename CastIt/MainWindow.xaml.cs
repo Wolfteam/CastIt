@@ -44,7 +44,7 @@ namespace CastIt
             var view = Content as MainPage;
             //when this method gets called, the IsExpanded property already changed
             //thats why we negate its value
-            bool collapse = !view.ViewModel.IsExpanded;
+            bool collapse = !view!.ViewModel.IsExpanded;
             if (collapse)
             {
                 BeginStoryboard(_hideWin);
@@ -52,7 +52,7 @@ namespace CastIt
             }
             else
             {
-                (_showWin.Children.First() as DoubleAnimation).To = tabHeight + AppConstants.MinWindowHeight;
+                (_showWin.Children.First() as DoubleAnimation)!.To = tabHeight + AppConstants.MinWindowHeight;
                 _showWin.Begin();
             }
         }
@@ -74,7 +74,7 @@ namespace CastIt
         private void AppMainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             var view = Content as MainPage;
-            if (view == null)
+            if (view?.ViewModel == null)
                 return;
 
             if (e.NewSize.Height <= AppConstants.MinWindowHeight &&

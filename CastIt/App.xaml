@@ -41,6 +41,7 @@
             <converters:FileOptionsMultiConverter x:Key="FileOptionsMultiConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:BooleanOrConverter x:Key="BooleanOrConverter" />
+            <converters:PlayListCardItemMultiConverter x:Key="PlayListCardItemMultiConverter" />
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.png" />
