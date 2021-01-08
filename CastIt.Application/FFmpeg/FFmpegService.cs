@@ -114,7 +114,7 @@ namespace CastIt.Application.FFMpeg
             }
 
             var filename = Path.GetFileName(mrl);
-            var thumbnailPath = _fileService.GetThumbnailFilePath(filename, 0);
+            var thumbnailPath = _fileService.GetFirstThumbnailFilePath(filename);
             if (File.Exists(thumbnailPath))
             {
                 return thumbnailPath;

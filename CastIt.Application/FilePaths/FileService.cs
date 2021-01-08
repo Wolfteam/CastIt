@@ -74,6 +74,9 @@ namespace CastIt.Application.FilePaths
             return CreateDirectory(basePath, SubTitlesFolderName);
         }
 
+        public string GetFirstThumbnailFilePath(string filename)
+            => GetThumbnailFilePath(filename, 0);
+
         public string GetThumbnailFilePath(string filename, long second)
         {
             return Path.Combine(GetPreviewsPath(), $"{filename}_{second:D2}.jpg");
