@@ -49,19 +49,19 @@ namespace CastIt.Common.Miscellaneous
             MvxContentPresentationAttribute attribute,
             MvxViewModelRequest request)
         {
-            if (!(attribute is CustomMvxContentPresentationAttribute customMvxViewForAttribute))
+            if (!(attribute is CustomMvxContentPresentationAttribute customAttribute))
                 return base.ShowContentView(element, attribute, request);
 
             var contentControl = FrameworkElementsDictionary.Keys
                 .FirstOrDefault(w => (w as MvxWindow)?.Identifier == attribute.WindowIdentifier)
                 ?? FrameworkElementsDictionary.Keys.Last();
 
-            if (!customMvxViewForAttribute.NoHistory && !attribute.StackNavigation && FrameworkElementsDictionary[contentControl].Any())
+            if (!customAttribute.NoHistory && !attribute.StackNavigation && FrameworkElementsDictionary[contentControl].Any())
                 FrameworkElementsDictionary[contentControl].Pop(); // Close previous view
 
             //We can't use a frame because we wouldn't be able to access the parents data
             //that's why we use a content control
-            if (WindowsUtils.GetDescendantFromName(contentControl, customMvxViewForAttribute.ContentFrame) is ContentControl control)
+            if (WindowsUtils.GetDescendantFromName(contentControl, customAttribute.ContentFrame) is ContentControl control)
             {
                 control.Content = element;
             }
@@ -70,7 +70,7 @@ namespace CastIt.Common.Miscellaneous
                 contentControl.Content = element;
             }
 
-            if (customMvxViewForAttribute.NoHistory)
+            if (customAttribute.NoHistory)
                 return Task.FromResult(true);
 
             FrameworkElementsDictionary[contentControl].Push(element);
