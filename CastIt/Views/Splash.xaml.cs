@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Miscellaneous;
+using CastIt.Common.Utils;
 using CastIt.ViewModels;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
@@ -61,6 +62,8 @@ namespace CastIt.Views
 
                 window.ResizeMode = canResize ? ResizeMode.CanResize : ResizeMode.NoResize;
                 window.ShowInTaskbar = showInTaskBar;
+
+                WindowsUtils.CenterWindow(window);
             });
         }
     }

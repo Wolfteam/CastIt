@@ -5,6 +5,7 @@ using MaterialDesignThemes.Wpf;
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media;
 
 namespace CastIt.Common.Utils
@@ -121,6 +122,43 @@ namespace CastIt.Common.Utils
 
             if (currentTheme != null)
                 themeDictionary.MergedDictionaries.Remove(currentTheme);
+        }
+
+        public static void CenterWindow(Window window)
+        {
+            var currentMonitor = Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window!).Handle);
+            CenterWindow(window, currentMonitor);
+        }
+
+        public static void CenterWindow(Window w, Screen screen)
+        {
+            int screenW = screen.Bounds.Width;
+            int screenH = screen.Bounds.Height;
+            int screenTop = screen.Bounds.Top;
+            int screenLeft = screen.Bounds.Left;
+
+            w.Left = PixelsToPoints((int)(screenLeft + (screenW - PointsToPixels(w.Width, "X")) / 2), "X");
+            w.Top = PixelsToPoints((int)(screenTop + (screenH - PointsToPixels(w.Height, "Y")) / 2), "Y");
+        }
+
+        public static double PixelsToPoints(int pixels, string direction)
+        {
+            if (direction == "X")
+            {
+                return pixels * SystemParameters.WorkArea.Width / Screen.PrimaryScreen.WorkingArea.Width;
+            }
+
+            return pixels * SystemParameters.WorkArea.Height / Screen.PrimaryScreen.WorkingArea.Height;
+        }
+
+        public static double PointsToPixels(double wpfPoints, string direction)
+        {
+            if (direction == "X")
+            {
+                return wpfPoints * Screen.PrimaryScreen.WorkingArea.Width / SystemParameters.WorkArea.Width;
+            }
+
+            return wpfPoints * Screen.PrimaryScreen.WorkingArea.Height / SystemParameters.WorkArea.Height;
         }
     }
 }
