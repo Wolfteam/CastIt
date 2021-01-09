@@ -558,4 +558,7 @@
   <data name="UseGridViewForPlayLists" xml:space="preserve">
     <value>Use a grid view for playlists</value>
   </data>
+  <data name="RemoveSelected" xml:space="preserve">
+    <value>Remove the selected ones</value>
+  </data>
 </root>

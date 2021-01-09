@@ -98,7 +98,20 @@
                 <MenuItem
                     Command="{Binding PlacementTarget.Tag.RemoveFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}"
                     CommandParameter="{Binding}"
-                    Header="{Binding [Remove]}">
+                    Visibility="{Binding PlacementTarget.Tag.SelectedItems.Count, Converter={StaticResource NotZeroToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                    <MenuItem.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PlacementTarget.Tag.SelectedItems.Count, Converter={StaticResource EqualToBooleanConverter}, ConverterParameter=1, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Value="True">
+                                    <Setter Property="Header" Value="{Binding [Remove]}" />
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding PlacementTarget.Tag.SelectedItems.Count, Converter={StaticResource GreaterThanToBooleanConverter}, ConverterParameter=1, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Value="True">
+                                    <Setter Property="Header" Value="{Binding [RemoveSelected]}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
                     <MenuItem.Icon>
                         <materialDesign:PackIcon Kind="Delete" />
                     </MenuItem.Icon>

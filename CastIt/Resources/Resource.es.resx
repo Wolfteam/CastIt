@@ -558,4 +558,7 @@
   <data name="UseGridViewForPlayLists" xml:space="preserve">
     <value>Usar una grilla para la listas de reproducción</value>
   </data>
+  <data name="RemoveSelected" xml:space="preserve">
+    <value>Remover los seleccionados</value>
+  </data>
 </root>

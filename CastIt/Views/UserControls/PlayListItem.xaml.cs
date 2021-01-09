@@ -21,6 +21,7 @@ namespace CastIt.Views.UserControls
         private const string PlaylistItemMoveFormat = "PlaylistItemMoveFormat";
 
         private IMvxInteraction<FileItemViewModel> _scrollToSelectedItemRequest;
+        private IMvxInteraction _selectAllRequest;
 
         public IMvxInteraction<FileItemViewModel> ScrollToSelectedItemRequest
         {
@@ -35,6 +36,19 @@ namespace CastIt.Views.UserControls
             }
         }
 
+        public IMvxInteraction SelectAllItemsRequest
+        {
+            get => _selectAllRequest;
+            set
+            {
+                _selectAllRequest = value;
+                if (value != null)
+                {
+                    Disposables.Add(_selectAllRequest.WeakSubscribe(SelectAllItems));
+                }
+            }
+        }
+
         public PlayListItem()
         {
             InitializeComponent();
@@ -44,6 +58,7 @@ namespace CastIt.Views.UserControls
                 set.Bind(this).For(v => v.OpenFileDialogRequest).To(vm => vm.OpenFileDialog).OneWay();
                 set.Bind(this).For(v => v.OpenFolderDialogRequest).To(vm => vm.OpenFolderDialog).OneWay();
                 set.Bind(this).For(v => v.ScrollToSelectedItemRequest).To(vm => vm.ScrollToSelectedItem).OneWay();
+                set.Bind(this).For(v => v.SelectAllItemsRequest).To(vm => vm.SelectAllItems).OneWay();
                 set.Apply();
             });
         }
@@ -253,6 +268,16 @@ namespace CastIt.Views.UserControls
         {
             if (e.Value != null)
                 Dispatcher.Invoke(() => PlaylistLv.ScrollIntoView(e.Value));
+        }
+
+        private void SelectAllItems(object sender, EventArgs e)
+        {
+            PlaylistLv.SelectedItems.Clear();
+
+            foreach (var item in Vm.Items)
+            {
+                PlaylistLv.SelectedItems.Add(item);
+            }
         }
     }
 }

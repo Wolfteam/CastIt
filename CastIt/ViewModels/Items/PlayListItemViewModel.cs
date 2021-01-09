@@ -48,6 +48,7 @@ namespace CastIt.ViewModels.Items
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
         private readonly MvxInteraction<FileItemViewModel> _scrollToSelectedItem = new MvxInteraction<FileItemViewModel>();
+        private readonly MvxInteraction _selectAll = new MvxInteraction();
         #endregion
 
         #region Properties
@@ -162,6 +163,9 @@ namespace CastIt.ViewModels.Items
 
         public IMvxInteraction<FileItemViewModel> ScrollToSelectedItem
             => _scrollToSelectedItem;
+
+        public IMvxInteraction SelectAllItems
+            => _selectAll;
         #endregion
 
         public PlayListItemViewModel(
@@ -490,17 +494,8 @@ namespace CastIt.ViewModels.Items
         }
 
         public void SelectAll()
-            => ChangeSelection(true);
-
-        public void UnSelectAll()
-            => ChangeSelection(false);
-
-        private void ChangeSelection(bool allSelected)
         {
-            foreach (var file in Items)
-            {
-                file.IsSelected = allSelected;
-            }
+            _selectAll.Raise();
         }
 
         public async Task SavePlayList(string newName)
