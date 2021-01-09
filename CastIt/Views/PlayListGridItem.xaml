@@ -26,7 +26,7 @@
             Margin="5,0,10,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal">
+            <DockPanel>
                 <Button
                     Height="32"
                     Command="{Binding ViewModel.GoBackCommand, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}"
@@ -42,6 +42,7 @@
                             MaxWidth="120"
                             Margin="5,0"
                             VerticalAlignment="Center"
+                            d:Text="PlayList"
                             FontWeight="Bold"
                             Foreground="{DynamicResource FontColorBrush}"
                             Text="{Binding Item.Name}"
@@ -49,7 +50,12 @@
                             TextWrapping="NoWrap" />
                     </StackPanel>
                 </Button>
-            </StackPanel>
+                <ProgressBar
+                    HorizontalAlignment="Right"
+                    IsIndeterminate="True"
+                    Style="{StaticResource MaterialDesignCircularProgressBar}"
+                    Visibility="{Binding Item.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </DockPanel>
         </Grid>
         <uc:PlayListItem
             Grid.Row="1"

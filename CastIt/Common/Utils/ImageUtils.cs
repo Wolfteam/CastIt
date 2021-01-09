@@ -99,7 +99,7 @@ namespace CastIt.Common.Utils
             PlayListItemViewModel vm)
         {
             //If the item is not in the playlist, then try to return an image that is part of the playlist
-            var exists = vm.Items.Any(f => f.Name == filename);
+            var exists = vm.Items.Any(f => f.Filename == filename);
             return exists ? GetImageForPlayListItem(fileService, path) : GetImageForPlayListItemCard(fileService, vm);
         }
 

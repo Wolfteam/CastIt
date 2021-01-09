@@ -71,7 +71,11 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     FontWeight="Bold"
-                    Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" />
+                    Foreground="{StaticResource FontColorOnDarkBackgroundBrush}">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Opacity="0.9" />
+                    </TextBlock.Effect>
+                </TextBlock>
             </Grid>
         </Popup>
     </Grid>

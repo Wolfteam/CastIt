@@ -35,7 +35,7 @@
                 Focusable="False"
                 RenderOptions.BitmapScalingMode="HighQuality"
                 Stretch="Fill"
-                ToolTip="{Binding ViewModel.CurrentlyPlayingFilename, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}}}">
+                ToolTip="{Binding Name}">
                 <Image.Source>
                     <MultiBinding Converter="{StaticResource PlayListCardItemMultiConverter}">
                         <Binding Path="ViewModel.CurrentFileThumbnail" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}}" />

@@ -48,6 +48,13 @@ namespace CastIt.Views.UserControls
             });
         }
 
+        public override void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            base.OnLoaded(sender, e);
+            var view = CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource);
+            view.Filter = FilterFiles;
+        }
+
         private void PlaylistLv_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // Get current mouse position
