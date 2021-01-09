@@ -18,6 +18,7 @@ namespace CastIt.Views.UserControls
     {
         private Point _moveStartPoint;
         private int _selectedItemIndex = -1;
+        private bool _loaded;
         private const string PlaylistItemMoveFormat = "PlaylistItemMoveFormat";
 
         private IMvxInteraction<FileItemViewModel> _scrollToSelectedItemRequest;
@@ -68,6 +69,7 @@ namespace CastIt.Views.UserControls
             base.OnLoaded(sender, e);
             var view = CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource);
             view.Filter = FilterFiles;
+            _loaded = true;
         }
 
         private void PlaylistLv_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -135,6 +137,11 @@ namespace CastIt.Views.UserControls
 
             HideAllSeparatorsLines();
             if (sender != e.Source)
+                return;
+
+            //TODO: DOUBLE CLICK IN A FILE CAN TRIGGER THE DROP EVENT...
+            //MouseDoubleClick event on the card item triggers the drop event, this is a workaround for that
+            if (!_loaded)
                 return;
 
             if (e.Data.GetDataPresent(PlaylistItemMoveFormat))

@@ -274,11 +274,12 @@ namespace CastIt.ViewModels.Items
         {
             for (int i = 0; i < Items.Count; i++)
             {
+                var item = Items[i];
                 int newValue = i + 1;
-                if (Items[i].Position != newValue)
+                if (item.Position != newValue)
                 {
-                    Items[i].Position = newValue;
-                    Items[i].PositionChanged = true;
+                    item.Position = newValue;
+                    item.PositionChanged = true;
                 }
             }
         }
