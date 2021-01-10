@@ -37,12 +37,15 @@ namespace CastIt.Domain.Models.FFmpeg.Info
         [JsonProperty(PropertyName = "nb_frames")]
         public long NumberOfFrames { get; set; }
 
+        [JsonProperty(PropertyName = "avg_frame_rate")]
+        public string AverageFrameRate { get; set; }
+
         [JsonProperty(PropertyName = "tags")]
         public FileInfoTag Tag { get; set; }
 
         //The CodecType in an audio file may return video if the stream is a png img
         public bool IsVideo
-            => CodecType == "video" && Level != 0 && NumberOfFrames > 1;
+            => CodecType == "video" && Level != 0 && (NumberOfFrames > 1 || AverageFrameRate != "0/0");
 
         public bool IsAudio
             => CodecType == "audio";
