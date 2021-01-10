@@ -4,31 +4,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:common="clr-namespace:CastIt.Application.Common;assembly=CastIt.Application"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dragablz="clr-namespace:Dragablz;assembly=Dragablz"
     xmlns:local="clr-namespace:CastIt.Views"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
-    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
+    d:DataContext="{d:DesignInstance Type=vms:MainViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:TypeArguments="vms:MainViewModel"
     mc:Ignorable="d">
-
-    <views:MvxWpfView.Resources>
-        <DataTemplate x:Key="PlayListItemHeaderTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
-            <uc:PlayListItemHeader
-                DataContext="{Binding}"
-                FocusVisualStyle="{x:Null}"
-                Tag="{Binding ElementName=PlayListTabControl, Path=DataContext}" />
-        </DataTemplate>
-
-        <DataTemplate x:Key="PlayListItemTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
-            <uc:PlayListItem DataContext="{Binding}" />
-        </DataTemplate>
-    </views:MvxWpfView.Resources>
 
     <views:MvxWpfView.InputBindings>
         <KeyBinding Key="F1" Command="{Binding PreviousCommand}" />
@@ -96,51 +82,11 @@
             Grid.ColumnSpan="2"
             Margin="5,0,5,0" />
 
-        <Grid
+        <ContentControl
+            x:Name="ContentFrame"
             Grid.Row="3"
             Grid.Column="0"
-            Grid.ColumnSpan="2"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Background="Transparent">
-            <Button
-                Height="50"
-                Command="{Binding AddNewPlayListCommand}"
-                Content="{Binding [AddNewPlayList]}"
-                Foreground="{DynamicResource FontColorBrush}"
-                Style="{StaticResource MaterialDesignOutlinedButton}"
-                ToolTip="{Binding [AddNewPlayList]}" />
-        </Grid>
-
-        <dragablz:TabablzControl
-            x:Name="PlayListTabControl"
-            Grid.Row="3"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            HorizontalAlignment="Stretch"
-            HorizontalContentAlignment="Stretch"
-            VerticalContentAlignment="Stretch"
-            BorderBrush="{DynamicResource DarkestColorBrush}"
-            BorderThickness="0"
-            ContentTemplate="{StaticResource PlayListItemTemplate}"
-            FocusVisualStyle="{x:Null}"
-            HeaderItemTemplate="{StaticResource PlayListItemHeaderTemplate}"
-            ItemsSource="{Binding PlayLists}"
-            SelectedIndex="{Binding SelectedPlayListIndex, Mode=TwoWay}"
-            ShowDefaultCloseButton="True"
-            Style="{StaticResource CustomTabablzControlStyle}"
-            Tag="{Binding}"
-            Visibility="{Binding PlayLists.Count, Converter={StaticResource NotZeroToVisibilityConverter}}">
-            <dragablz:TabablzControl.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Command="{Binding PlacementTarget.Tag.AddNewPlayListCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddNewPlayList]}">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon Kind="Plus" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </ContextMenu>
-            </dragablz:TabablzControl.ContextMenu>
-        </dragablz:TabablzControl>
+            Grid.ColumnSpan="2" />
 
         <materialDesign:Snackbar
             Grid.Row="4"

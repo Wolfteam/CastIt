@@ -20,15 +20,28 @@ namespace CastIt.Common.Miscellaneous
         public override void RegisterAttributeTypes()
         {
             base.RegisterAttributeTypes();
-            AttributeTypesToActionsDictionary.Add(typeof(CustomMvxContentPresentationAttribute), new MvxPresentationAttributeAction
-            {
-                ShowAction = (viewType, attribute, request) =>
+            AttributeTypesToActionsDictionary.Register<CustomMvxContentPresentationAttribute>(
+                (viewType, attribute, request) =>
                 {
                     var view = WpfViewLoader.CreateView(request);
                     return ShowContentView(view, (CustomMvxContentPresentationAttribute)attribute, request);
-                },
-                CloseAction = (viewModel, attribute) => CloseContentView(viewModel)
-            });
+                }, (viewModel, attribute) =>
+                {
+                    return CloseContentView(viewModel);
+                });
+        }
+
+        public override async Task<bool> Close(IMvxViewModel toClose)
+        {
+            // toClose is window
+            if (FrameworkElementsDictionary.Any(i => (i.Key as IMvxWpfView)?.ViewModel == toClose) && await CloseWindow(toClose))
+                return true;
+            //TODO: PROPERLY CLOSE THE SPLASH VIEW
+            // toClose is content
+            if (FrameworkElementsDictionary.Any(i => i.Value.Any() && (i.Value.Peek() as IMvxWpfView)?.ViewModel == toClose) && await CloseContentView(toClose))
+                return true;
+
+            return false;
         }
 
         protected override Task<bool> ShowContentView(
@@ -36,23 +49,31 @@ namespace CastIt.Common.Miscellaneous
             MvxContentPresentationAttribute attribute,
             MvxViewModelRequest request)
         {
-            if (!(attribute is CustomMvxContentPresentationAttribute customMvxViewForAttribute))
+            if (!(attribute is CustomMvxContentPresentationAttribute customAttribute))
                 return base.ShowContentView(element, attribute, request);
 
             var contentControl = FrameworkElementsDictionary.Keys
                 .FirstOrDefault(w => (w as MvxWindow)?.Identifier == attribute.WindowIdentifier)
                 ?? FrameworkElementsDictionary.Keys.Last();
 
-            if (!attribute.StackNavigation && FrameworkElementsDictionary[contentControl].Any())
+            if (!customAttribute.NoHistory && !attribute.StackNavigation && FrameworkElementsDictionary[contentControl].Any())
                 FrameworkElementsDictionary[contentControl].Pop(); // Close previous view
 
-            if (WindowsUtils.GetDescendantFromName(contentControl, customMvxViewForAttribute.ContentFrame) is Frame frame)
+            //We can't use a frame because we wouldn't be able to access the parents data
+            //that's why we use a content control
+            if (WindowsUtils.GetDescendantFromName(contentControl, customAttribute.ContentFrame) is ContentControl control)
             {
-                frame.Content = element;
+                control.Content = element;
+            }
+            else
+            {
+                contentControl.Content = element;
             }
 
-            //FrameworkElementsDictionary[contentControl].Push(element);
-            //contentControl.Content = element;
+            if (customAttribute.NoHistory)
+                return Task.FromResult(true);
+
+            FrameworkElementsDictionary[contentControl].Push(element);
             return Task.FromResult(true);
         }
     }

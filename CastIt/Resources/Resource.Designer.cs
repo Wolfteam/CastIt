@@ -1078,6 +1078,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove the selected ones.
+        /// </summary>
+        public static string RemoveSelected {
+            get {
+                return ResourceManager.GetString("RemoveSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rename.
         /// </summary>
         public static string Rename {
@@ -1299,6 +1308,15 @@ namespace CastIt.Resources {
         public static string UrlNotSupported {
             get {
                 return ResourceManager.GetString("UrlNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use a grid view for playlists.
+        /// </summary>
+        public static string UseGridViewForPlayLists {
+            get {
+                return ResourceManager.GetString("UseGridViewForPlayLists", resourceCulture);
             }
         }
         

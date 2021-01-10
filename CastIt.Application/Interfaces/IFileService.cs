@@ -10,6 +10,8 @@
 
         string GetPreviewsPath();
 
+        string GetFirstThumbnailFilePath(string filename);
+
         string GetThumbnailFilePath(string filename, long second);
 
         string GetPreviewThumbnailFilePath(string filename);

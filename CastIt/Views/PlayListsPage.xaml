@@ -1,0 +1,59 @@
+﻿<views:MvxWpfView
+    x:Class="CastIt.Views.PlayListsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dragablz="http://dragablz.net/winfx/xaml/dragablz"
+    xmlns:local="clr-namespace:CastIt.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
+    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
+    xmlns:vms="clr-namespace:CastIt.ViewModels"
+    d:DataContext="{d:DesignInstance Type=vms:PlayListsViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:TypeArguments="vms:PlayListsViewModel"
+    mc:Ignorable="d">
+
+    <views:MvxWpfView.Resources>
+        <DataTemplate x:Key="PlayListItemHeaderTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
+            <uc:PlayListItemHeader
+                DataContext="{Binding}"
+                FocusVisualStyle="{x:Null}"
+                Tag="{Binding ElementName=PlayListTabControl, Path=Tag}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="PlayListItemTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
+            <uc:PlayListItem DataContext="{Binding}" />
+        </DataTemplate>
+    </views:MvxWpfView.Resources>
+
+    <dragablz:TabablzControl
+        x:Name="PlayListTabControl"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Stretch"
+        VerticalContentAlignment="Stretch"
+        BorderBrush="{DynamicResource DarkestColorBrush}"
+        BorderThickness="0"
+        ContentTemplate="{StaticResource PlayListItemTemplate}"
+        FocusVisualStyle="{x:Null}"
+        HeaderItemTemplate="{StaticResource PlayListItemHeaderTemplate}"
+        ItemsSource="{Binding ViewModel.PlayLists, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}"
+        SelectedIndex="{Binding ViewModel.SelectedPlayListIndex, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}, Mode=TwoWay}"
+        ShowDefaultCloseButton="True"
+        Style="{StaticResource CustomTabablzControlStyle}"
+        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}, Mode=TwoWay}"
+        Visibility="{Binding ViewModel.PlayLists.Count, Converter={StaticResource NotZeroToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}">
+        <dragablz:TabablzControl.ContextMenu>
+            <ContextMenu>
+                <MenuItem Command="{Binding PlacementTarget.Tag.AddNewPlayListCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Header="{Binding [AddNewPlayList]}">
+                    <MenuItem.Icon>
+                        <materialDesign:PackIcon Kind="Plus" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+        </dragablz:TabablzControl.ContextMenu>
+    </dragablz:TabablzControl>
+</views:MvxWpfView>

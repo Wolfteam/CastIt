@@ -119,6 +119,12 @@ namespace CastIt.Infrastructure.Services
             set => _appSettings.ShowPlayListTotalDuration = value;
         }
 
+        public bool UseGridViewForPlayLists
+        {
+            get => _appSettings.UseGridViewForPlayLists;
+            set => _appSettings.UseGridViewForPlayLists = value;
+        }
+
         public SubtitleFgColorType CurrentSubtitleFgColor
         {
             get => _appSettings.CurrentSubtitleFgColor;

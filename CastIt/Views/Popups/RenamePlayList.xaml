@@ -1,18 +1,20 @@
 ﻿<UserControl
-    x:Class="CastIt.Views.UserControls.AddFromUrl"
+    x:Class="CastIt.Views.Popups.RenamePlayList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
+    Width="260"
+    Height="120"
+    d:DataContext="{d:DesignInstance Type=vmis:PlayListItemViewModel}"
+    d:DesignHeight="100"
+    d:DesignWidth="350"
     mc:Ignorable="d">
 
     <Grid
-        Width="260"
-        Height="120"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         Background="{DynamicResource WindowLightBackground}">
@@ -31,39 +33,32 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
             Background="{DynamicResource PrimaryHueDarkBrush}">
-            <DockPanel>
-                <StackPanel
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="LinkAdd" Style="{StaticResource ColorZoneIconStyle}" />
-                    <TextBlock Style="{StaticResource ColorZoneTextBlockWithIconStyle}" Text="{Binding [FromUrl]}" />
-                </StackPanel>
-            </DockPanel>
+            <TextBlock Foreground="{DynamicResource FontColorOnDarkBackgroundBrush}" Text="{Binding [PlayList]}" />
         </materialDesign:ColorZone>
         <TextBox
-            x:Name="UrlTextBox"
+            x:Name="PlayListName"
             Grid.Row="1"
             Grid.Column="0"
             Margin="10,5"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
-            materialDesign:HintAssist.Hint="URL"
+            materialDesign:HintAssist.Hint="{Binding [Name]}"
             Foreground="{DynamicResource FontColorBrush}"
-            Style="{StaticResource MaterialDesignFloatingHintTextBox}">
+            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+            Text="{Binding Name, Mode=OneWay}">
             <TextBox.InputBindings>
                 <KeyBinding
                     Key="Enter"
-                    Command="{Binding AddUrlCommand}"
-                    CommandParameter="{Binding ElementName=UrlTextBox, Path=Text}" />
+                    Command="{Binding RenameCommand}"
+                    CommandParameter="{Binding ElementName=PlayListName, Path=Text}" />
             </TextBox.InputBindings>
         </TextBox>
         <Button
             Grid.Row="1"
             Grid.Column="1"
             Margin="0,0,10,0"
-            Command="{Binding AddUrlCommand}"
-            CommandParameter="{Binding ElementName=UrlTextBox, Path=Text}"
+            Command="{Binding RenameCommand}"
+            CommandParameter="{Binding ElementName=PlayListName, Path=Text}"
             Style="{StaticResource MaterialDesignIconButton}"
             ToolTip="{Binding [Save]}">
             <materialDesign:PackIcon

@@ -74,9 +74,30 @@ namespace CastIt.Views
             set.Apply();
         }
 
-        public Dictionary<PlayListItemViewModel, int> GetTabsPosition()
-            => PlayListTabControl.GetOrderedHeaders()
-                .ToDictionary(a => (a.Content as PlayListItemViewModel), a => a.LogicalIndex);
+        public Dictionary<PlayListItemViewModel, int> GetFinalPlayListsPositions()
+        {
+            if (ContentFrame.Content is PlayListsPage page)
+            {
+                //Here the items are not ordered in the main vm, but the order is stored in the logical index prop
+                return page.PlayListTabControl
+                    .GetOrderedHeaders()
+                    .ToDictionary(a => (a.Content as PlayListItemViewModel), a => a.LogicalIndex);
+            }
+
+            if (ContentFrame.Content is PlayListsGridPage)
+            {
+                //Since the items were moved, the change is reflected in the vm, so we
+                //simply create an ordered dictionary
+                var dict = new Dictionary<PlayListItemViewModel, int>();
+                foreach (var playlist in MainWindow.MainViewModel.PlayLists)
+                {
+                    dict.Add(playlist, dict.Count + 1);
+                }
+                return dict;
+            }
+
+            return new Dictionary<PlayListItemViewModel, int>();
+        }
 
         private void OpenSubtitleFileDialog(object sender, EventArgs e)
         {
@@ -101,9 +122,18 @@ namespace CastIt.Views
         {
             if (e.Value == null)
                 return;
-            var tabs = GetTabsPosition();
-            var (playlist, logicalIndex) = tabs.FirstOrDefault(t => t.Key.Id == e.Value.Id);
-            await ViewModel.DeletePlayList(logicalIndex, playlist);
+            var tabs = GetFinalPlayListsPositions();
+            //If we are in tab mode
+            if (tabs.Count > 0)
+            {
+                var (playlist, logicalIndex) = tabs.FirstOrDefault(t => t.Key.Id == e.Value.Id);
+                await ViewModel.DeletePlayList(logicalIndex, playlist);
+            }
+            //else we are in grid view mode
+            else
+            {
+                await ViewModel.DeletePlayList(ViewModel.PlayLists.IndexOf(e.Value), e.Value);
+            }
         }
     }
 }

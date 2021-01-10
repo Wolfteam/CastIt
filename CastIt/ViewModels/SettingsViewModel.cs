@@ -172,6 +172,17 @@ namespace CastIt.ViewModels
             }
         }
 
+        public bool UseGridViewForPlayLists
+        {
+            get => _settingsService.UseGridViewForPlayLists;
+            set
+            {
+                _settingsService.UseGridViewForPlayLists = value;
+                Messenger.Publish(new UseGridViewMessage(this, value));
+                RaisePropertyChanged(() => UseGridViewForPlayLists);
+            }
+        }
+
         #region Subtitles
         public MvxObservableCollection<Item> SubtitleFgColors
             => GetSubtitleFgColors();

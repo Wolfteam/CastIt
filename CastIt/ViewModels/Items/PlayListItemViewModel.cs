@@ -48,6 +48,7 @@ namespace CastIt.ViewModels.Items
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
         private readonly MvxInteraction<FileItemViewModel> _scrollToSelectedItem = new MvxInteraction<FileItemViewModel>();
+        private readonly MvxInteraction _selectAll = new MvxInteraction();
         #endregion
 
         #region Properties
@@ -162,6 +163,9 @@ namespace CastIt.ViewModels.Items
 
         public IMvxInteraction<FileItemViewModel> ScrollToSelectedItem
             => _scrollToSelectedItem;
+
+        public IMvxInteraction SelectAllItems
+            => _selectAll;
         #endregion
 
         public PlayListItemViewModel(
@@ -270,11 +274,12 @@ namespace CastIt.ViewModels.Items
         {
             for (int i = 0; i < Items.Count; i++)
             {
+                var item = Items[i];
                 int newValue = i + 1;
-                if (Items[i].Position != newValue)
+                if (item.Position != newValue)
                 {
-                    Items[i].Position = newValue;
-                    Items[i].PositionChanged = true;
+                    item.Position = newValue;
+                    item.PositionChanged = true;
                 }
             }
         }
@@ -489,12 +494,9 @@ namespace CastIt.ViewModels.Items
             await UpdatePlayedTime();
         }
 
-        private void SelectAll()
+        public void SelectAll()
         {
-            foreach (var file in Items)
-            {
-                file.IsSelected = true;
-            }
+            _selectAll.Raise();
         }
 
         public async Task SavePlayList(string newName)

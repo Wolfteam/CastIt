@@ -1,10 +1,7 @@
-﻿using CastIt.Application.Common;
-using CastIt.Common.Utils;
+﻿using CastIt.Common.Utils;
 using CastIt.ViewModels.Items;
-using Microsoft.Win32;
 using MvvmCross.Base;
 using MvvmCross.Binding.BindingContext;
-using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using System;
 using System.IO;
@@ -17,105 +14,62 @@ using System.Windows.Media;
 
 namespace CastIt.Views.UserControls
 {
-    public partial class PlayListItem : MvxWpfView<PlayListItemViewModel>
+    public partial class PlayListItem : BasePlayListItem
     {
         private Point _moveStartPoint;
         private int _selectedItemIndex = -1;
+        private bool _loaded;
         private const string PlaylistItemMoveFormat = "PlaylistItemMoveFormat";
 
-        private IMvxInteraction _openFileDialogRequest;
-        private IMvxInteraction _openFolderDialogRequest;
         private IMvxInteraction<FileItemViewModel> _scrollToSelectedItemRequest;
-
-        public IMvxInteraction OpenFileDialogRequest
-        {
-            get => _openFileDialogRequest;
-            set
-            {
-                if (_openFileDialogRequest != null)
-                    _openFileDialogRequest.Requested -= OpenFileDialogHandler;
-
-                _openFileDialogRequest = value;
-                if (value != null)
-                    _openFileDialogRequest.Requested += OpenFileDialogHandler;
-            }
-        }
-
-        public IMvxInteraction OpenFolderDialogRequest
-        {
-            get => _openFolderDialogRequest;
-            set
-            {
-                if (_openFolderDialogRequest != null)
-                    _openFolderDialogRequest.Requested -= OpenFolderDialogHandler;
-
-                _openFolderDialogRequest = value;
-                if (value != null)
-                    _openFolderDialogRequest.Requested += OpenFolderDialogHandler;
-            }
-        }
+        private IMvxInteraction _selectAllRequest;
 
         public IMvxInteraction<FileItemViewModel> ScrollToSelectedItemRequest
         {
             get => _scrollToSelectedItemRequest;
             set
             {
-                if (_scrollToSelectedItemRequest != null)
-                    _scrollToSelectedItemRequest.Requested -= ScrollToSelectedItem;
-
                 _scrollToSelectedItemRequest = value;
                 if (value != null)
-                    _scrollToSelectedItemRequest.Requested += ScrollToSelectedItem;
+                {
+                    Disposables.Add(_scrollToSelectedItemRequest.WeakSubscribe(ScrollToSelectedItem));
+                }
+            }
+        }
+
+        public IMvxInteraction SelectAllItemsRequest
+        {
+            get => _selectAllRequest;
+            set
+            {
+                _selectAllRequest = value;
+                if (value != null)
+                {
+                    Disposables.Add(_selectAllRequest.WeakSubscribe(SelectAllItems));
+                }
             }
         }
 
         public PlayListItem()
         {
             InitializeComponent();
-
-            var set = this.CreateBindingSet<PlayListItem, PlayListItemViewModel>();
-            set.Bind(this).For(v => v.OpenFileDialogRequest).To(vm => vm.OpenFileDialog).OneWay();
-            set.Bind(this).For(v => v.OpenFolderDialogRequest).To(vm => vm.OpenFolderDialog).OneWay();
-            set.Bind(this).For(v => v.ScrollToSelectedItemRequest).To(vm => vm.ScrollToSelectedItem).OneWay();
-            set.Apply();
-
-            Loaded += SetViewModelHandler;
+            this.DelayBind(() =>
+            {
+                var set = this.CreateBindingSet<PlayListItem, PlayListItemViewModel>();
+                set.Bind(this).For(v => v.OpenFileDialogRequest).To(vm => vm.OpenFileDialog).OneWay();
+                set.Bind(this).For(v => v.OpenFolderDialogRequest).To(vm => vm.OpenFolderDialog).OneWay();
+                set.Bind(this).For(v => v.ScrollToSelectedItemRequest).To(vm => vm.ScrollToSelectedItem).OneWay();
+                set.Bind(this).For(v => v.SelectAllItemsRequest).To(vm => vm.SelectAllItems).OneWay();
+                set.Apply();
+            });
         }
 
-        private void SetViewModelHandler(object sender, EventArgs e)
+        public override void OnLoaded(object sender, RoutedEventArgs e)
         {
-            Loaded -= SetViewModelHandler;
-            ViewModel = DataContext as PlayListItemViewModel;
-
+            base.OnLoaded(sender, e);
             var view = CollectionViewSource.GetDefaultView(PlaylistLv.ItemsSource);
             view.Filter = FilterFiles;
-        }
-
-        private void OpenFileDialogHandler(object sender, EventArgs e)
-        {
-            var allowedFormats = FileFormatConstants.AllowedFormatsString;
-            string filter = $"{ViewModel.GetText("VideoOrMusicFiles")} ({allowedFormats})|{allowedFormats}|{ViewModel.GetText("AllFiles")} (*.*)|*.*";
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter = filter,
-                Multiselect = true,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
-            };
-            var result = openFileDialog.ShowDialog();
-            if (result == true)
-            {
-                ViewModel.OnFilesAddedCommand.Execute(openFileDialog.FileNames);
-            }
-        }
-
-        private void OpenFolderDialogHandler(object sender, EventArgs e)
-        {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            var result = dialog.ShowDialog();
-            if (result == System.Windows.Forms.DialogResult.OK)
-            {
-                ViewModel.OnFolderAddedCommand.Execute(new[] { dialog.SelectedPath });
-            }
+            _loaded = true;
         }
 
         private void PlaylistLv_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -137,7 +91,7 @@ namespace CastIt.Views.UserControls
             // Get the dragged ListViewItem
             if (!(sender is ListView listView))
                 return;
-            var listViewItem = WindowsUtils.FindAnchestor<ListViewItem>((DependencyObject)e.OriginalSource);
+            var listViewItem = WindowsUtils.FindAncestor<ListViewItem>((DependencyObject)e.OriginalSource);
             if (listViewItem == null)
                 return;
             // Find the data behind the ListViewItem
@@ -178,8 +132,16 @@ namespace CastIt.Views.UserControls
         private void PlaylistLv_Drop(object sender, DragEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine("Drop");
+            if (Vm == null)
+                return;
+
             HideAllSeparatorsLines();
             if (sender != e.Source)
+                return;
+
+            //TODO: DOUBLE CLICK IN A FILE CAN TRIGGER THE DROP EVENT...
+            //MouseDoubleClick event on the card item triggers the drop event, this is a workaround for that
+            if (!_loaded)
                 return;
 
             if (e.Data.GetDataPresent(PlaylistItemMoveFormat))
@@ -199,10 +161,10 @@ namespace CastIt.Views.UserControls
                     .ToArray();
 
                 if (folders.Any())
-                    ViewModel.OnFolderAddedCommand.Execute(folders);
+                    Vm.OnFolderAddedCommand.Execute(folders);
 
                 if (files.Any())
-                    ViewModel.OnFilesAddedCommand.Execute(files);
+                    Vm.OnFilesAddedCommand.Execute(files);
             }
         }
 
@@ -214,18 +176,18 @@ namespace CastIt.Views.UserControls
 
         private void ToggleSeparatorLine(ListView listView, DragEventArgs e)
         {
-            var listViewItem = WindowsUtils.FindAnchestor<ListViewItem>((DependencyObject)e.OriginalSource);
-            if (listViewItem == null)
+            var listViewItem = WindowsUtils.FindAncestor<ListViewItem>((DependencyObject)e.OriginalSource);
+            if (listViewItem == null || Vm == null)
             {
                 return;
             }
             var isInTheTop = IsDragInTheTopOfItem(e, listViewItem);
             var item = (FileItemViewModel)listView.ItemContainerGenerator.ItemFromContainer(listViewItem);
-            int index = ViewModel.Items.IndexOf(item);
+            int index = Vm.Items.IndexOf(item);
             HideAllSeparatorsLines();
             if (index != _selectedItemIndex)
             {
-                bool showBottom = index == ViewModel.Items.Count - 1 && !isInTheTop;
+                bool showBottom = index == Vm.Items.Count - 1 && !isInTheTop;
                 bool showTop = !showBottom && isInTheTop;
                 item.ShowItemSeparators(showTop, showBottom);
                 //item.ShowItemSeparators(isInTheTop, !isInTheTop);
@@ -235,7 +197,7 @@ namespace CastIt.Views.UserControls
         private void HandlePlaylistItemMove(ListView listView, DragEventArgs e)
         {
             // Get the drop ListViewItem destination
-            var listViewItem = WindowsUtils.FindAnchestor<ListViewItem>((DependencyObject)e.OriginalSource);
+            var listViewItem = WindowsUtils.FindAncestor<ListViewItem>((DependencyObject)e.OriginalSource);
             if (listViewItem == null)
             {
                 // Abort
@@ -249,7 +211,7 @@ namespace CastIt.Views.UserControls
             // Move item into observable collection 
             // (this will be automatically reflected to lstView.ItemsSource)
             e.Effects = DragDropEffects.Move;
-            int newIndex = ViewModel.Items.IndexOf(item);
+            int newIndex = Vm.Items.IndexOf(item);
             System.Diagnostics.Debug.WriteLine($"Moving index = {_selectedItemIndex} to = {newIndex}");
             if (_selectedItemIndex >= 0 &&
                 newIndex >= 0 &&
@@ -271,8 +233,8 @@ namespace CastIt.Views.UserControls
                 //        itemIndex = 0;
                 //    }
                 //}
-                ViewModel.Items.Move(_selectedItemIndex, newIndex);
-                ViewModel.SetPositionIfChanged();
+                Vm.Items.Move(_selectedItemIndex, newIndex);
+                Vm.SetPositionIfChanged();
             }
             _selectedItemIndex = -1;
         }
@@ -286,7 +248,7 @@ namespace CastIt.Views.UserControls
 
         private void HideAllSeparatorsLines()
         {
-            var f = ViewModel.Items
+            var f = Vm.Items
                 .Where(item => item.IsSeparatorBottomLineVisible || item.IsSeparatorTopLineVisible)
                 .ToList();
             foreach (var file in f)
@@ -313,6 +275,16 @@ namespace CastIt.Views.UserControls
         {
             if (e.Value != null)
                 Dispatcher.Invoke(() => PlaylistLv.ScrollIntoView(e.Value));
+        }
+
+        private void SelectAllItems(object sender, EventArgs e)
+        {
+            PlaylistLv.SelectedItems.Clear();
+
+            foreach (var item in Vm.Items)
+            {
+                PlaylistLv.SelectedItems.Add(item);
+            }
         }
     }
 }

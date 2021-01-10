@@ -7,12 +7,15 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
+    d:DataContext="{d:DesignInstance Type=vmis:FileItemViewModel}"
     d:DesignHeight="80"
     d:DesignWidth="550"
     mc:Ignorable="d">
 
     <!--  This tag binding contains the playlist vm  -->
     <Grid
+        Margin="10,0"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         Tag="{Binding Tag, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
@@ -95,7 +98,20 @@
                 <MenuItem
                     Command="{Binding PlacementTarget.Tag.RemoveFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}"
                     CommandParameter="{Binding}"
-                    Header="{Binding [Remove]}">
+                    Visibility="{Binding PlacementTarget.Tag.SelectedItems.Count, Converter={StaticResource NotZeroToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                    <MenuItem.Style>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PlacementTarget.Tag.SelectedItems.Count, Converter={StaticResource EqualToBooleanConverter}, ConverterParameter=1, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Value="True">
+                                    <Setter Property="Header" Value="{Binding [Remove]}" />
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding PlacementTarget.Tag.SelectedItems.Count, Converter={StaticResource GreaterThanToBooleanConverter}, ConverterParameter=1, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContextMenu}}}" Value="True">
+                                    <Setter Property="Header" Value="{Binding [RemoveSelected]}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
                     <MenuItem.Icon>
                         <materialDesign:PackIcon Kind="Delete" />
                     </MenuItem.Icon>

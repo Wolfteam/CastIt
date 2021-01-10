@@ -11,7 +11,7 @@
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     Width="720"
-    Height="460"
+    Height="500"
     d:DesignHeight="420"
     d:DesignWidth="500"
     x:TypeArguments="vms:SettingsViewModel"
@@ -44,6 +44,7 @@
             VerticalScrollBarVisibility="Auto">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -367,8 +368,14 @@
                     IsChecked="{Binding ShowPlayListTotalDuration}"
                     Text="{Binding [ShowPlayListTotalDuration]}"
                     ToolTipText="{Binding [ShowPlayListTotalDuration]}" />
-                <Button
+                <uc:SettingToggleItem
                     Grid.Row="7"
+                    Grid.Column="0"
+                    IsChecked="{Binding UseGridViewForPlayLists}"
+                    Text="{Binding [UseGridViewForPlayLists]}"
+                    ToolTipText="{Binding [UseGridViewForPlayLists]}" />
+                <Button
+                    Grid.Row="8"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
                     Width="150"

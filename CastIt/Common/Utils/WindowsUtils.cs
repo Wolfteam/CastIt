@@ -3,18 +3,16 @@ using CastIt.Domain.Enums;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using System;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace CastIt.Common.Utils
 {
     public static class WindowsUtils
     {
-        public static T FindAnchestor<T>(DependencyObject current)
+        public static T FindAncestor<T>(DependencyObject current)
             where T : DependencyObject
         {
             do
@@ -126,48 +124,41 @@ namespace CastIt.Common.Utils
                 themeDictionary.MergedDictionaries.Remove(currentTheme);
         }
 
-        //https://gist.github.com/Phyxion/160a6f04e6083016d4b2a3aed3c4fe71
-        public static Image GetImage(
-            PackIconKind iconKind,
-            System.Windows.Media.Brush brush,
-            System.Windows.Media.Pen pen)
+        public static void CenterWindow(Window window)
         {
-            var icon = new PackIcon
-            {
-                Kind = iconKind
-            };
-
-            var geometryDrawing = new GeometryDrawing
-            {
-                Geometry = Geometry.Parse(icon.Data),
-                Brush = brush,
-                Pen = pen
-            };
-
-            var drawingGroup = new DrawingGroup { Children = { geometryDrawing } };
-
-            var img = new DrawingImage { Drawing = drawingGroup };
-            var stream = DrawingImageToStream(img);
-            return Image.FromStream(stream);
+            var currentMonitor = Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window!).Handle);
+            CenterWindow(window, currentMonitor);
         }
 
-        //https://stackoverflow.com/questions/41916147/how-to-convert-system-windows-media-drawingimage-into-stream
-        private static MemoryStream DrawingImageToStream(DrawingImage drawingImage)
+        public static void CenterWindow(Window w, Screen screen)
         {
-            var visual = new DrawingVisual();
-            using (DrawingContext dc = visual.RenderOpen())
+            int screenW = screen.Bounds.Width;
+            int screenH = screen.Bounds.Height;
+            int screenTop = screen.Bounds.Top;
+            int screenLeft = screen.Bounds.Left;
+
+            w.Left = PixelsToPoints((int)(screenLeft + (screenW - PointsToPixels(w.Width, "X")) / 2), "X");
+            w.Top = PixelsToPoints((int)(screenTop + (screenH - PointsToPixels(w.Height, "Y")) / 2), "Y");
+        }
+
+        public static double PixelsToPoints(int pixels, string direction)
+        {
+            if (direction == "X")
             {
-                dc.DrawDrawing(drawingImage.Drawing);
+                return pixels * SystemParameters.WorkArea.Width / Screen.PrimaryScreen.WorkingArea.Width;
             }
-            var target = new RenderTargetBitmap((int)visual.Drawing.Bounds.Right, (int)visual.Drawing.Bounds.Bottom, 96.0, 96.0, PixelFormats.Pbgra32);
-            target.Render(visual);
 
-            var stream = new MemoryStream();
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(target));
-            encoder.Save(stream);
+            return pixels * SystemParameters.WorkArea.Height / Screen.PrimaryScreen.WorkingArea.Height;
+        }
 
-            return stream;
+        public static double PointsToPixels(double wpfPoints, string direction)
+        {
+            if (direction == "X")
+            {
+                return wpfPoints * Screen.PrimaryScreen.WorkingArea.Width / SystemParameters.WorkArea.Width;
+            }
+
+            return wpfPoints * Screen.PrimaryScreen.WorkingArea.Height / SystemParameters.WorkArea.Height;
         }
     }
 }

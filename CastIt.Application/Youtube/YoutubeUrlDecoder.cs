@@ -455,12 +455,6 @@ namespace CastIt.Application.Youtube
             _logger.LogInformation($"{nameof(GetVideoQualities)}: Getting video qualities...");
             var formatPattern = @"(\\""formats\\"":\[.*?])";
             var formatMatch = Regex.Match(body, formatPattern);
-            if (formatMatch.Length == 0)
-            {
-                _logger.LogInformation($"{nameof(GetVideoQualities)}: Couldn't retrieve formats, checking if we have adaptiveFormats...");
-                formatPattern = @"(\\""adaptiveFormats\\"":\[.*?])";
-                formatMatch = Regex.Match(body, formatPattern);
-            }
 
             if (formatMatch.Length == 0)
             {
@@ -474,8 +468,16 @@ namespace CastIt.Application.Youtube
             if (formatMatch.Length == 0)
             {
                 _logger.LogInformation(
-                    $"{nameof(GetVideoQualities)}: Couldn't retrieve formats, " +
-                    "checking if the formats is not between slashes using the adaptiveFormats keyword...");
+                    $"{nameof(GetVideoQualities)}: Couldn't retrieve formats, checking if we have adaptive formats...");
+                formatPattern = @"(\\""adaptiveFormats\\"":\[.*?])";
+                formatMatch = Regex.Match(body, formatPattern);
+            }
+
+            if (formatMatch.Length == 0)
+            {
+                _logger.LogInformation(
+                    $"{nameof(GetVideoQualities)}: Couldn't retrieve adaptive formats, " +
+                    "checking if the formats is not between slashes using the format keyword...");
                 formatPattern = @"(\""adaptiveFormats\"":\[.*?])";
                 formatMatch = Regex.Match(body, formatPattern);
             }
@@ -491,24 +493,29 @@ namespace CastIt.Application.Youtube
             string heightPatternA = @"(?<=\\""height\\"":).+?(?=,)";
             string heightPatternB = @"(?<=\""height\"":).+?(?=,)";
             var streams = Regex.Matches(streamMap, "{(.*?)}").AsQueryable().OfType<Match>().ToList();
-            var qualities = streams.ToDictionary(k =>
+
+            var qualitiesDictionary = new Dictionary<int, string>();
+            foreach (var stream in streams)
             {
-                var val = Regex.Match(k.ToString(), heightPatternA).Value;
+                var match = stream.Value;
+                var val = Regex.Match(match, heightPatternA).Value;
                 if (string.IsNullOrEmpty(val))
                 {
-                    _logger.LogInformation($"Couldn't retrieve height, trying now without backslashes in the pattern");
-                    val = Regex.Match(k.ToString(), heightPatternB).Value;
+                    _logger.LogInformation("Couldn't retrieve height, trying now without backslashes in the pattern");
+                    val = Regex.Match(match, heightPatternB).Value;
                 }
 
                 if (string.IsNullOrEmpty(val))
                 {
-                    _logger.LogWarning($"Couldn't retrieve height from = {k}");
+                    _logger.LogWarning($"Couldn't retrieve height from = {match}");
                 }
 
-                return int.Parse(string.IsNullOrEmpty(val) ? "-1" : val);
-            }, v => v.ToString());
-
-            var qualitiesDictionary = qualities.Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                int quality = int.Parse(string.IsNullOrEmpty(val) ? "-1" : val);
+                if (!qualitiesDictionary.ContainsKey(quality) && quality > 0)
+                {
+                    qualitiesDictionary.Add(quality, match);
+                }
+            }
 
             _logger.LogInformation($"{nameof(GetVideoQualities)}: Got = {qualitiesDictionary.Count} video qualities");
 

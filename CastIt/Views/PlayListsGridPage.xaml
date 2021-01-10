@@ -1,0 +1,73 @@
+﻿<views:MvxWpfView
+    x:Class="CastIt.Views.PlayListsGridPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CastIt.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:selectors="clr-namespace:CastIt.Common.Selectors"
+    xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
+    xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
+    xmlns:vms="clr-namespace:CastIt.ViewModels"
+    d:DataContext="{d:DesignInstance Type=vms:PlayListsGridViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:TypeArguments="vms:PlayListsGridViewModel"
+    mc:Ignorable="d">
+
+    <views:MvxWpfView.Resources>
+        <DataTemplate x:Key="PlayListItemCardTemplate" DataType="{x:Type vmis:PlayListItemViewModel}">
+            <uc:PlayListItemCard DataContext="{Binding}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="AddNewPlayListItemTemplate">
+            <Button
+                Width="60"
+                Height="60"
+                Margin="8,10"
+                Command="{Binding ViewModel.AddNewPlayListCommand, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}"
+                ToolTip="{Binding [AddNewPlayList]}">
+                <materialDesign:PackIcon
+                    Width="30"
+                    Height="30"
+                    Foreground="White"
+                    Kind="Plus" />
+            </Button>
+        </DataTemplate>
+
+        <selectors:PlayListItemCardSelector
+            x:Key="PlayListItemCardSelector"
+            AddCard="{StaticResource AddNewPlayListItemTemplate}"
+            Card="{StaticResource PlayListItemCardTemplate}" />
+
+        <CollectionViewSource x:Key="PlayListsItems" Source="{Binding ViewModel.PlayLists, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}" />
+    </views:MvxWpfView.Resources>
+
+    <ScrollViewer HorizontalAlignment="Stretch">
+        <ItemsControl
+            x:Name="PlayListItemsControl"
+            Margin="10,0,0,0"
+            Padding="0,10,0,20"
+            HorizontalAlignment="Center"
+            HorizontalContentAlignment="Stretch"
+            AllowDrop="True"
+            Drop="OnDrop"
+            ItemTemplateSelector="{StaticResource PlayListItemCardSelector}"
+            MouseMove="OnPreviewMouseMove">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel IsItemsHost="True" ItemWidth="200" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemsSource>
+                <CompositeCollection>
+                    <CollectionContainer Collection="{Binding Source={StaticResource PlayListsItems}}" />
+                    <!--  TODO: FIGURE OUT HOW CAN I FIX THE WARNING, FOR SOME REASON THIS IS GETTING CALLED TWICE  -->
+                    <x:Null />
+                </CompositeCollection>
+            </ItemsControl.ItemsSource>
+        </ItemsControl>
+    </ScrollViewer>
+</views:MvxWpfView>

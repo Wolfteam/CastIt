@@ -18,7 +18,7 @@ namespace CastIt.Common.Utils
         public static void Enable(MainWindow window)
         {
             // No need to track this instance; its event handlers will keep it alive
-            new MinimizeToTrayInstance(window);
+            var _ = new MinimizeToTrayInstance(window);
         }
 
         //TODO: CANT REMOVE THE BLUE BORDER 
@@ -29,8 +29,8 @@ namespace CastIt.Common.Utils
             private NotifyIcon _notifyIcon;
             private bool _balloonShown;
 
-            public MainViewModel MainViewModel
-                => (_window.Content as MainPage).ViewModel;
+            private MainViewModel MainViewModel
+                => (_window.Content as MainPage)!.ViewModel;
 
             public MinimizeToTrayInstance(MainWindow window)
             {
@@ -48,7 +48,7 @@ namespace CastIt.Common.Utils
                 {
                     _notifyIcon = new NotifyIcon()
                     {
-                        Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location)
+                        Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly()!.Location)
                     };
 
                     _notifyIcon.DoubleClick += NotifyIconDoubleClicked;
@@ -78,11 +78,11 @@ namespace CastIt.Common.Utils
                     ? new System.Windows.Media.Pen(System.Windows.Media.Brushes.Black, 0.5)
                     : new System.Windows.Media.Pen(System.Windows.Media.Brushes.White, 0.5);
 
-                var accentColor = (System.Windows.Application.Current.Resources["PrimaryHueDarkBrush"] as System.Windows.Media.SolidColorBrush)
+                var accentColor = (System.Windows.Application.Current.Resources["PrimaryHueDarkBrush"] as System.Windows.Media.SolidColorBrush)!
                     .Color.ToDrawingColor();
-                var fontColor = (System.Windows.Application.Current.Resources["FontColorBrush"] as System.Windows.Media.SolidColorBrush)
+                var fontColor = (System.Windows.Application.Current.Resources["FontColorBrush"] as System.Windows.Media.SolidColorBrush)!
                     .Color.ToDrawingColor();
-                var bgColor = (System.Windows.Application.Current.Resources["WindowBackground"] as System.Windows.Media.SolidColorBrush)
+                var bgColor = (System.Windows.Application.Current.Resources["WindowBackground"] as System.Windows.Media.SolidColorBrush)!
                     .Color.ToDrawingColor();
 
                 var renderer = new CustomRenderer(fontColor, bgColor, accentColor)
@@ -102,29 +102,29 @@ namespace CastIt.Common.Utils
 
                 _notifyIcon.ContextMenuStrip.Items.Add(
                     MainViewModel.GetText("ShowMainWindow"),
-                    WindowsUtils.GetImage(PackIconKind.WindowRestore, brush, pen),
+                    ImageUtils.GetImage(PackIconKind.WindowRestore, brush, pen),
                     NotifyIconDoubleClicked);
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
                 _notifyIcon.ContextMenuStrip.Items.Add(
                     $"{MainViewModel.GetText("Play")} / {MainViewModel.GetText("Pause")}",
-                    WindowsUtils.GetImage(PackIconKind.Play, brush, pen),
+                    ImageUtils.GetImage(PackIconKind.Play, brush, pen),
                     TogglePlayBack);
                 _notifyIcon.ContextMenuStrip.Items.Add(
                     MainViewModel.GetText("Stop"),
-                    WindowsUtils.GetImage(PackIconKind.Stop, brush, pen),
+                    ImageUtils.GetImage(PackIconKind.Stop, brush, pen),
                     StopPlayBack);
                 _notifyIcon.ContextMenuStrip.Items.Add(
                     MainViewModel.GetText("Next"),
-                    WindowsUtils.GetImage(PackIconKind.SkipNext, brush, pen),
+                    ImageUtils.GetImage(PackIconKind.SkipNext, brush, pen),
                     PlayNext);
                 _notifyIcon.ContextMenuStrip.Items.Add(
                     MainViewModel.GetText("Previous"),
-                    WindowsUtils.GetImage(PackIconKind.SkipPrevious, brush, pen),
+                    ImageUtils.GetImage(PackIconKind.SkipPrevious, brush, pen),
                     PlayPrevious);
                 _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
                 _notifyIcon.ContextMenuStrip.Items.Add(
                     MainViewModel.GetText("Exit"),
-                    WindowsUtils.GetImage(PackIconKind.ExitRun, brush, pen),
+                    ImageUtils.GetImage(PackIconKind.ExitRun, brush, pen),
                     Exit);
             }
 
