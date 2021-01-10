@@ -52,7 +52,10 @@
             Padding="0,10,0,20"
             HorizontalAlignment="Center"
             HorizontalContentAlignment="Stretch"
-            ItemTemplateSelector="{StaticResource PlayListItemCardSelector}">
+            AllowDrop="True"
+            Drop="OnDrop"
+            ItemTemplateSelector="{StaticResource PlayListItemCardSelector}"
+            MouseMove="OnPreviewMouseMove">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel IsItemsHost="True" ItemWidth="200" />

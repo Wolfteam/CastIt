@@ -1,5 +1,6 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
+using CastIt.ViewModels;
 using CastIt.Views;
 using MvvmCross.Platforms.Wpf.Views;
 using System.Linq;
@@ -16,6 +17,15 @@ namespace CastIt
 
         public double CurrentWidth;
         public double CurrentHeight;
+
+        public static MainViewModel MainViewModel
+        {
+            get
+            {
+                var window = System.Windows.Application.Current.MainWindow as MainWindow;
+                return (window!.Content as MainPage)!.ViewModel;
+            }
+        }
 
         public MainWindow()
         {

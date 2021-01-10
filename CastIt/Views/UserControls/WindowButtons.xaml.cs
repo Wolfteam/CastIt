@@ -53,7 +53,7 @@ namespace CastIt.Views.UserControls
                     var vm = DataContext as MainViewModel;
                     if (vm?.PlayLists.Any() == true)
                     {
-                        var positions = view.GetTabsPosition();
+                        var positions = view.GetFinalPlayListsPositions();
                         vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
                     }
                     view.ButtonsBar.DisposeViewModels();

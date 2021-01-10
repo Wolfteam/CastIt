@@ -28,7 +28,6 @@ namespace CastIt.ViewModels.Items
         private readonly IAppDataService _playListsService;
         private readonly IFileService _fileService;
 
-        private bool _isSelected;
         private bool _isSeparatorTopLineVisible;
         private bool _isSeparatorBottomLineVisible;
         private string _duration;
@@ -84,12 +83,6 @@ namespace CastIt.ViewModels.Items
         {
             get => _duration;
             private set => this.RaiseAndSetIfChanged(ref _duration, value);
-        }
-
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set => SetProperty(ref _isSelected, value);
         }
 
         public bool IsSeparatorTopLineVisible
