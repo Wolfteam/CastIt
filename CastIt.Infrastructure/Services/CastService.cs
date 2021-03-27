@@ -242,10 +242,10 @@ namespace CastIt.Infrastructure.Services
                         throw new Exception($"File info is null for yt hls = {ytMedia.Url}");
                     }
 
-                    var closestQuality = fileInfo.Videos
+                    var closestQuality = fileInfo.HlsVideos
                         .Select(v => v.Height)
                         .GetClosest(quality);
-                    var videoInfo = fileInfo.Videos.First(v => v.Height == closestQuality);
+                    var videoInfo = fileInfo.HlsVideos.First(v => v.Height == closestQuality);
                     videoStreamIndex = videoInfo.Index;
                     audioStreamIndex = fileInfo.Audios.Any()
                         ? fileInfo.Audios.Select(a => a.Index).GetClosest(videoStreamIndex)

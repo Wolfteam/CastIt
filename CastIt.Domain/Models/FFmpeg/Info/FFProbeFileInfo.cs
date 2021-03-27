@@ -16,6 +16,9 @@ namespace CastIt.Domain.Models.FFmpeg.Info
         public List<FileInfoStream> Videos
             => Streams.Where(s => s.IsVideo).ToList();
 
+        public List<FileInfoStream> HlsVideos
+            => Streams.Where(s => s.IsHlsVideo).ToList();
+
         public List<FileInfoStream> Audios
             => Streams.Where(s => s.IsAudio).ToList();
 

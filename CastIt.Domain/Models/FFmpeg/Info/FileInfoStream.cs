@@ -47,6 +47,10 @@ namespace CastIt.Domain.Models.FFmpeg.Info
         public bool IsVideo
             => CodecType == "video" && Level != 0 && (NumberOfFrames > 1 || AverageFrameRate != "0/0");
 
+        //Live videos does not have neither number of frames nor avg frame rate, that's why I use this one instead
+        public bool IsHlsVideo
+            => CodecType == "video" && Level != 0;
+
         public bool IsAudio
             => CodecType == "audio";
 

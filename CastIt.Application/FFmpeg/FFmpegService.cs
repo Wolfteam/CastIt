@@ -465,7 +465,7 @@ namespace CastIt.Application.FFMpeg
             if (fileInfo == null)
                 throw new ArgumentNullException(nameof(fileInfo), "The provided file info can't be null");
 
-            var videoInfo = fileInfo.Videos.FirstOrDefault(f => f.Index == videoStreamIndex && f.IsVideo);
+            var videoInfo = fileInfo.Videos.Find(f => f.Index == videoStreamIndex && f.IsVideo) ?? fileInfo.HlsVideos.Find(f => f.Index == videoStreamIndex && f.IsHlsVideo);
             if (videoInfo is null)
                 throw new NullReferenceException("The file does not have a valid video stream");
 
