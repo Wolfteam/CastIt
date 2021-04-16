@@ -129,13 +129,13 @@ class FileItem extends StatelessWidget {
   }
 
   void _playFile(BuildContext ctx) {
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.playFile(id, playListId);
     _goToMainPage(ctx);
   }
 
   void _goToMainPage(BuildContext ctx) {
-    ctx.bloc<MainBloc>().add(MainEvent.goToTab(index: 0));
+    ctx.read<MainBloc>().add(MainEvent.goToTab(index: 0));
     Navigator.of(ctx).pop();
   }
 

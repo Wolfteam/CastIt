@@ -40,17 +40,15 @@ class PlayProgressBar extends StatelessWidget {
       );
     }
     return Slider(
-      onChanged: (double value) =>
-          context.bloc<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
+      onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
       value: state.currentSeconds,
       max: state.duration,
       activeColor: theme.accentColor,
       label: _generateLabel(state.currentSeconds),
       divisions: state.duration.round(),
-      onChangeStart: (startValue) => context.bloc<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
-      onChangeEnd: (finalValue) => context
-          .bloc<PlayBloc>()
-          .add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
+      onChangeStart: (startValue) => context.read<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
+      onChangeEnd: (finalValue) =>
+          context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
     );
   }
 

@@ -113,7 +113,9 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                       color: theme.primaryColor,
                       onPressed: !(state as SettingsLoadedState).isCastItUrlValid
                           ? null
-                          : widget.onOk != null ? () => widget.onOk(_urlController.text) : _onRefreshClick,
+                          : widget.onOk != null
+                              ? () => widget.onOk(_urlController.text)
+                              : _onRefreshClick,
                       child: Text(i18n.ok),
                     )
                 ],
@@ -132,14 +134,14 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
   }
 
   void _urlChanged() {
-    context.bloc<SettingsBloc>().add(SettingsEvent.castItUrlChanged(castItUrl: _urlController.text));
+    context.read<SettingsBloc>().add(SettingsEvent.castItUrlChanged(castItUrl: _urlController.text));
   }
 
   void _onCancel() => Navigator.pop(context);
 
   void _onRefreshClick() {
-    // context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
-    context.bloc<ServerWsBloc>().add(ServerWsEvent.updateUrlAndConnectToWs(castItUrl: _urlController.text));
+    // context.read<PlayListsBloc>().add(PlayListsEvent.load());
+    context.read<ServerWsBloc>().add(ServerWsEvent.updateUrlAndConnectToWs(castItUrl: _urlController.text));
     _onCancel();
   }
 }

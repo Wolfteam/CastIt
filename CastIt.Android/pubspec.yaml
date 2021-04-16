@@ -15,46 +15,44 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.1+8
+version: 1.0.1+9
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  cached_network_image: ^2.3.2+1
-  connectivity: ^0.4.9
-  cupertino_icons: ^1.0.0
+  cached_network_image: ^3.0.0
   data_connection_checker: ^0.3.4
   equatable: ^1.2.5
   flutter:
     sdk: flutter
-  flutter_appcenter_bundle: ^3.2.0+2
-  flutter_bloc: ^6.0.5
+  flutter_bloc: ^7.0.0
   flutter_cupertino_localizations: ^1.0.1
   flutter_flexible_toast: ^0.1.4
   flutter_localizations:
     sdk: flutter
   freezed_annotation: ^0.12.0
-  get_it: ^5.0.0
+  get_it: ^6.1.1
   json_annotation: ^3.0.1
-  log_4_dart_2: ^0.4.0
-  package_info: ^0.4.1
-  path: ^1.6.4
-  path_provider: ^1.6.17
-  pull_to_refresh: ^1.6.2
-  shared_preferences: ^0.5.11
-  sprintf: ^4.1.0
+  logger: ^1.0.0
+  package_info: ^2.0.0
+  path: ^1.8.0
+  path_provider: ^2.0.1
+  pull_to_refresh: ^1.6.5
+  shared_preferences: ^2.0.5
+  sprintf: ^6.0.0
   url_launcher: ^5.7.0
   web_socket_channel: ^1.1.0
+  wifi_info_flutter: ^2.0.0
 
 dev_dependencies:
   build_runner: ^1.10.1
+  flutter_launcher_icons: ^0.9.0
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: "^0.8.0"
   freezed: ^0.12.1
   json_serializable: ^3.3.0
-  lint: ^1.2.0
+  lint: ^1.5.3
 
 flutter_icons:
   android: "launcher_icon"

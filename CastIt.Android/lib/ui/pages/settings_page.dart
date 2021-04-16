@@ -545,17 +545,17 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   }
 
   void _appThemeChanged(AppThemeType newValue) {
-    context.bloc<SettingsBloc>().add(SettingsEvent.themeChanged(theme: newValue));
-    context.bloc<MainBloc>().add(MainEvent.themeChanged(theme: newValue));
+    context.read<SettingsBloc>().add(SettingsEvent.themeChanged(theme: newValue));
+    context.read<MainBloc>().add(MainEvent.themeChanged(theme: newValue));
   }
 
   void _accentColorChanged(AppAccentColorType newValue) {
-    context.bloc<SettingsBloc>().add(SettingsEvent.accentColorChanged(accentColor: newValue));
-    context.bloc<MainBloc>().add(MainEvent.accentColorChanged(accentColor: newValue));
+    context.read<SettingsBloc>().add(SettingsEvent.accentColorChanged(accentColor: newValue));
+    context.read<MainBloc>().add(MainEvent.accentColorChanged(accentColor: newValue));
   }
 
   void _languageChanged(AppLanguageType newValue) {
-    context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue));
+    context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue));
   }
 
 //TODO: SOMETIMES SETTINGS ARE NOT UPDATING
@@ -567,7 +567,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     bool forceAudioTranscode,
     bool enableHwAccel,
   ) {
-    final bloc = context.bloc<ServerWsBloc>();
+    final bloc = context.read<ServerWsBloc>();
     return bloc.updateSettings(
       enableHwAccel: enableHwAccel,
       forceAudioTranscode: forceAudioTranscode,
@@ -602,7 +602,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     final continueButton = RaisedButton(
       onPressed: () async {
         Navigator.of(context).pop();
-        await context.bloc<ServerWsBloc>().closeDesktopApp();
+        await context.read<ServerWsBloc>().closeDesktopApp();
       },
       child: Text(i18n.ok),
     );

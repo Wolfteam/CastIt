@@ -71,7 +71,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
 
   Future<void> _playFile(BuildContext context, bool force) {
     Navigator.of(context).pop(true);
-    return context.bloc<ServerWsBloc>().playFile(id, playListId, force: force);
+    return context.read<ServerWsBloc>().playFile(id, playListId, force: force);
   }
 
   void _showDeleteModal(BuildContext context) {

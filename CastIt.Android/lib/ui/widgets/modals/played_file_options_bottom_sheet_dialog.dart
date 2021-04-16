@@ -199,15 +199,14 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       isQuality: option.isQuality,
     );
     Navigator.of(context).pop();
-    context.bloc<PlayedFileOptionsBloc>().add(event);
+    context.read<PlayedFileOptionsBloc>().add(event);
   }
 
-  void _setVolume(BuildContext context, double volumeLevel, bool isMuted) => context
-      .bloc<PlayedFileOptionsBloc>()
-      .add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
+  void _setVolume(BuildContext context, double volumeLevel, bool isMuted) =>
+      context.read<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
 
   Future<void> _stopPlayback(BuildContext context) async {
-    await context.bloc<ServerWsBloc>().stopPlayBack();
+    await context.read<ServerWsBloc>().stopPlayBack();
     Navigator.of(context).pop();
   }
 }

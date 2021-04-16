@@ -48,7 +48,7 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
               header: const MaterialClassicHeader(),
               controller: _refreshController,
               onRefresh: () {
-                context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
+                context.read<PlayListsBloc>().add(PlayListsEvent.load());
               },
               child: _buildPage(ctx, state),
             ),
@@ -67,7 +67,7 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
       },
       loaded: (playlists, _) {
         //TODO: CREATE A WAY TO FORCE A RECONNECT
-        // context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+        // context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
         return ListView.builder(
           itemCount: playlists.length,
           itemBuilder: (ctx, i) {
@@ -87,7 +87,7 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
         );
       },
       disconnected: () {
-        context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
+        context.read<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
         return const SomethingWentWrong();
       },
     );

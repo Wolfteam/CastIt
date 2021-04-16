@@ -15,7 +15,6 @@ import 'bloc/server_ws/server_ws_bloc.dart';
 import 'bloc/settings/settings_bloc.dart';
 import 'generated/i18n.dart';
 import 'injection.dart';
-import 'logger.dart';
 import 'services/logging_service.dart';
 import 'services/settings_service.dart';
 import 'telemetry.dart';
@@ -23,7 +22,7 @@ import 'ui/pages/intro_page.dart';
 import 'ui/pages/main_page.dart';
 
 Future main() async {
-  await setupLogging();
+  WidgetsFlutterBinding.ensureInitialized();
   initInjection();
   await initTelemetry();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -64,37 +63,37 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            final serverWsBloc = ctx.read<ServerWsBloc>();
             return PlayListBloc(serverWsBloc);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            final serverWsBloc = ctx.read<ServerWsBloc>();
             return PlayListsBloc(serverWsBloc);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            final serverWsBloc = ctx.read<ServerWsBloc>();
             return PlayBloc(serverWsBloc);
           },
         ),
         BlocProvider(
           create: (ctx) {
             final settings = getIt<SettingsService>();
-            final serverWsBloc = ctx.bloc<ServerWsBloc>();
+            final serverWsBloc = ctx.read<ServerWsBloc>();
             return SettingsBloc(settings, serverWsBloc);
           },
         ),
         BlocProvider(create: (ctx) {
-          final serverWsBloc = ctx.bloc<ServerWsBloc>();
+          final serverWsBloc = ctx.read<ServerWsBloc>();
           return PlayedFileOptionsBloc(serverWsBloc);
         }),
         BlocProvider(create: (ctx) => PlayListRenameBloc()),
         BlocProvider(create: (ctx) {
           final settings = getIt<SettingsService>();
-          final settingsBloc = ctx.bloc<SettingsBloc>();
+          final settingsBloc = ctx.read<SettingsBloc>();
           return IntroBloc(settings, settingsBloc);
         }),
       ],

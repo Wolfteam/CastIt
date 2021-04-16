@@ -1,5 +1,4 @@
-import 'package:flutter_appcenter_bundle/flutter_appcenter_bundle.dart';
-
+import 'flutter_appcenter_bundle.dart';
 import 'secrets.dart';
 
 //Only call this function from the main.dart

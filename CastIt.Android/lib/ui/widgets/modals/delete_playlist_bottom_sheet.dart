@@ -27,7 +27,7 @@ class DeletePlayListBottomSheet extends StatelessWidget {
   }
 
   Future<void> _onOk(BuildContext context) async {
-    await context.bloc<ServerWsBloc>().deletePlayList(playListId);
+    await context.read<ServerWsBloc>().deletePlayList(playListId);
     _onCancel(context);
   }
 

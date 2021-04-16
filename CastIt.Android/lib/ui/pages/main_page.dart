@@ -41,9 +41,9 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_didChangeDependencies) return;
-    context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
-    context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
-    context.bloc<SettingsBloc>().add(SettingsEvent.load());
+    context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+    context.read<PlayListsBloc>().add(PlayListsEvent.load());
+    context.read<SettingsBloc>().add(SettingsEvent.load());
     _didChangeDependencies = true;
   }
 
@@ -52,10 +52,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     debugPrint('State = $state');
     if (state == AppLifecycleState.inactive) {
       _canShowConnectionModal = false;
-      context.bloc<ServerWsBloc>().add(ServerWsEvent.disconnectFromWs());
+      context.read<ServerWsBloc>().add(ServerWsEvent.disconnectFromWs());
     } else if (state == AppLifecycleState.resumed) {
       _canShowConnectionModal = true;
-      context.bloc<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+      context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
     }
   }
 
@@ -98,7 +98,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
         showUnselectedLabels: true,
         items: _buildBottomNavBars(),
         type: BottomNavigationBarType.fixed,
-        onTap: (newIndex) => context.bloc<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
+        onTap: (newIndex) => context.read<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
       ),
     );
   }

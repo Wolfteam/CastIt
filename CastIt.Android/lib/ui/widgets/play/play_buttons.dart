@@ -79,18 +79,18 @@ class PlayButtons extends StatelessWidget {
   }
 
   void _togglePlayBack(BuildContext ctx) {
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.togglePlayBack();
   }
 
   void _goTo(BuildContext ctx, bool next, bool previous) {
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.goTo(next: next, previous: previous);
   }
 
   void _skipThirtySeconds(BuildContext ctx, bool forward) {
     final seconds = 30.0 * (forward ? 1 : -1);
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.skipSeconds(seconds);
   }
 }

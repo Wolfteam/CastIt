@@ -40,7 +40,7 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
     if (_didChangeDependencies) {
       return;
     }
-    context.bloc<PlayListRenameBloc>().add(PlayListRenameEvent.load(name: widget.currentName));
+    context.read<PlayListRenameBloc>().add(PlayListRenameEvent.load(name: widget.currentName));
     _didChangeDependencies = true;
   }
 
@@ -114,13 +114,12 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
     );
   }
 
-  void _nameChanged() =>
-      context.bloc<PlayListRenameBloc>().add(PlayListRenameEvent.nameChanged(name: _nameController.text));
+  void _nameChanged() => context.read<PlayListRenameBloc>().add(PlayListRenameEvent.nameChanged(name: _nameController.text));
 
   void _cancel() => Navigator.of(context).pop();
 
   void _rename() {
-    context.bloc<ServerWsBloc>().renamePlayList(widget.id, _nameController.text);
+    context.read<ServerWsBloc>().renamePlayList(widget.id, _nameController.text);
     _cancel();
   }
 }

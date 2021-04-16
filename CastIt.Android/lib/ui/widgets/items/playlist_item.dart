@@ -57,7 +57,7 @@ class PlayListItem extends StatelessWidget {
   }
 
   void _goToPlayListPage(BuildContext context) {
-    context.bloc<PlayListBloc>().add(PlayListEvent.load(id: id));
+    context.read<PlayListBloc>().add(PlayListEvent.load(id: id));
     final route = MaterialPageRoute(
       builder: (ctx) => PlayListPage(id: id),
     );

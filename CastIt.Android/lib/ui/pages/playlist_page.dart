@@ -119,8 +119,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
           ];
         }
         if (widget.scrollToFileId != null) {
-          final position =
-              s.files.firstWhere((element) => element.id == widget.scrollToFileId, orElse: () => null)?.position;
+          final position = s.files.firstWhere((element) => element.id == widget.scrollToFileId, orElse: () => null)?.position;
           if (position != null) {
             SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(position));
           }
@@ -190,7 +189,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
       header: const MaterialClassicHeader(),
       controller: _refreshController,
       onRefresh: () {
-        context.bloc<PlayListBloc>().add(PlayListEvent.load(id: widget.id));
+        context.read<PlayListBloc>().add(PlayListEvent.load(id: widget.id));
       },
       child: ListView.builder(
         controller: _listViewScrollController,
@@ -318,9 +317,9 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
   }
 
   void _setPlayListOptions(bool loop, bool shuffle) {
-    final bloc = context.bloc<ServerWsBloc>();
+    final bloc = context.read<ServerWsBloc>();
     bloc.setPlayListOptions(widget.id, loop: loop, shuffle: shuffle);
-    context.bloc<PlayListBloc>().add(PlayListEvent.playListOptionsChanged(loop: loop, shuffle: shuffle));
+    context.read<PlayListBloc>().add(PlayListEvent.playListOptionsChanged(loop: loop, shuffle: shuffle));
   }
 
   void _animateToIndex(int i) {
@@ -341,11 +340,9 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
     }
   }
 
-  void _toggleSearchBoxVisibility() =>
-      context.bloc<PlayListBloc>().add(const PlayListEvent.toggleSearchBoxVisibility());
+  void _toggleSearchBoxVisibility() => context.read<PlayListBloc>().add(const PlayListEvent.toggleSearchBoxVisibility());
 
-  void _onSearchTextChanged() =>
-      context.bloc<PlayListBloc>().add(PlayListEvent.searchBoxTextChanged(text: _searchBoxTextController.text));
+  void _onSearchTextChanged() => context.read<PlayListBloc>().add(PlayListEvent.searchBoxTextChanged(text: _searchBoxTextController.text));
 
   void _cleanSearchText() {
     if (_searchBoxTextController.text.isEmpty) {

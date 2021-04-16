@@ -166,13 +166,13 @@ class PlayCoverImg extends StatelessWidget {
   }
 
   void _goToPlayList(BuildContext context) {
-    context.bloc<PlayListBloc>().add(PlayListEvent.load(id: playListId));
+    context.read<PlayListBloc>().add(PlayListEvent.load(id: playListId));
     final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId, scrollToFileId: fileId));
     Navigator.of(context).push(route);
   }
 
   void _showFileOptionsModal(BuildContext context) {
-    context.bloc<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.load(id: fileId));
+    context.read<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.load(id: fileId));
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
@@ -183,8 +183,7 @@ class PlayCoverImg extends StatelessWidget {
   }
 
   Future<void> _togglePlayListShuffle(BuildContext context) =>
-      context.bloc<ServerWsBloc>().setPlayListOptions(playListId, loop: loopPlayList, shuffle: !shufflePlayList);
+      context.read<ServerWsBloc>().setPlayListOptions(playListId, loop: loopPlayList, shuffle: !shufflePlayList);
 
-  Future<void> _toggleFileLoop(BuildContext context) =>
-      context.bloc<ServerWsBloc>().loopFile(fileId, playListId, loop: !loopFile);
+  Future<void> _toggleFileLoop(BuildContext context) => context.read<ServerWsBloc>().loopFile(fileId, playListId, loop: !loopFile);
 }

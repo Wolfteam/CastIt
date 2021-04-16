@@ -30,7 +30,7 @@ class _IntroPageState extends State<IntroPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    context.bloc<SettingsBloc>().add(SettingsEvent.load());
+    context.read<SettingsBloc>().add(SettingsEvent.load());
   }
 
   @override
@@ -65,7 +65,7 @@ class _IntroPageState extends State<IntroPage> {
       loading: (s) => PageView(),
       loaded: (s) => PageView(
         controller: _pageController,
-        onPageChanged: (index) => context.bloc<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
+        onPageChanged: (index) => context.read<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
         children: [
           IntroPageItem(
             mainTitle: i18n.welcome(i18n.appName),
@@ -111,8 +111,7 @@ class _IntroPageState extends State<IntroPage> {
                     ),
                     Row(
                       children: [
-                        for (int i = 0; i < _maxNumberOfPages; i++)
-                          i == s.page ? _buildPageIndicator(true) : _buildPageIndicator(false),
+                        for (int i = 0; i < _maxNumberOfPages; i++) i == s.page ? _buildPageIndicator(true) : _buildPageIndicator(false),
                       ],
                     ),
                     FlatButton(
@@ -188,7 +187,7 @@ class _IntroPageState extends State<IntroPage> {
             hint: Text(i18n.chooseLanguage),
             value: currentLang,
             underline: Container(height: 0, color: Colors.transparent),
-            onChanged: (newValue) => context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
+            onChanged: (newValue) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
             items: dropdown,
           ),
         ),
@@ -227,13 +226,13 @@ class _IntroPageState extends State<IntroPage> {
     );
 
     if (skipped == true) {
-      context.bloc<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
+      context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
     }
   }
 
   void _onUrlSet(String url) {
     Navigator.of(context).pop();
-    context.bloc<IntroBloc>().add(IntroEvent.urlWasSet(url: url));
+    context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: url));
   }
 
   void _onNext(int currentPage, String castitUrl) {
@@ -249,5 +248,5 @@ class _IntroPageState extends State<IntroPage> {
     _pageController.animateToPage(newPage, duration: const Duration(milliseconds: 300), curve: Curves.linear);
   }
 
-  void _onStart() => context.bloc<MainBloc>().add(MainEvent.introCompleted());
+  void _onStart() => context.read<MainBloc>().add(MainEvent.introCompleted());
 }
