@@ -128,7 +128,7 @@ namespace CastIt.Application.FilePaths
         public void DeleteAppLogsAndPreviews()
         {
             DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
-            DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-3));
+            DeleteFilesInDirectory(AppFileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
         }
 
         public void DeleteServerLogsAndPreviews()
