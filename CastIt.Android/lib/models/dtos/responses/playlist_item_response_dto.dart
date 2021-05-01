@@ -1,45 +1,23 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import 'file_item_response_dto.dart';
-import 'get_all_playlist_response_dto.dart';
 
+part 'playlist_item_response_dto.freezed.dart';
 part 'playlist_item_response_dto.g.dart';
 
-@JsonSerializable()
-class PlayListItemResponseDto extends GetAllPlayListResponseDto {
-  @JsonKey(name: 'Files')
-  final List<FileItemResponseDto> files;
-
-  @override
-  List<Object> get props => [
-        id,
-        name,
-        position,
-        loop,
-        shuffle,
-        numberOfFiles,
-        files,
-        totalDuration,
-      ];
-
-  const PlayListItemResponseDto({
-    int id,
-    String name,
-    int position,
-    bool loop,
-    bool shuffle,
-    int numberOfFiles,
-    String totalDuration,
-    this.files,
-  }) : super(
-          id: id,
-          name: name,
-          position: position,
-          loop: loop,
-          shuffle: shuffle,
-          numberOfFiles: numberOfFiles,
-          totalDuration: totalDuration,
-        );
+@freezed
+abstract class PlayListItemResponseDto implements _$PlayListItemResponseDto {
+  const factory PlayListItemResponseDto({
+    @JsonKey(name: 'Id') @required int id,
+    @JsonKey(name: 'Name') @required String name,
+    @JsonKey(name: 'Position') @required int position,
+    @JsonKey(name: 'Loop') @required bool loop,
+    @JsonKey(name: 'Shuffle') @required bool shuffle,
+    @JsonKey(name: 'NumberOfFiles') @required int numberOfFiles,
+    @JsonKey(name: 'TotalDuration') @required String totalDuration,
+    @Default(<FileItemResponseDto>[]) @JsonKey(name: 'Files') List<FileItemResponseDto> files,
+  }) = _PlayListItemResponseDto;
 
   factory PlayListItemResponseDto.fromJson(Map<String, dynamic> json) => _$PlayListItemResponseDtoFromJson(json);
 
