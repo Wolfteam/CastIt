@@ -20,7 +20,7 @@ class IntroBloc extends Bloc<IntroEvent, IntroState> {
   StreamSubscription _settingSubscription;
 
   IntroBloc(this._settings, this._settingsBloc) : super(IntroState.loading()) {
-    _settingSubscription = _settingsBloc.listen((e) {
+    _settingSubscription = _settingsBloc.stream.listen((e) {
       if (e is SettingsLoadedState && state is IntroLoadedState) {
         add(IntroEvent.languageChanged(newLang: e.appLanguage));
       } else if (e is SettingsLoadedState) {

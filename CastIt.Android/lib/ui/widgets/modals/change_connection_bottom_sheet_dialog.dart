@@ -64,7 +64,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
               TextFormField(
                 minLines: 1,
                 validator: (_) => (state as SettingsLoadedState).isCastItUrlValid ? null : i18n.invalidUrl,
-                autovalidate: true,
+                autovalidateMode: AutovalidateMode.always,
                 controller: _urlController,
                 keyboardType: TextInputType.url,
                 textInputAction: TextInputAction.done,
@@ -101,7 +101,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
               ButtonBar(
                 buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
                 children: <Widget>[
-                  OutlineButton(
+                  OutlinedButton(
                     onPressed: widget.onCancel != null ? () => widget.onCancel() : _onCancel,
                     child: Text(
                       i18n.cancel,
@@ -109,8 +109,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                     ),
                   ),
                   if (widget.showOkButton)
-                    RaisedButton(
-                      color: theme.primaryColor,
+                    ElevatedButton(
                       onPressed: !(state as SettingsLoadedState).isCastItUrlValid
                           ? null
                           : widget.onOk != null

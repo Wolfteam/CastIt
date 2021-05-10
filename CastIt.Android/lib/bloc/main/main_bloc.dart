@@ -75,12 +75,11 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     AppAccentColorType accentColor,
     AppLanguageType language, {
     bool isInitialized = true,
-    bool isConnectedToWs = false,
   }) {
     final themeData = accentColor.getThemeData(theme);
     _setLocale(language);
 
-    _logger.info(runtimeType, '_init: Is first intall = ${_settings.isFirstInstall}');
+    _logger.info(runtimeType, '_init: Is first install = ${_settings.isFirstInstall}');
     return MainState.loaded(
       appTitle: appTitle,
       initialized: isInitialized,

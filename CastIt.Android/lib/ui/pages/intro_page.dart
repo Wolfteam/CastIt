@@ -100,7 +100,7 @@ class _IntroPageState extends State<IntroPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    FlatButton(
+                    TextButton(
                       onPressed: () async {
                         await _showSkipDialog();
                       },
@@ -114,7 +114,7 @@ class _IntroPageState extends State<IntroPage> {
                         for (int i = 0; i < _maxNumberOfPages; i++) i == s.page ? _buildPageIndicator(true) : _buildPageIndicator(false),
                       ],
                     ),
-                    FlatButton(
+                    TextButton(
                       onPressed: () => _onNext(s.page, s.currentCastItUrl),
                       child: Text(
                         i18n.next.toUpperCase(),

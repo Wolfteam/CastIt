@@ -80,7 +80,7 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
             autofocus: true,
             minLines: 1,
             validator: (_) => s.isNameValid ? null : i18n.invalidName,
-            autovalidate: true,
+            autovalidateMode: AutovalidateMode.always,
             controller: _nameController,
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.done,
@@ -98,12 +98,11 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
           ButtonBar(
             buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
             children: <Widget>[
-              OutlineButton(
+              OutlinedButton(
                 onPressed: _cancel,
                 child: Text(i18n.cancel, style: TextStyle(color: theme.primaryColor)),
               ),
-              RaisedButton(
-                color: theme.primaryColor,
+              ElevatedButton(
                 onPressed: !s.isNameValid ? null : _rename,
                 child: Text(i18n.rename),
               )

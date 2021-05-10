@@ -30,7 +30,7 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
           children: <Widget>[
             ModalSheetSeparator(),
             BottomSheetTitle(icon: Icons.playlist_play, title: i18n.playlistOptions),
-            FlatButton(
+            TextButton(
               onPressed: () => _showRenameModal(context),
               child: Row(
                 children: <Widget>[
@@ -40,7 +40,7 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
                 ],
               ),
             ),
-            FlatButton(
+            TextButton(
               onPressed: () => _showDeleteModal(context),
               child: Row(
                 children: <Widget>[

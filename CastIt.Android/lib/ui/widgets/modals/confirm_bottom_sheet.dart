@@ -49,12 +49,11 @@ class ConfirmBottomSheet extends StatelessWidget {
             ButtonBar(
               buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
               children: <Widget>[
-                OutlineButton(
+                OutlinedButton(
                   onPressed: () => onCancel(),
                   child: Text(cancelText ?? i18n.cancel, style: TextStyle(color: theme.primaryColor)),
                 ),
-                RaisedButton(
-                  color: theme.primaryColor,
+                ElevatedButton(
                   onPressed: () => onOk(),
                   child: Text(okText ?? i18n.ok),
                 )

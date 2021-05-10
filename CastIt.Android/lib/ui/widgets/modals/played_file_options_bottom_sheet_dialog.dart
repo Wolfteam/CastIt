@@ -58,7 +58,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           _buildSubtitleOptions(context, i18n, s.options),
           _buildQualitiesOptions(context, i18n, s.options),
           _buildVolumeOptions(context, i18n, s.volumeLvl, s.isMuted),
-          OutlineButton.icon(
+          OutlinedButton.icon(
             onPressed: () => _stopPlayback(context),
             icon: const Icon(Icons.stop),
             label: Text(i18n.stopPlayback),

@@ -113,27 +113,15 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     final i18n = I18n.of(context);
     return [
       BottomNavigationBarItem(
-        title: Text(
-          i18n.playing,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: i18n.playing,
         icon: const Icon(Icons.play_arrow),
       ),
       BottomNavigationBarItem(
-        title: Text(
-          i18n.playlists,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: i18n.playlists,
         icon: const Icon(Icons.playlist_play),
       ),
       BottomNavigationBarItem(
-        title: Text(
-          i18n.settings,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: i18n.settings,
         icon: const Icon(Icons.settings),
       ),
     ];
@@ -188,6 +176,6 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       ),
       duration: const Duration(seconds: 3),
     );
-    Scaffold.of(ctx).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

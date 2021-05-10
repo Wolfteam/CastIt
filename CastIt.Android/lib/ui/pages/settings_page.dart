@@ -331,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           onTap: () => _showConnectionDialog(i18n.webServerUrl, castItUrl),
         ),
         ListTile(
-          onTap: _showCloseappDialog,
+          onTap: _showCloseAppDialog,
           contentPadding: const EdgeInsets.only(right: 20, left: 16),
           title: Text(i18n.closeDesktopApp),
           trailing: const Icon(Icons.cast),
@@ -592,14 +592,14 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     );
   }
 
-  void _showCloseappDialog() {
+  void _showCloseAppDialog() {
     final i18n = I18n.of(context);
     final theme = Theme.of(context);
-    final cancelButton = OutlineButton(
+    final cancelButton = OutlinedButton(
       onPressed: () => Navigator.of(context).pop(),
       child: Text(i18n.cancel, style: TextStyle(color: theme.primaryColor)),
     );
-    final continueButton = RaisedButton(
+    final continueButton = ElevatedButton(
       onPressed: () async {
         Navigator.of(context).pop();
         await context.read<ServerWsBloc>().closeDesktopApp();

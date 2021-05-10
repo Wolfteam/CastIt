@@ -162,7 +162,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             children: <Widget>[
               Align(
                 alignment: Alignment.centerLeft,
-                child: FlatButton.icon(
+                child: TextButton.icon(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.of(context).pop(),
                   label: Text(

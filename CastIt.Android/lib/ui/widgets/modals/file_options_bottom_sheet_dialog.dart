@@ -33,7 +33,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
           children: <Widget>[
             ModalSheetSeparator(),
             BottomSheetTitle(icon: Icons.insert_drive_file, title: i18n.fileOptions),
-            FlatButton(
+            TextButton(
               onPressed: () => _playFile(context, false),
               child: Row(
                 children: <Widget>[
@@ -43,7 +43,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
                 ],
               ),
             ),
-            FlatButton(
+            TextButton(
               onPressed: () => _playFile(context, true),
               child: Row(
                 children: <Widget>[
@@ -53,7 +53,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
                 ],
               ),
             ),
-            FlatButton(
+            TextButton(
               onPressed: () => _showDeleteModal(context),
               child: Row(
                 children: <Widget>[
