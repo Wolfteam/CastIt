@@ -17,11 +17,11 @@ part 'intro_state.dart';
 class IntroBloc extends Bloc<IntroEvent, IntroState> {
   final SettingsService _settings;
   final SettingsBloc _settingsBloc;
-  StreamSubscription _settingSubscription;
+  late StreamSubscription _settingSubscription;
 
-  IntroBloc(this._settings, this._settingsBloc) : super(IntroState.loading()) {
+  IntroBloc(this._settings, this._settingsBloc) : super(const IntroState.loading()) {
     _settingSubscription = _settingsBloc.stream.listen((e) {
-      if (e is SettingsLoadedState && state is IntroLoadedState) {
+      if (e is SettingsLoadedState && state is _IntroLoadedState) {
         add(IntroEvent.languageChanged(newLang: e.appLanguage));
       } else if (e is SettingsLoadedState) {
         add(IntroEvent.load());
@@ -29,7 +29,7 @@ class IntroBloc extends Bloc<IntroEvent, IntroState> {
     });
   }
 
-  IntroLoadedState get currentState => state as IntroLoadedState;
+  _IntroLoadedState get currentState => state as _IntroLoadedState;
 
   @override
   Stream<IntroState> mapEventToState(

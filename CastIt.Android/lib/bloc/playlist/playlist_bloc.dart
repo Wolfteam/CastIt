@@ -96,9 +96,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
         final isFiltering = !e.text.isNullEmptyOrWhitespace;
         final filteredFiles = !isFiltering
             ? <FileItemResponseDto>[]
-            : currentState.files
-                .where((element) => element.filename.toLowerCase().contains(e.text.toLowerCase()))
-                .toList();
+            : currentState.files.where((element) => element.filename.toLowerCase().contains(e.text.toLowerCase())).toList();
 
         return currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
       },

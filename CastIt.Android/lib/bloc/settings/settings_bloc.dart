@@ -32,7 +32,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     });
 
     _serverWsBloc.settingsChanged.stream.listen((settings) {
-      add(SettingsEvent.connected(settings: settings));
+      add(SettingsEvent.connected(settings: settings!));
     });
 
     _serverWsBloc.disconnected.stream.listen((_) {
@@ -62,7 +62,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           enableHwAccel: false,
           forceAudioTranscode: false,
           forceVideoTranscode: false,
-          isConected: false,
+          isConnected: false,
           playFromTheStart: false,
           playNextFileAutomatically: false,
           appName: packageInfo.appName,
@@ -71,7 +71,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       },
       connected: (event) async {
         return currentState.copyWith(
-          isConected: true,
+          isConnected: true,
           videoScale: event.settings.videoScaleType,
           enableHwAccel: event.settings.enableHwAccel,
           forceAudioTranscode: event.settings.forceAudioTranscode,
@@ -80,7 +80,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           playNextFileAutomatically: event.settings.playNextFileAutomatically,
         );
       },
-      disconnected: (event) async => currentState.copyWith(isConected: false),
+      disconnected: (event) async => currentState.copyWith(isConnected: false),
       themeChanged: (event) async {
         _settings.appTheme = event.theme;
         return currentState.copyWith(appTheme: event.theme);
