@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -15,9 +16,9 @@ import '../widgets/something_went_wrong.dart';
 
 class PlayListPage extends StatefulWidget {
   final int id;
-  final int scrollToFileId;
+  final int? scrollToFileId;
   const PlayListPage({
-    @required this.id,
+    required this.id,
     this.scrollToFileId,
   });
 
@@ -34,9 +35,9 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   final _searchFocusNode = FocusNode();
 
-  TextEditingController _searchBoxTextController;
+  late TextEditingController _searchBoxTextController;
 
-  AnimationController _hideFabAnimController;
+  late AnimationController _hideFabAnimController;
 
   @override
   void initState() {
@@ -113,15 +114,15 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             _buildHeader(),
             Expanded(
               child: Center(
-                child: Text(i18n.somethingWentWrong),
+                child: Text(i18n!.somethingWentWrong),
               ),
             ),
           ];
         }
         if (widget.scrollToFileId != null) {
-          final position = s.files.firstWhere((element) => element.id == widget.scrollToFileId, orElse: () => null)?.position;
+          final position = s.files.firstWhereOrNull((element) => element.id == widget.scrollToFileId)?.position;
           if (position != null) {
-            SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(position));
+            SchedulerBinding.instance!.addPostFrameCallback((_) => _animateToIndex(position));
           }
         }
         final filesToUse = s.isFiltering ? s.filteredFiles : s.files;
@@ -138,7 +139,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Icon(Icons.info_outline, size: 60),
-              Text(i18n.playlistNotFound, textAlign: TextAlign.center, style: theme.textTheme.headline4),
+              Text(i18n!.playlistNotFound, textAlign: TextAlign.center, style: theme.textTheme.headline4),
             ],
           ),
         )
@@ -146,10 +147,10 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildHeader({int itemCount, bool showSearch = false}) {
-    final i18n = I18n.of(context);
+  Widget _buildHeader({int? itemCount, bool showSearch = false}) {
+    final i18n = I18n.of(context)!;
     if (showSearch) {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         _searchFocusNode.requestFocus();
       });
     }
@@ -162,7 +163,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             children: <Widget>[
               Align(
                 alignment: Alignment.centerLeft,
-                child: FlatButton.icon(
+                child: TextButton.icon(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.of(context).pop(),
                   label: Text(
@@ -226,7 +227,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   Widget _buildSearchBox() {
     final theme = Theme.of(context);
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return Card(
       elevation: 10,
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -260,7 +261,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildFloatingActionBar(PlayListState state) {
+  Widget? _buildFloatingActionBar(PlayListState state) {
     final theme = Theme.of(context);
     const iconSize = 30.0;
     return state.map(

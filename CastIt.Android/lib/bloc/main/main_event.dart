@@ -1,18 +1,18 @@
 part of 'main_bloc.dart';
 
 @freezed
-abstract class MainEvent implements _$MainEvent {
+class MainEvent with _$MainEvent {
   factory MainEvent.init() = MainInitEvent;
 
   factory MainEvent.themeChanged({
-    @required AppThemeType theme,
+    required AppThemeType theme,
   }) = MainThemeChangedEvent;
 
   factory MainEvent.accentColorChanged({
-    @required AppAccentColorType accentColor,
+    required AppAccentColorType accentColor,
   }) = MainAccentColorChangedEvent;
 
-  factory MainEvent.goToTab({@required int index}) = MainGoToTabEvent;
+  factory MainEvent.goToTab({required int index}) = MainGoToTabEvent;
 
   factory MainEvent.introCompleted() = MainIntroCompletedEvent;
   const MainEvent._();

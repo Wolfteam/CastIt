@@ -10,12 +10,12 @@ abstract class AppSettingsResponseDto implements _$AppSettingsResponseDto {
   VideoScaleType get videoScaleType => getVideoScaleType(videoScale);
 
   factory AppSettingsResponseDto({
-    @required @JsonKey(name: 'StartFilesFromTheStart') bool playFromTheStart,
-    @required @JsonKey(name: 'PlayNextFileAutomatically') bool playNextFileAutomatically,
-    @required @JsonKey(name: 'ForceVideoTranscode') bool forceVideoTranscode,
-    @required @JsonKey(name: 'ForceAudioTranscode') bool forceAudioTranscode,
-    @required @JsonKey(name: 'VideoScale') int videoScale,
-    @required @JsonKey(name: 'EnableHardwareAcceleration') bool enableHwAccel,
+    @JsonKey(name: 'StartFilesFromTheStart') required bool playFromTheStart,
+    @JsonKey(name: 'PlayNextFileAutomatically') required bool playNextFileAutomatically,
+    @JsonKey(name: 'ForceVideoTranscode') required bool forceVideoTranscode,
+    @JsonKey(name: 'ForceAudioTranscode') required bool forceAudioTranscode,
+    @JsonKey(name: 'VideoScale') required int videoScale,
+    @JsonKey(name: 'EnableHardwareAcceleration') required bool enableHwAccel,
   }) = _AppSettingsResponseDto;
 
   factory AppSettingsResponseDto.fromJson(Map<String, dynamic> json) => _$AppSettingsResponseDtoFromJson(json);

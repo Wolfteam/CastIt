@@ -13,9 +13,9 @@ class RenamePlayListBottomSheet extends StatefulWidget {
   final String currentName;
 
   const RenamePlayListBottomSheet({
-    Key key,
-    @required this.id,
-    @required this.currentName,
+    Key? key,
+    required this.id,
+    required this.currentName,
   }) : super(key: key);
 
   @override
@@ -23,14 +23,14 @@ class RenamePlayListBottomSheet extends StatefulWidget {
 }
 
 class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
-  TextEditingController _nameController;
+  TextEditingController? _nameController;
   bool _didChangeDependencies = false;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
-    _nameController.addListener(_nameChanged);
+    _nameController!.addListener(_nameChanged);
   }
 
   @override
@@ -46,11 +46,10 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     final separator = ModalSheetSeparator();
     final sheetTitle = BottomSheetTitle(icon: Icons.edit, title: i18n.rename);
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
@@ -79,8 +78,8 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
           TextFormField(
             autofocus: true,
             minLines: 1,
-            validator: (_) => s.isNameValid ? null : i18n.invalidName,
-            autovalidate: true,
+            validator: (_) => s.isNameValid ? null : i18n!.invalidName,
+            autovalidateMode: AutovalidateMode.always,
             controller: _nameController,
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.done,
@@ -88,22 +87,21 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
               suffixIcon: IconButton(
                 alignment: Alignment.bottomCenter,
                 icon: const Icon(Icons.close),
-                onPressed: () => _nameController.clear(),
+                onPressed: () => _nameController!.clear(),
               ),
               alignLabelWithHint: true,
-              hintText: i18n.name,
+              hintText: i18n!.name,
               labelText: i18n.name,
             ),
           ),
           ButtonBar(
             buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
             children: <Widget>[
-              OutlineButton(
+              OutlinedButton(
                 onPressed: _cancel,
                 child: Text(i18n.cancel, style: TextStyle(color: theme.primaryColor)),
               ),
-              RaisedButton(
-                color: theme.primaryColor,
+              ElevatedButton(
                 onPressed: !s.isNameValid ? null : _rename,
                 child: Text(i18n.rename),
               )
@@ -114,12 +112,12 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
     );
   }
 
-  void _nameChanged() => context.read<PlayListRenameBloc>().add(PlayListRenameEvent.nameChanged(name: _nameController.text));
+  void _nameChanged() => context.read<PlayListRenameBloc>().add(PlayListRenameEvent.nameChanged(name: _nameController!.text));
 
   void _cancel() => Navigator.of(context).pop();
 
   void _rename() {
-    context.read<ServerWsBloc>().renamePlayList(widget.id, _nameController.text);
+    context.read<ServerWsBloc>().renamePlayList(widget.id, _nameController!.text);
     _cancel();
   }
 }

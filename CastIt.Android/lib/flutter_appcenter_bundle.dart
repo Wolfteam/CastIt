@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 const _methodChannelName = 'com.github.wolfteam.castit';
@@ -11,8 +10,8 @@ const _methodChannel = MethodChannel(_methodChannelName);
 class AppCenter {
   /// Start appcenter functionalities
   static Future<void> startAsync({
-    @required String appSecretAndroid,
-    @required String appSecretIOS,
+    required String appSecretAndroid,
+    required String appSecretIOS,
     bool enableAnalytics = true,
     bool enableCrashes = true,
     bool enableDistribute = false,
@@ -27,7 +26,7 @@ class AppCenter {
       throw UnsupportedError('Current platform is not supported.');
     }
 
-    if (appsecret == null || appsecret.isEmpty) {
+    if (appsecret.isEmpty) {
       return;
     }
 
@@ -41,7 +40,7 @@ class AppCenter {
   }
 
   /// Track events
-  static Future<void> trackEventAsync(String name, [Map<String, String> properties]) async {
+  static Future<void> trackEventAsync(String name, [Map<String, String>? properties]) async {
     await _methodChannel.invokeMethod('trackEvent', <String, dynamic>{
       'name': name,
       'properties': properties ?? <String, String>{},
@@ -50,7 +49,8 @@ class AppCenter {
 
   /// Check whether analytics is enalbed
   static Future<bool> isAnalyticsEnabledAsync() async {
-    return _methodChannel.invokeMethod('isAnalyticsEnabled');
+    final enabled = await _methodChannel.invokeMethod<bool?>('isAnalyticsEnabled');
+    return enabled ?? false;
   }
 
   /// Get appcenter installation id
@@ -59,17 +59,18 @@ class AppCenter {
   }
 
   /// Enable or disable analytics
-  static Future configureAnalyticsAsync({@required enabled}) async {
+  static Future configureAnalyticsAsync({required enabled}) async {
     await _methodChannel.invokeMethod('configureAnalytics', enabled);
   }
 
   /// Check whether crashes is enabled
   static Future<bool> isCrashesEnabledAsync() async {
-    return _methodChannel.invokeMethod('isCrashesEnabled');
+    final enabled = await _methodChannel.invokeMethod<bool?>('isCrashesEnabled');
+    return enabled ?? false;
   }
 
   /// Enable or disable appcenter crash reports
-  static Future configureCrashesAsync({@required enabled}) async {
+  static Future configureCrashesAsync({required enabled}) async {
     await _methodChannel.invokeMethod('configureCrashes', enabled);
   }
 }

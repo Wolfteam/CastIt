@@ -5,6 +5,7 @@ import '../common/app_constants.dart';
 import '../common/enums/app_accent_color_type.dart';
 import '../common/enums/app_language_type.dart';
 import '../common/enums/app_theme_type.dart';
+import '../common/extensions/string_extensions.dart';
 import '../models/app_settings.dart';
 import 'logging_service.dart';
 
@@ -12,18 +13,23 @@ abstract class SettingsService {
   AppSettings get appSettings;
 
   AppThemeType get appTheme;
+
   set appTheme(AppThemeType theme);
 
   AppAccentColorType get accentColor;
+
   set accentColor(AppAccentColorType accentColor);
 
   AppLanguageType get language;
+
   set language(AppLanguageType lang);
 
   String get castItUrl;
+
   set castItUrl(String url);
 
   bool get isFirstInstall;
+
   set isFirstInstall(bool itIs);
 
   Future init();
@@ -38,31 +44,36 @@ class SettingsServiceImpl extends SettingsService {
 
   bool _initialized = false;
 
-  SharedPreferences _prefs;
+  late SharedPreferences _prefs;
   final LoggingService _logger;
 
   @override
-  AppThemeType get appTheme => AppThemeType.values[(_prefs.getInt(_appThemeKey))];
+  AppThemeType get appTheme => AppThemeType.values[_prefs.getInt(_appThemeKey)!];
+
   @override
   set appTheme(AppThemeType theme) => _prefs.setInt(_appThemeKey, theme.index);
 
   @override
-  AppAccentColorType get accentColor => AppAccentColorType.values[_prefs.getInt(_accentColorKey)];
+  AppAccentColorType get accentColor => AppAccentColorType.values[_prefs.getInt(_accentColorKey)!];
+
   @override
   set accentColor(AppAccentColorType accentColor) => _prefs.setInt(_accentColorKey, accentColor.index);
 
   @override
-  AppLanguageType get language => AppLanguageType.values[_prefs.getInt(_appLanguageKey)];
+  AppLanguageType get language => AppLanguageType.values[_prefs.getInt(_appLanguageKey)!];
+
   @override
   set language(AppLanguageType lang) => _prefs.setInt(_appLanguageKey, lang.index);
 
   @override
-  String get castItUrl => _prefs.getString(_castItUrlKey);
+  String get castItUrl => _prefs.getString(_castItUrlKey)!;
+
   @override
   set castItUrl(String url) => _prefs.setString(_castItUrlKey, url);
 
   @override
-  bool get isFirstInstall => _prefs.getBool(_firstInstallKey);
+  bool get isFirstInstall => _prefs.getBool(_firstInstallKey)!;
+
   @override
   set isFirstInstall(bool itIs) => _prefs.setBool(_firstInstallKey, itIs);
 
@@ -121,7 +132,7 @@ class SettingsServiceImpl extends SettingsService {
     try {
       final ip = await WifiInfo().getWifiIP();
 
-      if (ip.isNotEmpty) {
+      if (ip.isNullEmptyOrWhitespace) {
         return 'http://$ip:9696';
       }
       return AppConstants.baseCastItUrl;

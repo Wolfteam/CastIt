@@ -11,15 +11,15 @@ class DeleteFileBottomSheet extends StatelessWidget {
   final String fileName;
 
   const DeleteFileBottomSheet({
-    Key key,
-    @required this.id,
-    @required this.playListId,
-    @required this.fileName,
+    Key? key,
+    required this.id,
+    required this.playListId,
+    required this.fileName,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return ConfirmBottomSheet(
       title: i18n.delete,
       icon: Icons.delete,

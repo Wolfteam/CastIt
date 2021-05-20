@@ -21,14 +21,14 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isShowingConnectionModal = false;
   bool _didChangeDependencies = false;
-  TabController _tabController;
+  late TabController _tabController;
   int _index = 0;
   bool _canShowConnectionModal = true;
   final _pages = [PlayPage(), PlayListsPage(), SettingsPage()];
 
   @override
   void initState() {
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
     _tabController = TabController(
       initialIndex: _index,
       length: _pages.length,
@@ -74,9 +74,9 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
               state2.map(
                 loaded: (s) async {
                   if (!s.msgToShow.isNullEmptyOrWhitespace) {
-                    _showServerMsg(ctx2, s.msgToShow);
+                    _showServerMsg(ctx2, s.msgToShow!);
                   }
-                  await _showConnectionDialog(s.isConnectedToWs, s.castItUrl);
+                  await _showConnectionDialog(s.isConnectedToWs!, s.castItUrl);
                 },
                 loading: (s) {
                   if (_isShowingConnectionModal) {
@@ -105,35 +105,23 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
 
   List<BottomNavigationBarItem> _buildBottomNavBars() {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return [
       BottomNavigationBarItem(
-        title: Text(
-          i18n.playing,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: i18n.playing,
         icon: const Icon(Icons.play_arrow),
       ),
       BottomNavigationBarItem(
-        title: Text(
-          i18n.playlists,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: i18n.playlists,
         icon: const Icon(Icons.playlist_play),
       ),
       BottomNavigationBarItem(
-        title: Text(
-          i18n.settings,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: i18n.settings,
         icon: const Icon(Icons.settings),
       ),
     ];
@@ -188,6 +176,6 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       ),
       duration: const Duration(seconds: 3),
     );
-    Scaffold.of(ctx).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

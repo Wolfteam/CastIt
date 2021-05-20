@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../base_socket_request_dto.dart';
@@ -6,7 +5,7 @@ import '../base_socket_request_dto.dart';
 part 'app_settings_request_dto.g.dart';
 
 @JsonSerializable()
-class AppSettingsRequestDto extends BaseSocketRequestDto {
+class AppSettingsRequestDto extends AbstractBaseSocketRequestDto {
   @JsonKey(name: 'StartFilesFromTheStart')
   final bool playFromTheStart;
 
@@ -26,18 +25,15 @@ class AppSettingsRequestDto extends BaseSocketRequestDto {
   final bool enableHwAccel;
 
   AppSettingsRequestDto({
-    @required String msgType,
-    @required this.playFromTheStart,
-    @required this.playNextFileAutomatically,
-    @required this.forceAudioTranscode,
-    @required this.forceVideoTranscode,
-    @required this.videoScale,
-    @required this.enableHwAccel,
-  }) {
-    messageType = msgType;
-  }
+    required this.playFromTheStart,
+    required this.playNextFileAutomatically,
+    required this.forceAudioTranscode,
+    required this.forceVideoTranscode,
+    required this.videoScale,
+    required this.enableHwAccel,
+  }) : super();
 
   factory AppSettingsRequestDto.fromJson(Map<String, dynamic> json) => _$AppSettingsRequestDtoFromJson(json);
-  @override
+
   Map<String, dynamic> toJson() => _$AppSettingsRequestDtoToJson(this);
 }

@@ -4,15 +4,13 @@ part 'volume_level_changed_response_dto.freezed.dart';
 part 'volume_level_changed_response_dto.g.dart';
 
 @freezed
-abstract class VolumeLevelChangedResponseDto
-    implements _$VolumeLevelChangedResponseDto {
+abstract class VolumeLevelChangedResponseDto implements _$VolumeLevelChangedResponseDto {
   factory VolumeLevelChangedResponseDto({
-    @required @JsonKey(name: 'VolumeLevel') double volumeLevel,
-    @required @JsonKey(name: 'IsMuted') bool isMuted,
+    @JsonKey(name: 'VolumeLevel') required double volumeLevel,
+    @JsonKey(name: 'IsMuted') required bool isMuted,
   }) = _VolumeLevelChangedResponseDto;
 
-  factory VolumeLevelChangedResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$VolumeLevelChangedResponseDtoFromJson(json);
+  factory VolumeLevelChangedResponseDto.fromJson(Map<String, dynamic> json) => _$VolumeLevelChangedResponseDtoFromJson(json);
 
   static List<String> get jsonKeys => ['VolumeLevel', 'IsMuted'];
 }

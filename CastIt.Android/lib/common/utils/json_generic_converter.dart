@@ -2,11 +2,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 import '../../models/dtos/dtos.dart';
 
-class JsonGenericConverter<T> implements JsonConverter<T, Object> {
+class JsonGenericConverter<T> implements JsonConverter<T?, Object?> {
   const JsonGenericConverter();
 
   @override
-  T fromJson(Object json) {
+  T? fromJson(Object? json) {
     if (json is Map<String, dynamic> && _allKeysArePresent(FileItemResponseDto.jsonKeys, json.keys)) {
       return FileItemResponseDto.fromJson(json) as T;
     }
@@ -48,11 +48,11 @@ class JsonGenericConverter<T> implements JsonConverter<T, Object> {
     // This will only work if `json` is a native JSON type:
     //   num, String, bool, null, etc
     // *and* is assignable to `T`.
-    return json as T;
+    return json as T?;
   }
 
   @override
-  Object toJson(T object) {
+  Object? toJson(T? object) {
     // This will only work if `object` is a native JSON type:
     //   num, String, bool, null, etc
     // Or if it has a `toJson()` function`.

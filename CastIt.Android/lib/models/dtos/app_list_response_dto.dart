@@ -11,6 +11,5 @@ class AppListResponseDto<T> extends AppResponseDto<List<T>> {
     result = <T>[];
   }
 
-  factory AppListResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$AppListResponseDtoFromJson(json);
+  factory AppListResponseDto.fromJson(Map<String, dynamic> json) => _$AppListResponseDtoFromJson(json) as AppListResponseDto<T>;
 }

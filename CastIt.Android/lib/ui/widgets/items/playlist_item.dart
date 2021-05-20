@@ -16,12 +16,12 @@ class PlayListItem extends StatelessWidget {
   final String totalDuration;
 
   const PlayListItem({
-    @required this.id,
-    @required this.name,
-    @required this.numberOfFiles,
-    @required this.loop,
-    @required this.shuffle,
-    @required this.totalDuration,
+    required this.id,
+    required this.name,
+    required this.numberOfFiles,
+    required this.loop,
+    required this.shuffle,
+    required this.totalDuration,
   });
 
   @override

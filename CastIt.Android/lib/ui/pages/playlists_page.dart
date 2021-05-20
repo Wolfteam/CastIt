@@ -23,7 +23,7 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[

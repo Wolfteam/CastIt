@@ -1,16 +1,16 @@
 part of 'server_ws_bloc.dart';
 
 @freezed
-abstract class ServerWsEvent implements _$ServerWsEvent {
+class ServerWsEvent with _$ServerWsEvent {
   // factory ServerMsgEvent.init() = ServerInitEvent;
   factory ServerWsEvent.connectToWs() = ServerConnectToWsEvent;
   factory ServerWsEvent.disconnectedFromWs() = ServerDisconnectedFromWsEvent;
   factory ServerWsEvent.disconnectFromWs() = ServerDisconnectFromWsEvent;
   factory ServerWsEvent.updateUrlAndConnectToWs({
-    @required String castItUrl,
+    required String castItUrl,
   }) = ServerUpdateUrlAndConnectToWsEvent;
   factory ServerWsEvent.showMsg({
-    @required String msg,
+    required String msg,
   }) = ShowMsgEvent;
 
   const ServerWsEvent._();

@@ -9,18 +9,18 @@ class ConfirmBottomSheet extends StatelessWidget {
   final String title;
   final IconData icon;
   final String content;
-  final String okText;
-  final String cancelText;
+  final String? okText;
+  final String? cancelText;
   final Function onOk;
   final Function onCancel;
 
   const ConfirmBottomSheet({
-    Key key,
-    @required this.title,
-    @required this.icon,
-    @required this.content,
-    @required this.onOk,
-    @required this.onCancel,
+    Key? key,
+    required this.title,
+    required this.icon,
+    required this.content,
+    required this.onOk,
+    required this.onCancel,
     this.okText,
     this.cancelText,
   }) : super(key: key);
@@ -32,7 +32,6 @@ class ConfirmBottomSheet extends StatelessWidget {
     final separator = ModalSheetSeparator();
     final sheetTitle = BottomSheetTitle(icon: icon, title: title);
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
@@ -49,14 +48,13 @@ class ConfirmBottomSheet extends StatelessWidget {
             ButtonBar(
               buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
               children: <Widget>[
-                OutlineButton(
+                OutlinedButton(
                   onPressed: () => onCancel(),
-                  child: Text(cancelText ?? i18n.cancel, style: TextStyle(color: theme.primaryColor)),
+                  child: Text(cancelText ?? i18n!.cancel, style: TextStyle(color: theme.primaryColor)),
                 ),
-                RaisedButton(
-                  color: theme.primaryColor,
+                ElevatedButton(
                   onPressed: () => onOk(),
-                  child: Text(okText ?? i18n.ok),
+                  child: Text(okText ?? i18n!.ok),
                 )
               ],
             )
