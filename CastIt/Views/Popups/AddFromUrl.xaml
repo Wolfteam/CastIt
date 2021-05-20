@@ -12,7 +12,7 @@
 
     <Grid
         Width="260"
-        Height="120"
+        Height="110"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         Background="{DynamicResource WindowLightBackground}">

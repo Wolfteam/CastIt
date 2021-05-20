@@ -100,7 +100,7 @@
         </materialDesign:ColorZone>
         <ScrollViewer
             Grid.Row="1"
-            Padding="16"
+            Margin="16"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
             VerticalScrollBarVisibility="Auto">
             <ItemsControl
