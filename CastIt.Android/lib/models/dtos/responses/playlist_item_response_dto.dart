@@ -9,13 +9,13 @@ part 'playlist_item_response_dto.g.dart';
 @freezed
 abstract class PlayListItemResponseDto implements _$PlayListItemResponseDto {
   const factory PlayListItemResponseDto({
-    @JsonKey(name: 'Id') @required int id,
-    @JsonKey(name: 'Name') @required String name,
-    @JsonKey(name: 'Position') @required int position,
-    @JsonKey(name: 'Loop') @required bool loop,
-    @JsonKey(name: 'Shuffle') @required bool shuffle,
-    @JsonKey(name: 'NumberOfFiles') @required int numberOfFiles,
-    @JsonKey(name: 'TotalDuration') @required String totalDuration,
+    @JsonKey(name: 'Id') required int id,
+    @JsonKey(name: 'Name') required String name,
+    @JsonKey(name: 'Position') required int position,
+    @JsonKey(name: 'Loop') required bool loop,
+    @JsonKey(name: 'Shuffle') required bool shuffle,
+    @JsonKey(name: 'NumberOfFiles') required int numberOfFiles,
+    @JsonKey(name: 'TotalDuration') required String totalDuration,
     @Default(<FileItemResponseDto>[]) @JsonKey(name: 'Files') List<FileItemResponseDto> files,
   }) = _PlayListItemResponseDto;
 

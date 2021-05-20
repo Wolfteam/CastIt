@@ -1,12 +1,10 @@
-import 'package:flutter/foundation.dart';
-import 'package:json_annotation/json_annotation.dart';
-
 import 'package:castit/models/dtos/base_socket_request_dto.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'play_file_request_dto.g.dart';
 
 @JsonSerializable()
-class PlayFileRequestDto extends BaseSocketRequestDto {
+class PlayFileRequestDto extends AbstractBaseSocketRequestDto {
   @JsonKey(name: 'Id')
   final int id;
 
@@ -17,13 +15,12 @@ class PlayFileRequestDto extends BaseSocketRequestDto {
   final bool force;
 
   PlayFileRequestDto({
-    @required String msgType,
-    @required this.id,
-    @required this.playListId,
-    @required this.force,
-  }) : super(messageType: msgType);
+    required this.id,
+    required this.playListId,
+    required this.force,
+  }) : super();
 
   factory PlayFileRequestDto.fromJson(Map<String, dynamic> json) => _$PlayFileRequestDtoFromJson(json);
-  @override
+
   Map<String, dynamic> toJson() => _$PlayFileRequestDtoToJson(this);
 }

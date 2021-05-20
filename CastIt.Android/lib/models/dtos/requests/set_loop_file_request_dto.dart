@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../base_socket_request_dto.dart';
@@ -6,7 +5,7 @@ import '../base_socket_request_dto.dart';
 part 'set_loop_file_request_dto.g.dart';
 
 @JsonSerializable()
-class SetLoopFileRequestDto extends BaseSocketRequestDto {
+class SetLoopFileRequestDto extends AbstractBaseSocketRequestDto {
   @JsonKey(name: 'Id')
   final int id;
 
@@ -17,13 +16,12 @@ class SetLoopFileRequestDto extends BaseSocketRequestDto {
   final bool loop;
 
   SetLoopFileRequestDto({
-    @required String msgType,
-    @required this.id,
-    @required this.playListId,
-    @required this.loop,
-  }) : super(messageType: msgType);
+    required this.id,
+    required this.playListId,
+    required this.loop,
+  }) : super();
 
   factory SetLoopFileRequestDto.fromJson(Map<String, dynamic> json) => _$SetLoopFileRequestDtoFromJson(json);
-  @override
+
   Map<String, dynamic> toJson() => _$SetLoopFileRequestDtoToJson(this);
 }
