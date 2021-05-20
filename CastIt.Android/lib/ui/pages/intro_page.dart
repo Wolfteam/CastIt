@@ -19,7 +19,7 @@ class IntroPage extends StatefulWidget {
 
 class _IntroPageState extends State<IntroPage> {
   final int _maxNumberOfPages = 3;
-  PageController _pageController;
+  late PageController _pageController;
 
   @override
   void initState() {
@@ -68,7 +68,7 @@ class _IntroPageState extends State<IntroPage> {
         onPageChanged: (index) => context.read<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
         children: [
           IntroPageItem(
-            mainTitle: i18n.welcome(i18n.appName),
+            mainTitle: i18n!.welcome(i18n.appName),
             subTitle: i18n.aboutSummary,
             content: i18n.welcomeSummary,
             extraContent: _buildLanguageSettings(s.currentLang),
@@ -88,7 +88,7 @@ class _IntroPageState extends State<IntroPage> {
     );
   }
 
-  Widget _buildBottomSheet(IntroState state) {
+  Widget? _buildBottomSheet(IntroState state) {
     return state.map(
       loading: (_) => null,
       loaded: (s) {
@@ -105,7 +105,7 @@ class _IntroPageState extends State<IntroPage> {
                         await _showSkipDialog();
                       },
                       child: Text(
-                        i18n.skip.toUpperCase(),
+                        i18n!.skip.toUpperCase(),
                         style: TextStyle(color: theme.accentColor, fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -131,7 +131,7 @@ class _IntroPageState extends State<IntroPage> {
                   color: theme.accentColor,
                   alignment: Alignment.center,
                   child: Text(
-                    i18n.start.toUpperCase(),
+                    i18n!.start.toUpperCase(),
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -156,7 +156,7 @@ class _IntroPageState extends State<IntroPage> {
   Widget _buildLanguageSettings(
     AppLanguageType currentLang,
   ) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     final dropdown = [AppLanguageType.english, AppLanguageType.spanish]
         .map<DropdownMenuItem<AppLanguageType>>(
           (lang) => DropdownMenuItem<AppLanguageType>(
@@ -187,7 +187,7 @@ class _IntroPageState extends State<IntroPage> {
             hint: Text(i18n.chooseLanguage),
             value: currentLang,
             underline: Container(height: 0, color: Colors.transparent),
-            onChanged: (newValue) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
+            onChanged: (newValue) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue!)),
             items: dropdown,
           ),
         ),
@@ -207,7 +207,7 @@ class _IntroPageState extends State<IntroPage> {
       isScrollControlled: true,
       builder: (_) => ChangeConnectionBottomSheetDialog(
         icon: Icons.info_outline,
-        title: i18n.webServerUrl,
+        title: i18n!.webServerUrl,
         currentUrl: castItUrl,
         showRefreshButton: false,
         showOkButton: true,

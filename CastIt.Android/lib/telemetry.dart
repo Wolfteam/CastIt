@@ -3,16 +3,16 @@ import 'secrets.dart';
 
 //Only call this function from the main.dart
 Future<void> initTelemetry() async {
-  final isAnalyticsEnalbed = await AppCenter.isAnalyticsEnabledAsync();
+  final isAnalyticsEnabled = await AppCenter.isAnalyticsEnabledAsync();
   final isCrashesEnabled = await AppCenter.isCrashesEnabledAsync();
 
-  if (isAnalyticsEnalbed && isCrashesEnabled) {
+  if (isAnalyticsEnabled && isCrashesEnabled) {
     return;
   }
 
   await AppCenter.startAsync(appSecretAndroid: Secrets.appCenterKey, appSecretIOS: '');
 }
 
-Future<void> trackEventAsync(String name, [Map<String, String> properties]) {
+Future<void> trackEventAsync(String name, [Map<String, String>? properties]) {
   return AppCenter.trackEventAsync(name, properties);
 }

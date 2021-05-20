@@ -14,16 +14,17 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
   final String fileName;
 
   const FileOptionsBottomSheetDialog({
-    @required this.id,
-    @required this.playListId,
-    @required this.fileName,
+    required this.id,
+    required this.playListId,
+    required this.fileName,
   });
 
   @override
   Widget build(BuildContext context) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark ? Colors.white : Colors.black;
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
@@ -34,6 +35,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
             ModalSheetSeparator(),
             BottomSheetTitle(icon: Icons.insert_drive_file, title: i18n.fileOptions),
             TextButton(
+              style: TextButton.styleFrom(primary: textColor),
               onPressed: () => _playFile(context, false),
               child: Row(
                 children: <Widget>[
@@ -44,6 +46,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
               ),
             ),
             TextButton(
+              style: TextButton.styleFrom(primary: textColor),
               onPressed: () => _playFile(context, true),
               child: Row(
                 children: <Widget>[
@@ -54,6 +57,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
               ),
             ),
             TextButton(
+              style: TextButton.styleFrom(primary: textColor),
               onPressed: () => _showDeleteModal(context),
               child: Row(
                 children: <Widget>[

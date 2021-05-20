@@ -6,9 +6,15 @@ class IntroPageItem extends StatelessWidget {
   final String mainTitle;
   final String subTitle;
   final String content;
-  final Widget extraContent;
+  final Widget? extraContent;
 
-  const IntroPageItem({Key key, this.mainTitle, this.subTitle, this.content, this.extraContent}) : super(key: key);
+  const IntroPageItem({
+    Key? key,
+    required this.mainTitle,
+    required this.subTitle,
+    required this.content,
+    this.extraContent,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +41,7 @@ class IntroPageItem extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
           ),
           const SizedBox(height: 20),
-          if (extraContent != null) extraContent
+          if (extraContent != null) extraContent!
         ],
       ),
     );

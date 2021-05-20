@@ -23,7 +23,7 @@ class PlayProgressText extends StatelessWidget {
           fileLoadingFailed: (state) => dummy,
           playing: (state) {
             final current = Duration(seconds: (state.currentSeconds ?? 0).round()).formatDuration();
-            final total = Duration(seconds: state.duration.round()).formatDuration();
+            final total = Duration(seconds: state.duration!.round()).formatDuration();
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(

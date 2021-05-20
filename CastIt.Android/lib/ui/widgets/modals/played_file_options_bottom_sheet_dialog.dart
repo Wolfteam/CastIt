@@ -13,7 +13,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
@@ -21,7 +20,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           listener: (ctx, state) {
             state.maybeWhen(
               closed: () {
-                if (ModalRoute.of(context).isCurrent) {
+                if (ModalRoute.of(context)!.isCurrent) {
                   Navigator.of(ctx).pop();
                 }
               },
@@ -41,7 +40,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
   }
 
   List<Widget> _buildPage(BuildContext context, PlayedFileOptionsState state) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     final separator = ModalSheetSeparator();
     final title = BottomSheetTitle(icon: Icons.play_circle_filled, title: i18n.fileOptions);
     return state.map(
@@ -120,7 +119,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         height: 0,
         color: Colors.transparent,
       ),
-      onChanged: options.length <= 1 ? null : (newValue) => _setOption(context, newValue),
+      onChanged: options.length <= 1 ? null : (newValue) => _setOption(context, newValue!),
       items: options
           .map<DropdownMenuItem<FileItemOptionsResponseDto>>(
             (fo) => DropdownMenuItem<FileItemOptionsResponseDto>(
