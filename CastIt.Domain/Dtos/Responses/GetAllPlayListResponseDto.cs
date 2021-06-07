@@ -12,7 +12,7 @@
 
         public bool Shuffle { get; set; }
 
-        public int NumberOfFiles { get; set; }
+        public long NumberOfFiles { get; set; }
         public string TotalDuration { get; set; }
     }
 }
