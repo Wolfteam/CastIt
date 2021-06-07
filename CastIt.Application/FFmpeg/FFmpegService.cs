@@ -29,6 +29,9 @@ namespace CastIt.Application.FFMpeg
         private readonly Process _transcodeProcess;
         private readonly List<HwAccelDeviceType> _availableHwDevices = new List<HwAccelDeviceType>();
 
+        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private bool _checkTranscodeProcess;
+
         private static readonly IReadOnlyList<string> AllowedVideoContainers = new List<string>
         {
             ".mp4"
@@ -320,6 +323,12 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
+        public Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options)
+        {
+            CheckBeforeTranscode();
+            return TranscodeVideo(outputStream, options, _tokenSource.Token);
+        }
+
         public async Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options, CancellationToken token)
         {
             string cmd;
@@ -353,6 +362,12 @@ namespace CastIt.Application.FFMpeg
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(outputStream, token).ConfigureAwait(false);
             _logger.LogInformation($"{nameof(TranscodeVideo)}: Transcode completed for file = {options.FilePath}");
+        }
+
+        public Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options)
+        {
+            CheckBeforeTranscode();
+            return TranscodeMusic(options, _tokenSource.Token);
         }
 
         public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token)
@@ -689,6 +704,18 @@ namespace CastIt.Application.FFMpeg
             }
 
             return builder.GetArgs();
+        }
+
+        private void CheckBeforeTranscode()
+        {
+            if (_checkTranscodeProcess)
+            {
+                _tokenSource.Cancel();
+                _tokenSource = new CancellationTokenSource();
+                KillTranscodeProcess();
+            }
+
+            _checkTranscodeProcess = true;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CastIt.Domain.Enums;
+using System.Collections.Generic;
 
 namespace CastIt.Application.Common
 {
@@ -14,5 +15,6 @@ namespace CastIt.Application.Common
     public delegate void OnPausedHandler();
     public delegate void OnDisconnectedHandler();
     public delegate void OnVolumeChangedHandler(double newLevel, bool isMuted);
-    public delegate void OnFileLoadFailed();
+    //public delegate void OnFileLoadFailed();
+    public delegate void OnServerMessageHandler(AppMessageType msg);
 }

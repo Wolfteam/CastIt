@@ -4,13 +4,13 @@ namespace CastIt.Application.Server
 {
     public static class AppWebServerConstants
     {
-        public const string MediaPath = "/media";
+        public const string MediaPath = "/play";
         public const string ImagesPath = "/images";
         public const string SubTitlesPath = "/subtitles";
         public const int DefaultPort = 9696;
 
         public const string SecondsQueryParameter = "seconds";
-        public const string FileQueryParameter = "file";
+        public const string FileQueryParameter = "filePath";
         public const string VideoStreamIndexParameter = "videoStream";
         public const string AudioStreamIndexParameter = "audioStream";
         public const string VideoNeedsTranscode = "videoNeedsTranscode";

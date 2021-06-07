@@ -1,4 +1,5 @@
 ﻿using System;
+using CastIt.Domain.Enums;
 
 namespace CastIt.Application.Interfaces
 {
@@ -35,5 +36,7 @@ namespace CastIt.Application.Interfaces
         string GetBytesReadable(long i);
 
         bool IsVideoOrMusicFile(string mrl, bool checkForVideo);
+
+        AppFileType GetFileType(string mrl);
     }
 }

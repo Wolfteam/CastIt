@@ -42,7 +42,7 @@ namespace CastIt.Application.Server
 
         protected abstract string GetBaseUrl();
 
-        public string GetMediaUrl(
+        public virtual string GetMediaUrl(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -66,7 +66,7 @@ namespace CastIt.Application.Server
                    $"&{AppWebServerConstants.VideoScaleParameter}={videoScale}";
         }
 
-        public string GetPreviewPath(string filepath)
+        public virtual string GetPreviewPath(string filepath)
         {
             if (string.IsNullOrEmpty(filepath))
                 return null;
@@ -75,7 +75,7 @@ namespace CastIt.Application.Server
             return $"{baseUrl}{AppWebServerConstants.ImagesPath}/{Uri.EscapeDataString(filename)}";
         }
 
-        public string GetSubTitlePath(string filepath)
+        public virtual string GetSubTitlePath(string filepath)
         {
             var baseUrl = GetBaseUrl();
             string filename = Path.GetFileName(filepath);
