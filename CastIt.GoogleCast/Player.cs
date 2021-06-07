@@ -65,6 +65,8 @@ namespace CastIt.GoogleCast
         public static bool CanLogTrace { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool IsPaused { get; private set; }
+        public bool IsPlayingOrPaused
+            => IsPlaying || IsPaused;
         public string CurrentContentId { get; private set; }
         public double CurrentMediaDuration { get; private set; }
         public double ElapsedSeconds { get; private set; }
@@ -79,6 +81,9 @@ namespace CastIt.GoogleCast
         }
         public double CurrentVolumeLevel { get; private set; }
         public bool IsMuted { get; private set; }
+
+        public PlayerStatus State
+            => new PlayerStatus(this);
 
         private SemaphoreSlim ListenMediaChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
         private SemaphoreSlim ListenReceiverChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
@@ -163,6 +168,7 @@ namespace CastIt.GoogleCast
         }
         #endregion
 
+        #region General Methods
         public void ListenForDevices()
         {
             var subscription = DeviceLocator
@@ -231,6 +237,7 @@ namespace CastIt.GoogleCast
         {
             return DeviceLocator.FindReceiversAsync(scanTime);
         }
+        #endregion
 
         #region Receiver Channel
         public Task<ReceiverStatus> SetVolumeAsync(float level)
