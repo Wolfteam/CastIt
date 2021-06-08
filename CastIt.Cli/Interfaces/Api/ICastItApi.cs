@@ -3,40 +3,100 @@ using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
 using Refit;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Interfaces.Api
 {
     public interface ICastItApi
     {
-        [Get("/api/devices")]
-        Task<AppListResponseDto<Receiver>> GetAllDevices([Query] int timeout);
+        #region Player
 
-        [Post("/api/connect")]
-        Task<EmptyResponseDto> Connect([Query] string host, [Query] int port);
+        [Get("/Player/Devices")]
+        Task<AppListResponseDto<Receiver>> GetAllDevices();
 
-        [Post("/api/disconnect")]
+        [Post("/Player/Connect")]
+        Task<EmptyResponseDto> Connect([Body] ConnectRequestDto dto);
+
+        [Post("/Player/Disconnect")]
         Task<EmptyResponseDto> Disconnect();
 
-        [Post("/api/play")]
-        Task<EmptyResponseDto> Play([Body] PlayCliFileRequestDto request);
-
-        [Post("/api//toggle-playback")]
+        [Post("/Player/TogglePlayback")]
         Task<EmptyResponseDto> TogglePlayback();
 
-        [Post("/api/stop")]
+        [Post("/Player/Stop")]
         Task<EmptyResponseDto> Stop();
 
-        [Post("/api/goto-seconds")]
-        Task<EmptyResponseDto> GoToSeconds([Query] double seconds, [Body] PlayCliFileRequestDto request);
+        [Post("/Player/Volume")]
+        Task<EmptyResponseDto> SetVolume([Body] SetVolumeRequestDto dto);
 
-        [Post("/api/volume")]
-        Task<EmptyResponseDto> SetVolume([Query] double newLevel, [Query] bool isMuted);
+        [Post("/Player/Next")]
+        Task<EmptyResponseDto> Next();
 
-        [Get("/api/settings")]
-        Task<AppResponseDto<CliAppSettingsResponseDto>> GetCurrentSettings();
+        [Post("/Player/Previous")]
+        Task<EmptyResponseDto> Previous();
 
-        [Post("/api/settings")]
-        Task<EmptyResponseDto> UpdateAppSettings([Body] UpdateCliAppSettingsRequestDto dto);
+        [Post("/Player/GoToSeconds/{seconds}")]
+        Task<EmptyResponseDto> GoToSeconds(double seconds);
+
+        [Post("/Player/GoToPosition/{position}")]
+        Task<EmptyResponseDto> GoToPosition(double position);
+
+        [Post("/Player/Seek/{seconds}")]
+        Task<EmptyResponseDto> Seek(double seconds);
+
+        #endregion
+
+        #region PlayLists
+        [Get("/PlayLists")]
+        Task<AppListResponseDto<GetAllPlayListResponseDto>> GetAllPlayLists();
+
+        [Get("/PlayLists/{id}")]
+        Task<AppResponseDto<PlayListItemResponseDto>> GetPlayList(long id);
+
+        [Post("/PlayLists")]
+        Task<AppResponseDto<PlayListItemResponseDto>> AddNewPlayList();
+
+        [Put("/PlayLists/{id}")]
+        Task<EmptyResponseDto> UpdatePlayList(long id, [Body] UpdatePlayListRequestDto dto);
+
+        [Put("/PlayLists/{id}/SetOptions")]
+        Task<EmptyResponseDto> SetOptions(long id, [Body] SetPlayListOptionsRequestDto dto);
+
+        [Delete("/PlayLists/{id}/RemoveFilesThatStartsWith/{path}")]
+        Task<EmptyResponseDto> RemoveFilesThatStartsWith(long id, string path);
+
+        [Delete("/PlayLists/{id}/RemoveAllMissingFiles")]
+        Task<EmptyResponseDto> RemoveAllMissingFiles(long id);
+
+        [Delete("/PlayLists/{id}/RemoveFiles")]
+        Task<EmptyResponseDto> RemoveFiles(long id, [Query(CollectionFormat.Multi)] List<long> fileIds);
+
+        [Delete("/PlayLists/{id}")]
+        Task<EmptyResponseDto> DeletePlayList(long id);
+
+        [Delete("/PlayLists/All/{exceptId}")]
+        Task<EmptyResponseDto> DeleteAllPlayList(long exceptId);
+
+        [Put("/PlayLists/{id}/AddFolders")]
+        Task<EmptyResponseDto> AddFolders(long id, [Body] AddFolderOrFilesToPlayListRequestDto dto);
+
+        [Put("/PlayLists/{id}/AddFiles")]
+        Task<EmptyResponseDto> AddFiles(long id, [Body] AddFolderOrFilesToPlayListRequestDto dto);
+
+        [Put("/PlayLists/{id}/AddUrl")]
+        Task<EmptyResponseDto> AddUrl(long id, [Body] AddUrlToPlayListRequestDto dto);
+        #endregion
+
+        #region Files
+        [Post("/Files/{fileId}/Play")]
+        Task<EmptyResponseDto> Play(long fileId);
+        #endregion
+
+        //[Get("settings")]
+        //Task<AppResponseDto<CliAppSettingsResponseDto>> GetCurrentSettings();
+
+        //[Post("settings")]
+        //Task<EmptyResponseDto> UpdateAppSettings([Body] UpdateCliAppSettingsRequestDto dto);
     }
 }
