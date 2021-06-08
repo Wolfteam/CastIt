@@ -29,7 +29,7 @@ namespace CastIt.Infrastructure.Interfaces
         public event OnFileLoadingHandler FileLoading;
 
         Task Init();
-        void CleanThemAll();
+        Task CleanThemAll();
         void StopRunningProcess();
         Task AddSeconds(
             int videoStreamIndex,

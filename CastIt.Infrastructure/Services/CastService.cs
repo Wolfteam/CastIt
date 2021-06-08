@@ -177,13 +177,13 @@ namespace CastIt.Infrastructure.Services
             if (AvailableDevices.Count == 0)
             {
                 _logger.LogWarning($"{nameof(DoChecksBeforePlaying)}: No renders were found, file = {mrl}");
-                throw new NoDevicesException();
+                throw new NoDevicesException($"No renders were found, file = {mrl}");
             }
 
             if (_connecting)
             {
                 _logger.LogWarning($"{nameof(DoChecksBeforePlaying)}: We are in the middle of connecting to a device, can't play file = {mrl} right now");
-                throw new ConnectingException();
+                throw new ConnectingException("We are in the middle of connecting to a device, can't play file = {mrl} right now");
             }
         }
 
@@ -602,7 +602,7 @@ namespace CastIt.Infrastructure.Services
             _ffmpegService.KillTranscodeProcess();
         }
 
-        public void CleanThemAll()
+        public virtual Task CleanThemAll()
         {
             try
             {
@@ -629,6 +629,8 @@ namespace CastIt.Infrastructure.Services
                 _logger.LogError(ex, $"{nameof(CleanThemAll)}: An unknown error occurred");
                 _telemetryService.TrackError(ex);
             }
+
+            return Task.CompletedTask;
         }
 
         public Task SetCastRenderer(string id)
