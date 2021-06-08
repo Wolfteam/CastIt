@@ -22,10 +22,13 @@ namespace CastIt.Infrastructure.Interfaces
         OnPausedHandler OnPaused { get; set; }
         OnDisconnectedHandler OnDisconnected { get; set; }
         OnVolumeChangedHandler OnVolumeChanged { get; set; }
-        OnFileLoadFailed OnFileLoadFailed { get; set; }
+        OnServerMessageHandler OnServerMessage { get; set; }
         Func<string> GetSubTitles { get; set; }
+        bool IsPlayingOrPaused { get; }
 
-        void Init();
+        public event OnFileLoadingHandler FileLoading;
+
+        Task Init();
         void CleanThemAll();
         void StopRunningProcess();
         Task AddSeconds(
@@ -35,6 +38,7 @@ namespace CastIt.Infrastructure.Interfaces
             int quality,
             double seconds,
             FFProbeFileInfo fileInfo);
+        Task AddSeconds(double seconds);
         Task GoToSeconds(
             int videoStreamIndex,
             int audioStreamIndex,
@@ -42,6 +46,7 @@ namespace CastIt.Infrastructure.Interfaces
             int quality,
             double seconds,
             FFProbeFileInfo fileInfo);
+        Task GoToSeconds(double seconds);
         Task GoToPosition(
             string filePath,
             int videoStreamIndex,
@@ -51,6 +56,8 @@ namespace CastIt.Infrastructure.Interfaces
             double position,
             double totalSeconds,
             FFProbeFileInfo fileInfo);
+        Task GoToPosition(double position, double totalSeconds);
+        Task GoToPosition(double position);
         Task<double> SetVolume(double level);
         Task<bool> SetIsMuted(bool isMuted);
         Task StartPlay(
@@ -74,5 +81,35 @@ namespace CastIt.Infrastructure.Interfaces
         Task SetCastRenderer(string host, int port);
         Task GoToSeconds(PlayCliFileRequestDto request, FFProbeFileInfo fileInfo);
         Task StartPlay(PlayCliFileRequestDto request, FFProbeFileInfo fileInfo);
+
+        void SendFileLoading();
+
+        void SendEndReached();
+
+        void SendPositionChanged(double position);
+
+        void SendTimeChanged(double seconds);
+
+        void SendPaused();
+
+        void SendDisconnected();
+
+        void SendVolumeLevelChanged(double newValue);
+
+        void SendIsMutedChanged(bool isMuted);
+
+        void SendRendererDiscovererItemAdded(IReceiver item);
+
+        void SendErrorLoadingFile();
+
+        void SendNoDevicesFound();
+
+        void SendNoInternetConnection();
+
+        void SendPlayListNotFound();
+
+        void SendFileNotFound();
+
+        void SendInvalidRequest();
     }
 }

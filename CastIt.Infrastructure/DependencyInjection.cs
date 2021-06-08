@@ -20,6 +20,13 @@ namespace CastIt.Infrastructure
             return services;
         }
 
+        public static IServiceCollection AddServerInfrastructure(this IServiceCollection services)
+        {
+            services.AddSingleton<IAppSettingsService, AppSettingsService>();
+            services.AddSingleton<IPlayer>(provider => new Player(provider.GetRequiredService<ILogger<Player>>()));
+            return services;
+        }
+
         public static List<FileToLog> GetInfrastructureLogs()
         {
             return new List<FileToLog>
