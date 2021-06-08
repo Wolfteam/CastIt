@@ -21,5 +21,6 @@
         NoDevicesFound = 300,
         NoInternetConnection = 301,
         ConnectionToDeviceIsStillInProgress = 302,
+        FFmpegError = 303
     }
 }

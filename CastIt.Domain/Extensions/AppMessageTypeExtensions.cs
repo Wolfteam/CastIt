@@ -25,6 +25,7 @@ namespace CastIt.Domain.Extensions
                 AppMessageType.ConnectionToDeviceIsStillInProgress => "Connection to device is still in progress",
                 AppMessageType.PlayListNotFound => "Playlist was not found",
                 AppMessageType.FileNotFound => "File was not found",
+                AppMessageType.FFmpegError => "Unknown error on FFmpeg",
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, $"The provided type = {type} is not valid")
             };
         }
