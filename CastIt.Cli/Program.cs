@@ -1,15 +1,19 @@
 ﻿using CastIt.Application;
 using CastIt.Cli.Commands;
+using CastIt.Cli.Common.Utils;
+using CastIt.Cli.Interfaces.Api;
 using CastIt.Cli.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Refit;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using CastIt.Cli.Services;
 
 namespace CastIt.Cli
 {
@@ -43,11 +47,25 @@ namespace CastIt.Cli
                             c.ClearProviders();
                             c.AddProvider(new SerilogLoggerProvider(Log.Logger));
                         });
+
+                        services.AddSingleton<ICastItApiService, CastItApiService>();
+
+                        var url = ServerUtils.StartServerIfNotStarted();
+#if DEBUG
+                        Console.WriteLine($"Using url = {url} for the web server api");
+#endif
+
+                        services.AddRefitClient<ICastItApi>()
+                            .ConfigureHttpClient(c => c.BaseAddress = new Uri(url));
+
                     }).ConfigureAppConfiguration(b =>
                     {
                         b.SetBasePath(basePath);
                         b.AddJsonFile(jsonPath);
                     });
+
+                //Give enough time to the server to be started
+                await Task.Delay(500);
 
                 return await builder.RunCommandLineApplicationAsync<MainCommand>(args);
             }
@@ -56,6 +74,7 @@ namespace CastIt.Cli
                 Console.WriteLine($"Something went wrong!. Current basePath = {basePath}");
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.InnerException?.Message);
+                Console.WriteLine(ex.StackTrace);
                 return 1;
             }
         }
