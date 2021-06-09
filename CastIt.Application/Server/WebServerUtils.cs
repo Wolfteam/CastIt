@@ -9,6 +9,17 @@ namespace CastIt.Application.Server
     public static class WebServerUtils
     {
         public const string ServerProcessName = "CastIt.Server";
+
+        public static string GetWebServerIpAddress()
+        {
+            if (!IsServerAlive())
+                return null;
+            var port = GetServerPort();
+            if (port.HasValue)
+                return GetWebServerIpAddress(port.Value);
+            return null;
+        }
+
         public static string GetWebServerIpAddress(int port)
         {
             string localIp = GetLocalIpAddress();
