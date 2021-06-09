@@ -1,6 +1,9 @@
 using CastIt.Application;
 using CastIt.Application.Interfaces;
+using CastIt.GoogleCast;
+using CastIt.GoogleCast.Interfaces;
 using CastIt.Infrastructure;
+using CastIt.Infrastructure.Interfaces;
 using CastIt.Test.Common;
 using CastIt.Test.Common.Extensions;
 using CastIt.Test.Interfaces;
@@ -26,6 +29,7 @@ namespace CastIt.Test
 
         public IConfiguration Configuration { get; }
 
+        //TODO: REMOVE FFMPEG FROM HERE. LOAD FFMPEG PATH FROM THE APPSETTINGS
         public Startup(IConfiguration configuration, string ffmpegPath, string ffprobePath)
         {
             Configuration = configuration;
@@ -43,7 +47,7 @@ namespace CastIt.Test
                 b.AddEventLog();
             });
 
-            var defaultSettings = Configuration.GetSection(nameof(AppSettings)).Get<AppSettings>();
+            var defaultSettings = Configuration.GetSection(nameof(ServerAppSettings)).Get<ServerAppSettings>();
 
             if (!string.IsNullOrWhiteSpace(_ffmpegPath))
             {
@@ -55,8 +59,8 @@ namespace CastIt.Test
                 defaultSettings.FFprobePath = _ffprobePath;
             }
 
-            services.AddApplication(defaultSettings.FFmpegPath, defaultSettings.FFprobePath)
-                .AddServerInfrastructure();
+            services.AddApplication(defaultSettings.FFmpegPath, defaultSettings.FFprobePath);
+            services.AddSingleton(defaultSettings);
             services.AddControllers()
                 .AddNewtonsoftJson(options =>
                 {
@@ -68,8 +72,11 @@ namespace CastIt.Test
                 });
             services.AddSignalR();
             services.AddSingleton<IAppDataService, AppDataService>();
-            services.AddSingleton<IServerCastService, NewCastService>();
+            services.AddSingleton<IServerCastService, ServerCastService>();
             services.AddSingleton<IBaseWebServer, FakeAppWebServer>();
+            services.AddSingleton<IServerAppSettingsService, ServerAppSettingsService>();
+            services.AddSingleton<IBaseWebServer, FakeAppWebServer>();
+            services.AddSingleton<IPlayer>(provider => new Player(provider.GetRequiredService<ILogger<Player>>()));
             services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
             services.AddSwagger("CastIt", "CastIt.xml");
         }

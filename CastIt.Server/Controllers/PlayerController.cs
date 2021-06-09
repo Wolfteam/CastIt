@@ -12,6 +12,10 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using CastIt.Domain.Enums;
+using CastIt.Test.Models;
+using CastIt.Test.Services;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace CastIt.Test.Controllers
 {
@@ -19,15 +23,19 @@ namespace CastIt.Test.Controllers
     {
         private readonly IFileService _fileService;
         private readonly IFFmpegService _ffmpegService;
+        private readonly IServerAppSettingsService _settingsService;
 
         public PlayerController(
             ILogger<PlayerController> logger,
             IFileService fileService,
             IFFmpegService fFmpegService,
-            IServerCastService castService) : base(logger, castService)
+            IServerCastService castService,
+            IServerAppSettingsService settingsService)
+            : base(logger, castService)
         {
             _fileService = fileService;
             _ffmpegService = fFmpegService;
+            _settingsService = settingsService;
         }
 
         //TODO: ADD THE APPMESSAGE TYPE TO EACH RESPONSE ?
@@ -46,123 +54,59 @@ namespace CastIt.Test.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Connect(ConnectRequestDto dto)
         {
-            try
-            {
-                Logger.LogInformation($"{nameof(Connect)}: Trying to connect to device by using host = {dto.Host} and port = {dto.Port}");
-                await CastService.SetCastRenderer(dto.Host, dto.Port);
+            Logger.LogInformation($"{nameof(Connect)}: Trying to connect to device by using host = {dto.Host} and port = {dto.Port}");
+            await CastService.SetCastRenderer(dto.Host, dto.Port);
 
-                Logger.LogInformation($"{nameof(Connect)}: Connection was successfully established");
-                return Ok(new EmptyResponseDto(true));
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"{nameof(Connect)}: Unknown error while trying to connect to host = {dto.Host} and port = {dto.Port}");
-                return Ok(new EmptyResponseDto(false, e.Message));
-            }
+            Logger.LogInformation($"{nameof(Connect)}: Connection was successfully established");
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Disconnect()
         {
-            try
-            {
-                Logger.LogInformation($"{nameof(Disconnect)}: Trying to disconnect from device...");
-                await CastService.SetCastRenderer(null);
+            Logger.LogInformation($"{nameof(Disconnect)}: Trying to disconnect from device...");
+            await CastService.SetCastRenderer(null);
 
-                Logger.LogInformation($"{nameof(Disconnect)}: Disconnect successfully completed");
-                return Ok(new EmptyResponseDto(true));
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"{nameof(Disconnect)}: Unknown error occurred");
-                return Ok(new EmptyResponseDto(false, e.Message));
-            }
+            Logger.LogInformation($"{nameof(Disconnect)}: Disconnect successfully completed");
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> TogglePlayback()
         {
-            try
-            {
-                Logger.LogInformation($"{nameof(TogglePlayback)}: Toggling playback...");
-                await CastService.TogglePlayback();
+            Logger.LogInformation($"{nameof(TogglePlayback)}: Toggling playback...");
+            await CastService.TogglePlayback();
 
-                Logger.LogInformation($"{nameof(TogglePlayback)}: Playback was successfully toggled");
-                return Ok(new EmptyResponseDto(true));
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"{nameof(TogglePlayback)}: Unknown error occurred");
-                return Ok(new EmptyResponseDto(false, e.Message));
-            }
+            Logger.LogInformation($"{nameof(TogglePlayback)}: Playback was successfully toggled");
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Stop()
         {
-            try
-            {
-                Logger.LogInformation($"{nameof(TogglePlayback)}: Stopping playback...");
-                await CastService.StopPlayback();
+            Logger.LogInformation($"{nameof(TogglePlayback)}: Stopping playback...");
+            await CastService.StopPlayback();
 
-                Logger.LogInformation($"{nameof(TogglePlayback)}: Stopping playback...");
-                return Ok(new EmptyResponseDto(true));
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"{nameof(Stop)}: Unknown error occurred");
-                return Ok(new EmptyResponseDto(false, e.Message));
-            }
+            Logger.LogInformation($"{nameof(TogglePlayback)}: Stopping playback...");
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpPost("Volume")]
         public async Task<IActionResult> SetVolume(SetVolumeRequestDto dto)
         {
-            try
+            if (dto.VolumeLevel < 0 || dto.VolumeLevel > 100)
             {
-                if (dto.VolumeLevel < 0 || dto.VolumeLevel > 100)
-                {
-                    return BadRequest(new EmptyResponseDto(false, $"VolumeLevel = {dto.VolumeLevel} is not valid"));
-                }
-
-                Logger.LogInformation($"{nameof(SetVolume)}: Setting volume level to = {dto.VolumeLevel} and muted to = {dto.IsMuted}...");
-
-                await CastService.SetVolume(dto.VolumeLevel);
-
-                await CastService.SetIsMuted(dto.IsMuted);
-
-                Logger.LogInformation($"{nameof(SetVolume)}: Volume level was updated");
-                return Ok(new EmptyResponseDto(true));
+                return BadRequest(new EmptyResponseDto(false, $"VolumeLevel = {dto.VolumeLevel} is not valid"));
             }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"{nameof(SetVolume)}: Unknown error occurred");
-                return Ok(new EmptyResponseDto(false, e.Message));
-            }
-        }
 
-        //TODO: THIS ONE ?
-        [HttpPut("Settings")]
-        public IActionResult UpdateSettings(UpdateCliAppSettingsRequestDto dto)
-        {
-            try
-            {
-                //_appSettings.EnableHardwareAcceleration = request.EnableHardwareAcceleration;
-                //_appSettings.ForceAudioTranscode = request.ForceAudioTranscode;
-                //_appSettings.ForceVideoTranscode = request.ForceVideoTranscode;
-                //_appSettings.VideoScale = request.VideoScale;
+            Logger.LogInformation($"{nameof(SetVolume)}: Setting volume level to = {dto.VolumeLevel} and muted to = {dto.IsMuted}...");
 
-                //Logger.LogInformation($"{nameof(UpdateSettings)}: Saving settings...");
-                //_appSettings.SaveSettings();
+            await CastService.SetVolume(dto.VolumeLevel);
 
-                Logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
-                return Ok(new EmptyResponseDto(true));
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, $"{nameof(UpdateSettings)}: Unknown error occurred");
-                return Ok(new EmptyResponseDto(false, e.Message));
-            }
+            await CastService.SetIsMuted(dto.IsMuted);
+
+            Logger.LogInformation($"{nameof(SetVolume)}: Volume level was updated");
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpPost("[action]")]
@@ -197,6 +141,31 @@ namespace CastIt.Test.Controllers
         public async Task<IActionResult> Seek(double seconds)
         {
             await CastService.AddSeconds(seconds);
+            return Ok(new EmptyResponseDto(true));
+        }
+
+        [HttpGet("Settings")]
+        public IActionResult GetSettings()
+        {
+            var response = new AppResponseDto<ServerAppSettings>(_settingsService.Settings);
+            return Ok(response);
+        }
+
+        [HttpPatch("Settings")]
+        public async Task<IActionResult> UpdateSettings(JsonPatchDocument<ServerAppSettings> patch)
+        {
+            if (patch == null)
+                return BadRequest(new EmptyResponseDto(false, "You need to provide a valid object"));
+
+            var updated = _settingsService.Settings.Copy();
+            patch.ApplyTo(updated, ModelState);
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(ModelState);
+            }
+
+            await _settingsService.SaveSettings(updated);
+            Logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
             return Ok(new EmptyResponseDto(true));
         }
 

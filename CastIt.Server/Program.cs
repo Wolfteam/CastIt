@@ -1,62 +1,31 @@
-﻿using CastIt.Application;
 using CastIt.Application.Common.Utils;
-using CastIt.Application.Interfaces;
 using CastIt.Application.Server;
 using CastIt.Domain.Models.Logging;
-using CastIt.Infrastructure;
-using CastIt.Infrastructure.Interfaces;
-using CastIt.Server.Interfaces;
 using CastIt.Shared.Extensions;
+using CastIt.Test.Controllers;
+using CastIt.Test.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace CastIt.Server
+namespace CastIt.Test
 {
-    internal static class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
-            var logs = new List<FileToLog>
-            {
-                new FileToLog(typeof(MainService), "service_main")
-            };
-
-            logs.AddRange(DependencyInjection.GetServerLogs());
-            logs.AddRange(Infrastructure.DependencyInjection.GetInfrastructureLogs());
-            logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
-            logs.SetupLogging(AppFileUtils.GetServerLogsPath());
-
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .UseSerilog()
-                .ConfigureServices((h, s) => ConfigureServices(args, h, s));
-
-        private static void ConfigureServices(string[] args, HostBuilderContext hostContext, IServiceCollection services)
-        {
+            //TODO: READ FROM THE SETTINGS
             if (args == null || args.Length == 0)
-                throw new Exception("To start the web server you need to provide some args");
-
-            services.AddLogging(b =>
-            {
-                b.AddDebug();
-                b.AddConsole();
-                b.AddSerilog();
-                b.AddEventLog();
-            });
+                args = new List<string>().ToArray();
 
             string ffmpegPath = null;
             string ffprobePath = null;
-            int startingPort = AppWebServerConstants.DefaultPort;
+            int startingPort = -1;
 
             var argsList = args.ToList();
             int portIndex = argsList.IndexOf(AppWebServerConstants.PortArgument);
@@ -82,19 +51,36 @@ namespace CastIt.Server
                 ffprobePath = ffprobeBasePath;
             }
 
-            services.AddApplication(ffmpegPath, ffprobePath)
-                .AddInfrastructure()
-                .AddAppWebServer();
-
-            services.AddHostedService(provider =>
+            var logs = new List<FileToLog>
             {
-                var logger = provider.GetRequiredService<ILogger<MainService>>();
-                var webServer = provider.GetRequiredService<IAppWebServer>();
-                var castService = provider.GetRequiredService<ICastService>();
-                var appSettingsService = provider.GetRequiredService<IAppSettingsService>();
-                var fileService = provider.GetRequiredService<IFileService>();
-                return new MainService(logger, webServer, castService, appSettingsService, fileService, startingPort);
-            });
+                new FileToLog(typeof(PlayerController), "controller_castit"),
+                new FileToLog(typeof(CastItHub), "hub_castit"),
+                new FileToLog(typeof(AppDataService), "service_appdata")
+            };
+
+            //TODO: LOG THEM ALL
+            //logs.AddRange(DependencyInjection.GetServerLogs());
+            logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
+            logs.SetupLogging(AppFileUtils.GetServerLogsPath());
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            CreateHostBuilder(args, ffmpegPath, ffprobePath, startingPort).Build().Run();
         }
+
+        public static IHostBuilder CreateHostBuilder(string[] args, string ffmpegPath, string ffprobePath, int port) =>
+            Host.CreateDefaultBuilder(args)
+                .UseSerilog()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    if (port > 0)
+                    {
+                        webBuilder.UseKestrel(options => options.ListenAnyIP(port));
+                    }
+
+                    webBuilder.UseStartup(factory => new Startup(factory.Configuration, ffmpegPath, ffprobePath));
+                })
+                //This has to happen AFTER ConfigureWebHostDefaults in order to get the server ip address
+                //https://stackoverflow.com/questions/58457143/net-core-3-0-ihostedservice-access-web-server-url-scheme-host-port-etc
+                .ConfigureServices(services => services.AddHostedService<CastItHostedService>());
     }
 }

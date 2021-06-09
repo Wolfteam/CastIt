@@ -1,16 +1,13 @@
-﻿using System.IO;
-using System.Linq;
+﻿using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Interfaces;
 using CastIt.Test.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CastIt.Application.Interfaces;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 
 namespace CastIt.Test.Services
 {
@@ -19,9 +16,10 @@ namespace CastIt.Test.Services
         private readonly ILogger<CastItHostedService> _logger;
         private readonly IServerCastService _castService;
         private readonly IHubContext<CastItHub, ICastItHub> _castItHub;
-        private readonly IAppSettingsService _appSettings;
+        private readonly IServerAppSettingsService _appSettings;
         private readonly IFileWatcherService _fileWatcherService;
-        private readonly IServer _server;
+        private readonly IBaseWebServer _baseWebServer;
+        private readonly IFileService _fileService;
 
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
@@ -29,16 +27,18 @@ namespace CastIt.Test.Services
             ILogger<CastItHostedService> logger,
             IServerCastService castService,
             IHubContext<CastItHub, ICastItHub> castItHub,
-            IAppSettingsService appSettings,
+            IServerAppSettingsService appSettings,
             IFileWatcherService fileWatcherService,
-            IServer server)
+            IFileService fileService,
+            IBaseWebServer baseWebServer)
         {
             _logger = logger;
             _castService = castService;
             _castItHub = castItHub;
             _appSettings = appSettings;
             _fileWatcherService = fileWatcherService;
-            _server = server;
+            _fileService = fileService;
+            _baseWebServer = baseWebServer;
 
             _castService.OnCastableDeviceAdded = OnDeviceDiscovered;
             _castService.OnFileLoaded = OnFileLoaded;
@@ -49,11 +49,11 @@ namespace CastIt.Test.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            var serverAddressesFeature = _server.Features.Get<IServerAddressesFeature>();
-            _logger.LogInformation("Initializing on the following ip: " + string.Join(", ", serverAddressesFeature.Addresses));
+            _fileService.DeleteServerLogsAndPreviews();
+            _baseWebServer.Init();
 
             _logger.LogInformation("Initializing app settings...");
-            _appSettings.Init();
+            await _appSettings.Init();
 
             _logger.LogInformation("Initialization completed");
             await base.StartAsync(cancellationToken);
@@ -64,14 +64,14 @@ namespace CastIt.Test.Services
             return Task.CompletedTask;
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Hosted service is going down!");
             _setDurationTokenSource.Cancel();
-            _castItHub.Clients.All.ShutDown();
-            _castService.CleanThemAll();
+            await _castService.CleanThemAll();
+            await _castItHub.Clients.All.ShutDown();
             //TODO: USE EVENTS AND REMOVE THEM HERE
-            return base.StopAsync(cancellationToken);
+            await base.StopAsync(cancellationToken);
         }
 
         private void InitializeOrUpdateFileWatcher(bool update)
