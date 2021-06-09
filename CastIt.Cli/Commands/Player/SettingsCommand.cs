@@ -1,94 +1,143 @@
-﻿using CastIt.Application.Server;
-using CastIt.Cli.Common.Utils;
-using CastIt.Cli.Interfaces.Api;
-using CastIt.Domain.Dtos.Requests;
+﻿using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Enums;
+using CastIt.GoogleCast.Enums;
+using CastIt.Test.Models;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
-using Refit;
-using System;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace CastIt.Cli.Commands
+namespace CastIt.Cli.Commands.Player
 {
-    //[Command(Name = "settings", Description = "Updates or retrieves the settings of the web server. The updated settings will take effect starting from the next played file")]
-    //public class SettingsCommand : BaseCommand
-    //{
-    //    private readonly IConsole _console;
+    [Command(Name = "settings", Description = "Gets or updates the server's settings")]
+    public class SettingsCommand : BaseCommand
+    {
+        //General
+        [Option(CommandOptionType.SingleOrNoValue, Description = "The ffmpeg path", LongName = "ffmpeg", ShortName = "ffmpeg")]
+        public string FFmpegPath { get; set; }
 
-    //    [Option(CommandOptionType.NoValue, Description = "If false, it will retrieve the current server settings, otherwise they will be updated. Defaults to false", LongName = "update")]
-    //    public bool Update { get; set; }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "The ffmpeg path", LongName = "ffprobe", ShortName = "ffprobe")]
+        public string FFprobePath { get; set; }
 
-    //    [Option(CommandOptionType.NoValue, Description = "Enables the hardware acceleration", LongName = "use_hwaccel", ShortName = "hw_accel")]
-    //    public bool UseHardwareAcceleration { get; set; }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if files should start from the start or if they should start where they were left", LongName = "play-from-start", ShortName = "play-from-start")]
+        public bool? StartFilesFromTheStart { get; set; }
 
-    //    [Option(CommandOptionType.NoValue, Description = "Forces the transcode of the video ", LongName = "transcode_video", ShortName = "tv")]
-    //    public bool ForceVideoTranscode { get; set; }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if the next file in the playlist should be played automatically", LongName = "play-next-file", ShortName = "play-next-file")]
+        public bool? PlayNextFileAutomatically { get; set; }
 
-    //    [Option(CommandOptionType.NoValue, Description = "Forces the transcode of the audio", LongName = "transcode_audio", ShortName = "ta")]
-    //    public bool ForceAudioTranscode { get; set; }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if video transcode must be done for all files", LongName = "video-transcode", ShortName = "video-transcode")]
+        public bool? ForceVideoTranscode { get; set; }
 
-    //    [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the video scale of the video. Defaults to Original", LongName = "video_scale")]
-    //    public VideoScaleType VideoScale { get; set; } = VideoScaleType.Original;
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if video transcode must be done for all files", LongName = "audio-transcode", ShortName = "audio-transcode")]
+        public bool? ForceAudioTranscode { get; set; }
 
-    //    public SettingsCommand(IConsole console)
-    //    {
-    //        _console = console;
-    //    }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the video scale for transcoded videos", LongName = "video-scale", ShortName = "video-scale")]
+        public VideoScaleType? VideoScale { get; set; }
 
-    //    protected override async Task<int> OnExecute(CommandLineApplication app)
-    //    {
-    //        try
-    //        {
-    //            if (!WebServerUtils.IsServerAlive())
-    //            {
-    //                _console.WriteLine("Server is not running");
-    //                return -1;
-    //            }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if the hardware acceleration should be enabled for transcoded processes", LongName = "use-hw-accel", ShortName = "use-hw-accel")]
+        public bool? EnableHardwareAcceleration { get; set; }
 
-    //            var url = ServerUtils.StartServerIfNotStarted(_console);
-    //            var castItApi = RestService.For<ICastItApi>(url);
+        //Subs specific
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the foreground color of the subtitles", LongName = "subs-fg-color", ShortName = "subs-fg-color")]
+        public SubtitleFgColorType? SubtitleFgColor { get; set; }
 
-    //            if (!Update)
-    //            {
-    //                _console.WriteLine("Trying to retrieve the current server settings...");
-    //                var response = await castItApi.GetCurrentSettings();
-    //                if (!response.Succeed)
-    //                {
-    //                    _console.WriteLine(response.Message);
-    //                    return -1;
-    //                }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the background color of the subtitles", LongName = "subs-bg-color", ShortName = "subs-bg-color")]
+        public SubtitleBgColorType? SubtitleBgColor { get; set; }
 
-    //                _console.WriteLine("Current server settings are:");
-    //                _console.WriteLine($"{JsonConvert.SerializeObject(response.Result, Formatting.Indented)}");
-    //            }
-    //            else
-    //            {
-    //                var request = new UpdateCliAppSettingsRequestDto
-    //                {
-    //                    ForceAudioTranscode = ForceAudioTranscode,
-    //                    VideoScale = VideoScale,
-    //                    EnableHardwareAcceleration = UseHardwareAcceleration,
-    //                    ForceVideoTranscode = ForceVideoTranscode
-    //                };
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the font scale of the subtitles", LongName = "subs-font-scale", ShortName = "subs-font-scale")]
+        public SubtitleFontScaleType? SubtitleFontScale { get; set; }
 
-    //                _console.WriteLine($"Trying to update app settings with request = {JsonConvert.SerializeObject(request, Formatting.Indented)}...");
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the font style of the subtitles", LongName = "subs-font-style", ShortName = "subs-font-style")]
+        public TextTrackFontStyleType? SubtitleFontStyle { get; set; }
 
-    //                var response = await castItApi.UpdateAppSettings(request);
-    //                if (!response.Succeed)
-    //                {
-    //                    _console.WriteLine(response.Message);
-    //                    return -1;
-    //                }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the font family of the subtitles", LongName = "subs-font-family", ShortName = "subs-font-family")]
+        public TextTrackFontGenericFamilyType? SubtitleFontFamily { get; set; }
 
-    //                _console.WriteLine("Settings were successfully updated. The new settings will take effect when you play a new file");
-    //            }
-    //        }
-    //        catch (Exception e)
-    //        {
-    //            _console.WriteLine(e.ToString());
-    //        }
-    //        return await base.OnExecute(app);
-    //    }
-    //}
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets the delay in seconds of the subtitles", LongName = "subs-delay", ShortName = "subs-delay")]
+        public double? SubtitleDelayInSeconds { get; set; }
+
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if first found subtitles should be loaded", LongName = "subs-auto-load", ShortName = "subs-auto-load")]
+        public bool? LoadFirstSubtitleFoundAutomatically { get; set; }
+
+        public SettingsCommand(IConsole appConsole, ICastItApiService castItApi)
+            : base(appConsole, castItApi)
+        {
+        }
+
+        protected override async Task<int> Execute(CommandLineApplication app)
+        {
+            CheckIfWebServerIsRunning();
+
+            var patch = BuildPathDocument();
+
+            if (!patch.Operations.Any())
+            {
+                var response = await CastItApi.GetCurrentSettings();
+                CheckServerResponse(response);
+
+                var json = JsonConvert.SerializeObject(response.Result, Formatting.Indented);
+                AppConsole.WriteLine(json);
+            }
+            else
+            {
+                var response = await CastItApi.UpdateSettings(patch);
+                CheckServerResponse(response);
+            }
+
+            return SuccessCode;
+        }
+
+        private JsonPatchDocument<ServerAppSettings> BuildPathDocument()
+        {
+            var patch = new JsonPatchDocument<ServerAppSettings>();
+
+            if (!string.IsNullOrWhiteSpace(FFmpegPath))
+                patch.Replace(p => p.FFmpegPath, FFmpegPath);
+
+            if (!string.IsNullOrWhiteSpace(FFprobePath))
+                patch.Replace(p => p.FFprobePath, FFprobePath);
+
+            if (StartFilesFromTheStart.HasValue)
+                patch.Replace(p => p.StartFilesFromTheStart, StartFilesFromTheStart.Value);
+
+            if (PlayNextFileAutomatically.HasValue)
+                patch.Replace(p => p.PlayNextFileAutomatically, PlayNextFileAutomatically.Value);
+
+            if (ForceVideoTranscode.HasValue)
+                patch.Replace(p => p.ForceVideoTranscode, ForceVideoTranscode.Value);
+
+            if (ForceAudioTranscode.HasValue)
+                patch.Replace(p => p.ForceAudioTranscode, ForceAudioTranscode.Value);
+
+            if (VideoScale.HasValue)
+                patch.Replace(p => p.VideoScale, VideoScale.Value);
+
+            if (EnableHardwareAcceleration.HasValue)
+                patch.Replace(p => p.EnableHardwareAcceleration, EnableHardwareAcceleration.Value);
+
+            if (SubtitleBgColor.HasValue)
+                patch.Replace(p => p.CurrentSubtitleBgColor, SubtitleBgColor.Value);
+
+            if (SubtitleFgColor.HasValue)
+                patch.Replace(p => p.CurrentSubtitleFgColor, SubtitleFgColor.Value);
+
+            if (SubtitleFontScale.HasValue)
+                patch.Replace(p => p.CurrentSubtitleFontScale, SubtitleFontScale.Value);
+
+            if (SubtitleFontStyle.HasValue)
+                patch.Replace(p => p.CurrentSubtitleFontStyle, SubtitleFontStyle.Value);
+
+            if (SubtitleFontFamily.HasValue)
+                patch.Replace(p => p.CurrentSubtitleFontFamily, SubtitleFontFamily.Value);
+
+            if (SubtitleDelayInSeconds.HasValue)
+                patch.Replace(p => p.SubtitleDelayInSeconds, SubtitleDelayInSeconds.Value);
+
+            if (LoadFirstSubtitleFoundAutomatically.HasValue)
+                patch.Replace(p => p.LoadFirstSubtitleFoundAutomatically, LoadFirstSubtitleFoundAutomatically.Value);
+
+            return patch;
+        }
+    }
 }

@@ -4,7 +4,9 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
 using Refit;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
+using CastIt.Test.Models;
 
 namespace CastIt.Cli.Interfaces.Api
 {
@@ -45,6 +47,11 @@ namespace CastIt.Cli.Interfaces.Api
         [Post("/Player/Seek/{seconds}")]
         Task<EmptyResponseDto> Seek(double seconds);
 
+        [Get("/Player/Settings")]
+        Task<AppResponseDto<ServerAppSettings>> GetCurrentSettings();
+
+        [Patch("/Player/Settings")]
+        Task<EmptyResponseDto> UpdateSettings([Body] StringContent body);
         #endregion
 
         #region PlayLists
@@ -92,11 +99,5 @@ namespace CastIt.Cli.Interfaces.Api
         [Post("/Files/{fileId}/Play")]
         Task<EmptyResponseDto> Play(long fileId);
         #endregion
-
-        //[Get("settings")]
-        //Task<AppResponseDto<CliAppSettingsResponseDto>> GetCurrentSettings();
-
-        //[Post("settings")]
-        //Task<EmptyResponseDto> UpdateAppSettings([Body] UpdateCliAppSettingsRequestDto dto);
     }
 }

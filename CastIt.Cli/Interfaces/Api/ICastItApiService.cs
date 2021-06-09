@@ -3,6 +3,8 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CastIt.Test.Models;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace CastIt.Cli.Interfaces.Api
 {
@@ -33,5 +35,7 @@ namespace CastIt.Cli.Interfaces.Api
         Task<EmptyResponseDto> AddFiles(long id, List<string> files);
         Task<EmptyResponseDto> AddUrl(long id, string url, bool onlyVideo);
         Task<EmptyResponseDto> Play(long fileId);
+        Task<AppResponseDto<ServerAppSettings>> GetCurrentSettings();
+        Task<EmptyResponseDto> UpdateSettings(JsonPatchDocument<ServerAppSettings> patch);
     }
 }

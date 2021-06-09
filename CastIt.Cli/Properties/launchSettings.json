@@ -2,7 +2,7 @@
   "profiles": {
     "CastIt.GoogleCast.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "playlists set-options -loop -shuffle"
+      "commandLineArgs": "player update-settings -play-next-file=true"
     }
   }
 }

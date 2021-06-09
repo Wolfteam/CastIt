@@ -3,6 +3,7 @@ using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace CastIt.Cli.Common.Utils
 {
@@ -24,7 +25,7 @@ namespace CastIt.Cli.Common.Utils
             var dir = Directory.GetCurrentDirectory();
             var path = Path.Combine(dir, "Server", WebServerUtils.ServerProcessName);
 #if DEBUG
-            path = "D:\\Proyectos\\CastIt\\CastIt.Test\\bin\\Debug\\net5.0\\CastIt.Test.exe";
+            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
 #endif
             Console.WriteLine("Getting an open port...");
             var openPort = WebServerUtils.GetOpenPort();
@@ -49,8 +50,12 @@ namespace CastIt.Cli.Common.Utils
             Console.WriteLine($"Trying to start process located in = {path} with args = {escapedArgs}");
             bool started = WebServerUtils.StartServer(escapedArgs, path);
             if (started)
+            {
+                //Give enough time to the server to be started
+                Task.Delay(500).GetAwaiter().GetResult();
                 return WebServerUtils.GetWebServerIpAddress(openPort);
-
+            }
+                
             Console.WriteLine("Couldn't start the web server");
             return null;
         }

@@ -54,18 +54,13 @@ namespace CastIt.Cli
 #if DEBUG
                         Console.WriteLine($"Using url = {url} for the web server api");
 #endif
-
                         services.AddRefitClient<ICastItApi>()
                             .ConfigureHttpClient(c => c.BaseAddress = new Uri(url));
-
                     }).ConfigureAppConfiguration(b =>
                     {
                         b.SetBasePath(basePath);
                         b.AddJsonFile(jsonPath);
                     });
-
-                //Give enough time to the server to be started
-                await Task.Delay(500);
 
                 return await builder.RunCommandLineApplicationAsync<MainCommand>(args);
             }

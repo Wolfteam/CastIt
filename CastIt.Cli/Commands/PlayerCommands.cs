@@ -15,8 +15,8 @@ namespace CastIt.Cli.Commands
         typeof(TogglePlaybackCommand),
         typeof(StopCommand),
         typeof(VolumeCommand),
-        typeof(GoToCommand)
-    //typeof(SettingsCommand)
+        typeof(GoToCommand),
+        typeof(SettingsCommand)
     )]
     public class PlayerCommands : BaseCommand
     {

@@ -3,10 +3,15 @@ using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
+using CastIt.Test.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Refit;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Services
@@ -243,6 +248,48 @@ namespace CastIt.Cli.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, $"{nameof(Seek)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<AppResponseDto<ServerAppSettings>> GetCurrentSettings()
+        {
+            var response = new AppResponseDto<ServerAppSettings>();
+            try
+            {
+                response = await _api.GetCurrentSettings();
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(GetCurrentSettings)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(GetCurrentSettings)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> UpdateSettings(JsonPatchDocument<ServerAppSettings> patch)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                var body = JsonConvert.SerializeObject(patch);
+                var content = new StringContent(body, Encoding.UTF8, "application/json");
+                response = await _api.UpdateSettings(content);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(UpdateSettings)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(UpdateSettings)}: Unknown error occurred");
                 HandleUnknownException(response);
             }
             return response;
