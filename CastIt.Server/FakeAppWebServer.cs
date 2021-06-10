@@ -1,5 +1,4 @@
-﻿using CastIt.Application.Common;
-using CastIt.Application.Interfaces;
+﻿using CastIt.Application.Interfaces;
 using CastIt.Application.Server;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Enums;
@@ -7,14 +6,16 @@ using CastIt.Shared.Extensions;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
 
-namespace CastIt.Test
+namespace CastIt.Server
 {
     public class FakeAppWebServer : IBaseWebServer
     {
+        private readonly ILogger<FakeAppWebServer> _logger;
         private readonly IServer _server;
         private string _baseIpAddress;
 
@@ -42,23 +43,38 @@ namespace CastIt.Test
         //public OnServerMsgHandler OnServerMsg { get; set; }
         #endregion
 
-        public FakeAppWebServer(IServer server)
+        public FakeAppWebServer(ILogger<FakeAppWebServer> logger, IServer server)
         {
+            _logger = logger;
             _server = server;
         }
 
+        //Keep in mind that this method should be called AFTER the server has completely started
         public void Init()
         {
-            //Keep in mind that this method should be called AFTER the server has completely started
             var serverAddressesFeature = _server.Features.Get<IServerAddressesFeature>();
-            _baseIpAddress = serverAddressesFeature.Addresses.LastOrDefault();
+            //On iis express the IServerAddressesFeature will return the right ip,
+            //but on other environments we will get something like http://[::]:9696 that's why we call
+            //WebServerUtils.GetWebServerIpAddress()
+            var ipAddress = serverAddressesFeature.Addresses.FirstOrDefault(s =>
+                !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
+                !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
+                !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
+
+            if (!string.IsNullOrWhiteSpace(ipAddress) && ipAddress.EndsWith("/"))
+            {
+                ipAddress = ipAddress[..^1];
+            }
+
+            _baseIpAddress = ipAddress;
+            _logger.LogInformation($"The current ip addresses are = {string.Join(",", serverAddressesFeature.Addresses)} and the used will be = {_baseIpAddress}");
             CheckIpAddress();
         }
 
         protected string GetBaseUrl()
         {
             CheckIpAddress();
-            return $"{_baseIpAddress}player";
+            return $"{_baseIpAddress}/player";
         }
 
         public string GetMediaUrl(

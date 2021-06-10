@@ -1,9 +1,9 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
-using CastIt.Test.Models;
+using CastIt.Infrastructure.Models;
 
-namespace CastIt.Test.Services
+namespace CastIt.Server.Interfaces
 {
     public interface IServerAppSettingsService : IBaseAppSettingsService<ServerAppSettings>
     {

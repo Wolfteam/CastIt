@@ -1,9 +1,10 @@
+using CastIt.Application;
 using CastIt.Application.Common.Utils;
 using CastIt.Application.Server;
 using CastIt.Domain.Models.Logging;
+using CastIt.Server.Common.Extensions;
+using CastIt.Server.Services;
 using CastIt.Shared.Extensions;
-using CastIt.Test.Controllers;
-using CastIt.Test.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace CastIt.Test
+namespace CastIt.Server
 {
     public static class Program
     {
@@ -51,16 +52,10 @@ namespace CastIt.Test
                 ffprobePath = ffprobeBasePath;
             }
 
-            var logs = new List<FileToLog>
-            {
-                new FileToLog(typeof(PlayerController), "controller_castit"),
-                new FileToLog(typeof(CastItHub), "hub_castit"),
-                new FileToLog(typeof(AppDataService), "service_appdata")
-            };
+            var logs = new List<FileToLog>();
+            logs.AddServerLogs().AddApplicationLogs();
 
             //TODO: LOG THEM ALL
-            //logs.AddRange(DependencyInjection.GetServerLogs());
-            logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
             logs.SetupLogging(AppFileUtils.GetServerLogsPath());
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
@@ -74,7 +69,10 @@ namespace CastIt.Test
                 {
                     if (port > 0)
                     {
-                        webBuilder.UseKestrel(options => options.ListenAnyIP(port));
+                        webBuilder.UseKestrel(options =>
+                        {
+                            options.ListenAnyIP(port);
+                        });
                     }
 
                     webBuilder.UseStartup(factory => new Startup(factory.Configuration, ffmpegPath, ffprobePath));

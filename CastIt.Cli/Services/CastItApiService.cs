@@ -3,7 +3,7 @@ using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
-using CastIt.Test.Models;
+using CastIt.Infrastructure.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

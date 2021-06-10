@@ -52,10 +52,10 @@ namespace CastIt.Cli.Common.Utils
             if (started)
             {
                 //Give enough time to the server to be started
-                Task.Delay(500).GetAwaiter().GetResult();
+                Task.Delay(1000).GetAwaiter().GetResult();
                 return WebServerUtils.GetWebServerIpAddress(openPort);
             }
-                
+
             Console.WriteLine("Couldn't start the web server");
             return null;
         }

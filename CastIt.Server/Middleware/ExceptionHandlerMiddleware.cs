@@ -1,19 +1,16 @@
 ﻿using CastIt.Domain.Dtos;
+using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
-using CastIt.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Net;
-using System.Net.Mime;
 using System.Threading.Tasks;
-using CastIt.Domain.Enums;
-using Microsoft.AspNetCore.Mvc.Formatters;
 
-namespace CastIt.Test.Middleware
+namespace CastIt.Server.Middleware
 {
     public class ExceptionHandlerMiddleware
     {

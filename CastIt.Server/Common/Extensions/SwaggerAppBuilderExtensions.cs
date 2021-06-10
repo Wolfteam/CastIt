@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 
-namespace CastIt.Test.Common.Extensions
+namespace CastIt.Server.Common.Extensions
 {
     public static class SwaggerAppBuilderExtensions
     {

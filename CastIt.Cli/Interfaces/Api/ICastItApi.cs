@@ -2,11 +2,11 @@
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
+using CastIt.Infrastructure.Models;
 using Refit;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using CastIt.Test.Models;
 
 namespace CastIt.Cli.Interfaces.Api
 {

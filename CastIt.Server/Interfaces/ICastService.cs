@@ -1,12 +1,11 @@
 ﻿using CastIt.Application.Common;
-using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CastIt.Infrastructure.Interfaces
+namespace CastIt.Server.Interfaces
 {
     public interface ICastService
     {

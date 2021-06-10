@@ -1,10 +1,10 @@
 ﻿using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Models.Device;
+using CastIt.Infrastructure.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CastIt.Test.Models;
-using Microsoft.AspNetCore.JsonPatch;
 
 namespace CastIt.Cli.Interfaces.Api
 {

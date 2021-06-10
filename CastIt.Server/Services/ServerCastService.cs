@@ -10,11 +10,10 @@ using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
 using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.GoogleCast.Interfaces;
-using CastIt.Test.Common;
-using CastIt.Test.Common.Comparers;
-using CastIt.Test.Interfaces;
-using CastIt.Test.Models;
-using CastIt.Test.Services;
+using CastIt.Server.Common;
+using CastIt.Server.Common.Comparers;
+using CastIt.Server.Interfaces;
+using CastIt.Server.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,7 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CastIt.Test
+namespace CastIt.Server.Services
 {
     public interface INewCastService
     {
@@ -576,7 +575,7 @@ namespace CastIt.Test
                 var fileInfo = await GetFileInfo(file.Path, _fileCancellationTokenSource.Token);
                 playList?.Files?.Add(MapToServerFileItem(file, fileInfo));
                 if (playList != null)
-                    SendFileAdded(playList.Id,file.Id);
+                    SendFileAdded(playList.Id, file.Id);
             }
         }
 

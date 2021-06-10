@@ -1,10 +1,10 @@
-﻿using System.Threading.Tasks;
-using CastIt.Domain.Dtos;
-using CastIt.Test.Interfaces;
+﻿using CastIt.Domain.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using CastIt.Server.Interfaces;
 
-namespace CastIt.Test.Controllers
+namespace CastIt.Server.Controllers
 {
     public class FilesController : BaseController<FilesController>
     {

@@ -2,14 +2,13 @@ using CastIt.Application;
 using CastIt.Application.Interfaces;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Interfaces;
-using CastIt.Infrastructure;
-using CastIt.Infrastructure.Interfaces;
-using CastIt.Test.Common;
-using CastIt.Test.Common.Extensions;
-using CastIt.Test.Interfaces;
-using CastIt.Test.Middleware;
-using CastIt.Test.Models;
-using CastIt.Test.Services;
+using CastIt.Infrastructure.Models;
+using CastIt.Server.Common;
+using CastIt.Server.Common.Extensions;
+using CastIt.Server.Hubs;
+using CastIt.Server.Interfaces;
+using CastIt.Server.Middleware;
+using CastIt.Server.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +19,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
 
-namespace CastIt.Test
+namespace CastIt.Server
 {
     public class Startup
     {

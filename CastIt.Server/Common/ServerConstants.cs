@@ -1,4 +1,4 @@
-﻿namespace CastIt.Test.Common
+﻿namespace CastIt.Server.Common
 {
     public static class ServerConstants
     {

@@ -3,7 +3,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
 
-namespace CastIt.Test.Common.Extensions
+namespace CastIt.Server.Common.Extensions
 {
     public static class SwaggerIdentityServiceCollections
     {

@@ -2,13 +2,13 @@
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Test.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CastIt.Server.Interfaces;
 
-namespace CastIt.Test.Controllers
+namespace CastIt.Server.Controllers
 {
     public class PlayListsController : BaseController<PlayListsController>
     {

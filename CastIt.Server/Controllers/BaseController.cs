@@ -1,8 +1,8 @@
-﻿using CastIt.Test.Interfaces;
+﻿using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace CastIt.Test.Controllers
+namespace CastIt.Server.Controllers
 {
     //TODO: SWAGGER DOC XD ?
     [ApiController]

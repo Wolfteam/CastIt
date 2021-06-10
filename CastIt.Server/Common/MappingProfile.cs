@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
-using CastIt.Test.Models;
+using CastIt.Server.Models;
 
-namespace CastIt.Test.Common
+namespace CastIt.Server.Common
 {
     public class MappingProfile : Profile
     {

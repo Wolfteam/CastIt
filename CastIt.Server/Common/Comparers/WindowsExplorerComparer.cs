@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace CastIt.Test.Common.Comparers
+namespace CastIt.Server.Common.Comparers
 {
     public class WindowsExplorerComparer : IComparer<string>
     {

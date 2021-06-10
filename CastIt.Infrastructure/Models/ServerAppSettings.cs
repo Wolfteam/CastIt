@@ -1,7 +1,7 @@
 ﻿using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
 
-namespace CastIt.Test.Models
+namespace CastIt.Infrastructure.Models
 {
     public class ServerAppSettings
     {

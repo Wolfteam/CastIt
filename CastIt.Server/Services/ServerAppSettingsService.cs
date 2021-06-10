@@ -2,12 +2,13 @@
 using CastIt.Application.Settings;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
-using CastIt.Test.Models;
+using CastIt.Infrastructure.Models;
+using CastIt.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CastIt.Test.Services
+namespace CastIt.Server.Services
 {
     //TODO: SHOULD I SPLIT THE SETTINGS CLASS?
     internal class ServerAppSettingsService : BaseAppSettingsService<ServerAppSettings>, IServerAppSettingsService

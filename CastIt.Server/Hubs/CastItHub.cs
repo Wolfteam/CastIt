@@ -2,17 +2,16 @@
 using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
-using CastIt.Test.Interfaces;
+using CastIt.Domain.Enums;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CastIt.Domain.Enums;
+using CastIt.Server.Interfaces;
 
-namespace CastIt.Test
+namespace CastIt.Server.Hubs
 {
     //The exposed name methods here must match the ones that the client listens for
     public interface ICastItHub

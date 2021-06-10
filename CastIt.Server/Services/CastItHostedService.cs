@@ -1,6 +1,7 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
-using CastIt.Test.Interfaces;
+using CastIt.Server.Hubs;
+using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CastIt.Test.Services
+namespace CastIt.Server.Services
 {
     public class CastItHostedService : BackgroundService
     {

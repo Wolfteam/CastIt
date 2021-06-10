@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace CastIt.Test.Interfaces
+namespace CastIt.Server.Interfaces
 {
     public interface IAppDataService
     {

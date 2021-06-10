@@ -4,20 +4,18 @@ using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Extensions;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Transcode;
-using CastIt.Test.Interfaces;
+using CastIt.Infrastructure.Models;
+using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using CastIt.Domain.Enums;
-using CastIt.Test.Models;
-using CastIt.Test.Services;
-using Microsoft.AspNetCore.JsonPatch;
 
-namespace CastIt.Test.Controllers
+namespace CastIt.Server.Controllers
 {
     public class PlayerController : BaseController<PlayerController>
     {

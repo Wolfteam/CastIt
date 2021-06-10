@@ -1,7 +1,7 @@
 ﻿using CastIt.Domain.Entities;
 using FluentMigrator;
 
-namespace CastIt.Test.Migrations
+namespace CastIt.Server.Migrations
 {
     [Migration(2)]
     public class InitFileItem : Migration

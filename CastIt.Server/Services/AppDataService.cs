@@ -1,18 +1,14 @@
 ﻿using CastIt.Application.Common.Utils;
 using CastIt.Domain.Entities;
-using CastIt.Test.Interfaces;
-using CastIt.Test.Migrations;
+using CastIt.Server.Interfaces;
+using CastIt.Server.Migrations;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
-using CastIt.Application.Common;
-using CastIt.Domain.Dtos.Responses;
 
-namespace CastIt.Test.Services
+namespace CastIt.Server.Services
 {
     public class AppDataService : IAppDataService
     {

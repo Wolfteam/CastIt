@@ -3,7 +3,7 @@ using CastIt.Application.Common.Extensions;
 using CastIt.Application.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
 
-namespace CastIt.Test.Models
+namespace CastIt.Server.Models
 {
     public class ServerFileItem
     {

@@ -12,7 +12,7 @@ using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
-using CastIt.Infrastructure.Interfaces;
+using CastIt.Server.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CastIt.Test.Services
+namespace CastIt.Server.Services
 {
     public abstract class BaseCastService : ICastService
     {
