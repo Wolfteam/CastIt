@@ -13,9 +13,9 @@ namespace CastIt.Application.Interfaces
 
         Task GenerateThumbnails(string mrl, bool hwAccelIsEnabled);
 
-        void KillThumbnailProcess();
+        Task KillThumbnailProcess();
 
-        void KillTranscodeProcess();
+        Task KillTranscodeProcess();
 
         Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options);
 

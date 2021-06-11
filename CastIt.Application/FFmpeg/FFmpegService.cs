@@ -221,7 +221,7 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
-        public void KillThumbnailProcess()
+        public async Task KillThumbnailProcess()
         {
             _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing thumbnail process");
             try
@@ -231,7 +231,7 @@ namespace CastIt.Application.FFMpeg
                 {
                     _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing the generate all thumbnails process");
                     _generateAllThumbnailsProcess.Kill(true);
-                    _generateAllThumbnailsProcess.WaitForExit();
+                    await _generateAllThumbnailsProcess.WaitForExitAsync(_tokenSource.Token);
                 }
             }
             catch (Exception ex)
@@ -249,7 +249,7 @@ namespace CastIt.Application.FFMpeg
                 {
                     _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing the generate thumbnail process");
                     _generateThumbnailProcess.Kill(true);
-                    _generateThumbnailProcess.WaitForExit();
+                    await _generateThumbnailProcess.WaitForExitAsync(_tokenSource.Token);
                 }
             }
             catch (Exception ex)
@@ -261,7 +261,7 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
-        public void KillTranscodeProcess()
+        public async Task KillTranscodeProcess()
         {
             _logger.LogInformation($"{nameof(KillTranscodeProcess)}: Killing transcode process");
             try
@@ -269,7 +269,7 @@ namespace CastIt.Application.FFMpeg
                 if (!_transcodeProcess.HasExited)
                 {
                     _transcodeProcess.Kill(true);
-                    _transcodeProcess.WaitForExit();
+                    await _transcodeProcess.WaitForExitAsync(_tokenSource.Token);
                 }
             }
             catch (Exception e)
@@ -323,10 +323,10 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
-        public Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options)
+        public async Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options)
         {
-            CheckBeforeTranscode();
-            return TranscodeVideo(outputStream, options, _tokenSource.Token);
+            await CheckBeforeTranscode();
+            await TranscodeVideo(outputStream, options, _tokenSource.Token);
         }
 
         public async Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options, CancellationToken token)
@@ -342,6 +342,7 @@ namespace CastIt.Application.FFMpeg
                 await using var memStream = new MemoryStream();
                 var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
                 await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
+                await _transcodeProcess.WaitForExitAsync(token);
                 if (_transcodeProcess.ExitCode != 0)
                 {
                     _logger.LogWarning(
@@ -364,10 +365,10 @@ namespace CastIt.Application.FFMpeg
             _logger.LogInformation($"{nameof(TranscodeVideo)}: Transcode completed for file = {options.FilePath}");
         }
 
-        public Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options)
+        public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options)
         {
-            CheckBeforeTranscode();
-            return TranscodeMusic(options, _tokenSource.Token);
+            await CheckBeforeTranscode();
+            return await TranscodeMusic(options, _tokenSource.Token);
         }
 
         public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token)
@@ -482,7 +483,11 @@ namespace CastIt.Application.FFMpeg
 
             var videoInfo = fileInfo.Videos.Find(f => f.Index == videoStreamIndex && f.IsVideo) ?? fileInfo.HlsVideos.Find(f => f.Index == videoStreamIndex && f.IsHlsVideo);
             if (videoInfo is null)
-                throw new NullReferenceException("The file does not have a valid video stream");
+            {
+                var msg = $"The file does not have a valid video stream for videoIndex = {videoStreamIndex}";
+                _logger.LogError($"{nameof(VideoNeedsTranscode)}: {msg}.{Environment.NewLine}{{@FileInfo}}", fileInfo);
+                throw new NullReferenceException(msg);
+            }
 
             bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
@@ -706,13 +711,13 @@ namespace CastIt.Application.FFMpeg
             return builder.GetArgs();
         }
 
-        private void CheckBeforeTranscode()
+        private async Task CheckBeforeTranscode()
         {
             if (_checkTranscodeProcess)
             {
                 _tokenSource.Cancel();
                 _tokenSource = new CancellationTokenSource();
-                KillTranscodeProcess();
+                await KillTranscodeProcess();
             }
 
             _checkTranscodeProcess = true;
