@@ -1,4 +1,5 @@
 ﻿using CastIt.Application.Common;
+using CastIt.Application.Server;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
 using System;
@@ -22,14 +23,25 @@ namespace CastIt.Server.Interfaces
         OnDisconnectedHandler OnDisconnected { get; set; }
         OnVolumeChangedHandler OnVolumeChanged { get; set; }
         OnServerMessageHandler OnServerMessage { get; set; }
+
+        OnFileLoadingHandler OnFileLoading { get; set; }
+        OnAppClosingHandler OnAppClosing { get; set; }
+        OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
+
+        OnPlayListAddedHandler OnPlayListAdded { get; set; }
+        OnPlayListChangedHandler OnPlayListChanged { get; set; }
+        OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
+
+        OnFileAddedHandler OnFileAdded { get; set; }
+        OnFileChangedHandler OnFileChanged { get; set; }
+        OnFileDeletedHandler OnFileDeleted { get; set; }
+
         Func<string> GetSubTitles { get; set; }
         bool IsPlayingOrPaused { get; }
 
-        public event OnFileLoadingHandler FileLoading;
-
         Task Init();
         Task CleanThemAll();
-        void StopRunningProcess();
+        Task StopRunningProcess();
         Task AddSeconds(
             int videoStreamIndex,
             int audioStreamIndex,

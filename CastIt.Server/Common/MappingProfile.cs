@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
-using CastIt.Server.Models;
+using CastIt.Infrastructure.Models;
 
 namespace CastIt.Server.Common
 {

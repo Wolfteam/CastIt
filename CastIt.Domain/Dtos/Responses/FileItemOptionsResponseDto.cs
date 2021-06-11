@@ -12,7 +12,6 @@
         public bool IsSelected { get; set; }
         public bool IsEnabled { get; set; }
 
-
         public static FileItemOptionsResponseDto ForVideo(int id, bool isSelected, bool isEnabled, string text)
         {
             return new FileItemOptionsResponseDto

@@ -167,6 +167,13 @@ namespace CastIt.Server.Controllers
             return Ok(new EmptyResponseDto(true));
         }
 
+        [HttpGet("Status")]
+        public IActionResult GetStatus()
+        {
+            var response = new AppResponseDto<ServerPlayerStatus>(CastService.GetPlayerStatus());
+            return Ok(response);
+        }
+
         #region Chromecast
         [HttpGet("[action]")]
         [ApiExplorerSettings(IgnoreApi = true)]

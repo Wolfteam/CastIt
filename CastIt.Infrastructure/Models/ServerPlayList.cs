@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CastIt.Server.Models
+namespace CastIt.Infrastructure.Models
 {
     public class ServerPlayList
     {

@@ -24,6 +24,7 @@ namespace CastIt.Server.Common.Extensions
                    new FileToLog(typeof(CastItHub), "hub_castit"),
 
                    //Services
+                   new FileToLog(typeof(ServerCastService), "service_cast"),
                    new FileToLog(typeof(AppDataService), "service_appdata"),
                    new FileToLog(typeof(ServerAppSettingsService), "service_appsettings")
                 });

@@ -2,11 +2,11 @@
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
+using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CastIt.Server.Interfaces;
 
 namespace CastIt.Server.Controllers
 {
@@ -79,7 +79,7 @@ namespace CastIt.Server.Controllers
         public async Task<IActionResult> DeletePlayList(long id)
         {
             await CastService.DeletePlayList(id);
-            return Ok(new EmptyResponseDto());
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpDelete("{id}/All/{exceptId}")]

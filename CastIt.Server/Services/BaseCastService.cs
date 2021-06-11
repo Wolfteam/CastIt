@@ -60,7 +60,7 @@ namespace CastIt.Server.Services
 
         #region Server Delegates
         //TODO: MIGRATE TO EVENTS ?
-        public event OnFileLoadingHandler FileLoading;
+        public OnFileLoadingHandler OnFileLoading { get; set; }
         public OnAppClosingHandler OnAppClosing { get; set; }
         public OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
 
@@ -115,7 +115,7 @@ namespace CastIt.Server.Services
         public virtual Task Init()
         {
             Logger.LogInformation($"{nameof(Init)}: Initializing all...");
-            Player.FileLoading += OnFileLoading;
+            Player.FileLoading += FileLoading;
             Player.DeviceAdded += RendererDiscovererItemAdded;
             Player.EndReached += EndReached;
             Player.TimeChanged += TimeChanged;
@@ -418,11 +418,8 @@ namespace CastIt.Server.Services
 
         public async void GenerateThumbnails(string filePath)
         {
-            await Task.Run(() =>
-            {
-                FFmpegService.KillThumbnailProcess();
-                FFmpegService.GenerateThumbnails(filePath, AppSettings.EnableHardwareAcceleration);
-            }).ConfigureAwait(false);
+            await FFmpegService.KillThumbnailProcess();
+            await FFmpegService.GenerateThumbnails(filePath, AppSettings.EnableHardwareAcceleration);
         }
 
         public Task TogglePlayback()
@@ -430,10 +427,10 @@ namespace CastIt.Server.Services
             return Player.IsPlaying ? Player.PauseAsync() : Player.PlayAsync();
         }
 
-        public Task StopPlayback()
+        public async Task StopPlayback()
         {
-            StopRunningProcess();
-            return Player.StopPlaybackAsync();
+            await StopRunningProcess();
+            await Player.StopPlaybackAsync();
         }
 
         public Task GoToPosition(
@@ -611,18 +608,18 @@ namespace CastIt.Server.Services
             return status?.Volume?.IsMuted ?? isMuted;
         }
 
-        public void StopRunningProcess()
+        public async Task StopRunningProcess()
         {
-            FFmpegService.KillThumbnailProcess();
-            FFmpegService.KillTranscodeProcess();
+            await FFmpegService.KillThumbnailProcess();
+            await FFmpegService.KillTranscodeProcess();
         }
 
-        public virtual Task CleanThemAll()
+        public virtual async Task CleanThemAll()
         {
             try
             {
                 Logger.LogInformation($"{nameof(CleanThemAll)} Clean them all started...");
-                Player.FileLoading -= OnFileLoading;
+                Player.FileLoading -= FileLoading;
                 Player.DeviceAdded -= RendererDiscovererItemAdded;
                 Player.EndReached -= EndReached;
                 Player.TimeChanged -= TimeChanged;
@@ -633,7 +630,7 @@ namespace CastIt.Server.Services
                 Player.IsMutedChanged -= IsMutedChanged;
                 Player.LoadFailed -= LoadFailed;
 
-                StopRunningProcess();
+                await StopRunningProcess();
 
                 AppWebServer.Dispose();
                 Player.Dispose();
@@ -644,8 +641,6 @@ namespace CastIt.Server.Services
                 Logger.LogError(ex, $"{nameof(CleanThemAll)}: An unknown error occurred");
                 TelemetryService.TrackError(ex);
             }
-
-            return Task.CompletedTask;
         }
 
         public Task SetCastRenderer(string id)
@@ -668,17 +663,22 @@ namespace CastIt.Server.Services
             var renderer = AvailableDevices.Find(d => d.Host == host && d.Port == port);
             return SetCastRenderer(renderer);
         }
+
+        public abstract Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
         #endregion
 
         #region Events handlers
-        public void OnFileLoading(object sender, EventArgs e)
+        public void FileLoading(object sender, EventArgs e)
             => SendFileLoading();
 
         private void FileLoaded(string title)
             => OnFileLoaded?.Invoke(title, CurrentThumbnailUrl, Player.CurrentMediaDuration, Player.CurrentVolumeLevel, Player.IsMuted);
 
-        private void EndReached(object sender, EventArgs e)
-            => SendEndReached();
+        private async void EndReached(object sender, EventArgs e)
+        {
+            SendEndReached();
+            await GoTo(true, true);
+        }
 
         private void PositionChanged(object sender, double position)
             => SendPositionChanged(position);
@@ -707,7 +707,7 @@ namespace CastIt.Server.Services
 
         #region Event Senders
         public void SendFileLoading()
-            => FileLoading?.Invoke();
+            => OnFileLoading?.Invoke();
 
         public void SendEndReached()
             => OnEndReached?.Invoke();
@@ -787,6 +787,9 @@ namespace CastIt.Server.Services
 
         public void SendFileDeleted(long playListId, long id)
             => OnFileDeleted?.Invoke(playListId, id);
+
+        public void SendServerMsg(AppMessageType type)
+            => OnServerMessage?.Invoke(type);
         #endregion
 
         //TODO: CHECK IF WE CAN KNOW WHEN A DEVICE IS REMOVED

@@ -27,4 +27,8 @@
     <ProjectReference Include="..\CastIt.Infrastructure\CastIt.Infrastructure.csproj" />
     <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
 </Project>
