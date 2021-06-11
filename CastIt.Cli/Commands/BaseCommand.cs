@@ -3,6 +3,7 @@ using CastIt.Cli.Common.Exceptions;
 using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Dtos;
 using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
@@ -68,6 +69,12 @@ namespace CastIt.Cli.Commands
             AppConsole.WriteLine(e.StackTrace!);
 
             return ErrorCode;
+        }
+
+        protected void PrettyPrintAsJson(object something)
+        {
+            var json = JsonConvert.SerializeObject(something, Formatting.Indented);
+            AppConsole.WriteLine(json);
         }
     }
 }

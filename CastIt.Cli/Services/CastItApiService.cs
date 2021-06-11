@@ -295,6 +295,26 @@ namespace CastIt.Cli.Services
             return response;
         }
 
+        public async Task<AppResponseDto<ServerPlayerStatus>> GetStatus()
+        {
+            var response = new AppResponseDto<ServerPlayerStatus>();
+            try
+            {
+                response = await _api.GetStatus();
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(GetStatus)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(GetStatus)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
         #endregion
 
         #region PlayLists

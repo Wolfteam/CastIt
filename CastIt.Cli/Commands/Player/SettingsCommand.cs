@@ -4,7 +4,6 @@ using CastIt.GoogleCast.Enums;
 using CastIt.Infrastructure.Models;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore.JsonPatch;
-using Newtonsoft.Json;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -76,8 +75,7 @@ namespace CastIt.Cli.Commands.Player
                 var response = await CastItApi.GetCurrentSettings();
                 CheckServerResponse(response);
 
-                var json = JsonConvert.SerializeObject(response.Result, Formatting.Indented);
-                AppConsole.WriteLine(json);
+                PrettyPrintAsJson(response.Result);
             }
             else
             {

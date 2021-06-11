@@ -37,5 +37,6 @@ namespace CastIt.Cli.Interfaces.Api
         Task<EmptyResponseDto> Play(long fileId);
         Task<AppResponseDto<ServerAppSettings>> GetCurrentSettings();
         Task<EmptyResponseDto> UpdateSettings(JsonPatchDocument<ServerAppSettings> patch);
+        Task<AppResponseDto<ServerPlayerStatus>> GetStatus();
     }
 }

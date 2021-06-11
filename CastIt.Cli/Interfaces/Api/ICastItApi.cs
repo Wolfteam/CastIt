@@ -52,6 +52,9 @@ namespace CastIt.Cli.Interfaces.Api
 
         [Patch("/Player/Settings")]
         Task<EmptyResponseDto> UpdateSettings([Body] StringContent body);
+
+        [Get("/Player/Status")]
+        Task<AppResponseDto<ServerPlayerStatus>> GetStatus();
         #endregion
 
         #region PlayLists
