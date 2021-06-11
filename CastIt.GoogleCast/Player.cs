@@ -271,7 +271,7 @@ namespace CastIt.GoogleCast
             params int[] activeTrackIds)
         {
             _logger.LogInfo($"{nameof(LoadAsync)}: Trying to load media = {media.ContentId}");
-            CurrentContentId = null;
+            CleanLoadedFile();
             CancelAndSetListenerToken();
 
             FileLoading?.Invoke(this, EventArgs.Empty);
@@ -442,13 +442,16 @@ namespace CastIt.GoogleCast
 
                             //Only call the end reached if we were playing something, the player was not paused and we are connected
                             if (contentIsBeingPlayed && !IsPaused && _sender.IsConnected)
+                            {
+                                CleanLoadedFile();
                                 EndReached?.Invoke(this, EventArgs.Empty);
+                            }
                             IsPaused = false;
                             break;
                         }
 
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
-                        if (mediaStatus.PlayerState == PlayerState.Paused)
+                        if (mediaStatus.PlayerState == Enums.PlayerState.Paused)
                         {
                             IsPaused = true;
                             IsPlaying = false;
@@ -465,7 +468,7 @@ namespace CastIt.GoogleCast
                                 $"{nameof(ListenForMediaChanges)}: End reached because the " +
                                 $"ElapsedSeconds = {ElapsedSeconds} is greater / equal to " +
                                 $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = {CurrentContentId}");
-                            IsPlaying = false;
+                            CleanLoadedFile();
                             CancelAndSetListenerToken(false);
                             EndReached?.Invoke(this, EventArgs.Empty);
                             break;
@@ -545,6 +548,15 @@ namespace CastIt.GoogleCast
             Disconnected?.Invoke(this, e);
             IsPlaying = false;
             _receiverChannel.IsConnected = false;
+        }
+
+        private void CleanLoadedFile()
+        {
+            CurrentContentId = null;
+            CurrentMediaDuration = 0;
+            ElapsedSeconds = 0;
+            IsPlaying = false;
+            IsPaused = false;
         }
         #endregion
     }

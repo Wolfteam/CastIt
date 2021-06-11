@@ -2,7 +2,6 @@
 
 namespace CastIt.GoogleCast
 {
-    //TODO: RENAME THIS TO PLAYER STATE
     public class PlayerStatus
     {
         public string Mrl { get; }
