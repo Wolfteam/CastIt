@@ -9,7 +9,7 @@ namespace CastIt.Cli.Commands
     [Subcommand(
         typeof(ConnectCommand),
         typeof(DisconnectCommand),
-        typeof(ListDevicesCommand),
+        typeof(DevicesCommand),
         typeof(PlayCommand),
         typeof(TogglePlaybackCommand),
         typeof(StopCommand),

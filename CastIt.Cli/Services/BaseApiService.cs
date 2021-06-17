@@ -3,6 +3,7 @@ using CastIt.Domain.Enums;
 using CastIt.Domain.Extensions;
 using Microsoft.Extensions.Logging;
 using Refit;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -39,7 +40,7 @@ namespace CastIt.Cli.Services
             if (error is null)
             {
                 Logger.LogError(ex,
-                    $"{nameof(HandleApiException)}: Response doesnt have a body, " +
+                    $"{nameof(HandleApiException)}: Response doesn't have a body, " +
                     $"so this may be an error produced by this app");
                 HandleUnknownException(response, defaultError);
             }
@@ -51,6 +52,10 @@ namespace CastIt.Cli.Services
                 response.Message = error.Message;
                 response.MessageId = error.MessageId;
             }
+
+#if DEBUG
+            response.Message += Environment.NewLine + ex;
+#endif
         }
 
         protected void HandleUnknownException<T>(

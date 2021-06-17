@@ -67,6 +67,26 @@ namespace CastIt.Cli.Services
             return response;
         }
 
+        public async Task<EmptyResponseDto> RefreshDevices(double seconds)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await _api.RefreshDevices(seconds);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(RefreshDevices)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(RefreshDevices)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
         public async Task<EmptyResponseDto> Connect(string host, int port)
         {
             var response = new EmptyResponseDto();

@@ -12,6 +12,7 @@ namespace CastIt.Cli.Interfaces.Api
     {
         Task<EmptyResponseDto> StopServer();
         Task<AppListResponseDto<Receiver>> GetAllDevices();
+        Task<EmptyResponseDto> RefreshDevices(double seconds);
         Task<EmptyResponseDto> Connect(string host, int port);
         Task<EmptyResponseDto> Disconnect();
         Task<EmptyResponseDto> TogglePlayback();

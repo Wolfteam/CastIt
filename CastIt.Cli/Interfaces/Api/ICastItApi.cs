@@ -22,6 +22,9 @@ namespace CastIt.Cli.Interfaces.Api
         [Get("/Player/Devices")]
         Task<AppListResponseDto<Receiver>> GetAllDevices();
 
+        [Post("/Player/Devices/Refresh/{seconds}")]
+        Task<EmptyResponseDto> RefreshDevices(double seconds);
+
         [Post("/Player/Connect")]
         Task<EmptyResponseDto> Connect([Body] ConnectRequestDto dto);
 

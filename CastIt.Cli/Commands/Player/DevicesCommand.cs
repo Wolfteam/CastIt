@@ -7,13 +7,19 @@ using System.Threading.Tasks;
 namespace CastIt.Cli.Commands.Player
 {
     [Command(Name = "devices", Description = "List the available devices in the network", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
-    public class ListDevicesCommand : BaseCommand
+    public class DevicesCommand : BaseCommand
     {
-        //TODO: BRING BACK THE TIMEOUT THING
-        //[Option(CommandOptionType.SingleOrNoValue, Description = "The device's scan timeout in seconds", LongName = "timeout")]
-        //public int Timeout { get; set; } = 10;
+        [Option(
+            CommandOptionType.NoValue,
+            Description = "Refreshes the devices in the server. The refresh will last for the specified seconds in the Timeout property",
+            LongName = "refresh",
+            ShortName = "refresh")]
+        public bool Refresh { get; set; }
 
-        public ListDevicesCommand(IConsole appConsole, ICastItApiService castItApi)
+        [Option(CommandOptionType.SingleOrNoValue, Description = "The device's scan timeout in seconds", LongName = "refresh-timeout", ShortName = "refresh-timeout")]
+        public int RefreshTimeout { get; set; } = 10;
+
+        public DevicesCommand(IConsole appConsole, ICastItApiService castItApi)
             : base(appConsole, castItApi)
         {
         }
@@ -21,6 +27,13 @@ namespace CastIt.Cli.Commands.Player
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             CheckIfWebServerIsRunning();
+            if (Refresh)
+            {
+                AppConsole.WriteLine($"Refreshing devices with a refreshTimeout = {RefreshTimeout} ...");
+                var refreshResponse = await CastItApi.RefreshDevices(RefreshTimeout);
+                CheckServerResponse(refreshResponse);
+            }
+
             AppConsole.WriteLine("Trying to retrieve the available devices from server...");
             var response = await CastItApi.GetAllDevices();
             CheckServerResponse(response);
