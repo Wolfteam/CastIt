@@ -14,7 +14,7 @@ namespace CastIt.Shared.Extensions
     {
         public const string LoggingFormat = "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} ({ThreadId}) [{Level}] {Message:lj}{NewLine}{Exception}";
 
-        public static void SetupLogging(this List<FileToLog> logs, string logsPath = null)
+        public static void SetupLogging(this List<FileToLog> logs, string logsPath = null, bool verbose = false)
         {
             logs = logs.GroupBy(l => l.AssemblyFullName).Select(g => g.First()).ToList();
 
@@ -24,7 +24,6 @@ namespace CastIt.Shared.Extensions
                 throw new ArgumentNullException(nameof(logsPath), "You need to provide a base path for the logs");
 
             var loggingConfig = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
@@ -32,6 +31,9 @@ namespace CastIt.Shared.Extensions
                 .Enrich.FromLogContext()
                 .WriteTo.Debug(outputTemplate: LoggingFormat)
                 .WriteTo.Console(outputTemplate: LoggingFormat, theme: AnsiConsoleTheme.Literate);
+
+            if (verbose)
+                loggingConfig.MinimumLevel.Verbose();
 
             var tenMb = 10000000;
             foreach (var kvp in logs)
