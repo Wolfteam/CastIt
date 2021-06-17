@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -83,6 +84,19 @@ namespace CastIt.Application.Server
             };
 
             return process.Start();
+        }
+
+        public static bool StartServer()
+            => StartServer($"{AppWebServerConstants.PortArgument} {GetOpenPort()}", GetServerPhysicalPath());
+
+        public static string GetServerPhysicalPath()
+        {
+            var dir = Directory.GetCurrentDirectory();
+            var path = Path.Combine(dir, "Server", ServerProcessName);
+#if DEBUG
+            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
+#endif
+            return path;
         }
     }
 }

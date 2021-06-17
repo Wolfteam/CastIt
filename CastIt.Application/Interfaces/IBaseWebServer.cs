@@ -31,8 +31,7 @@ namespace CastIt.Application.Interfaces
 
         void Init();
 
-        public string GetMediaUrl(
-            string filePath,
+        public string GetPlayUrl(string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
             double seconds,
@@ -40,10 +39,13 @@ namespace CastIt.Application.Interfaces
             bool audioNeedsTranscode,
             HwAccelDeviceType hwAccelToUse,
             VideoScaleType videoScale,
+            int selectedQuality,
             string videoWidthAndHeight = null);
 
-        string GetPreviewPath(string filepath);
+        string GetChromeCastPreviewUrl(string filepath);
 
-        string GetSubTitlePath(string filepath);
+        string GetThumbnailPreviewUrl(long tentativeSecond);
+
+        string GetSubTitleUrl();
     }
 }

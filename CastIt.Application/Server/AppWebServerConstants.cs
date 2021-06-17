@@ -1,39 +1,19 @@
-﻿using System.Collections.Generic;
-
-namespace CastIt.Application.Server
+﻿namespace CastIt.Application.Server
 {
     public static class AppWebServerConstants
     {
-        public const string MediaPath = "/play";
-        public const string ImagesPath = "/images";
-        public const string SubTitlesPath = "/subtitles";
-        public const int DefaultPort = 9696;
+        public const int NoStreamSelectedId = -1;
+        public const int DefaultSelectedStreamId = 0;
+        public const int DefaultQualitySelected = 360;
 
-        public const string SecondsQueryParameter = "seconds";
-        public const string FileQueryParameter = "filePath";
-        public const string VideoStreamIndexParameter = "videoStream";
-        public const string AudioStreamIndexParameter = "audioStream";
-        public const string VideoNeedsTranscode = "videoNeedsTranscode";
-        public const string AudioNeedsTranscode = "audioNeedsTranscode";
-        public const string HwAccelTypeToUse = "hwAccelTypeToUse";
-        public const string VideoWidthAndHeight = "videoWidthAndHeight";
-        public const string VideoScaleParameter = "videoScale";
+        public const string ChromeCastPlayPath = "ChromeCastPlay";
+        public const string ChromeCastImagesPath = "ChromeCastImages";
+        public const string ChromeCastSubTitlesPath = "ChromeCastSubtitles";
+        public const string ThumbnailPreviewImagesPath = "Images/Previews";
+        public const int DefaultPort = 9696;
 
         public const string PortArgument = "--port";
         public const string FFmpegPathArgument = "--ffmpegBasePath";
         public const string FFprobePathArgument = "--ffprobeBasePath";
-
-        public static IReadOnlyList<string> AllowedQueryParameters => new List<string>
-        {
-            SecondsQueryParameter,
-            FileQueryParameter,
-            VideoStreamIndexParameter,
-            AudioStreamIndexParameter,
-            VideoNeedsTranscode,
-            AudioNeedsTranscode,
-            HwAccelTypeToUse,
-            VideoWidthAndHeight,
-            VideoScaleParameter
-        };
     }
 }

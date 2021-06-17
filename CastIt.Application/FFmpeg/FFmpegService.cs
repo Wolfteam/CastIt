@@ -538,10 +538,7 @@ namespace CastIt.Application.FFMpeg
             return hwAccelType;
         }
 
-        private static string BuildVideoTranscodeCmd(
-            TranscodeVideoFile options,
-            double? from = null,
-            double? to = null)
+        private static string BuildVideoTranscodeCmd(TranscodeVideoFile options, double? from = null, double? to = null)
         {
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(options.FilePath)
@@ -551,9 +548,17 @@ namespace CastIt.Application.FFMpeg
                 .SetHwAccel(options.HwAccelDeviceType)
                 .SetVideoCodec(options.HwAccelDeviceType);
             var outputArgs = builder.AddOutputPipe()
-                .SetPreset(options.HwAccelDeviceType)
                 .AddArg("map_metadata", -1)
                 .AddArg("map_chapters", -1); //for some reason the chromecast doesnt like chapters o.o
+
+            if (options.Quality >= 720)
+                outputArgs.SetFastPreset();
+            else if (options.Quality >= 480)
+                outputArgs.SetVeryFastPreset();
+            else if (options.Quality >= 144)
+                outputArgs.SetUltraFastPreset();
+            else
+                outputArgs.SetPreset(options.HwAccelDeviceType);
 
             if (options.VideoStreamIndex >= 0)
                 outputArgs.SetMap(options.VideoStreamIndex);

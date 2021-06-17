@@ -13,7 +13,7 @@ namespace CastIt.Application.Settings
         protected readonly ILogger Logger;
         protected readonly ITelemetryService TelemetryService;
 
-        public T Settings { get; set; }
+        public T Settings { get; protected set; }
         protected abstract string BasePath { get; }
         public abstract string AppSettingsFilename { get; }
         #endregion
@@ -68,6 +68,9 @@ namespace CastIt.Application.Settings
             }
         }
 
+        public virtual Task SaveCurrentSettings()
+            => SaveSettings(Settings);
+
         public virtual Task SaveSettings(T settings)
         {
             try
@@ -94,6 +97,8 @@ namespace CastIt.Application.Settings
 
             return Task.CompletedTask;
         }
+
+        public abstract Task<T> UpdateSettings(T settings, bool saveToFileSystem = false);
 
         public string GetAppSettingsPath()
         {

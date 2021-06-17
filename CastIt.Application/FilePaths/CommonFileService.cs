@@ -186,6 +186,7 @@ namespace CastIt.Application.FilePaths
             bool isUrl = IsUrlFile(mrl);
             bool isVideo = IsVideoFile(mrl);
             bool isMusic = IsMusicFile(mrl);
+            bool isHls = IsHls(mrl);
             (bool isSubtitle, _) = IsSubtitle(mrl);
 
             var value = AppFileType.Na;
@@ -201,6 +202,9 @@ namespace CastIt.Application.FilePaths
 
             if (isMusic)
                 value |= AppFileType.LocalMusic;
+
+            if (isHls)
+                value |= AppFileType.Hls;
 
             if (isSubtitle)
                 value |= AppFileType.LocalSubtitle;

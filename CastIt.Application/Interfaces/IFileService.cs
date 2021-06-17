@@ -1,4 +1,6 @@
-﻿namespace CastIt.Application.Interfaces
+﻿using System.Threading.Tasks;
+
+namespace CastIt.Application.Interfaces
 {
     public interface IFileService : ICommonFileService
     {
@@ -25,5 +27,11 @@
         void DeleteAppLogsAndPreviews();
 
         void DeleteServerLogsAndPreviews();
+
+        string GetTemporalPreviewImagePath(long id);
+
+        Task<string> DownloadAndSavePreviewImage(long id, string url, bool overrideIfExists = true);
+
+        Task<string> DownloadAndSavePreviewImage(string filename, string url, bool overrideIfExists = true);
     }
 }

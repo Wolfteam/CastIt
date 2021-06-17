@@ -11,7 +11,11 @@ namespace CastIt.Application.Interfaces
 
         Task<T> SaveDefaultSettings();
 
+        Task SaveCurrentSettings();
+
         Task SaveSettings(T settings);
+
+        Task<T> UpdateSettings(T settings, bool saveToFileSystem = false);
 
         Task<T> LoadSettings();
 
