@@ -2,6 +2,7 @@
 using CastIt.Application.Server;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
+using CastIt.Server.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,7 +15,8 @@ namespace CastIt.Server.Interfaces
         OnCastRendererSetHandler OnCastRendererSet { get; set; }
         OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        OnFileLoadedHandler OnFileLoaded { get; set; }
+        OnCastDevicesChangedHandler OnCastDevicesChanged { get; set; }
+        //OnFileLoadedHandler OnFileLoaded { get; set; }
         OnEndReachedHandler OnEndReached { get; set; }
         OnPositionChangedHandler OnPositionChanged { get; set; }
         OnTimeChangedHandler OnTimeChanged { get; set; }
@@ -24,13 +26,14 @@ namespace CastIt.Server.Interfaces
         OnVolumeChangedHandler OnVolumeChanged { get; set; }
         OnServerMessageHandler OnServerMessage { get; set; }
 
-        OnFileLoadingHandler OnFileLoading { get; set; }
+        //OnFileLoadingHandler OnFileLoading { get; set; }
         OnAppClosingHandler OnAppClosing { get; set; }
         OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
 
         OnPlayListAddedHandler OnPlayListAdded { get; set; }
         OnPlayListChangedHandler OnPlayListChanged { get; set; }
         OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
+        OnPlayListBusyHandler OnPlayListBusy { get; set; }
 
         OnFileAddedHandler OnFileAdded { get; set; }
         OnFileChangedHandler OnFileChanged { get; set; }
@@ -38,6 +41,12 @@ namespace CastIt.Server.Interfaces
 
         Func<string> GetSubTitles { get; set; }
         bool IsPlayingOrPaused { get; }
+        int CurrentVideoStreamIndex { get; }
+        int CurrentAudioStreamIndex { get; }
+        int CurrentSubtitleStreamIndex { get; }
+        int CurrentVideoQuality { get; }
+        string CurrentThumbnailUrl { get; }
+        FFProbeFileInfo CurrentFileInfo { get; }
 
         Task Init();
         Task CleanThemAll();
@@ -84,14 +93,11 @@ namespace CastIt.Server.Interfaces
         Task<string> GetFirstThumbnail(string filePath);
         Task<string> GetThumbnail();
         Task<string> GetThumbnail(string filePath);
-        Task StopPlayback();
         Task TogglePlayback();
         void GenerateThumbnails();
         void GenerateThumbnails(string filePath);
         Task SetCastRenderer(string id);
         Task SetCastRenderer(string host, int port);
-
-        void SendFileLoading();
 
         void SendEndReached();
 
@@ -120,5 +126,7 @@ namespace CastIt.Server.Interfaces
         void SendFileNotFound();
 
         void SendInvalidRequest();
+
+        Task RefreshCastDevices(TimeSpan ts);
     }
 }

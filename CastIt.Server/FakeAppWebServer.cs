@@ -56,6 +56,8 @@ namespace CastIt.Server
             //On iis express the IServerAddressesFeature will return the right ip,
             //but on other environments we will get something like http://[::]:9696 that's why we call
             //WebServerUtils.GetWebServerIpAddress()
+            //Keep in mind that to test this thing on IIS you need to add to the configuration file (.vs\CastIt\config)
+            //<binding protocol="http" bindingInformation="*:62003:your.local.ipaddress" />
             var ipAddress = serverAddressesFeature.Addresses.FirstOrDefault(s =>
                 !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
                 !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
@@ -71,13 +73,13 @@ namespace CastIt.Server
             CheckIpAddress();
         }
 
-        protected string GetBaseUrl()
+        protected string GetPlayerBaseUrl()
         {
             CheckIpAddress();
             return $"{_baseIpAddress}/player";
         }
 
-        public string GetMediaUrl(
+        public string GetPlayUrl(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -86,9 +88,10 @@ namespace CastIt.Server
             bool audioNeedsTranscode,
             HwAccelDeviceType hwAccelToUse,
             VideoScaleType videoScale,
+            int selectedQuality,
             string videoWidthAndHeight = null)
         {
-            var baseUrl = GetBaseUrl();
+            var baseUrl = GetPlayerBaseUrl();
             var request = new PlayAppFileRequestDto
             {
                 Mrl = filePath,
@@ -99,26 +102,32 @@ namespace CastIt.Server
                 AudioNeedsTranscode = audioNeedsTranscode,
                 HwAccelToUse = hwAccelToUse,
                 VideoScale = videoScale,
+                SelectedQuality = selectedQuality,
                 VideoWidthAndHeight = videoWidthAndHeight
             };
 
-            return SetUrlParameters($"{baseUrl}{AppWebServerConstants.MediaPath}", request);
+            return SetUrlParameters($"{baseUrl}/{AppWebServerConstants.ChromeCastPlayPath}", request);
         }
 
-        public virtual string GetPreviewPath(string filepath)
+        public virtual string GetChromeCastPreviewUrl(string filepath)
         {
             if (string.IsNullOrEmpty(filepath))
                 return null;
-            var baseUrl = GetBaseUrl();
+            var baseUrl = GetPlayerBaseUrl();
             string filename = Path.GetFileName(filepath);
-            return $"{baseUrl}{AppWebServerConstants.ImagesPath}/{Uri.EscapeDataString(filename)}";
+            return $"{baseUrl}/{AppWebServerConstants.ChromeCastImagesPath}/{Uri.EscapeDataString(filename)}";
         }
 
-        public virtual string GetSubTitlePath(string filepath)
+        public virtual string GetThumbnailPreviewUrl(long tentativeSecond)
         {
-            var baseUrl = GetBaseUrl();
-            string filename = Path.GetFileName(filepath);
-            return $"{baseUrl}{AppWebServerConstants.SubTitlesPath}/{Uri.EscapeDataString(filename)}";
+            var baseUrl = GetPlayerBaseUrl();
+            return $"{baseUrl}/{AppWebServerConstants.ThumbnailPreviewImagesPath}/{tentativeSecond}";
+        }
+
+        public virtual string GetSubTitleUrl()
+        {
+            var baseUrl = GetPlayerBaseUrl();
+            return $"{baseUrl}/{AppWebServerConstants.ChromeCastSubTitlesPath}";
         }
 
         private string SetUrlParameters(string baseUrl, object dto)

@@ -1,7 +1,7 @@
 ﻿using CastIt.Domain.Entities;
+using CastIt.Infrastructure.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CastIt.Infrastructure.Models;
 
 namespace CastIt.Server.Interfaces
 {

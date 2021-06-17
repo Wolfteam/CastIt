@@ -2,6 +2,7 @@
 using CastIt.Application.Common.Extensions;
 using CastIt.Application.Interfaces;
 using CastIt.Application.Server;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
@@ -26,7 +27,7 @@ namespace CastIt.Server.Services
     public abstract class BaseCastService : ICastService
     {
         private const int SubTitleDefaultTrackId = 1;
-        protected readonly ILogger<BaseCastService> Logger;
+        protected readonly ILogger Logger;
         protected readonly IBaseWebServer AppWebServer;
         protected readonly IFFmpegService FFmpegService;
         protected readonly IYoutubeUrlDecoder YoutubeUrlDecoder;
@@ -47,7 +48,7 @@ namespace CastIt.Server.Services
         public OnCastRendererSetHandler OnCastRendererSet { get; set; }
         public OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
         public OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        public OnFileLoadedHandler OnFileLoaded { get; set; }
+        public OnCastDevicesChangedHandler OnCastDevicesChanged { get; set; }
         public OnPositionChangedHandler OnPositionChanged { get; set; }
         public OnTimeChangedHandler OnTimeChanged { get; set; }
         public OnEndReachedHandler OnEndReached { get; set; }
@@ -60,13 +61,14 @@ namespace CastIt.Server.Services
 
         #region Server Delegates
         //TODO: MIGRATE TO EVENTS ?
-        public OnFileLoadingHandler OnFileLoading { get; set; }
+        //public OnFileLoadingHandler OnFileLoading { get; set; }
         public OnAppClosingHandler OnAppClosing { get; set; }
         public OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
 
         public OnPlayListAddedHandler OnPlayListAdded { get; set; }
         public OnPlayListChangedHandler OnPlayListChanged { get; set; }
         public OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
+        public OnPlayListBusyHandler OnPlayListBusy { get; set; }
 
         public OnFileAddedHandler OnFileAdded { get; set; }
         public OnFileChangedHandler OnFileChanged { get; set; }
@@ -80,11 +82,11 @@ namespace CastIt.Server.Services
         public int CurrentAudioStreamIndex { get; private set; }
         public int CurrentSubtitleStreamIndex { get; private set; }
         public int CurrentVideoQuality { get; private set; }
-        public string CurrentThumbnailUrl { get; set; }
-        public FFProbeFileInfo CurrentFileInfo { get; set; }
+        public string CurrentThumbnailUrl { get; private set; }
+        public FFProbeFileInfo CurrentFileInfo { get; private set; }
 
         protected BaseCastService(
-            ILogger<BaseCastService> logger,
+            ILogger logger,
             IBaseWebServer appWebServer,
             IFFmpegService ffmpegService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
@@ -116,6 +118,7 @@ namespace CastIt.Server.Services
         {
             Logger.LogInformation($"{nameof(Init)}: Initializing all...");
             Player.FileLoading += FileLoading;
+            Player.FileLoaded += FileLoaded;
             Player.DeviceAdded += RendererDiscovererItemAdded;
             Player.EndReached += EndReached;
             Player.TimeChanged += TimeChanged;
@@ -168,8 +171,6 @@ namespace CastIt.Server.Services
             }
 
             Logger.LogInformation($"{nameof(StartPlay)}: Url was successfully loaded");
-
-            FileLoaded(media.Metadata.Title);
         }
 
         private void DoChecksBeforePlaying(string mrl, AppFileType type, FFProbeFileInfo fileInfo)
@@ -230,7 +231,7 @@ namespace CastIt.Server.Services
                 : HwAccelDeviceType.None;
 
             string title = Path.GetFileName(filePath);
-            string url = AppWebServer.GetMediaUrl(
+            string url = AppWebServer.GetPlayUrl(
                 filePath,
                 videoStreamIndex,
                 audioStreamIndex,
@@ -238,7 +239,7 @@ namespace CastIt.Server.Services
                 videoNeedsTranscode,
                 audioNeedsTranscode,
                 hwAccelToUse,
-                AppSettings.VideoScale,
+                AppSettings.VideoScale, -1,
                 CurrentFileInfo.Videos.Find(f => f.Index == videoStreamIndex)?.WidthAndHeightText);
 
             var media = new MediaInformation
@@ -269,7 +270,7 @@ namespace CastIt.Server.Services
 
             Logger.LogInformation($"{nameof(BuildMetadataForLocalFile)}: Retrieving img url to use...");
             string firstThumbnail = await GetFirstThumbnail();
-            string imgUrl = AppWebServer.GetPreviewPath(firstThumbnail);
+            string imgUrl = AppWebServer.GetChromeCastPreviewUrl(firstThumbnail);
             if (!string.IsNullOrEmpty(imgUrl))
             {
                 media.Metadata.Images.Add(new GoogleCast.Models.Image
@@ -298,8 +299,7 @@ namespace CastIt.Server.Services
             Logger.LogInformation($"{nameof(BuildMetadataForUrl)}: File is a youtube link, parsing it...");
             var ytMedia = await YoutubeUrlDecoder.Parse(url, quality);
 
-            //TODO: IS THIS REQUIRED ?
-            QualitiesChanged?.Invoke(ytMedia.SelectedQuality, ytMedia.Qualities);
+            await OnQualitiesLoaded(ytMedia.SelectedQuality, ytMedia.Qualities);
 
             //TODO: SHOULD I SET THE STREAM TYPE ?
             var media = new MediaInformation
@@ -313,16 +313,21 @@ namespace CastIt.Server.Services
                 //You have to set the content type before hand, with that, the album art of a music file will be shown
                 ContentType = FFmpegService.GetOutputTranscodeMimeType(url)
             };
-            if (!string.IsNullOrEmpty(ytMedia.ThumbnailUrl))
+
+            CurrentVideoQuality = quality;
+            if (!string.IsNullOrWhiteSpace(ytMedia.ThumbnailUrl))
+            {
+                var newUrl = await SavePreviewImageFromUrl(ytMedia.ThumbnailUrl);
+                CurrentThumbnailUrl = newUrl ?? ytMedia.ThumbnailUrl;
+            }
+
+            if (!string.IsNullOrEmpty(CurrentThumbnailUrl))
             {
                 media.Metadata.Images.Add(new GoogleCast.Models.Image
                 {
-                    Url = ytMedia.ThumbnailUrl
+                    Url = CurrentThumbnailUrl
                 });
             }
-
-            CurrentVideoQuality = quality;
-            CurrentThumbnailUrl = ytMedia.ThumbnailUrl;
 
             if (!ytMedia.IsHls)
             {
@@ -340,6 +345,8 @@ namespace CastIt.Server.Services
             var closestQuality = fileInfo.HlsVideos
                 .Select(v => v.Height)
                 .GetClosest(quality);
+
+            Logger.LogInformation($"{nameof(BuildMetadataForUrl)}: The quality to use for this hls will be = {closestQuality}...");
             var videoInfo = fileInfo.HlsVideos.First(v => v.Height == closestQuality);
             int videoStreamIndex = videoInfo.Index;
             int audioStreamIndex = fileInfo.Audios.Any()
@@ -354,7 +361,7 @@ namespace CastIt.Server.Services
 
             media.Duration = -1;
             media.StreamType = StreamType.Live;
-            media.ContentId = AppWebServer.GetMediaUrl(
+            media.ContentId = AppWebServer.GetPlayUrl(
                 ytMedia.Url,
                 videoStreamIndex,
                 audioStreamIndex,
@@ -362,16 +369,21 @@ namespace CastIt.Server.Services
                 videoNeedsTranscode,
                 audioNeedsTranscode,
                 HwAccelDeviceType.None,
-                //TODO: IS IT OKAY TO USE ORIGINAL HERE ?
-                VideoScaleType.Original,
+                AppSettings.VideoScale,
+                closestQuality,
                 videoInfo.WidthAndHeightText);
             media.ContentType = FFmpegService.GetOutputTranscodeMimeType(media.ContentId);
 
+            CurrentFileInfo = fileInfo;
             CurrentVideoStreamIndex = videoStreamIndex;
             CurrentAudioStreamIndex = audioStreamIndex;
 
             return media;
         }
+
+        protected abstract Task OnQualitiesLoaded(int selectedQuality, List<int> qualities);
+
+        protected abstract Task<string> SavePreviewImageFromUrl(string url);
 
         private async Task SetSubtitlesIfAny(string mrl, MediaInformation media, List<int> activeTrackIds, int subtitleStreamIndex, double seconds)
         {
@@ -390,7 +402,7 @@ namespace CastIt.Server.Services
                     AppSettings.SubtitleDelayInSeconds,
                     default);
 
-                _subtitle.TrackContentId = AppWebServer.GetSubTitlePath(subTitleFilePath);
+                _subtitle.TrackContentId = AppWebServer.GetSubTitleUrl();
                 Logger.LogInformation($"{nameof(StartPlay)}: Subtitles were generated");
                 media.Tracks.Add(_subtitle);
                 media.TextTrackStyle = GetSubtitleStyle();
@@ -427,10 +439,10 @@ namespace CastIt.Server.Services
             return Player.IsPlaying ? Player.PauseAsync() : Player.PlayAsync();
         }
 
-        public async Task StopPlayback()
+        protected virtual async Task StopPlayback()
         {
-            await StopRunningProcess();
             await Player.StopPlaybackAsync();
+            await StopRunningProcess();
         }
 
         public Task GoToPosition(
@@ -511,7 +523,7 @@ namespace CastIt.Server.Services
             }
 
             //TODO: MOVE THE _currentFilePath TO A PARAM LIKE THE GOTOPOSITION METHOD
-            SendFileLoading();
+            FileLoading();
             if (FileService.IsLocalFile(_currentFilePath))
                 return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
@@ -561,7 +573,7 @@ namespace CastIt.Server.Services
                 newValue = Player.CurrentMediaDuration;
             }
             //TODO: MOVE THE _currentFilePath TO A PARAM
-            SendFileLoading();
+            FileLoading();
             if (!FileService.IsLocalFile(_currentFilePath))
                 return Player.SeekAsync(newValue);
             return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
@@ -631,8 +643,8 @@ namespace CastIt.Server.Services
                 Player.LoadFailed -= LoadFailed;
 
                 await StopRunningProcess();
-
                 AppWebServer.Dispose();
+
                 Player.Dispose();
                 Logger.LogInformation($"{nameof(CleanThemAll)} Clean them all completed");
             }
@@ -664,15 +676,34 @@ namespace CastIt.Server.Services
             return SetCastRenderer(renderer);
         }
 
+        public async Task RefreshCastDevices(TimeSpan ts)
+        {
+            if (ts.TotalSeconds > 30 || ts.TotalSeconds <= 0)
+            {
+                ts = TimeSpan.FromSeconds(30);
+            }
+            var devices = await Player.GetDevicesAsync(ts);
+            var connectedTo = AvailableDevices.Find(t => t.IsConnected);
+            AvailableDevices.Clear();
+            AvailableDevices.AddRange(devices.OrderBy(a => a.FriendlyName));
+            if (connectedTo != null && AvailableDevices.Any(d => d.Id == connectedTo.Id))
+            {
+                var connectedToDevice = AvailableDevices.First(d => d.Id == connectedTo.Id);
+                connectedToDevice.IsConnected = true;
+            }
+            SendDevicesChanged();
+        }
+
         public abstract Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
         #endregion
 
         #region Events handlers
         public void FileLoading(object sender, EventArgs e)
-            => SendFileLoading();
+            => FileLoading();
 
-        private void FileLoaded(string title)
-            => OnFileLoaded?.Invoke(title, CurrentThumbnailUrl, Player.CurrentMediaDuration, Player.CurrentVolumeLevel, Player.IsMuted);
+        protected abstract void FileLoaded(object sender, EventArgs e);
+
+        protected abstract void FileLoading();
 
         private async void EndReached(object sender, EventArgs e)
         {
@@ -706,8 +737,6 @@ namespace CastIt.Server.Services
         #endregion
 
         #region Event Senders
-        public void SendFileLoading()
-            => OnFileLoading?.Invoke();
 
         public void SendEndReached()
             => OnEndReached?.Invoke();
@@ -727,9 +756,17 @@ namespace CastIt.Server.Services
         public void SendPaused()
             => OnPaused?.Invoke();
 
+        public void SendDevicesChanged()
+            => OnCastDevicesChanged?.Invoke(AvailableDevices);
+
         public void SendDisconnected()
         {
             _renderWasSet = false;
+            foreach (var device in AvailableDevices)
+            {
+                device.IsConnected = false;
+            }
+            SendDevicesChanged();
             OnDisconnected?.Invoke();
         }
 
@@ -739,14 +776,16 @@ namespace CastIt.Server.Services
         public void SendIsMutedChanged(bool isMuted)
             => OnVolumeChanged?.Invoke(Player.CurrentVolumeLevel, isMuted);
 
-        public void SendRendererDiscovererItemAdded(IReceiver item)
+        public void SendRendererDiscovererItemAdded(IReceiver device)
         {
             Logger.LogInformation(
-                $"{nameof(RendererDiscovererItemAdded)}: New item discovered: " +
-                $"{item.FriendlyName} - Ip = {item.Host}:{item.Port}");
-            AvailableDevices.Add(item);
-            //TODO: SEND THE WHOLE RECEIVER
-            OnCastableDeviceAdded?.Invoke(item.Id, item.FriendlyName, item.Type, item.Host, item.Port);
+                $"{nameof(RendererDiscovererItemAdded)}: New device discovered: " +
+                $"{device.FriendlyName} - Ip = {device.Host}:{device.Port}");
+            if (AvailableDevices.All(d => d.Id != device.Id))
+            {
+                AvailableDevices.Add(device);
+            }
+            OnCastableDeviceAdded?.Invoke(device);
         }
 
         public void SendErrorLoadingFile()
@@ -770,20 +809,23 @@ namespace CastIt.Server.Services
         public void SendServerIsClosing()
             => OnServerMessage?.Invoke(AppMessageType.ServerIsClosing);
 
-        public void SendPlayListAdded(long id)
-            => OnPlayListAdded?.Invoke(id);
+        public void SendPlayListAdded(GetAllPlayListResponseDto playList)
+            => OnPlayListAdded?.Invoke(playList);
 
-        public void SendPlayListChanged(long id)
-            => OnPlayListChanged?.Invoke(id);
+        public void SendPlayListChanged(GetAllPlayListResponseDto playList)
+            => OnPlayListChanged?.Invoke(playList);
+
+        public void SendPlayListBusy(long id, bool isBusy)
+            => OnPlayListBusy?.Invoke(id, isBusy);
 
         public void SendPlayListDeleted(long id)
             => OnPlayListDeleted?.Invoke(id);
 
-        public void SendFileAdded(long playListId, long id)
-            => OnFileAdded?.Invoke(playListId, id);
+        public void SendFileAdded(FileItemResponseDto file)
+            => OnFileAdded?.Invoke(file);
 
-        public void SendFileChanged(long playListId, long id)
-            => OnFileChanged?.Invoke(playListId, id);
+        public void SendFileChanged(FileItemResponseDto file)
+            => OnFileChanged?.Invoke(file);
 
         public void SendFileDeleted(long playListId, long id)
             => OnFileDeleted?.Invoke(playListId, id);
@@ -814,7 +856,7 @@ namespace CastIt.Server.Services
             try
             {
                 await Player.ConnectAsync(receiver);
-                OnCastRendererSet?.Invoke(receiver.Id);
+                OnCastRendererSet?.Invoke(receiver);
                 _renderWasSet = true;
             }
             finally
