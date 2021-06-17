@@ -1,11 +1,12 @@
-﻿using CastIt.Application.Server;
+﻿using System;
+using CastIt.Application.Server;
 using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "disconnect", Description = "Disconnects from the current connected device and stops the web server")]
+    [Command(Name = "disconnect", Description = "Disconnects from the current connected device and stops the web server", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class DisconnectCommand : BaseCommand
     {
         [Option(CommandOptionType.NoValue, Description = "Indicates if the server should be killed, defaults to false", LongName = "kill-server")]

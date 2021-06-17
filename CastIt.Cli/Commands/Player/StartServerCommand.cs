@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
+    //TODO: CHECK IF WE NEED TO REMOVE THIS ONE
     [Command(Name = "start-server", Description = "Starts the web server. This command should be called first before using any other command")]
     public class StartServerCommand : BaseCommand
     {

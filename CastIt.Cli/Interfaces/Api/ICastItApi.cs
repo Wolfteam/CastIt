@@ -12,6 +12,11 @@ namespace CastIt.Cli.Interfaces.Api
 {
     public interface ICastItApi
     {
+        #region Server
+        [Post("/Server/Stop")]
+        Task<EmptyResponseDto> StopServer();
+        #endregion
+
         #region Player
 
         [Get("/Player/Devices")]
@@ -54,7 +59,7 @@ namespace CastIt.Cli.Interfaces.Api
         Task<EmptyResponseDto> UpdateSettings([Body] StringContent body);
 
         [Get("/Player/Status")]
-        Task<AppResponseDto<ServerPlayerStatus>> GetStatus();
+        Task<AppResponseDto<ServerPlayerStatusResponseDto>> GetStatus();
         #endregion
 
         #region PlayLists

@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "update", Description = "Updates a playlist")]
+    [Command(Name = "update", Description = "Updates a playlist", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class UpdateCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]
@@ -24,7 +25,7 @@ namespace CastIt.Cli.Commands.PlayLists
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             CheckIfWebServerIsRunning();
-            var response =  await CastItApi.UpdatePlayList(PlayListId, Name, Position);
+            var response = await CastItApi.UpdatePlayList(PlayListId, Name, Position);
             CheckServerResponse(response);
 
             AppConsole.WriteLine("Playlist was successfully updated");

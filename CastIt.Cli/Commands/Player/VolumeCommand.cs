@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "volume", Description = "Sets the volume of the device")]
+    [Command(Name = "volume", Description = "Sets the volume of the device", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class VolumeCommand : BaseCommand
     {
         [Option(CommandOptionType.NoValue, Description = "Pass this option to mute the device.", LongName = "muted")]

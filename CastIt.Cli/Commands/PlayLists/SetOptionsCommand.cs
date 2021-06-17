@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "set-options", Description = "Sets playlist options")]
+    [Command(Name = "set-options", Description = "Sets playlist options", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class SetOptionsCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]

@@ -2,7 +2,6 @@
 using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Common.Utils
@@ -22,11 +21,7 @@ namespace CastIt.Cli.Common.Utils
             }
             Console.WriteLine("Web server is not running, starting it...");
 
-            var dir = Directory.GetCurrentDirectory();
-            var path = Path.Combine(dir, "Server", WebServerUtils.ServerProcessName);
-#if DEBUG
-            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
-#endif
+            var path = WebServerUtils.GetServerPhysicalPath();
             Console.WriteLine("Getting an open port...");
             var openPort = WebServerUtils.GetOpenPort();
             var args = new List<string>

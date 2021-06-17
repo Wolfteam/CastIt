@@ -1,12 +1,13 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "add", Description = "Deletes all the play lists except the provided one")]
+    [Command(Name = "add", Description = "Deletes all the play lists except the provided one", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class AddCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]

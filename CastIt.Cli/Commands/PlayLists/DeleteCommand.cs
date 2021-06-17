@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "delete", Description = "Deletes the playlist")]
+    [Command(Name = "delete", Description = "Deletes the playlist", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class DeleteCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]

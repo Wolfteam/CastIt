@@ -1,13 +1,15 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Dtos;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
     [Command(
         Name = "goto",
-        Description = "Goes to the next / previous file or it goes to a particular position / second in the current played file. The behaviour of this command depends on the params passed to it")]
+        Description = "Goes to the next / previous file or it goes to a particular position / second in the current played file. The behaviour of this command depends on the params passed to it",
+        OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class GoToCommand : BaseCommand
     {
         [Option(CommandOptionType.NoValue, Description = "If provided, it will play the next file in the current playlist", LongName = "next", ShortName = "next")]

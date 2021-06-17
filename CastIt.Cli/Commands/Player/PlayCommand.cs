@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "play", Description = "Plays a particular file to the connected device")]
+    [Command(Name = "play", Description = "Plays a particular file to the connected device", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class PlayCommand : BaseCommand
     {
         public PlayCommand(IConsole appConsole, ICastItApiService castItApi)

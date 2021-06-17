@@ -1,11 +1,12 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "connect", Description = "Connects to a particular device")]
+    [Command(Name = "connect", Description = "Connects to a particular device", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class ConnectCommand : BaseCommand
     {
         [Argument(0, Description = "The device´s ip address", ShowInHelpText = true)]

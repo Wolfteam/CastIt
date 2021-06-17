@@ -1,11 +1,12 @@
 ﻿using CastIt.Cli.Interfaces.Api;
-using McMaster.Extensions.CommandLineUtils;
-using System.Threading.Tasks;
 using ConsoleTables;
+using McMaster.Extensions.CommandLineUtils;
+using System;
+using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "get", Description = "Retrieves the playlist + it's files")]
+    [Command(Name = "get", Description = "Retrieves the playlist + it's files", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class GetCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]

@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "stop", Description = "Stops the playback of the current played file")]
+    [Command(Name = "stop", Description = "Stops the playback of the current played file", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class StopCommand : BaseCommand
     {
         public StopCommand(IConsole appConsole, ICastItApiService castItApi)

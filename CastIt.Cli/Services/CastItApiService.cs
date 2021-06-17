@@ -24,6 +24,28 @@ namespace CastIt.Cli.Services
             _api = api;
         }
 
+        #region Server
+        public async Task<EmptyResponseDto> StopServer()
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await _api.StopServer();
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(StopServer)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(StopServer)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+        #endregion
+
         #region Player
         public async Task<AppListResponseDto<Receiver>> GetAllDevices()
         {
@@ -295,9 +317,9 @@ namespace CastIt.Cli.Services
             return response;
         }
 
-        public async Task<AppResponseDto<ServerPlayerStatus>> GetStatus()
+        public async Task<AppResponseDto<ServerPlayerStatusResponseDto>> GetStatus()
         {
-            var response = new AppResponseDto<ServerPlayerStatus>();
+            var response = new AppResponseDto<ServerPlayerStatusResponseDto>();
             try
             {
                 response = await _api.GetStatus();

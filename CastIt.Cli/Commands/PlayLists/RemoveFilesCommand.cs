@@ -1,12 +1,16 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "remove-files", Description = "Removes either missing files, the files that starts with an specific provided path or specific files from the playlist")]
+    [Command(
+        Name = "remove-files",
+        Description = "Removes either missing files, the files that starts with an specific provided path or specific files from the playlist",
+        OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class RemoveFilesCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]

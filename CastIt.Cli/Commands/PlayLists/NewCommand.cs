@@ -1,10 +1,11 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "new", Description = "Creates a new playlist")]
+    [Command(Name = "new", Description = "Creates a new playlist", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class NewCommand : BaseCommand
     {
         public NewCommand(IConsole appConsole, ICastItApiService castItApi)

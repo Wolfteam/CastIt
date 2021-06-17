@@ -1,11 +1,12 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "devices", Description = "List the available devices in the network")]
+    [Command(Name = "devices", Description = "List the available devices in the network", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class ListDevicesCommand : BaseCommand
     {
         //TODO: BRING BACK THE TIMEOUT THING

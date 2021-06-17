@@ -4,12 +4,13 @@ using CastIt.GoogleCast.Enums;
 using CastIt.Infrastructure.Models;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore.JsonPatch;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.Player
 {
-    [Command(Name = "settings", Description = "Gets or updates the server's settings")]
+    [Command(Name = "settings", Description = "Gets or updates the server's settings", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class SettingsCommand : BaseCommand
     {
         //General

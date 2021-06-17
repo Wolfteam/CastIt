@@ -7,7 +7,6 @@ namespace CastIt.Cli.Commands
 {
     [Command(Name = "player", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [Subcommand(
-        typeof(StartServerCommand),
         typeof(ConnectCommand),
         typeof(DisconnectCommand),
         typeof(ListDevicesCommand),

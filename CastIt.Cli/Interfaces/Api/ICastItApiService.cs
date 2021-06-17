@@ -10,6 +10,7 @@ namespace CastIt.Cli.Interfaces.Api
 {
     public interface ICastItApiService
     {
+        Task<EmptyResponseDto> StopServer();
         Task<AppListResponseDto<Receiver>> GetAllDevices();
         Task<EmptyResponseDto> Connect(string host, int port);
         Task<EmptyResponseDto> Disconnect();
@@ -37,6 +38,6 @@ namespace CastIt.Cli.Interfaces.Api
         Task<EmptyResponseDto> Play(long fileId);
         Task<AppResponseDto<ServerAppSettings>> GetCurrentSettings();
         Task<EmptyResponseDto> UpdateSettings(JsonPatchDocument<ServerAppSettings> patch);
-        Task<AppResponseDto<ServerPlayerStatus>> GetStatus();
+        Task<AppResponseDto<ServerPlayerStatusResponseDto>> GetStatus();
     }
 }
