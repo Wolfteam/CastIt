@@ -1,135 +1,144 @@
-﻿using AutoMapper;
-using CastIt.Domain.Dtos;
-using CastIt.Domain.Dtos.Requests;
+﻿using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using Microsoft.AspNetCore.Http.Features;
+using CastIt.Domain.Interfaces;
+using CastIt.Infrastructure.Models;
+using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using CastIt.Server.Interfaces;
 
 namespace CastIt.Server.Hubs
 {
+    //Task OnConnectedAsync();
+    //Task GoToSeconds(GoToSecondsRequestDto dto);
+    //Task SkipSeconds(GoToSecondsRequestDto dto);
+    //Task GoTo(GoToRequestDto dto);
+    //Task TogglePlayBack();
+    //Task StopPlayBack();
+    //Task SetPlayListOptions(SetPlayListOptionsRequestDto dto);
+    //Task DeletePlayList(long id);
+    //Task DeleteFile(long id, long playlistId);
+    //Task LoopFile(SetLoopFileRequestDto dto);
+    //Task SetFileOptions(SetFileOptionsRequestDto dto);
+    //Task UpdateSettings(AppSettingsRequestDto dto);
+    //Task SetVolume(SetVolumeRequestDto dto);
+    //Task RenamePlayList(RenamePlayListRequestDto dto);
+    //Task CloseApp();
+    //Task SendPlayLists();
+    //Task GetPlayList(long playlistId);
+    //Task ClientConnected();
+    //void FileLoading();
+    //Task SendCurrentFileLoaded();
+    //void FileLoadingError(string error);
+    //void EndReached();
+    //void TimeChanged(double seconds);
+    //void Paused();
+    //void ChromeCastDisconnected();
+    //void VolumeLevelChanged(double newLevel, bool isMuted);
+    //void AppClosing();
+    //Task RefreshPlayList(long id, bool wasDeleted = false);
+    //void SendInfoMessage(string msg);
+    //Task SendMsg(string msgType, bool succeed = true);
+    //Task SendMsg<T>(T result, string msgType, bool succeed = true) where T : class;
+
     //The exposed name methods here must match the ones that the client listens for
     public interface ICastItHub
     {
-        //Task OnConnectedAsync();
-        Task Play(PlayFileRequestDto dto);
-        //Task GoToSeconds(GoToSecondsRequestDto dto);
-        //Task SkipSeconds(GoToSecondsRequestDto dto);
-        //Task GoTo(GoToRequestDto dto);
-        //Task TogglePlayBack();
-        //Task StopPlayBack();
-        //Task SetPlayListOptions(SetPlayListOptionsRequestDto dto);
-        //Task DeletePlayList(long id);
-        //Task DeleteFile(long id, long playlistId);
-        //Task LoopFile(SetLoopFileRequestDto dto);
-        //Task SetFileOptions(SetFileOptionsRequestDto dto);
-        //Task UpdateSettings(AppSettingsRequestDto dto);
-        //Task SetVolume(SetVolumeRequestDto dto);
-        //Task RenamePlayList(RenamePlayListRequestDto dto);
-        //Task CloseApp();
-        //Task SendPlayLists();
-        //Task GetPlayList(long playlistId);
-        //Task ClientConnected();
-        //void FileLoading();
-        //Task SendCurrentFileLoaded();
-        //void FileLoadingError(string error);
-        //void EndReached();
-        Task PositionChanged(double position);
-        //void TimeChanged(double seconds);
-        //void Paused();
-        //void ChromeCastDisconnected();
-        //void VolumeLevelChanged(double newLevel, bool isMuted);
-        //void AppClosing();
-        //Task RefreshPlayList(long id, bool wasDeleted = false);
-        //void SendInfoMessage(string msg);
-        //Task SendMsg(string msgType, bool succeed = true);
-        //Task SendMsg<T>(T result, string msgType, bool succeed = true) where T : class;
-
-        Task SendMsg(AppMessageType type);
-        Task EndReached();
-        Task ShutDown();
-        Task SendMsg(EmptyResponseDto dto);
-
         Task SendPlayLists(List<GetAllPlayListResponseDto> playLists);
+
+        Task StoppedPlayBack();
+
+        Task PlayListAdded(GetAllPlayListResponseDto playList);
+
+        Task PlayListChanged(GetAllPlayListResponseDto playList);
+
+        Task PlayListDeleted(long id);
+
+        Task PlayListIsBusy(long id, bool isBusy);
+
+        Task FileAdded(FileItemResponseDto file);
+
+        Task FileChanged(FileItemResponseDto file);
+
+        Task FileDeleted(long playListId, long id);
+
+        Task FileLoading(FileItemResponseDto file);
+
+        Task FileLoaded(FileItemResponseDto file);
+
+        Task FileEndReached(FileItemResponseDto file);
+
+        //Task FileStoppedPlayback(FileItemResponseDto file);
+
+        //Task CurrentPlayedFileStatusChanged(ServerFileItem file);
+
+        Task PlayerStatusChanged(ServerPlayerStatusResponseDto status);
+
+        Task PlayerSettingsChanged(ServerAppSettings settings);
+
+        Task ServerMessage(AppMessageType type);
+
+        Task CastDeviceSet(IReceiver device);
+
+        Task CastDevicesChanged(List<IReceiver> devices);
+
+        Task CastDeviceDisconnected();
     }
 
     //The exposed name methods here must match the ones that the client can call
     public class CastItHub : Hub<ICastItHub>
     {
-        #region Server Constants
-        private const string PlayListsLoadedMsgType = "SERVER_PLAYLISTS_ALL";
-        private const string PlayListLoadedMsgType = "SERVER_PLAYLISTS_ONE";
-        private const string RefreshPlayListMsgType = "SERVER_PLAYLIST_REFRESH";
-
-        private const string FileLoadingMsgType = "SERVER_FILE_LOADING";
-        private const string FileLoadedMsgType = "SERVER_FILE_LOADED";
-        private const string FilePositionChangedMsgType = "SERVER_FILE_POSITION_CHANGED";
-        private const string FileTimeChangedMsgType = "SERVER_FILE_TIME_CHANGED";
-        private const string FilePausedMsgType = "SERVER_FILE_PAUSED";
-        private const string FileEndReachedMsgType = "SERVER_FILE_END_REACHED";
-        private const string ErrorOnFileLoadingMsgType = "SERVER_ERROR_ON_FILE_LOADING";
-        private const string SendFileOptionsMsgType = "SERVER_SEND_FILE_OPTIONS";
-
-        private const string ClientConnectedMsgType = "SERVER_CLIENT_CONNECTED";
-        private const string SettingsChangedMsgType = "SERVER_SETTINGS_CHANGED";
-        private const string ChromeCastDisconnectedMsgType = "SERVER_CHROMECAST_DISCONNECTED";
-        private const string VolumeChangedMsgType = "SERVER_VOLUME_LEVEL_CHANGED";
-        private const string AppClosedMsgType = "SERVER_APP_CLOSING";
-        private const string InfoMsgType = "SERVER_INFO_MSG";
-        #endregion
-
         private readonly ILogger<CastItHub> _logger;
         private readonly IServerCastService _castService;
-        private readonly IMapper _mapper;
+        private readonly IServerAppSettingsService _settingsService;
 
-        public CastItHub(ILogger<CastItHub> logger, IServerCastService castService, IMapper mapper)
+        public CastItHub(
+            ILogger<CastItHub> logger,
+            IServerCastService castService,
+            IServerAppSettingsService settingsService)
         {
             _logger = logger;
             _castService = castService;
-            _mapper = mapper;
+            _settingsService = settingsService;
         }
 
         public override async Task OnConnectedAsync()
         {
-            var url = GetBaseUrl();
-            await SendClientConnected().ConfigureAwait(false);
+            await SendSettingsChanged();
+            //await SendClientConnected().ConfigureAwait(false);
             if (_castService.IsPlayingOrPaused)
             {
-                await SendCurrentFileLoadedToClient();
+                await SendPlayerStatusChanged();
             }
-            //await AppSettingsChangedTask().ConfigureAwait(false);
-
             await SendPlayListsToClient();
+            await SendCastDevicesChanged();
         }
 
         #region Client Msgs
-
         public Task Play(PlayFileRequestDto dto)
         {
-            return _castService.PlayFile(dto.PlayListId, dto.Force, false);
+            return _castService.PlayFile(dto.Id, dto.Force, dto.FileOptionsChanged);
         }
 
-        public Task GoToSeconds(GoToSecondsRequestDto dto)
+        public Task GoToSeconds(double seconds)
         {
-            return _castService.GoToSeconds(dto.Seconds);
+            return _castService.GoToSeconds(seconds);
         }
 
-        public Task SkipSeconds(GoToSecondsRequestDto dto)
+        public Task SkipSeconds(double seconds)
         {
-            return _castService.AddSeconds(dto.Seconds);
+            return _castService.AddSeconds(seconds);
         }
 
-        public Task GoTo(GoToRequestDto dto)
+        public Task GoTo(bool next, bool previous)
         {
-            if (dto.Next)
+            if (next)
                 return _castService.GoTo(true);
 
-            if (dto.Previous)
+            if (previous)
                 return _castService.GoTo(false);
 
             return Task.CompletedTask;
@@ -140,51 +149,31 @@ namespace CastIt.Server.Hubs
             return _castService.TogglePlayback();
         }
 
-        public Task StopPlayBack()
+        public Task StopPlayback()
         {
             return _castService.StopPlayback();
         }
 
-        public Task SetPlayListOptions(SetPlayListOptionsRequestDto dto)
+        public Task DeleteFile(long playlistId, long id)
         {
-            return Task.CompletedTask;
-            //_view.SetPlayListOptions(playlistOptions.Id, playlistOptions.Loop, playlistOptions.Shuffle);
-        }
-
-        public Task DeletePlayList(long id)
-        {
-            return Task.CompletedTask;
-            //return _view.DeletePlayList(deletePlayListRequest.Id);
-        }
-
-        public Task DeleteFile(long id, long playlistId)
-        {
-            return Task.CompletedTask;
-            //return _view.DeleteFile(deleteFileRequest.Id, deleteFileRequest.PlayListId);
+            return _castService.RemoveFiles(playlistId, id);
         }
 
         public Task LoopFile(SetLoopFileRequestDto dto)
         {
+            _castService.LoopFile(dto.Id, dto.PlayListId, dto.Loop);
             return Task.CompletedTask;
-            //return _view.SetFileLoop(loopRequest.Id, loopRequest.PlayListId, loopRequest.Loop);
         }
 
         public Task SetFileOptions(SetFileOptionsRequestDto dto)
         {
-            return Task.CompletedTask;
-            //return _view.SetFileOptions(request.StreamIndex, request.IsAudio, request.IsSubTitle, request.IsQuality);
+            return _castService.SetCurrentPlayedFileOptions(dto.StreamIndex, dto.IsAudio, dto.IsSubTitle, dto.IsQuality);
         }
 
-        public Task UpdateSettings(AppSettingsRequestDto dto)
+        public async Task UpdateSettings(ServerAppSettings settings)
         {
-            return Task.CompletedTask;
-            //_view.UpdateSettings(
-            //    settingsRequest.StartFilesFromTheStart,
-            //    settingsRequest.PlayNextFileAutomatically,
-            //    settingsRequest.ForceVideoTranscode,
-            //    settingsRequest.ForceAudioTranscode,
-            //    settingsRequest.VideoScale,
-            //    settingsRequest.EnableHardwareAcceleration);
+            await _settingsService.UpdateSettings(settings);
+            await SendSettingsChanged();
         }
 
         public async Task SetVolume(SetVolumeRequestDto dto)
@@ -193,125 +182,143 @@ namespace CastIt.Server.Hubs
             await _castService.SetIsMuted(dto.IsMuted);
         }
 
-        public Task RenamePlayList(UpdatePlayListRequestDto dto)
+        public Task<PlayListItemResponseDto> AddNewPlayList()
         {
+            return _castService.AddNewPlayList();
+        }
+
+        public Task<PlayListItemResponseDto> GetPlayList(long id)
+        {
+            var playList = _castService.GetPlayList(id);
+            return Task.FromResult(playList);
+        }
+
+        public Task UpdatePlayList(UpdatePlayListRequestDto dto)
+        {
+            return _castService.UpdatePlayList(dto.Id, dto.Name, dto.Position);
+        }
+
+        public Task SetPlayListOptions(SetPlayListOptionsRequestDto dto)
+        {
+            _castService.SetPlayListOptions(dto.Id, dto.Loop, dto.Shuffle);
             return Task.CompletedTask;
-            //return _view.RenamePlayList(renameRequest.Id, renameRequest.Name);
+        }
+
+        public Task DeletePlayList(long id)
+        {
+            return _castService.DeletePlayList(id);
+        }
+
+        public Task DeleteAllPlayLists(long exceptId = -1)
+        {
+            return _castService.DeleteAllPlayLists(exceptId);
+        }
+
+        public Task RemoveFiles(long playListId, List<long> ids)
+        {
+            return _castService.RemoveFiles(playListId, ids.ToArray());
+        }
+
+        public Task RemoveFilesThatStartsWith(long playListId, string path)
+        {
+            return _castService.RemoveFilesThatStartsWith(playListId, path);
+        }
+
+        public Task RemoveAllMissingFiles(long playListId)
+        {
+            return _castService.RemoveAllMissingFiles(playListId);
+        }
+
+        public Task AddFolders(long playListId, AddFolderOrFilesToPlayListRequestDto dto)
+        {
+            return _castService.AddFolder(playListId, dto.IncludeSubFolders, dto.Folders.ToArray());
+        }
+
+        public Task AddFiles(long playListId, AddFolderOrFilesToPlayListRequestDto dto)
+        {
+            return _castService.AddFiles(playListId, dto.Files.ToArray());
+        }
+
+        public Task AddUrlFile(long playListId, AddUrlToPlayListRequestDto dto)
+        {
+            return _castService.AddUrl(playListId, dto.Url, dto.OnlyVideo);
+        }
+
+        public Task SetFileSubtitlesFromPath(string filePath)
+        {
+            return _castService.SetFileSubtitlesFromPath(filePath);
+        }
+
+        public Task ConnectToCastDevice(string id)
+        {
+            return _castService.SetCastRenderer(id);
+        }
+
+        public Task RefreshCastDevices(TimeSpan ts)
+        {
+            return _castService.RefreshCastDevices(ts);
         }
 
         public Task CloseApp()
         {
-            return Task.CompletedTask;
+            throw new NotImplementedException();
         }
         #endregion
 
         #region Server Msgs
-        private async Task SendPlayListsToClient()
+        public async Task SendPlayListsToClient()
         {
-            var playLists = _castService.PlayLists;
-            var mapped = _mapper.Map<List<GetAllPlayListResponseDto>>(playLists);
-            await Clients.Caller.SendPlayLists(mapped);
+            var playLists = await _castService.GetAllPlayLists();
+            await Clients.Caller.SendPlayLists(playLists);
         }
 
-        public async Task SendPlayListToClient(long playlistId)
-        {
-            var playlist = _castService.PlayLists.FirstOrDefault(pl => pl.Id == playlistId);
-            await SendMsg(playlist, PlayListLoadedMsgType);
-        }
-
-        public async Task SendClientConnected()
-        {
-            await SendMsg(ClientConnectedMsgType).ConfigureAwait(false);
-        }
-
-        public Task<long> Testing(long id)
-        {
-            return Task.FromResult(id);
-        }
-
-        public async void SendFileLoadingToClient()
-        {
-            await SendMsg(FileLoadingMsgType).ConfigureAwait(false);
-        }
-
-        //public async void FileLoaded()
+        //public async Task SendClientConnected()
         //{
-        //    await FileLoadedTask().ConfigureAwait(false);
+        //    await SendMsgToClients(ClientConnectedMsgType).ConfigureAwait(false);
         //}
 
-        public Task SendCurrentFileLoadedToClient()
+        public Task SendFileLoading(FileItemResponseDto file)
         {
-            var file = _castService.GetCurrentFileLoaded();
-            return file == null ? Task.CompletedTask : SendMsg(file, FileLoadedMsgType);
+            return Clients.All.FileLoading(file);
         }
 
-        public async void FileLoadingError(string error)
+        public Task SendFileLoaded(FileItemResponseDto file)
         {
-            await SendMsg(ErrorOnFileLoadingMsgType).ConfigureAwait(false);
+            return Clients.All.FileLoaded(file);
         }
 
-        public async void EndReached()
+        public Task SendPlayerStatusChanged()
         {
-            await SendMsg(FileEndReachedMsgType).ConfigureAwait(false);
+            var status = _castService.GetPlayerStatus();
+            return Clients.All.PlayerStatusChanged(status);
         }
 
-        public async void SendPositionChangedToClients(double position)
+        public Task SendEndReached(FileItemResponseDto file)
         {
-            var response = new SocketResponseDto<double>
-            {
-                MessageType = FilePositionChangedMsgType,
-                Succeed = true,
-                Result = position,
-            };
-            await SendMsgToClients(response).ConfigureAwait(false);
+            return Clients.All.FileEndReached(file);
         }
 
-        public async void TimeChanged(double seconds)
+        public Task SendCastDevicesChanged()
         {
-            var response = new SocketResponseDto<double>
-            {
-                MessageType = FileTimeChangedMsgType,
-                Succeed = true,
-                Result = seconds,
-            };
-            await SendMsgToClients(response).ConfigureAwait(false);
+            var devices = _castService.AvailableDevices;
+            return Clients.All.CastDevicesChanged(devices);
         }
 
-        public async void Paused()
-        {
-            await SendMsg(FilePausedMsgType).ConfigureAwait(false);
-        }
-
-        public async void ChromeCastDisconnected()
-        {
-            await SendMsg(ChromeCastDisconnectedMsgType).ConfigureAwait(false);
-        }
-
-        public async void VolumeLevelChanged(double newLevel, bool isMuted)
-        {
-            var result = new VolumeLevelChangedResponseDto
-            {
-                IsMuted = isMuted,
-                VolumeLevel = newLevel,
-            };
-            await SendMsg(result, VolumeChangedMsgType).ConfigureAwait(false);
-        }
-
-        public async void AppClosing()
-        {
-            await SendMsg(AppClosedMsgType).ConfigureAwait(false);
-        }
-
-        //public async void AppSettingsChanged()
+        //public Task SendCurrentPlayedFileStatusChanged(ServerFileItem file)
         //{
-        //    await AppSettingsChangedTask().ConfigureAwait(false);
+        //    return Clients.All.CurrentPlayedFileStatusChanged(file);
         //}
 
-        //public Task AppSettingsChangedTask()
+        //public async void ChromeCastDisconnected()
         //{
-        //    var settings = _view.GetCurrentAppSettings();
-        //    return SendMsg(settings, SettingsChangedMsgType);
+        //    await SendMsgToClients(ChromeCastDisconnectedMsgType).ConfigureAwait(false);
         //}
+
+        public Task SendSettingsChanged()
+        {
+            var settings = _settingsService.Settings;
+            return Clients.All.PlayerSettingsChanged(settings);
+        }
 
         //public async void PlayListChanged(long id)
         //{
@@ -332,17 +339,6 @@ namespace CastIt.Server.Hubs
         //        await FileLoadedTask().ConfigureAwait(false);
         //    }
         //}
-
-        public Task RefreshPlayList(long id, bool wasDeleted = false)
-        {
-            var dto = new RefreshPlayListResponseDto
-            {
-                Id = id,
-                WasDeleted = wasDeleted
-            };
-
-            return SendMsg(dto, RefreshPlayListMsgType);
-        }
 
         //public async void FileAdded(long onPlayListId)
         //{
@@ -369,11 +365,6 @@ namespace CastIt.Server.Hubs
         //    }
         //}
 
-        public async void SendInfoMessage(string msg)
-        {
-            await SendMsg(msg, InfoMsgType).ConfigureAwait(false);
-        }
-
         //public async Task SendFileOptions(long id)
         //{
         //    var options = _view.GetFileOptions(id);
@@ -381,41 +372,9 @@ namespace CastIt.Server.Hubs
         //    VolumeLevelChanged(_view.VolumeLevel, _view.IsMuted);
         //}
 
-        private Task SendMsg(string msgType, bool succeed = true)
+        public Task SendServerMessage(AppMessageType type)
         {
-            var response = new EmptySocketResponseDto
-            {
-                MessageType = msgType,
-                Succeed = succeed,
-            };
-            if (msgType != FilePausedMsgType)
-                _logger.LogInformation($"{nameof(SendMsgToClients)}: Sending msg of type = {msgType}");
-            return SendMsgToClients(response);
-        }
-
-        private Task SendMsg<T>(T result, string msgType, bool succeed = true) where T : class
-        {
-            var response = new SocketResponseDto<T>
-            {
-                Succeed = succeed,
-                MessageType = msgType,
-                Result = result
-            };
-            _logger.LogInformation($"{nameof(SendMsgToClients)}: Sending msg of type = {msgType} with result");
-            return SendMsgToClients(response);
-        }
-
-        private Task SendMsgToClients(EmptyResponseDto response)
-        {
-            //string json = JsonConvert.SerializeObject(response);
-            return Clients.All.SendMsg(response);
-        }
-
-        private string GetBaseUrl()
-        {
-            var feature = Context.Features.Get<IHttpConnectionFeature>();
-            var url = $"{feature.LocalIpAddress}/{feature.LocalPort}";
-            return url;
+            return Clients.All.ServerMessage(type);
         }
         #endregion
     }

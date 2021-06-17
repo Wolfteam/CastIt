@@ -1,11 +1,14 @@
 ﻿using CastIt.Application.Interfaces;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
+using CastIt.Domain.Interfaces;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,6 +26,7 @@ namespace CastIt.Server.Services
         private readonly IFileWatcherService _fileWatcherService;
         private readonly IBaseWebServer _baseWebServer;
         private readonly IFileService _fileService;
+        private readonly ITelemetryService _telemetryService;
 
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
@@ -33,7 +37,8 @@ namespace CastIt.Server.Services
             IServerAppSettingsService appSettings,
             IFileWatcherService fileWatcherService,
             IFileService fileService,
-            IBaseWebServer baseWebServer)
+            IBaseWebServer baseWebServer,
+            ITelemetryService telemetryService)
         {
             _logger = logger;
             _castService = castService;
@@ -42,30 +47,34 @@ namespace CastIt.Server.Services
             _fileWatcherService = fileWatcherService;
             _fileService = fileService;
             _baseWebServer = baseWebServer;
+            _telemetryService = telemetryService;
 
             SetCastItEventHandlers();
         }
 
         private void SetCastItEventHandlers()
         {
-            _castService.OnCastRendererSet = OnCastRendererSet;
-            _castService.OnCastableDeviceAdded = OnDeviceDiscovered;
+            _castService.OnCastRendererSet = OnCastDeviceSet;
+            _castService.OnCastableDeviceAdded = OnCastDeviceDiscovered;
             _castService.OnCastableDeviceDeleted = OnCastableDeviceDeleted;
+            _castService.OnCastDevicesChanged = OnCastDevicesChanged;
+            _castService.OnFileLoading = OnFileLoading;
             _castService.OnFileLoaded = OnFileLoaded;
             _castService.OnPositionChanged = OnPositionChanged;
             _castService.OnTimeChanged = OnTimeChanged;
             _castService.OnEndReached = OnEndReached;
             _castService.QualitiesChanged = QualitiesChanged;
             _castService.OnPaused = OnPaused;
-            _castService.OnDisconnected = OnDisconnected;
+            _castService.OnDisconnected = OnCastDeviceDisconnected;
             _castService.OnVolumeChanged = OnVolumeChanged;
             _castService.OnServerMessage = OnServerMessage;
-
-            _castService.OnFileLoading = OnFileLoading;
             _castService.OnAppClosing = OnAppClosing;
+            _castService.OnStoppedPlayback = OnStoppedPlayback;
+
             _castService.OnPlayListAdded = OnPlayListAdded;
             _castService.OnPlayListChanged = OnPlayListChanged;
             _castService.OnPlayListDeleted = OnPlayListDeleted;
+            _castService.OnPlayListBusy = OnPlayListBusy;
             _castService.OnFileAdded = OnFileAdded;
             _castService.OnFileChanged = OnFileChanged;
             _castService.OnFileDeleted = OnFileDeleted;
@@ -74,44 +83,61 @@ namespace CastIt.Server.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
             _fileService.DeleteServerLogsAndPreviews();
             _baseWebServer.Init();
 
-            _logger.LogInformation("Initializing app settings...");
+            _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
+            await _castService.Init();
+
+            _logger.LogInformation($"{nameof(StartAsync)}: Initializing app settings...");
             await _appSettings.Init();
 
-            _logger.LogInformation("Initializing file watchers...");
+            _logger.LogInformation($"{nameof(StartAsync)}: Initializing file watchers...");
             InitializeOrUpdateFileWatcher(false);
 
-            _logger.LogInformation("Initialization completed");
+            _logger.LogInformation($"{nameof(StartAsync)}: Initialization completed");
             await base.StartAsync(cancellationToken);
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return Task.CompletedTask;
+            _logger.LogInformation($"{nameof(ExecuteAsync)}: Refreshing play lists images...");
+            _castService.RefreshPlayListImages();
+
+            _logger.LogInformation($"{nameof(ExecuteAsync)}: Setting missing file info for pending files...");
+            await _castService.SetFileInfoForPendingFiles();
+
+            UpdateFileWatchers();
+            _logger.LogInformation($"{nameof(ExecuteAsync)}: Process completed");
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Hosted service is going down!");
-            _setDurationTokenSource.Cancel();
-            _fileWatcherService.StopListening();
-            await _castService.CleanThemAll();
-            await _castItHub.Clients.All.ShutDown();
+            //TODO: THIS MSG IS NOT GETTING DELIVERED
+            _logger.LogInformation($"{nameof(StopAsync)}: Hosted service is going down!");
+            await _castItHub.Clients.All.ServerMessage(AppMessageType.ServerIsClosing);
 
-            //TODO: USE EVENTS AND REMOVE THEM HERE
+            _logger.LogInformation($"{nameof(StopAsync)}: Cancelling any pending duration job...");
+            _setDurationTokenSource.Cancel();
+
+            _logger.LogInformation($"{nameof(StopAsync)}: Stop listening to folders...");
+            _fileWatcherService.StopListening();
+
+            _logger.LogInformation($"{nameof(StopAsync)}: Cleaning the cast service...");
+            await _castService.CleanThemAll();
+
+            _logger.LogInformation($"{nameof(StopAsync)}: Saving current settings...");
+            await _appSettings.SaveCurrentSettings();
+
+            _logger.LogInformation($"{nameof(StopAsync)}: Stop completed");
             await base.StopAsync(cancellationToken);
         }
 
         private void InitializeOrUpdateFileWatcher(bool update)
         {
             _logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Getting directories to watch...");
-            var dirs = _castService.PlayLists.SelectMany(pl => pl.Files)
-                .Where(f => f.IsLocalFile)
-                .Select(f => Path.GetDirectoryName(f.Path))
-                .Distinct()
-                .ToList();
+            var dirs = GetFoldersToWatch();
 
             _logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Got = {dirs.Count} directories...");
             if (!update)
@@ -130,49 +156,84 @@ namespace CastIt.Server.Services
             }
         }
 
+        private List<string> GetFoldersToWatch()
+        {
+            var dirs = _castService.PlayLists.SelectMany(pl => pl.Files)
+                .Where(f => f.IsLocalFile)
+                .Select(f => Path.GetDirectoryName(f.Path))
+                .Distinct()
+                .ToList();
+            return dirs;
+        }
+
+        //AKA UpdatePlayedTime
+        private void UpdateFileWatchers()
+        {
+            var dirs = GetFoldersToWatch();
+            _fileWatcherService.UpdateWatchers(dirs, false);
+            //TODO: PLAYLISTS CHANGED
+        }
+
         #region CastIt Handlers
-        private void OnFileDeleted(long playListId, long id)
+        private async void OnFileDeleted(long playListId, long id)
         {
+            await _castItHub.Clients.All.FileDeleted(playListId, id);
         }
 
-        private void OnFileChanged(long playListId, long id)
+        private async void OnFileChanged(FileItemResponseDto file)
         {
+            await _castItHub.Clients.All.FileChanged(file);
         }
 
-        private void OnFileAdded(long playListId, long id)
+        private async void OnFileAdded(FileItemResponseDto file)
         {
+            await _castItHub.Clients.All.FileAdded(file);
         }
 
-        private void OnPlayListDeleted(long id)
+        private async void OnPlayListDeleted(long id)
         {
+            await _castItHub.Clients.All.PlayListDeleted(id);
         }
 
-        private void OnPlayListAdded(long id)
+        private async void OnPlayListAdded(GetAllPlayListResponseDto playList)
         {
+            await _castItHub.Clients.All.PlayListAdded(playList);
+        }
+
+        private async void OnPlayListChanged(GetAllPlayListResponseDto playList)
+        {
+            await _castItHub.Clients.All.PlayListChanged(playList);
+        }
+
+        private async void OnPlayListBusy(long id, bool busy)
+        {
+            await PlayListBusy(id, busy);
         }
 
         private void OnAppClosing()
         {
         }
 
-        private void OnPlayListChanged(long id)
+        private async void OnFileLoading(FileItemResponseDto file)
         {
+            _logger.LogInformation($"{nameof(OnFileLoading)}: File = {file.Name} is being loaded...");
+            await _castItHub.Clients.All.FileLoading(file);
         }
 
-        private void OnFileLoading()
+        private async void OnVolumeChanged(double newLevel, bool isMuted)
         {
+            await PlayerStatusChanged();
         }
 
-        private void OnVolumeChanged(double newLevel, bool isMuted)
+        private async void OnCastDeviceDisconnected()
         {
+            _logger.LogInformation($"{nameof(OnCastDeviceDisconnected)}: A disconnect took place");
+            await _castItHub.Clients.All.CastDeviceDisconnected();
         }
 
-        private void OnDisconnected()
+        private async void OnPaused()
         {
-        }
-
-        private void OnPaused()
-        {
+            await PlayerStatusChanged();
         }
 
         private void QualitiesChanged(int selectedQuality, List<int> qualities)
@@ -181,54 +242,100 @@ namespace CastIt.Server.Services
 
         private void OnTimeChanged(double seconds)
         {
+            _castService.CurrentPlayedFile?.UpdatePlayedSeconds(seconds);
         }
 
         private void OnCastableDeviceDeleted(string id)
         {
         }
 
-        private void OnCastRendererSet(string id)
+        private async void OnCastDeviceSet(IReceiver device)
         {
+            await _castItHub.Clients.All.CastDeviceSet(device);
         }
 
-        private void OnDeviceDiscovered(string id, string name, string type, string host, int port)
+        private async void OnCastDeviceDiscovered(IReceiver device)
         {
-            _logger.LogInformation($"Found deviceId = {id}");
+            _logger.LogInformation($"Found deviceId = {device.Id}");
+            await _castItHub.Clients.All.CastDevicesChanged(_castService.AvailableDevices);
         }
 
         private async void OnServerMessage(AppMessageType type)
         {
-            await _castItHub.Clients.All.SendMsg(type);
+            _logger.LogInformation($"{nameof(OnServerMessage)}: Sending server msg = {type} to all clients");
+            await _castItHub.Clients.All.ServerMessage(type);
         }
 
         private async void OnPositionChanged(double newPosition)
         {
             _castService.CurrentPlayedFile?.UpdatePlayedPercentage(newPosition);
-            await _castItHub.Clients.All.PositionChanged(newPosition);
+            await PlayerStatusChanged();
         }
 
-        private void OnFileLoaded(string title, string path, double duration, double volume, bool muted)
+        private async void OnFileLoaded(FileItemResponseDto file)
         {
-            _logger.LogInformation($"File Loaded = {title}");
+            _logger.LogInformation($"{nameof(OnFileLoaded)}: File {file.Filename} was loaded");
+            await _castItHub.Clients.All.FileLoaded(file);
+            await PlayerStatusChanged();
         }
 
         private async void OnEndReached()
         {
-            _castService.CurrentPlayedFile?.BeingPlayed(false);
-            await _castItHub.Clients.All.EndReached();
+            _logger.LogInformation($"{nameof(OnEndReached)}: End reached for = {_castService.CurrentPlayedFile?.Filename}");
+            _castService.CurrentPlayedFile?.EndReached();
+            await _castItHub.Clients.All.FileEndReached(_castService.GetCurrentPlayedFile());
+            _castService.CleanPlayedFile(false);
+            await PlayerStatusChanged();
         }
 
         private async void OnFilesAdded(long playListId, FileItem[] files)
         {
             _logger.LogInformation($"{nameof(OnFilesAdded)}: {files.Length} file(s) were added for playListId = {playListId}... Adding them...");
-            foreach (var file in files)
+            try
             {
-                if (_setDurationTokenSource.IsCancellationRequested)
-                    break;
-                await _castService.AddFile(playListId, file);
+                await PlayListBusy(playListId, true);
+                foreach (var file in files)
+                {
+                    if (_setDurationTokenSource.IsCancellationRequested)
+                        break;
+                    await _castService.AddFile(playListId, file);
+                }
+
+                _logger.LogInformation($"{nameof(OnFilesAdded)}: Successfully added all the files to playListId = {playListId}");
             }
-            _logger.LogInformation($"{nameof(OnFilesAdded)}: Successfully added all the files to playListId = {playListId}");
+            catch (Exception e)
+            {
+                await _castItHub.Clients.All.ServerMessage(AppMessageType.UnknownErrorOccurred);
+                _telemetryService.TrackError(e);
+                _logger.LogError(e, $"{nameof(OnFilesAdded)}: Unknown error");
+            }
+            finally
+            {
+                await PlayListBusy(playListId, false);
+            }
         }
+
+        private async void OnStoppedPlayback()
+        {
+            await _castItHub.Clients.All.StoppedPlayBack();
+            await PlayerStatusChanged();
+        }
+
+        private async void OnCastDevicesChanged(List<IReceiver> devices)
+        {
+            await _castItHub.Clients.All.CastDevicesChanged(devices);
+        }
+
+        private Task PlayerStatusChanged()
+        {
+            return _castItHub.Clients.All.PlayerStatusChanged(_castService.GetPlayerStatus());
+        }
+
+        private async Task PlayListBusy(long id, bool isBusy)
+        {
+            await _castItHub.Clients.All.PlayListIsBusy(id, isBusy);
+        }
+
         #endregion
 
         #region FileWatcher Handlers
@@ -237,24 +344,28 @@ namespace CastIt.Server.Services
             return OnFwChanged(path, isAFolder);
         }
 
-        private Task OnFwChanged(string path, bool isAFolder)
+        private async Task OnFwChanged(string path, bool isAFolder)
         {
-            var files = _castService.PlayLists
-                .SelectMany(f => f.Files)
-                .Where(f => isAFolder ? f.Path.StartsWith(path) : f.Path == path)
-                .ToList();
-            foreach (var file in files)
+            foreach (var playList in _castService.PlayLists)
             {
-                var playlist = _castService.PlayLists.Find(f => f.Id == file.PlayListId);
-                if (playlist == null)
-                    continue;
+                var files = playList.Files
+                    .Where(f => isAFolder ? f.Path.StartsWith(path) : f.Path == path)
+                    .ToList();
 
-                OnFileChanged(playlist.Id, file.Id);
-                //await playlist.SetFileInfo(file.Id, _setDurationTokenSource.Token);
-                //_appWebServer?.OnFileChanged(playlist.Id);
+                if (files.Any())
+                {
+                    continue;
+                }
+
+                await _castItHub.Clients.All.PlayListIsBusy(playList.Id, true);
+
+                foreach (var file in files)
+                {
+                    await _castService.UpdateFileItem(file);
+                }
+
+                await _castItHub.Clients.All.PlayListIsBusy(playList.Id, false);
             }
-            return Task.CompletedTask;
-            ;
         }
 
         private Task OnFwDeleted(string path, bool isAFolder)
@@ -277,7 +388,7 @@ namespace CastIt.Server.Services
                 if (isAFolder)
                 {
                     await _castService.RemoveFilesThatStartsWith(playlist.Id, oldPath);
-                    await _castService.AddFolder(playlist.Id, new[] { newPath });
+                    await _castService.AddFolder(playlist.Id, false, new[] { newPath });
                 }
                 else
                 {
