@@ -48,5 +48,26 @@ namespace CastIt.Infrastructure.Models
                 LoadFirstSubtitleFoundAutomatically = LoadFirstSubtitleFoundAutomatically
             };
         }
+
+        public ServerAppSettings UpdateWith(ServerAppSettings other)
+        {
+            //TODO: FFMPEG ?
+
+            StartFilesFromTheStart = other.StartFilesFromTheStart;
+            PlayNextFileAutomatically = other.PlayNextFileAutomatically;
+            ForceVideoTranscode = other.ForceVideoTranscode;
+            ForceAudioTranscode = other.ForceAudioTranscode;
+            VideoScale = other.VideoScale;
+            EnableHardwareAcceleration = other.EnableHardwareAcceleration;
+
+            CurrentSubtitleFgColor = other.CurrentSubtitleFgColor;
+            CurrentSubtitleBgColor = other.CurrentSubtitleBgColor;
+            CurrentSubtitleFontScale = other.CurrentSubtitleFontScale;
+            CurrentSubtitleFontStyle = other.CurrentSubtitleFontStyle;
+            CurrentSubtitleFontFamily = other.CurrentSubtitleFontFamily;
+            SubtitleDelayInSeconds = other.SubtitleDelayInSeconds;
+            LoadFirstSubtitleFoundAutomatically = other.LoadFirstSubtitleFoundAutomatically;
+            return this;
+        }
     }
 }

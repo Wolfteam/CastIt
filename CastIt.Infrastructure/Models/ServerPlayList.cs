@@ -12,9 +12,9 @@ namespace CastIt.Infrastructure.Models
         public bool Loop { get; set; }
         public bool Shuffle { get; set; }
 
+        public string ImageUrl { get; set; }
         public int NumberOfFiles
             => Files.Count;
-        //public ServerFileItem SelectedFileItem { get; set; }
 
         public List<ServerFileItem> Files { get; set; }
             = new List<ServerFileItem>();
