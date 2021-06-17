@@ -69,10 +69,7 @@ namespace CastIt.Server
                 {
                     if (port > 0)
                     {
-                        webBuilder.UseKestrel(options =>
-                        {
-                            options.ListenAnyIP(port);
-                        });
+                        webBuilder.UseKestrel(options => options.ListenAnyIP(port));
                     }
 
                     webBuilder.UseStartup(factory => new Startup(factory.Configuration, ffmpegPath, ffprobePath));

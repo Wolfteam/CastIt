@@ -54,6 +54,27 @@ namespace CastIt.Server.Controllers
             return Ok(new EmptyResponseDto(true));
         }
 
+        [HttpPut("{id}/[action]")]
+        public async Task<IActionResult> AddFolders(long id, AddFolderOrFilesToPlayListRequestDto dto)
+        {
+            await CastService.AddFolder(id, dto.IncludeSubFolders, dto.Folders.ToArray());
+            return Ok(new EmptyResponseDto(true));
+        }
+
+        [HttpPut("{id}/[action]")]
+        public async Task<IActionResult> AddFiles(long id, AddFolderOrFilesToPlayListRequestDto dto)
+        {
+            await CastService.AddFiles(id, dto.Files.ToArray());
+            return Ok(new EmptyResponseDto(true));
+        }
+
+        [HttpPut("{id}/[action]")]
+        public async Task<IActionResult> AddUrl(long id, AddUrlToPlayListRequestDto dto)
+        {
+            await CastService.AddUrl(id, dto.Url, dto.OnlyVideo);
+            return Ok(new EmptyResponseDto(true));
+        }
+
         [HttpDelete("{id}/[action]/{path}")]
         public async Task<IActionResult> RemoveFilesThatStartsWith(long id, string path)
         {
@@ -93,27 +114,6 @@ namespace CastIt.Server.Controllers
         public IActionResult SortFiles(long id, [FromQuery] SortModeType modeType)
         {
             CastService.SortFiles(id, modeType);
-            return Ok(new EmptyResponseDto(true));
-        }
-
-        [HttpPut("{id}/[action]")]
-        public async Task<IActionResult> AddFolders(long id, AddFolderOrFilesToPlayListRequestDto dto)
-        {
-            await CastService.AddFolder(id, dto.Folders.ToArray());
-            return Ok(new EmptyResponseDto(true));
-        }
-
-        [HttpPut("{id}/[action]")]
-        public async Task<IActionResult> AddFiles(long id, AddFolderOrFilesToPlayListRequestDto dto)
-        {
-            await CastService.AddFiles(id, dto.Files.ToArray());
-            return Ok(new EmptyResponseDto(true));
-        }
-
-        [HttpPut("{id}/[action]")]
-        public async Task<IActionResult> AddUrl(long id, AddUrlToPlayListRequestDto dto)
-        {
-            await CastService.AddUrl(id, dto.Url, dto.OnlyVideo);
             return Ok(new EmptyResponseDto(true));
         }
     }

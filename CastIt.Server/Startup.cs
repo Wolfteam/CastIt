@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
+using System;
 
 namespace CastIt.Server
 {
@@ -58,6 +59,12 @@ namespace CastIt.Server
                 defaultSettings.FFprobePath = _ffprobePath;
             }
 
+            //Cors is required for the subtitles to work
+            services.AddCors();
+
+            //Should be more than enough for the hosted service to complete
+            services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(3));
+
             services.AddApplication(defaultSettings.FFmpegPath, defaultSettings.FFprobePath);
             services.AddSingleton(defaultSettings);
             services.AddControllers()
@@ -77,6 +84,7 @@ namespace CastIt.Server
             services.AddSingleton<IBaseWebServer, FakeAppWebServer>();
             services.AddSingleton<IPlayer>(provider => new Player(provider.GetRequiredService<ILogger<Player>>()));
             services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
+            services.AddSingleton<IImageProviderService, ImageProviderService>();
             services.AddSwagger("CastIt", "CastIt.xml");
         }
 
@@ -90,6 +98,12 @@ namespace CastIt.Server
 
             app.UseRouting();
 
+            //Cors is required for the subtitles to work
+            app.UseCors(options =>
+                options.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+            );
             app.UseMiddleware<ExceptionHandlerMiddleware>();
 
             //app.UseAuthorization();
@@ -97,14 +111,14 @@ namespace CastIt.Server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<CastItHub>("/CastitHub");
+                endpoints.MapHub<CastItHub>("/CastItHub");
             });
             app.UseSwagger("CastIt");
 
             //Since the hosted service is started after this, we need to make sure that this thing is initialized
-            using var scope = app.ApplicationServices.CreateScope();
-            var castService = scope.ServiceProvider.GetRequiredService<IServerCastService>();
-            castService.Init().GetAwaiter().GetResult();
+            //using var scope = app.ApplicationServices.CreateScope();
+            //var castService = scope.ServiceProvider.GetRequiredService<IServerCastService>();
+            //castService.Init().GetAwaiter().GetResult();
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
 using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Extensions;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Transcode;
@@ -13,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Controllers
@@ -22,21 +25,33 @@ namespace CastIt.Server.Controllers
         private readonly IFileService _fileService;
         private readonly IFFmpegService _ffmpegService;
         private readonly IServerAppSettingsService _settingsService;
+        private readonly IImageProviderService _imageProviderService;
 
         public PlayerController(
             ILogger<PlayerController> logger,
             IFileService fileService,
             IFFmpegService fFmpegService,
             IServerCastService castService,
-            IServerAppSettingsService settingsService)
+            IServerAppSettingsService settingsService,
+            IImageProviderService imageProviderService)
             : base(logger, castService)
         {
             _fileService = fileService;
             _ffmpegService = fFmpegService;
             _settingsService = settingsService;
+            _imageProviderService = imageProviderService;
         }
 
         //TODO: ADD THE APPMESSAGE TYPE TO EACH RESPONSE ?
+        //TODO: ADD A SETTING THAT ALLOWS YOU TO CHANGE THE MAXIMUM DAYS TO WAIT BEFORE DELETING PREVIEWS
+
+        [HttpGet("Status")]
+        public IActionResult GetStatus()
+        {
+            var response = new AppResponseDto<ServerPlayerStatusResponseDto>(CastService.GetPlayerStatus());
+            return Ok(response);
+        }
+
         [HttpGet("Devices")]
         public IActionResult GetAllDevices()
         {
@@ -47,6 +62,13 @@ namespace CastIt.Server.Controllers
             };
 
             return Ok(response);
+        }
+
+        [HttpPost("Devices/Refresh/{seconds}")]
+        public async Task<IActionResult> RefreshDevices(double seconds)
+        {
+            await CastService.RefreshCastDevices(TimeSpan.FromSeconds(seconds));
+            return Ok(new EmptyResponseDto(true));
         }
 
         [HttpPost("[action]")]
@@ -167,15 +189,23 @@ namespace CastIt.Server.Controllers
             return Ok(new EmptyResponseDto(true));
         }
 
-        [HttpGet("Status")]
-        public IActionResult GetStatus()
+        [HttpGet("Images/Previews/{tentativeSecond}")]
+        public async Task<IActionResult> GetPreviewImageForPlayedFile(long tentativeSecond)
         {
-            var response = new AppResponseDto<ServerPlayerStatus>(CastService.GetPlayerStatus());
-            return Ok(response);
+            Logger.LogTrace(
+                $"{nameof(GetPreviewImageForPlayedFile)}: Checking if we can retrieve an image for " +
+                $"file = {CastService.CurrentPlayedFile?.Filename} on second = {tentativeSecond}...");
+            var path = await CastService.GetClosestPreviewThumbnailForPlayedFile(tentativeSecond);
+            if (!_fileService.IsLocalFile(path))
+            {
+                Logger.LogTrace($"{nameof(GetPreviewImageForPlayedFile)}: Path = {path} does not exist (image may not be ready yet) returning default image");
+                path = _imageProviderService.GetNoImagePath();
+            }
+            return PhysicalFile(path, MediaTypeNames.Image.Jpeg);
         }
 
         #region Chromecast
-        [HttpGet("[action]")]
+        [HttpGet(AppWebServerConstants.ChromeCastPlayPath)]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task Play([FromQuery] PlayAppFileRequestDto dto)
         {
@@ -226,23 +256,43 @@ namespace CastIt.Server.Controllers
             }
         }
 
-        [HttpGet("Images/{filename}")]
+        [HttpGet(AppWebServerConstants.ChromeCastImagesPath + "/{filename}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult GetImage(string filename)
         {
-            var previewsPath = _fileService.GetPreviewsPath();
-            var path = Path.Combine(previewsPath, filename);
-            if (!System.IO.File.Exists(path))
+            Logger.LogTrace($"{nameof(GetImage)}: Checking if we can retrieve image for file = {filename}...");
+            var path = _imageProviderService.IsNoImage(filename)
+                ? Path.Combine(_imageProviderService.GetImagesPath(), filename)
+                : Path.Combine(_fileService.GetPreviewsPath(), filename);
+
+            Logger.LogTrace($"{nameof(GetImage)}: Retrieving image for path = {path}...");
+            if (!_fileService.IsLocalFile(path))
             {
+                Logger.LogWarning($"{nameof(GetImage)}: Path = {path} does not exist, returning default image");
+                path = _imageProviderService.GetNoImagePath();
+            }
+            return PhysicalFile(path, MediaTypeNames.Image.Jpeg);
+        }
+
+        [HttpGet(AppWebServerConstants.ChromeCastSubTitlesPath)]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IActionResult GetSubtitleForPlayedFile()
+        {
+            Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: Retrieving subs for currentPlayedFile = {CastService.CurrentPlayedFile?.Filename}");
+            var path = _fileService.GetSubTitleFilePath();
+            if (!_fileService.IsLocalFile(path))
+            {
+                Logger.LogWarning($"{nameof(GetSubtitleForPlayedFile)}: Path = {path} does not exist");
                 return NotFound();
             }
-            return PhysicalFile(path, "image/jpeg");
+            Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: SubsPath = {path}");
+            return PhysicalFile(path, "text/vtt");
         }
 
         private static TranscodeVideoFile GetVideoFileOptions(PlayAppFileRequestDto dto)
         {
             return new TranscodeVideoFileBuilder()
-                .WithDefaults(dto.HwAccelToUse, dto.VideoScale, dto.VideoWidthAndHeight)
+                .WithDefaults(dto.HwAccelToUse, dto.VideoScale, dto.SelectedQuality, dto.VideoWidthAndHeight)
                 .WithStreams(dto.VideoStreamIndex, dto.AudioStreamIndex)
                 .WithFile(dto.Mrl)
                 .ForceTranscode(dto.VideoNeedsTranscode, dto.AudioNeedsTranscode)
