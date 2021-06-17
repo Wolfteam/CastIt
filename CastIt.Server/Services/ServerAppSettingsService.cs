@@ -112,6 +112,20 @@ namespace CastIt.Server.Services
         {
         }
 
+        public override async Task<ServerAppSettings> UpdateSettings(ServerAppSettings settings, bool saveToFileSystem = false)
+        {
+            Logger.LogInformation($"{nameof(UpdateSettings)}: Trying to update settings...");
+            Settings.UpdateWith(settings);
+            if (saveToFileSystem)
+            {
+                Logger.LogInformation($"{nameof(UpdateSettings)}: Saving the updated settings to disk...");
+                await SaveCurrentSettings();
+            }
+
+            Logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
+            return Settings;
+        }
+
         public override Task<ServerAppSettings> GetDefaultAppSettings()
         {
             var defaultSettings = new ServerAppSettings
