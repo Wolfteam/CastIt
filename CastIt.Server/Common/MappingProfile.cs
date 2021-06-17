@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
+using CastIt.GoogleCast;
 using CastIt.Infrastructure.Models;
 
 namespace CastIt.Server.Common
@@ -17,6 +18,8 @@ namespace CastIt.Server.Common
             CreateMap<ServerPlayList, GetAllPlayListResponseDto>();
             CreateMap<ServerPlayList, PlayListItemResponseDto>();
             CreateMap<ServerFileItem, FileItemResponseDto>();
+
+            CreateMap<PlayerStatus, PlayerStatusResponseDto>();
         }
     }
 }

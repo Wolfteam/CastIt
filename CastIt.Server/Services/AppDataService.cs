@@ -1,11 +1,13 @@
 ﻿using CastIt.Application.Common.Utils;
 using CastIt.Domain.Entities;
+using CastIt.Infrastructure.Models;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Migrations;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Services
@@ -131,12 +133,6 @@ namespace CastIt.Server.Services
             return _db.Select<FileItem>().Where(f => f.PlayListId == playlistId).CountAsync();
         }
 
-        public void SaveChangesBeforeClosingApp(Dictionary<PlayList, int> playListsPositions, List<FileItem> vms)
-        {
-            SavePlayListsPositions(playListsPositions);
-            SaveFileChanges(vms);
-        }
-
         public Task UpdatePlayList(long id, string name, int position)
         {
             return _db.Update<PlayList>(id)
@@ -156,33 +152,33 @@ namespace CastIt.Server.Services
                 .ExecuteAffrowsAsync();
         }
 
-        private void SavePlayListsPositions(Dictionary<PlayList, int> positions)
+        public async Task SavePlayListChanges(List<ServerPlayList> playLists)
         {
-            if (positions.Count == 0)
+            if (playLists.Count == 0)
                 return;
 
-            foreach (var (vm, position) in positions)
-            {
-                _db.Update<PlayList>(vm.Id)
-                    .Set(p => p.Position, position)
-                    .Set(p => p.Shuffle, vm.Shuffle)
-                    .Set(p => p.Loop, vm.Loop)
-                    .ExecuteAffrows();
-            }
+            var tasks = playLists.Select(playList => _db.Update<PlayList>(playList.Id)
+                .Set(p => p.Position, playList.Position)
+                .Set(p => p.Shuffle, playList.Shuffle)
+                .Set(p => p.Loop, playList.Loop)
+                .ExecuteAffrowsAsync()
+            );
+
+            await Task.WhenAll(tasks);
         }
 
-        private void SaveFileChanges(List<FileItem> vms)
+        public async Task SaveFileChanges(List<ServerFileItem> files)
         {
-            if (vms.Count == 0)
+            if (files.Count == 0)
                 return;
 
-            foreach (var vm in vms)
-            {
-                _db.Update<FileItem>(vm.Id)
-                    .Set(f => f.PlayedPercentage, vm.PlayedPercentage)
-                    .Set(f => f.Position, vm.Position)
-                    .ExecuteAffrows();
-            }
+            var tasks = files.Select(file => _db.Update<FileItem>(file.Id)
+                .Set(f => f.PlayedPercentage, file.PlayedPercentage)
+                .Set(f => f.Position, file.Position)
+                .ExecuteAffrowsAsync()
+            );
+
+            await Task.WhenAll(tasks);
         }
 
         private void ApplyMigrations()

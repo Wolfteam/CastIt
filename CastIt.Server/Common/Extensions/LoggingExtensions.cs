@@ -1,4 +1,5 @@
 ﻿using CastIt.Domain.Models.Logging;
+using CastIt.GoogleCast;
 using CastIt.Server.Controllers;
 using CastIt.Server.Hubs;
 using CastIt.Server.Services;
@@ -26,7 +27,10 @@ namespace CastIt.Server.Common.Extensions
                    //Services
                    new FileToLog(typeof(ServerCastService), "service_cast"),
                    new FileToLog(typeof(AppDataService), "service_appdata"),
-                   new FileToLog(typeof(ServerAppSettingsService), "service_appsettings")
+                   new FileToLog(typeof(ServerAppSettingsService), "service_appsettings"),
+
+                   //Others
+                   new FileToLog(typeof(Player), "castit_player")
                 });
             return logs;
         }
