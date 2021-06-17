@@ -11,5 +11,7 @@
         string Host { get; }
 
         int Port { get; }
+
+        bool IsConnected { get; set; }
     }
 }

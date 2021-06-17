@@ -60,5 +60,17 @@
                 Text = text
             };
         }
+
+        public static FileItemOptionsResponseDto ForQuality(int quality, bool isSelected)
+        {
+            return new FileItemOptionsResponseDto
+            {
+                Id = quality,
+                IsSelected = isSelected,
+                IsEnabled = true,
+                IsQuality = true,
+                Text = $"{quality}"
+            };
+        }
     }
 }

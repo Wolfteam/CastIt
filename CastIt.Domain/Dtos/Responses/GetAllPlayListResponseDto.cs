@@ -12,7 +12,9 @@
 
         public bool Shuffle { get; set; }
 
-        public long NumberOfFiles { get; set; }
+        public int NumberOfFiles { get; set; }
+        public string PlayedTime { get; set; }
         public string TotalDuration { get; set; }
+        public string ImageUrl { get; set; }
     }
 }

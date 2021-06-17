@@ -13,6 +13,7 @@ namespace CastIt.Domain.Dtos.Requests
         public bool AudioNeedsTranscode { get; set; }
         public HwAccelDeviceType HwAccelToUse { get; set; }
         public VideoScaleType VideoScale { get; set; }
+        public int SelectedQuality { get; set; }
         public string VideoWidthAndHeight { get; set; }
     }
 }

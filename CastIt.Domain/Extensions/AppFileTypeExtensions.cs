@@ -5,9 +5,7 @@ namespace CastIt.Domain.Extensions
     public static class AppFileTypeExtensions
     {
         public static bool IsLocalOrHls(this AppFileType type)
-            => type.HasFlag(AppFileType.Hls) ||
-               type.IsMusic() ||
-               type.IsVideo();
+            => type.HasFlag(AppFileType.Hls) || type.IsLocal();
 
         public static bool IsMusic(this AppFileType type)
             => type.HasFlag(AppFileType.LocalMusic);
@@ -26,5 +24,8 @@ namespace CastIt.Domain.Extensions
 
         public static bool DoesNotExist(this AppFileType type)
             => type.HasFlag(AppFileType.Na);
+
+        public static bool IsLocal(this AppFileType type)
+            => type.IsMusic() || type.IsVideo();
     }
 }

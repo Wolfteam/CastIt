@@ -6,5 +6,6 @@ namespace CastIt.Domain.Dtos.Requests
     {
         public List<string> Folders { get; set; } = new List<string>();
         public List<string> Files { get; set; } = new List<string>();
+        public bool IncludeSubFolders { get; set; }
     }
 }
