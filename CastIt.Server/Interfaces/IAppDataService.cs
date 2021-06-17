@@ -1,6 +1,7 @@
 ﻿using CastIt.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CastIt.Infrastructure.Models;
 
 namespace CastIt.Server.Interfaces
 {
@@ -27,6 +28,8 @@ namespace CastIt.Server.Interfaces
         Task DeleteFiles(List<long> ids);
         Task UpdateFile(long id, string name, string description, double duration);
 
-        void SaveChangesBeforeClosingApp(Dictionary<PlayList, int> playListsPositions, List<FileItem> vms);
+        Task SavePlayListChanges(List<ServerPlayList> playLists);
+
+        Task SaveFileChanges(List<ServerFileItem> files);
     }
 }
