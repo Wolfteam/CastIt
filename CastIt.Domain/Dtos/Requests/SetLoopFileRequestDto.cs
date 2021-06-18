@@ -1,6 +1,6 @@
 ﻿namespace CastIt.Domain.Dtos.Requests
 {
-    public class SetLoopFileRequestDto : BaseSocketRequestDto
+    public class SetLoopFileRequestDto
     {
         public long Id { get; set; }
         public long PlayListId { get; set; }

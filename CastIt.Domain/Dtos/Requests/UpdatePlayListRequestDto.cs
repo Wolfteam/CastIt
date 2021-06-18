@@ -1,8 +1,8 @@
 ﻿namespace CastIt.Domain.Dtos.Requests
 {
-    public class UpdatePlayListRequestDto : BaseItemRequestDto
+    public class UpdatePlayListRequestDto
     {
+        public long Id { get; set; }
         public string Name { get; set; }
-        public int? Position { get; set; }
     }
 }
