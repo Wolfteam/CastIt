@@ -1,6 +1,7 @@
 ﻿using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Enums;
 using CastIt.Domain.Models.Device;
 using CastIt.Infrastructure.Models;
 using Refit;
@@ -78,17 +79,11 @@ namespace CastIt.Cli.Interfaces.Api
         [Put("/PlayLists/{id}")]
         Task<EmptyResponseDto> UpdatePlayList(long id, [Body] UpdatePlayListRequestDto dto);
 
+        [Put("/PlayLists/{id}/Position/{newIndex}")]
+        Task<EmptyResponseDto> UpdatePlayListPosition(long id, int newIndex);
+
         [Put("/PlayLists/{id}/SetOptions")]
         Task<EmptyResponseDto> SetOptions(long id, [Body] SetPlayListOptionsRequestDto dto);
-
-        [Delete("/PlayLists/{id}/RemoveFilesThatStartsWith/{path}")]
-        Task<EmptyResponseDto> RemoveFilesThatStartsWith(long id, string path);
-
-        [Delete("/PlayLists/{id}/RemoveAllMissingFiles")]
-        Task<EmptyResponseDto> RemoveAllMissingFiles(long id);
-
-        [Delete("/PlayLists/{id}/RemoveFiles")]
-        Task<EmptyResponseDto> RemoveFiles(long id, [Query(CollectionFormat.Multi)] List<long> fileIds);
 
         [Delete("/PlayLists/{id}")]
         Task<EmptyResponseDto> DeletePlayList(long id);
@@ -96,19 +91,35 @@ namespace CastIt.Cli.Interfaces.Api
         [Delete("/PlayLists/All/{exceptId}")]
         Task<EmptyResponseDto> DeleteAllPlayList(long exceptId);
 
-        [Put("/PlayLists/{id}/AddFolders")]
+        [Post("/PlayLists/{id}/Files/{fileId}/Play")]
+        Task<EmptyResponseDto> Play(long id, long fileId);
+
+        [Put("/PlayLists/{id}/Files/{fileId}/Position/{newIndex}")]
+        Task<EmptyResponseDto> UpdateFilePosition(long id, long fileId, int newIndex);
+
+        [Put("/PlayLists/{id}/Files/{fileId}/Loop")]
+        Task<EmptyResponseDto> LoopFile(long id, long fileId, [Query] bool loop);
+
+        [Put("/PlayLists/{id}/Files/AddFolders")]
         Task<EmptyResponseDto> AddFolders(long id, [Body] AddFolderOrFilesToPlayListRequestDto dto);
 
-        [Put("/PlayLists/{id}/AddFiles")]
+        [Put("/PlayLists/{id}/Files/AddFiles")]
         Task<EmptyResponseDto> AddFiles(long id, [Body] AddFolderOrFilesToPlayListRequestDto dto);
 
-        [Put("/PlayLists/{id}/AddUrl")]
+        [Put("/PlayLists/{id}/Files/AddUrl")]
         Task<EmptyResponseDto> AddUrl(long id, [Body] AddUrlToPlayListRequestDto dto);
-        #endregion
 
-        #region Files
-        [Post("/Files/{fileId}/Play")]
-        Task<EmptyResponseDto> Play(long fileId);
+        [Delete("/PlayLists/{id}/Files/RemoveFilesThatStartsWith/{path}")]
+        Task<EmptyResponseDto> RemoveFilesThatStartsWith(long id, string path);
+
+        [Delete("/PlayLists/{id}/Files/RemoveAllMissingFiles")]
+        Task<EmptyResponseDto> RemoveAllMissingFiles(long id);
+
+        [Delete("/PlayLists/{id}/Files/RemoveFiles")]
+        Task<EmptyResponseDto> RemoveFiles(long id, [Query(CollectionFormat.Multi)] List<long> fileIds);
+
+        [Put("/PlayLists/{id}/Files/SortFiles")]
+        Task<EmptyResponseDto> SortFiles(long id, [Query] SortModeType modeType);
         #endregion
     }
 }

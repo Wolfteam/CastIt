@@ -1,4 +1,5 @@
-﻿using CastIt.Cli.Commands.Player;
+﻿using CastIt.Cli.Commands.Files;
+using CastIt.Cli.Commands.Player;
 using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using System;

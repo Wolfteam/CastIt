@@ -25,6 +25,9 @@ namespace CastIt.Cli.Commands.PlayLists
         [Option(CommandOptionType.NoValue, Description = "Pass this one if you only want the video otherwise it will parse the full playlist. This one applies only when you add a url", LongName = "only-video", ShortName = "only-video")]
         public bool OnlyVideo { get; set; }
 
+        [Option(CommandOptionType.NoValue, Description = "Pass this one if you want to include sub folders. This one applies only when the Folders param is provided", LongName = "include-subfolders", ShortName = "include-subfolders")]
+        public bool IncludeSubFolders { get; set; }
+
         public AddCommand(IConsole appConsole, ICastItApiService castItApi)
             : base(appConsole, castItApi)
         {
@@ -37,7 +40,7 @@ namespace CastIt.Cli.Commands.PlayLists
             if (Folders.Any())
             {
                 AppConsole.WriteLine("Adding folders...");
-                var response = await CastItApi.AddFolders(Id, Folders);
+                var response = await CastItApi.AddFolders(Id, IncludeSubFolders, Folders);
                 CheckServerResponse(response);
             }
 

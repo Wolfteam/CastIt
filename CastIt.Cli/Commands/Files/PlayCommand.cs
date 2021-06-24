@@ -3,7 +3,7 @@ using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Threading.Tasks;
 
-namespace CastIt.Cli.Commands.Player
+namespace CastIt.Cli.Commands.Files
 {
     [Command(Name = "play", Description = "Plays a particular file to the connected device", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class PlayCommand : BaseCommand
@@ -13,7 +13,10 @@ namespace CastIt.Cli.Commands.Player
         {
         }
 
-        [Argument(0, Description = "The file id", ShowInHelpText = true)]
+        [Argument(0, Description = "The play list id", ShowInHelpText = true)]
+        public long PlayListId { get; set; }
+
+        [Argument(1, Description = "The file id", ShowInHelpText = true)]
         public long FileId { get; set; }
 
         //[Argument(0, Description = "The file's full path or url", ShowInHelpText = true)]
@@ -37,13 +40,13 @@ namespace CastIt.Cli.Commands.Player
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             CheckIfWebServerIsRunning();
-            if (FileId <= 0)
+            if (PlayListId <= 0 || FileId <= 0)
             {
-                AppConsole.WriteLine($"FileId = {FileId} is not valid");
+                AppConsole.WriteLine($"PlaylistId = {PlayListId} or FileId = {FileId} are not valid");
                 return ErrorCode;
             }
 
-            var response = await CastItApi.Play(FileId);
+            var response = await CastItApi.Play(PlayListId, FileId);
             CheckServerResponse(response);
             AppConsole.WriteLine($"FileId = {FileId} was successfully loaded");
             return SuccessCode;

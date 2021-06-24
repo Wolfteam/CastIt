@@ -30,10 +30,10 @@ namespace CastIt.Cli.Commands.PlayLists
             var response = await CastItApi.GetPlayList(PlayListId);
             CheckServerResponse(response);
 
-            var table = new ConsoleTable("Id", "Name", "Information", "Playing", "Played Time");
+            var table = new ConsoleTable("Id", "Name", "Information", "Position", "Playing", "Played Time");
             foreach (var file in response.Result.Files)
             {
-                table.AddRow(file.Id, file.Filename, file.SubTitle, file.IsBeingPlayed ? "Yes" : "No", file.TotalDuration);
+                table.AddRow(file.Id, file.Filename, file.SubTitle, file.Position, file.IsBeingPlayed ? "Yes" : "No", file.TotalDuration);
             }
             AppConsole.WriteLine(table.ToString());
             return SuccessCode;

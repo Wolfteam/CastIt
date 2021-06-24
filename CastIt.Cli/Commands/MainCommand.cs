@@ -8,7 +8,7 @@ namespace CastIt.Cli.Commands
 {
     [Command(Name = "castit", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]
-    [Subcommand(typeof(PlayerCommands), typeof(PlayListCommands), typeof(ServerCommands))]
+    [Subcommand(typeof(PlayerCommands), typeof(PlayListCommands), typeof(ServerCommands), typeof(FilesCommand))]
     public class MainCommand : BaseCommand
     {
         public MainCommand(IConsole appConsole, ICastItApiService castItApi)

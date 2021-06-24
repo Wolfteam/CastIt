@@ -25,8 +25,18 @@ namespace CastIt.Cli.Commands.PlayLists
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             CheckIfWebServerIsRunning();
-            var response = await CastItApi.UpdatePlayList(PlayListId, Name, Position);
-            CheckServerResponse(response);
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                var response = await CastItApi.UpdatePlayList(PlayListId, Name);
+                CheckServerResponse(response);
+            }
+
+            if (Position >= 0)
+            {
+                AppConsole.WriteLine($"Updating playlist position to = {Position}...");
+                var response =  await CastItApi.UpdatePlayListPosition(PlayListId, Position.Value);
+                CheckServerResponse(response);
+            }
 
             AppConsole.WriteLine("Playlist was successfully updated");
             return SuccessCode;

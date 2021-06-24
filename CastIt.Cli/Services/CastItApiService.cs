@@ -2,6 +2,7 @@
 using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Enums;
 using CastIt.Domain.Models.Device;
 using CastIt.Infrastructure.Models;
 using Microsoft.AspNetCore.JsonPatch;
@@ -420,7 +421,7 @@ namespace CastIt.Cli.Services
             return response;
         }
 
-        public async Task<EmptyResponseDto> UpdatePlayList(long id, string name, int? position)
+        public async Task<EmptyResponseDto> UpdatePlayList(long id, string name)
         {
             var response = new EmptyResponseDto();
             try
@@ -428,7 +429,6 @@ namespace CastIt.Cli.Services
                 response = await _api.UpdatePlayList(id, new UpdatePlayListRequestDto
                 {
                     Name = name,
-                    Position = position
                 });
             }
             catch (ApiException apiEx)
@@ -439,6 +439,26 @@ namespace CastIt.Cli.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, $"{nameof(UpdatePlayList)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> UpdatePlayListPosition(long id, int newIndex)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await _api.UpdatePlayListPosition(id, newIndex);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(UpdatePlayListPosition)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(UpdatePlayListPosition)}: Unknown error occurred");
                 HandleUnknownException(response);
             }
             return response;
@@ -568,14 +588,15 @@ namespace CastIt.Cli.Services
             return response;
         }
 
-        public async Task<EmptyResponseDto> AddFolders(long id, List<string> folders)
+        public async Task<EmptyResponseDto> AddFolders(long id, bool includeSubFolders, List<string> folders)
         {
             var response = new EmptyResponseDto();
             try
             {
                 response = await _api.AddFolders(id, new AddFolderOrFilesToPlayListRequestDto
                 {
-                    Folders = folders
+                    Folders = folders,
+                    IncludeSubFolders = includeSubFolders,
                 });
             }
             catch (ApiException apiEx)
@@ -596,7 +617,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.AddFolders(id, new AddFolderOrFilesToPlayListRequestDto
+                response = await _api.AddFiles(id, new AddFolderOrFilesToPlayListRequestDto
                 {
                     Files = files
                 });
@@ -637,15 +658,13 @@ namespace CastIt.Cli.Services
             }
             return response;
         }
-        #endregion
 
-        #region Files
-        public async Task<EmptyResponseDto> Play(long fileId)
+        public async Task<EmptyResponseDto> Play(long playListId, long fileId)
         {
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Play(fileId);
+                response = await _api.Play(playListId, fileId);
             }
             catch (ApiException apiEx)
             {
@@ -655,6 +674,66 @@ namespace CastIt.Cli.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, $"{nameof(Play)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> UpdateFilePosition(long playListId, long fileId, int newIndex)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await _api.UpdateFilePosition(playListId, fileId, newIndex);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(UpdateFilePosition)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(UpdateFilePosition)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> SortFiles(long id, SortModeType sortMode)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await _api.SortFiles(id, sortMode);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(SortFiles)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(SortFiles)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> LoopFile(long playListId, long fileId, bool loop)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await _api.LoopFile(playListId, fileId, loop);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(LoopFile)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(LoopFile)}: Unknown error occurred");
                 HandleUnknownException(response);
             }
             return response;

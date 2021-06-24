@@ -1,7 +1,7 @@
-﻿using System;
-using CastIt.Cli.Interfaces.Api;
+﻿using CastIt.Cli.Interfaces.Api;
 using ConsoleTables;
 using McMaster.Extensions.CommandLineUtils;
+using System;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
@@ -25,11 +25,11 @@ namespace CastIt.Cli.Commands.PlayLists
             var playLists = response.Result;
 
             AppConsole.WriteLine("The following play lists were found:");
-            var table = new ConsoleTable("Id", "Name", "Files", "Loop", "Shuffle", "Played Time");
+            var table = new ConsoleTable("Id", "Name", "Files", "Loop", "Shuffle", "Position", "Played Time");
 
             foreach (var playList in playLists)
             {
-                table.AddRow(playList.Id, playList.Name, playList.NumberOfFiles, playList.Loop, playList.Shuffle, playList.TotalDuration);
+                table.AddRow(playList.Id, playList.Name, playList.NumberOfFiles, playList.Loop, playList.Shuffle, playList.Position, playList.TotalDuration);
             }
 
             AppConsole.WriteLine(table.ToString());

@@ -15,7 +15,8 @@ namespace CastIt.Cli.Commands
         typeof(GetCommand),
         typeof(RemoveFilesCommand),
         typeof(SetOptionsCommand),
-        typeof(UpdateCommand)
+        typeof(UpdateCommand),
+        typeof(SortFilesCommand)
     )]
     public class PlayListCommands : BaseCommand
     {
