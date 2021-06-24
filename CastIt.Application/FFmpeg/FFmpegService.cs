@@ -1,5 +1,6 @@
 ﻿using CastIt.Application.Common;
 using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Models.FFmpeg.Args;
@@ -66,6 +67,8 @@ namespace CastIt.Application.FFMpeg
         private bool _checkGenerateThumbnailProcess;
         private bool _checkGenerateAllThumbnailsProcess;
 
+        //TODO: READ THIS
+        //https://github.com/jellyfin/jellyfin/blob/master/MediaBrowser.MediaEncoding/Encoder/MediaEncoder.cs
         public FFmpegService(
             ILogger<FFmpegService> logger,
             IFileService fileService,
@@ -88,12 +91,15 @@ namespace CastIt.Application.FFMpeg
                     CreateNoWindow = true
                 }
             };
-
             var startInfo = new ProcessStartInfo
             {
                 WindowStyle = ProcessWindowStyle.Hidden,
                 FileName = fileService.GetFFmpegPath(),
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
             };
 
             _generateThumbnailProcess = new Process
@@ -219,6 +225,47 @@ namespace CastIt.Application.FFMpeg
             {
                 _checkGenerateAllThumbnailsProcess = false;
             }
+        }
+
+        public async Task<byte[]> GetThumbnailTile(string mrl, long tentativeSecond, int fps)
+        {
+            try
+            {
+                var device = GetHwAccelDeviceType();
+                var hwAccels = new List<HwAccelDeviceType>
+                {
+                    HwAccelDeviceType.Auto,
+                    device,
+                    HwAccelDeviceType.None
+                };
+
+                foreach (var hwAccel in hwAccels)
+                {
+                    var cmd = BuildThumbnailTileCommand(mrl, tentativeSecond, hwAccel);
+                    _logger.LogInformation($"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with cmd = {cmd} ...");
+
+                    await using var memStream = new MemoryStream();
+                    _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
+                    _generateAllThumbnailsProcess.Start();
+                    await _generateAllThumbnailsProcess.StandardOutput.BaseStream.CopyToAsync(memStream);
+                    await _generateAllThumbnailsProcess.WaitForExitAsync();
+
+                    if (_generateAllThumbnailsProcess.ExitCode == 0)
+                    {
+                        _logger.LogInformation($"{nameof(GetThumbnailTile)}: Thumbnail tiles were generated successfully with hwaccel = {hwAccel}");
+                        return memStream.ToArray();
+                    }
+
+                    _logger.LogWarning($"{nameof(GetThumbnailTile)}: Couldn't generate thumbnail tile with hwaccel = {hwAccel}");
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
+            }
+
+            _logger.LogWarning($"{nameof(GetThumbnailTile)}: Couldn't generate thumbnail with any of the provided hwaccels");
+            return null;
         }
 
         public async Task KillThumbnailProcess()
@@ -661,6 +708,8 @@ namespace CastIt.Application.FFMpeg
                     adapters.Add(obj["AdapterCompatibility"].ToString());
                 }
 
+                _availableHwDevices.Add(HwAccelDeviceType.Auto);
+
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
                 {
                     _availableHwDevices.Add(HwAccelDeviceType.Nvidia);
@@ -674,6 +723,11 @@ namespace CastIt.Application.FFMpeg
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
                 {
                     _availableHwDevices.Add(HwAccelDeviceType.Intel);
+                }
+
+                if (OperatingSystem.IsWindows())
+                {
+                    _availableHwDevices.Add(HwAccelDeviceType.Dxva2);
                 }
 
                 _logger.LogInformation($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", _availableHwDevices)}");
@@ -726,6 +780,41 @@ namespace CastIt.Application.FFMpeg
             }
 
             _checkTranscodeProcess = true;
+        }
+
+        private string BuildThumbnailTileCommand(string mrl, long seek, HwAccelDeviceType deviceType)
+        {
+            //TODO: MOVE SOME PARTS TO THE ARGS BUILDER
+            var builder = new FFmpegArgsBuilder();
+            var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
+            var outputArgs = builder.AddStdOut().SetFormat("mjpeg");
+            switch (deviceType)
+            {
+                case HwAccelDeviceType.None:
+                case HwAccelDeviceType.AMD:
+                    inputArgs.Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Intel:
+                    inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel).Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale_qsv={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Nvidia:
+                    inputArgs.SetHwAccel("nvdec").AddArg("hwaccel_output_format cuda").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters("hwdownload", "format=nv12", @"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Dxva2:
+                    inputArgs.SetHwAccel("dxva2").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Auto:
+                    inputArgs.SetHwAccel("auto").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return builder.GetArgs();
         }
     }
 }

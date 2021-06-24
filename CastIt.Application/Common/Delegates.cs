@@ -20,7 +20,6 @@ namespace CastIt.Application.Common
     //public delegate void OnFileLoadFailed();
     public delegate void OnServerMessageHandler(AppMessageType msg);
 
-
     public delegate void OnPlayListBusyHandler(long playListId, bool busy);
 
     public delegate void OnFileLoadingOrLoadedHandler(FileItemResponseDto file);

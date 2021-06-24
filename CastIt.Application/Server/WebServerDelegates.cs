@@ -10,9 +10,11 @@ namespace CastIt.Application.Server
 
     public delegate void OnPlayListAddedHandler(GetAllPlayListResponseDto playList);
     public delegate void OnPlayListChangedHandler(GetAllPlayListResponseDto playList);
+    public delegate void OnPlayListsChangedHandler(List<GetAllPlayListResponseDto> playList);
     public delegate void OnPlayListDeletedHandler(long id);
 
     public delegate void OnFileAddedHandler(FileItemResponseDto file);
     public delegate void OnFileChangedHandler(FileItemResponseDto file);
+    public delegate void OnFilesChangedHandler(List<FileItemResponseDto> file);
     public delegate void OnFileDeletedHandler(long playlistId, long id);
 }

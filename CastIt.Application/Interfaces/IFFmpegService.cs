@@ -50,5 +50,7 @@ namespace CastIt.Application.Interfaces
             FFProbeFileInfo fileInfo,
             bool shouldUseHwAccel = true,
             bool isHls = false);
+
+        Task<byte[]> GetThumbnailTile(string mrl, long tentativeSecond, int fps);
     }
 }
