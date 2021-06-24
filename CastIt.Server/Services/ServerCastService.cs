@@ -9,6 +9,7 @@ using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
+using CastIt.Domain.Models;
 using CastIt.Domain.Models.FFmpeg.Info;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.Infrastructure.Models;
@@ -54,9 +55,13 @@ namespace CastIt.Server.Services
         private readonly IMapper _mapper;
         private readonly IImageProviderService _imageProviderService;
 
+        private readonly Dictionary<Range<long>, byte[]> _previewThumbnails = new Dictionary<Range<long>, byte[]>();
+        private readonly List<FileThumbnailRangeResponseDto> _thumbnailRanges = new List<FileThumbnailRangeResponseDto>();
+
         private bool _onSkipOrPrevious;
 
         public CancellationTokenSource FileCancellationTokenSource { get; } = new CancellationTokenSource();
+        private readonly SemaphoreSlim _thumbnailSemaphoreSlim = new SemaphoreSlim(3, 3);
         #endregion
 
         #region Delegates
@@ -133,9 +138,10 @@ namespace CastIt.Server.Services
             return PlayFile(file, force, false);
         }
 
-        public Task PlayFile(long id, bool force, bool fileOptionsChanged)
+        public Task PlayFile(long playListId, long id, bool force, bool fileOptionsChanged)
         {
-            var file = PlayLists.SelectMany(pl => pl.Files).FirstOrDefault(f => f.Id == id);
+            var playList = InternalGetPlayList(playListId);
+            var file = playList.Files.Find(f => f.Id == id);
             if (file == null)
             {
                 Logger.LogWarning($"{nameof(PlayFile)}: FileId = {id} was not found");
@@ -202,11 +208,12 @@ namespace CastIt.Server.Services
 
             try
             {
+                bool differentFile = CurrentPlayedFile?.Id != file.Id;
                 CurrentPlayList = playList;
                 CurrentPlayedFile?.BeingPlayed(false);
                 CurrentPlayedFile = file;
                 FileLoading();
-                await StopPlayback(false);
+                await StopPlayback(false, false);
                 DisableLoopForAllFiles(file.Id);
                 var fileInfo = await GetFileInfo(file.Path, FileCancellationTokenSource.Token);
                 if (fileInfo == null)
@@ -221,25 +228,30 @@ namespace CastIt.Server.Services
                     .BeingPlayed()
                     .UpdateFileInfo(fileInfo);
 
+                if (differentFile)
+                {
+                    GenerateThumbnailRanges();
+                }
+
                 //This should only be called if we are changing the current played file
                 if (!fileOptionsChanged)
                 {
+                    Logger.LogInformation($"{nameof(PlayFile)}: Setting the video and audio streams...");
                     CurrentPlayedFile
                         .CleanAllStreams()
                         .SetVideoStreams()
                         .SetAudioStreams();
                 }
 
-                if (CurrentPlayedFile.Type.IsVideo())
+                if (CurrentPlayedFile.Type.IsLocalVideo() && !fileOptionsChanged)
                 {
+                    Logger.LogInformation($"{nameof(PlayFile)}: Setting the sub streams...");
                     var (localSubsPath, filename) = TryGetSubTitlesLocalPath(CurrentPlayedFile.Path);
                     CurrentPlayedFile.SetSubtitleStreams(localSubsPath, filename, AppSettings.LoadFirstSubtitleFoundAutomatically);
                 }
 
-                if (file.CanStartPlayingFromCurrentPercentage &&
-                    !type.IsUrl() &&
-                    !force &&
-                    !AppSettings.StartFilesFromTheStart)
+                bool resume = file.CanStartPlayingFromCurrentPercentage && !type.IsUrl() && !force && !AppSettings.StartFilesFromTheStart;
+                if (resume)
                 {
                     Logger.LogInformation($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage}% ...");
                     await GoToPosition(
@@ -263,9 +275,6 @@ namespace CastIt.Server.Services
                         file.CurrentFileQuality,
                         fileInfo);
                 }
-
-                //TODO: MOVE THIS TO THE HOSTED SERVICE
-                GenerateThumbnails(file.Path);
 
                 Logger.LogInformation($"{nameof(PlayFile)}: File is being played...");
             }
@@ -314,6 +323,12 @@ namespace CastIt.Server.Services
             return null;
         }
 
+        protected override Task<string> GetSelectedSubtitlePath()
+        {
+            var path = CurrentPlayedFile?.CurrentFileSubTitles.Find(f => f.IsSelected)?.Path;
+            return Task.FromResult(path);
+        }
+
         public FileItemResponseDto GetCurrentPlayedFile()
         {
             if (CurrentPlayedFile == null)
@@ -329,6 +344,14 @@ namespace CastIt.Server.Services
                 return;
 
             _onSkipOrPrevious = true;
+
+            if (CurrentPlayedFile.Loop)
+            {
+                await PlayFile(CurrentPlayedFile, true, false);
+                _onSkipOrPrevious = false;
+                return;
+            }
+
             var playList = InternalGetPlayList(CurrentPlayedFile.PlayListId, false);
             if (playList == null)
             {
@@ -350,7 +373,6 @@ namespace CastIt.Server.Services
             int increment = nextTrack ? 1 : -1;
             var fileIndex = files.FindIndex(f => f.Id == CurrentPlayedFile.Id);
             int newIndex = fileIndex + increment;
-            //TODO: HERE THE PLAYLIST SHOULD BE UP TO DATE WITH THE CHANGES MADE FROM THE CLIENT
             bool random = playList.Shuffle && files.Count > 1;
             if (random)
                 Logger.LogInformation($"{nameof(GoTo)}: Random is active for playListId = {playList.Id}, picking a random file ...");
@@ -401,7 +423,6 @@ namespace CastIt.Server.Services
                 $"{nameof(GoTo)}: File at index = {fileIndex} in playListId {playList.Id} was not found. " +
                 "Probably an end of playlist");
 
-            //TODO: HERE THE PLAYLIST SHOULD BE UP TO DATE WITH THE CHANGES MADE FROM THE CLIENT
             if (!playList.Loop)
             {
                 Logger.LogInformation($"{nameof(GoTo)}: Since no file was found and playlist is not marked to loop, the playback of this playlist will end here");
@@ -425,7 +446,7 @@ namespace CastIt.Server.Services
             return mapped;
         }
 
-        public async Task UpdatePlayList(long playListId, string newName, int? position)
+        public async Task UpdatePlayList(long playListId, string newName)
         {
             if (string.IsNullOrWhiteSpace(newName))
             {
@@ -441,14 +462,55 @@ namespace CastIt.Server.Services
             }
 
             playList.Name = newName;
-            if (position.HasValue && playList.Position != position && position >= 0)
-            {
-                //TODO: UPDATE THE PLAYLISTS OR MAYBE ADD A NEW METHOD TO UPDATE THE POSITION
-                playList.Position = position.Value;
-            }
 
             await _appDataService.UpdatePlayList(playListId, newName, playList.Position);
             SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
+        }
+
+        public void UpdatePlayListPosition(long playListId, int newIndex)
+        {
+            var playList = InternalGetPlayList(playListId, false);
+            if (playList == null || PlayLists.Count - 1 < newIndex)
+            {
+                Logger.LogWarning($"{nameof(UpdatePlayListPosition)}: PlaylistId = {playListId} doesn't exist or the newIndex = {newIndex} is not valid");
+                return;
+            }
+            var currentIndex = PlayLists.IndexOf(playList);
+
+            Logger.LogInformation($"{nameof(UpdatePlayListPosition)}: Moving playlist from index = {currentIndex} to newIndex = {newIndex}");
+            PlayLists.RemoveAt(currentIndex);
+            PlayLists.Insert(newIndex, playList);
+
+            for (int i = 0; i < PlayLists.Count; i++)
+            {
+                var item = PlayLists[i];
+                item.Position = i;
+            }
+            SendPlayListsChanged(_mapper.Map<List<GetAllPlayListResponseDto>>(PlayLists));
+        }
+
+        public void UpdateFilePosition(long playListId, long id, int newIndex)
+        {
+            var playList = InternalGetPlayList(playListId, false);
+            if (playList == null)
+            {
+                Logger.LogWarning($"{nameof(UpdateFilePosition)}: PlaylistId = {playListId} doesn't exist");
+                return;
+            }
+
+            var file = playList.Files.Find(f => f.Id == id);
+            if (file == null || playList.Files.Count - 1 < newIndex)
+            {
+                Logger.LogWarning($"{nameof(UpdateFilePosition)}: FileId = {id} doesn't exist or the newIndex = {newIndex} is not valid");
+                return;
+            }
+
+            var currentIndex = playList.Files.IndexOf(file);
+
+            Logger.LogInformation($"{nameof(UpdatePlayListPosition)}: Moving file from index = {currentIndex} to newIndex = {newIndex}");
+            playList.Files.RemoveAt(currentIndex);
+            playList.Files.Insert(newIndex, file);
+            SetFilePositionIfChanged(playListId);
         }
 
         public async Task RemoveFilesThatStartsWith(long playListId, string path)
@@ -547,7 +609,11 @@ namespace CastIt.Server.Services
 
         public void SortFiles(long playListId, SortModeType sortBy)
         {
-            var playList = InternalGetPlayList(playListId);
+            var playList = InternalGetPlayList(playListId, false);
+            if (playList == null)
+            {
+                return;
+            }
 
             if ((sortBy == SortModeType.DurationAsc || sortBy == SortModeType.DurationDesc) &&
                 playList.Files.Any(f => string.IsNullOrEmpty(f.Duration)))
@@ -555,39 +621,30 @@ namespace CastIt.Server.Services
                 OnServerMessage?.Invoke(AppMessageType.OneOrMoreFilesAreNotReadyYet);
                 return;
             }
-            playList.Files = sortBy switch
-            {
-                SortModeType.AlphabeticalPathAsc => playList.Files.OrderBy(f => f.Path, new WindowsExplorerComparer()).ToList(),
-                SortModeType.AlphabeticalPathDesc => playList.Files.OrderByDescending(f => f.Path, new WindowsExplorerComparer()).ToList(),
-                SortModeType.DurationAsc => playList.Files.OrderBy(f => f.TotalSeconds).ToList(),
-                SortModeType.DurationDesc => playList.Files.OrderByDescending(f => f.TotalSeconds).ToList(),
-                SortModeType.AlphabeticalNameAsc => playList.Files.OrderBy(f => f.Filename, new WindowsExplorerComparer()).ToList(),
-                SortModeType.AlphabeticalNameDesc => playList.Files.OrderByDescending(f => f.Filename, new WindowsExplorerComparer()).ToList(),
-                _ => throw new ArgumentOutOfRangeException(nameof(sortBy), sortBy, "Invalid sort mode"),
-            };
 
-            SetPositionIfChanged(playListId);
+            playList.Files.Sort(new WindowsExplorerComparerForServerFileItem(sortBy));
+            SetFilePositionIfChanged(playListId);
         }
 
-        public void SetPositionIfChanged(long playListId)
+        public void SetFilePositionIfChanged(long playListId)
         {
             var playList = InternalGetPlayList(playListId);
             for (int i = 0; i < playList.Files.Count; i++)
             {
                 var item = playList.Files[i];
-                int newValue = i + 1;
-                if (item.Position != newValue)
-                {
-                    item.Position = newValue;
-                    item.PositionChanged = true;
-                }
+                var newIndex = i + 1;
+                if (item.Position == newIndex)
+                    continue;
+                item.Position = newIndex;
+                item.PositionChanged = true;
             }
+            SendFilesChanged(_mapper.Map<List<FileItemResponseDto>>(playList.Files));
         }
 
         private Task AfterRemovingFiles(long playListId)
         {
             var playList = InternalGetPlayList(playListId);
-            SetPositionIfChanged(playListId);
+            SetFilePositionIfChanged(playListId);
             SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
             return Task.CompletedTask;
         }
@@ -723,7 +780,8 @@ namespace CastIt.Server.Services
             {
                 Player = _mapper.Map<PlayerStatusResponseDto>(Player.State),
                 PlayList = mapped,
-                PlayedFile = GetCurrentPlayedFile()
+                PlayedFile = GetCurrentPlayedFile(),
+                ThumbnailRanges = _thumbnailRanges
             };
         }
 
@@ -852,7 +910,7 @@ namespace CastIt.Server.Services
                 SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
         }
 
-        public async Task StopPlayback(bool nullPlayedFile = true)
+        public async Task StopPlayback(bool nullPlayedFile = true, bool disableLoopForAll = true)
         {
             if (IsPlayingOrPaused)
             {
@@ -861,7 +919,8 @@ namespace CastIt.Server.Services
 
             CleanPlayedFile(nullPlayedFile);
             await StopRunningProcess();
-            DisableLoopForAllFiles();
+            if (disableLoopForAll)
+                DisableLoopForAllFiles();
             OnStoppedPlayback?.Invoke();
         }
 
@@ -872,10 +931,11 @@ namespace CastIt.Server.Services
             {
                 CurrentPlayList = null;
                 CurrentPlayedFile = null;
+                _previewThumbnails.Clear();
             }
         }
 
-        public void LoopFile(long id, long playListId, bool loop)
+        public void LoopFile(long playListId, long id, bool loop)
         {
             var playList = InternalGetPlayList(playListId, false);
             var file = playList?.Files.Find(f => f.Id == id);
@@ -921,7 +981,7 @@ namespace CastIt.Server.Services
             {
                 return Task.CompletedTask;
             }
-
+            Logger.LogInformation($"{nameof(SetFileSubtitlesFromPath)}: Trying to set subs from path = {filePath}...");
             var (isSub, filename) = FileService.IsSubtitle(filePath);
             if (!isSub || CurrentPlayedFile.CurrentFileSubTitles.Any(f => f.Text == filename))
             {
@@ -931,9 +991,9 @@ namespace CastIt.Server.Services
 
             foreach (var item in CurrentPlayedFile.CurrentFileSubTitles)
             {
+                item.IsSelected = false;
                 if (item.Id == AppWebServerConstants.NoStreamSelectedId)
                     item.IsEnabled = true;
-                item.IsSelected = false;
             }
 
             CurrentPlayedFile.CurrentFileSubTitles.Add(new FileItemOptionsResponseDto
@@ -949,31 +1009,67 @@ namespace CastIt.Server.Services
             return PlayFile(CurrentPlayedFile, false, true);
         }
 
-        public Task<string> GetClosestPreviewThumbnailForPlayedFile(long tentativeSecond)
-            => GetClosestPreviewThumbnail(CurrentPlayedFile, tentativeSecond);
-
-        public async Task<string> GetClosestPreviewThumbnail(ServerFileItem file, long tentativeSecond)
+        public async Task<byte[]> GetClosestPreviewThumbnail(long tentativeSecond)
         {
-            string path = file?.Path;
-            if (string.IsNullOrWhiteSpace(path))
+            try
             {
-                return null;
+                await _thumbnailSemaphoreSlim.WaitAsync(FileCancellationTokenSource.Token);
+
+                var belongsToRange = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.ContainsValue(tentativeSecond));
+
+                if (belongsToRange.Value != null)
+                {
+                    return belongsToRange.Value;
+                }
+
+                string path = CurrentPlayedFile?.Path;
+                if (string.IsNullOrWhiteSpace(path) || tentativeSecond > CurrentPlayedFile?.TotalSeconds || tentativeSecond < 0)
+                {
+                    var pathTo = _imageProviderService.GetNoImagePath();
+                    return await File.ReadAllBytesAsync(pathTo);
+                }
+
+                if ((CurrentPlayedFile.Type.IsLocalMusic() || CurrentPlayedFile.Type.IsUrl()) &&
+                    _previewThumbnails.Any(kvp => kvp.Value != null))
+                {
+                    return _previewThumbnails.First().Value;
+                }
+
+                byte[] bytes;
+                if (CurrentPlayedFile.Type.IsLocalMusic())
+                {
+                    //Images for music files don't change, that's why we return the original image here
+                    var pathTo = FFmpegService.GetThumbnail(CurrentPlayedFile.Path);
+                    bytes = await File.ReadAllBytesAsync(pathTo);
+                }
+                else if (CurrentPlayedFile.Type.IsUrl() && !string.IsNullOrWhiteSpace(CurrentThumbnailUrl))
+                {
+                    //In this case, we download and save the image if needed
+                    var pathTo =
+                        await FileService.DownloadAndSavePreviewImage(CurrentPlayedFile.Id, CurrentThumbnailUrl, false);
+                    bytes = await File.ReadAllBytesAsync(pathTo);
+                }
+                else
+                {
+                    //TODO: maybe spawn 2 extra process to generate thumbnails below and above of what gets generated here
+                    var fps = CurrentPlayedFile.FileInfo?.Videos.FirstOrDefault()?.AverageFrameRate ?? 24;
+                    bytes = await FFmpegService.GetThumbnailTile(CurrentPlayedFile.Path, belongsToRange.Key.Minimum, fps);
+                }
+
+                //The bytes are null, that's I set them here
+                _previewThumbnails[belongsToRange.Key] = bytes;
+                return bytes;
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, $"{nameof(GetClosestPreviewThumbnail)}: Unknown error");
+            }
+            finally
+            {
+                _thumbnailSemaphoreSlim.Release();
             }
 
-            if (file.Type.IsMusic())
-            {
-                //Images for music files don't change, that's why we return the original image here
-                return FFmpegService.GetThumbnail(file.Path);
-            }
-
-            if (file.Type.IsUrl() && !string.IsNullOrWhiteSpace(CurrentThumbnailUrl))
-            {
-                //In this case, we download and save the image if needed
-                return await FileService.DownloadAndSavePreviewImage(file.Id, CurrentThumbnailUrl, false);
-            }
-
-            //In this case, a preview may already be generated
-            return FileService.GetClosestThumbnail(path, tentativeSecond);
+            return null;
         }
 
         private (string, string) TryGetSubTitlesLocalPath(string mrl)
@@ -1002,9 +1098,51 @@ namespace CastIt.Server.Services
             return null;
         }
 
+        private void GenerateThumbnailRanges()
+        {
+            _previewThumbnails.Clear();
+            _thumbnailRanges.Clear();
+
+            if (CurrentPlayedFile.Type.IsLocalVideo())
+            {
+                var rangesToGenerate = (int)Math.Ceiling(CurrentPlayedFile.TotalSeconds / AppWebServerConstants.ThumbnailsPerImage);
+                var min = 0;
+                var max = AppWebServerConstants.ThumbnailsPerImage;
+                for (int d = 0; d < rangesToGenerate; d++)
+                {
+                    var fix = d == rangesToGenerate - 1 ? 0 : -1;
+                    var range = new Range<long>(min, max + fix);
+                    _previewThumbnails.Add(range, null);
+                    min += AppWebServerConstants.ThumbnailsPerImage;
+                    max += AppWebServerConstants.ThumbnailsPerImage;
+                }
+            }
+            else
+            {
+                long max = CurrentPlayedFile.TotalSeconds > 0 ? (long)CurrentPlayedFile.TotalSeconds : long.MaxValue;
+                var range = new Range<long>(0, max);
+                _previewThumbnails.Add(range, null);
+            }
+
+            _thumbnailRanges.AddRange(_previewThumbnails.Select(t => new FileThumbnailRangeResponseDto
+            {
+                ThumbnailRange = t.Key
+            }));
+
+            //there's no point in generating the thumbnail matrix for other file types, since the image will be the same
+            if (CurrentPlayedFile.Type.IsLocalVideo())
+            {
+                foreach (var thumbnailRange in _thumbnailRanges)
+                {
+                    //the +1 is required to make sure we are not in the range limits
+                    thumbnailRange.PreviewThumbnailUrl = AppWebServer.GetThumbnailPreviewUrl(thumbnailRange.ThumbnailRange.Minimum);
+                    thumbnailRange.SetMatrixOfSeconds(AppWebServerConstants.ThumbnailsPerImageRow);
+                }
+            }
+        }
+
         private async Task AddYoutubeUrl(long playListId, string url)
         {
-            //TODO: AppConstants.MaxCharsPerString = 1000
             var media = await YoutubeUrlDecoder.Parse(url, null, false);
             if (media == null)
             {
@@ -1012,9 +1150,9 @@ namespace CastIt.Server.Services
                 OnServerMessage?.Invoke(AppMessageType.UrlCouldntBeParsed);
                 return;
             }
-            if (!string.IsNullOrEmpty(media.Title) && media.Title.Length > 1000)
+            if (!string.IsNullOrEmpty(media.Title) && media.Title.Length > AppWebServerConstants.MaxCharsPerString)
             {
-                media.Title = media.Title.Substring(0, 1000);
+                media.Title = media.Title.Substring(0, AppWebServerConstants.MaxCharsPerString);
             }
             var playList = InternalGetPlayList(playListId);
             var createdFile = await _appDataService.AddFile(playListId, url, playList.Files.Count + 1, media.Title);

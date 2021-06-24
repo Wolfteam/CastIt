@@ -73,10 +73,12 @@ namespace CastIt.Server.Services
 
             _castService.OnPlayListAdded = OnPlayListAdded;
             _castService.OnPlayListChanged = OnPlayListChanged;
+            _castService.OnPlayListsChanged = OnPlayListsChanged;
             _castService.OnPlayListDeleted = OnPlayListDeleted;
             _castService.OnPlayListBusy = OnPlayListBusy;
             _castService.OnFileAdded = OnFileAdded;
             _castService.OnFileChanged = OnFileChanged;
+            _castService.OnFilesChanged = OnFilesChanged;
             _castService.OnFileDeleted = OnFileDeleted;
             _castService.OnFilesAdded = OnFilesAdded;
         }
@@ -185,6 +187,11 @@ namespace CastIt.Server.Services
             await _castItHub.Clients.All.FileChanged(file);
         }
 
+        private async void OnFilesChanged(List<FileItemResponseDto> files)
+        {
+            await _castItHub.Clients.All.FilesChanged(files);
+        }
+
         private async void OnFileAdded(FileItemResponseDto file)
         {
             await _castItHub.Clients.All.FileAdded(file);
@@ -203,6 +210,11 @@ namespace CastIt.Server.Services
         private async void OnPlayListChanged(GetAllPlayListResponseDto playList)
         {
             await _castItHub.Clients.All.PlayListChanged(playList);
+        }
+
+        private async void OnPlayListsChanged(List<GetAllPlayListResponseDto> playlist)
+        {
+            await _castItHub.Clients.All.PlayListsChanged(playlist);
         }
 
         private async void OnPlayListBusy(long id, bool busy)

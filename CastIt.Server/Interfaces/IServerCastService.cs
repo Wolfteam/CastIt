@@ -20,7 +20,7 @@ namespace CastIt.Server.Interfaces
         OnFileLoadingOrLoadedHandler OnFileLoaded { get; set; }
         OnStoppedPlayback OnStoppedPlayback { get; set; }
 
-        public Task PlayFile(long id, bool force, bool fileOptionsChanged);
+        public Task PlayFile(long playListId, long id, bool force, bool fileOptionsChanged);
 
         public Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
 
@@ -28,12 +28,14 @@ namespace CastIt.Server.Interfaces
         Task PlayFile(ServerFileItem file, bool force = false);
         Task PlayFile(ServerFileItem file, bool force, bool fileOptionsChanged);
         FileItemResponseDto GetCurrentPlayedFile();
-        Task UpdatePlayList(long playListId, string newName, int? position = -1);
+        Task UpdatePlayList(long playListId, string newName);
+        void UpdatePlayListPosition(long playListId, int newIndex);
+        void UpdateFilePosition(long playListId, long id, int newIndex);
         Task RemoveFilesThatStartsWith(long playListId, string path);
         Task RemoveAllMissingFiles(long playListId);
         Task RemoveFiles(long playListId, params long[] ids);
         void SortFiles(long playListId, SortModeType sortBy);
-        void SetPositionIfChanged(long playListId);
+        void SetFilePositionIfChanged(long playListId);
         Task AddFolder(long playListId, bool includeSubFolders, string[] folders);
         Task AddFiles(long playListId, string[] paths);
         Task AddFile(long playListId, FileItem file);
@@ -52,18 +54,16 @@ namespace CastIt.Server.Interfaces
         Task DeleteAllPlayLists(long exceptId);
         void RefreshPlayListImages();
 
-        Task StopPlayback(bool nullPlayedFile = true);
+        Task StopPlayback(bool nullPlayedFile = true, bool disableLoopForAll = true);
 
         void CleanPlayedFile(bool nullPlayedFile = true);
 
-        void LoopFile(long id, long playListId, bool loop);
+        void LoopFile(long playListId, long id, bool loop);
 
         Task SetCurrentPlayedFileOptions(int streamIndex, bool isAudio, bool isSubTitle, bool isQuality);
 
         Task SetFileSubtitlesFromPath(string filePath);
 
-        Task<string> GetClosestPreviewThumbnailForPlayedFile(long tentativeSecond);
-
-        Task<string> GetClosestPreviewThumbnail(ServerFileItem file, long tentativeSecond);
+        Task<byte[]> GetClosestPreviewThumbnail(long tentativeSecond);
     }
 }

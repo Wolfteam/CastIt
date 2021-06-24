@@ -76,7 +76,10 @@ namespace CastIt.Server
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.Formatting = Formatting.Indented;
                 });
-            services.AddSignalR();
+            services.AddSignalR(o =>
+            {
+                o.EnableDetailedErrors = true;
+            });
             services.AddSingleton<IAppDataService, AppDataService>();
             services.AddSingleton<IServerCastService, ServerCastService>();
             services.AddSingleton<IBaseWebServer, FakeAppWebServer>();

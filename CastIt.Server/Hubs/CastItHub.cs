@@ -55,6 +55,8 @@ namespace CastIt.Server.Hubs
 
         Task PlayListChanged(GetAllPlayListResponseDto playList);
 
+        Task PlayListsChanged(List<GetAllPlayListResponseDto> playLists);
+
         Task PlayListDeleted(long id);
 
         Task PlayListIsBusy(long id, bool isBusy);
@@ -62,6 +64,8 @@ namespace CastIt.Server.Hubs
         Task FileAdded(FileItemResponseDto file);
 
         Task FileChanged(FileItemResponseDto file);
+
+        Task FilesChanged(List<FileItemResponseDto> files);
 
         Task FileDeleted(long playListId, long id);
 
@@ -120,7 +124,7 @@ namespace CastIt.Server.Hubs
         #region Client Msgs
         public Task Play(PlayFileRequestDto dto)
         {
-            return _castService.PlayFile(dto.Id, dto.Force, dto.FileOptionsChanged);
+            return _castService.PlayFile(dto.PlayListId, dto.Id, dto.Force, dto.FileOptionsChanged);
         }
 
         public Task GoToSeconds(double seconds)
@@ -161,7 +165,7 @@ namespace CastIt.Server.Hubs
 
         public Task LoopFile(SetLoopFileRequestDto dto)
         {
-            _castService.LoopFile(dto.Id, dto.PlayListId, dto.Loop);
+            _castService.LoopFile(dto.PlayListId, dto.Id, dto.Loop);
             return Task.CompletedTask;
         }
 
@@ -195,7 +199,13 @@ namespace CastIt.Server.Hubs
 
         public Task UpdatePlayList(UpdatePlayListRequestDto dto)
         {
-            return _castService.UpdatePlayList(dto.Id, dto.Name, dto.Position);
+            return _castService.UpdatePlayList(dto.Id, dto.Name);
+        }
+
+        public Task UpdatePlayListPosition(long playListId, int newIndex)
+        {
+            _castService.UpdatePlayListPosition(playListId, newIndex);
+            return Task.CompletedTask;
         }
 
         public Task SetPlayListOptions(SetPlayListOptionsRequestDto dto)
@@ -257,6 +267,18 @@ namespace CastIt.Server.Hubs
         public Task RefreshCastDevices(TimeSpan ts)
         {
             return _castService.RefreshCastDevices(ts);
+        }
+
+        public Task SortFiles(long playListId, SortModeType sortMode)
+        {
+            _castService.SortFiles(playListId, sortMode);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateFilePosition(long playListId, long id, int newIndex)
+        {
+            _castService.UpdateFilePosition(playListId, id, newIndex);
+            return Task.CompletedTask;
         }
 
         public Task CloseApp()

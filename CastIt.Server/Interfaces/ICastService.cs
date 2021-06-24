@@ -25,21 +25,20 @@ namespace CastIt.Server.Interfaces
         OnDisconnectedHandler OnDisconnected { get; set; }
         OnVolumeChangedHandler OnVolumeChanged { get; set; }
         OnServerMessageHandler OnServerMessage { get; set; }
-
-        //OnFileLoadingHandler OnFileLoading { get; set; }
         OnAppClosingHandler OnAppClosing { get; set; }
         OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
 
         OnPlayListAddedHandler OnPlayListAdded { get; set; }
         OnPlayListChangedHandler OnPlayListChanged { get; set; }
+        OnPlayListsChangedHandler OnPlayListsChanged { get; set; }
         OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
         OnPlayListBusyHandler OnPlayListBusy { get; set; }
 
         OnFileAddedHandler OnFileAdded { get; set; }
         OnFileChangedHandler OnFileChanged { get; set; }
+        OnFilesChangedHandler OnFilesChanged { get; set; }
         OnFileDeletedHandler OnFileDeleted { get; set; }
 
-        Func<string> GetSubTitles { get; set; }
         bool IsPlayingOrPaused { get; }
         int CurrentVideoStreamIndex { get; }
         int CurrentAudioStreamIndex { get; }

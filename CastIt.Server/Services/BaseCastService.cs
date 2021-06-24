@@ -67,15 +67,15 @@ namespace CastIt.Server.Services
 
         public OnPlayListAddedHandler OnPlayListAdded { get; set; }
         public OnPlayListChangedHandler OnPlayListChanged { get; set; }
+        public OnPlayListsChangedHandler OnPlayListsChanged { get; set; }
         public OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
         public OnPlayListBusyHandler OnPlayListBusy { get; set; }
 
         public OnFileAddedHandler OnFileAdded { get; set; }
         public OnFileChangedHandler OnFileChanged { get; set; }
+        public OnFilesChangedHandler OnFilesChanged { get; set; }
         public OnFileDeletedHandler OnFileDeleted { get; set; }
         #endregion
-
-        public Func<string> GetSubTitles { get; set; }
 
         public bool IsPlayingOrPaused => Player.IsPlayingOrPaused;
         public int CurrentVideoStreamIndex { get; private set; }
@@ -220,13 +220,13 @@ namespace CastIt.Server.Services
             double seconds)
         {
             Logger.LogInformation($"{nameof(BuildMetadataForLocalFile)}: File is a local one, generating metadata...");
-            bool videoNeedsTranscode = type.IsVideo() && FFmpegService.VideoNeedsTranscode(
+            bool videoNeedsTranscode = type.IsLocalVideo() && FFmpegService.VideoNeedsTranscode(
                 videoStreamIndex, AppSettings.ForceVideoTranscode,
                 AppSettings.VideoScale, CurrentFileInfo);
             bool audioNeedsTranscode = FFmpegService.AudioNeedsTranscode(
                 audioStreamIndex, AppSettings.ForceAudioTranscode,
-                CurrentFileInfo, type.IsMusic());
-            var hwAccelToUse = type.IsVideo()
+                CurrentFileInfo, type.IsLocalMusic());
+            var hwAccelToUse = type.IsLocalVideo()
                 ? FFmpegService.GetHwAccelToUse(videoStreamIndex, CurrentFileInfo, AppSettings.EnableHardwareAcceleration)
                 : HwAccelDeviceType.None;
 
@@ -254,11 +254,11 @@ namespace CastIt.Server.Services
                 Duration = CurrentFileInfo.Format.Duration
             };
 
-            if (type.IsVideo())
+            if (type.IsLocalVideo())
             {
                 media.StreamType = StreamType.Live;
             }
-            else if (type.IsMusic())
+            else if (type.IsLocalMusic())
             {
                 media.Metadata = new MusicTrackMediaMetadata
                 {
@@ -385,14 +385,16 @@ namespace CastIt.Server.Services
 
         protected abstract Task<string> SavePreviewImageFromUrl(string url);
 
+        protected abstract Task<string> GetSelectedSubtitlePath();
+
         private async Task SetSubtitlesIfAny(string mrl, MediaInformation media, List<int> activeTrackIds, int subtitleStreamIndex, double seconds)
         {
             bool useSubTitleStream = subtitleStreamIndex >= 0;
-            if (useSubTitleStream || !string.IsNullOrEmpty(GetSubTitles?.Invoke()))
+            var selectedSubtitlePath = await GetSelectedSubtitlePath();
+            if (useSubTitleStream || !string.IsNullOrEmpty(selectedSubtitlePath))
             {
-                Logger.LogInformation(
-                    $"{nameof(StartPlay)}: Subtitles were specified, generating a compatible one...");
-                string subtitleLocation = useSubTitleStream ? mrl : GetSubTitles.Invoke();
+                Logger.LogInformation($"{nameof(StartPlay)}: Subtitles were specified, generating a compatible one...");
+                string subtitleLocation = useSubTitleStream ? mrl : selectedSubtitlePath;
                 string subTitleFilePath = FileService.GetSubTitleFilePath();
                 await FFmpegService.GenerateSubTitles(
                     subtitleLocation,
@@ -815,6 +817,9 @@ namespace CastIt.Server.Services
         public void SendPlayListChanged(GetAllPlayListResponseDto playList)
             => OnPlayListChanged?.Invoke(playList);
 
+        public void SendPlayListsChanged(List<GetAllPlayListResponseDto> playLists)
+            => OnPlayListsChanged?.Invoke(playLists);
+
         public void SendPlayListBusy(long id, bool isBusy)
             => OnPlayListBusy?.Invoke(id, isBusy);
 
@@ -826,6 +831,9 @@ namespace CastIt.Server.Services
 
         public void SendFileChanged(FileItemResponseDto file)
             => OnFileChanged?.Invoke(file);
+
+        public void SendFilesChanged(List<FileItemResponseDto> files)
+            => OnFilesChanged?.Invoke(files);
 
         public void SendFileDeleted(long playListId, long id)
             => OnFileDeleted?.Invoke(playListId, id);
