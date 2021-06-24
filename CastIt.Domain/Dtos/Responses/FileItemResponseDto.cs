@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CastIt.Domain.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace CastIt.Domain.Dtos.Responses
@@ -18,6 +19,7 @@ namespace CastIt.Domain.Dtos.Responses
         public bool Loop { get; set; }
 
         public bool IsBeingPlayed { get; set; }
+        public AppFileType Type { get; set; }
         public bool IsLocalFile { get; set; }
         public bool IsUrlFile { get; set; }
         public double PlayedSeconds { get; set; }

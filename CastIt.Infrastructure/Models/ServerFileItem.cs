@@ -145,7 +145,8 @@ namespace CastIt.Infrastructure.Models
                 CreatedAt = file.CreatedAt,
                 UpdatedAt = file.UpdatedAt,
                 PlayListId = file.PlayListId,
-                Type = fileService.GetFileType(file.Path)
+                Type = fileService.GetFileType(file.Path),
+                PlayedSeconds =  file.PlayedPercentage * file.TotalSeconds / 100
             };
 
             return serverFileItem.UpdateFileInfo(fileInfo);
@@ -245,7 +246,7 @@ namespace CastIt.Infrastructure.Models
         {
             CheckBeforeSettingStream();
             CurrentFileSubTitles.Clear();
-            if (!Type.IsVideo())
+            if (!Type.IsLocalVideo())
                 return this;
 
             bool localSubExists = !string.IsNullOrEmpty(localSubsPath);

@@ -7,16 +7,16 @@ namespace CastIt.Domain.Extensions
         public static bool IsLocalOrHls(this AppFileType type)
             => type.HasFlag(AppFileType.Hls) || type.IsLocal();
 
-        public static bool IsMusic(this AppFileType type)
+        public static bool IsLocalMusic(this AppFileType type)
             => type.HasFlag(AppFileType.LocalMusic);
 
-        public static bool IsVideo(this AppFileType type)
+        public static bool IsLocalVideo(this AppFileType type)
             => type.HasFlag(AppFileType.LocalVideo);
 
         public static bool IsVideoOrMusic(this AppFileType type)
-            => type.IsVideo() || type.IsMusic();
+            => type.IsLocalVideo() || type.IsLocalMusic();
 
-        public static bool IsSubtitle(this AppFileType type)
+        public static bool IsLocalSubtitle(this AppFileType type)
             => type.HasFlag(AppFileType.LocalSubtitle);
 
         public static bool IsUrl(this AppFileType type)
@@ -26,6 +26,6 @@ namespace CastIt.Domain.Extensions
             => type.HasFlag(AppFileType.Na);
 
         public static bool IsLocal(this AppFileType type)
-            => type.IsMusic() || type.IsVideo();
+            => type.IsLocalMusic() || type.IsLocalVideo();
     }
 }

@@ -113,5 +113,8 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public FFmpegOutputArgs WithVideoFilter(string filter)
             => AddArg("vf", filter);
+
+        public FFmpegOutputArgs WithVideoFilters(params string[] filters)
+            => AddArg("vf", string.Join(",", filters));
     }
 }
