@@ -195,13 +195,9 @@ namespace CastIt.Server.Controllers
             Logger.LogTrace(
                 $"{nameof(GetPreviewImageForPlayedFile)}: Checking if we can retrieve an image for " +
                 $"file = {CastService.CurrentPlayedFile?.Filename} on second = {tentativeSecond}...");
-            var path = await CastService.GetClosestPreviewThumbnailForPlayedFile(tentativeSecond);
-            if (!_fileService.IsLocalFile(path))
-            {
-                Logger.LogTrace($"{nameof(GetPreviewImageForPlayedFile)}: Path = {path} does not exist (image may not be ready yet) returning default image");
-                path = _imageProviderService.GetNoImagePath();
-            }
-            return PhysicalFile(path, MediaTypeNames.Image.Jpeg);
+
+            var bytes = await CastService.GetClosestPreviewThumbnail(tentativeSecond);
+            return File(new MemoryStream(bytes), MediaTypeNames.Image.Jpeg);
         }
 
         #region Chromecast
@@ -232,7 +228,7 @@ namespace CastIt.Server.Controllers
                 HttpContext.Response.ContentType = _ffmpegService.GetOutputTranscodeMimeType(dto.Mrl);
                 DisableCaching();
 
-                if (!type.IsMusic())
+                if (!type.IsLocalMusic())
                 {
                     var options = GetVideoFileOptions(dto);
                     Logger.LogInformation($"{nameof(Play)}: Handling request for video file with options = {JsonConvert.SerializeObject(options)}");
