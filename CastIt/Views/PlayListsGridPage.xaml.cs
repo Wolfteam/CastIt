@@ -62,14 +62,7 @@ namespace CastIt.Views
 
             e.Effects = DragDropEffects.Move;
 
-            var currentIndex = mainVm.PlayLists.IndexOf(vm);
-            var newIndex = mainVm.PlayLists.IndexOf(targetCard.Vm);
-            if (currentIndex >= 0 &&
-                newIndex >= 0 &&
-                currentIndex != newIndex)
-            {
-                mainVm.PlayLists.Move(currentIndex, newIndex);
-            }
+            mainVm.MovePlayList(vm, targetCard.Vm);
         }
     }
 }

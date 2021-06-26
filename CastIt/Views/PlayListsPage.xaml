@@ -41,7 +41,7 @@
         FocusVisualStyle="{x:Null}"
         HeaderItemTemplate="{StaticResource PlayListItemHeaderTemplate}"
         ItemsSource="{Binding ViewModel.PlayLists, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}"
-        SelectedIndex="{Binding ViewModel.SelectedPlayListIndex, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}, Mode=TwoWay}"
+        SelectedIndex="{Binding ViewModel.SelectedPlayListIndex, Mode=TwoWay, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}}"
         ShowDefaultCloseButton="True"
         Style="{StaticResource CustomTabablzControlStyle}"
         Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type local:MainPage}, Mode=FindAncestor}, Mode=TwoWay}"

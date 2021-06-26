@@ -62,31 +62,9 @@
             PlacementTarget="{Binding ElementName=MainSlider}"
             StaysOpen="True">
             <Grid>
-                <!--  https://stackoverflow.com/questions/1028519/trying-to-change-a-croppedbitmaps-sourcerect-at-runtime  -->
-                <!--<Image x:Name="ImageThumbnail" Source="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, IsAsync=True, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}">
-                    <Image.Clip>
-                        <RectangleGeometry Rect="0, 0, 350, 200" />
-                    </Image.Clip>
-                    <Image.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform ScaleX="5" ScaleY="5" />
-                            <MatrixTransform Matrix="1, 0, 0, 1, -350, -200" />
-                        </TransformGroup>
-                    </Image.RenderTransform>
-                </Image>-->
                 <Rectangle RadiusX="30" RadiusY="30">
                     <Rectangle.Fill>
-                        <ImageBrush x:Name="ImageThumbnail" ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, IsAsync=False, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}, ConverterParameter=true}">
-                            <!--<ImageBrush.Transform>
-                            -->
-                            <!--  Dummy transforms that gets updated in the code behind  -->
-                            <!--
-                                <TransformGroup>
-                                    <ScaleTransform ScaleX="5" ScaleY="5" />
-                                    <MatrixTransform Matrix="1, 0, 0, 1, -350, -200" />
-                                </TransformGroup>
-                            </ImageBrush.Transform>-->
-                        </ImageBrush>
+                        <ImageBrush x:Name="ImageThumbnail" ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, IsAsync=False, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}, ConverterParameter=true}" />
                     </Rectangle.Fill>
                 </Rectangle>
                 <TextBlock

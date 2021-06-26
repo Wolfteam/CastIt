@@ -1204,6 +1204,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Server is not running.
+        /// </summary>
+        public static string ServerIsNotRunning {
+            get {
+                return ResourceManager.GetString("ServerIsNotRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Server: {0}.
         /// </summary>
         public static string ServerUrl {

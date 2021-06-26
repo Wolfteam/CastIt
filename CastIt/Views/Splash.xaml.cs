@@ -6,6 +6,7 @@ using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using System;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace CastIt.Views
 {
@@ -52,6 +53,10 @@ namespace CastIt.Views
             Dispatcher.Invoke(() =>
             {
                 var window = System.Windows.Application.Current.MainWindow;
+                if (window == null)
+                {
+                    return;
+                }
                 window.Width = width;
                 window.Height = height;
                 if (updateMinSizes)
@@ -64,7 +69,7 @@ namespace CastIt.Views
                 window.ShowInTaskbar = showInTaskBar;
 
                 WindowsUtils.CenterWindow(window);
-            });
+            }, DispatcherPriority.Send);
         }
     }
 }

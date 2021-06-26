@@ -585,4 +585,7 @@
   <data name="ConnectionCouldNotBeEstablished" xml:space="preserve">
     <value>Connection could not be established</value>
   </data>
+  <data name="ServerIsNotRunning" xml:space="preserve">
+    <value>Server is not running</value>
+  </data>
 </root>
