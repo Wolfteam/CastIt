@@ -93,6 +93,9 @@ namespace CastIt
             var basePath = AppFileUtils.GetLogsPath();
             var logs = new List<FileToLog>
             {
+                //Services
+                new FileToLog(typeof(CastItHubClientService), "service_castithub"),
+                new FileToLog(typeof(DesktopAppSettingsService), "service_settings"),
                 //ViewModels
                 new FileToLog(typeof(MainViewModel), "vm_main"),
                 new FileToLog(typeof(DevicesViewModel), "vm_devices"),

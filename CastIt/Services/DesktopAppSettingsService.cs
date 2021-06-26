@@ -17,7 +17,7 @@ namespace CastIt.Services
             => AppFileUtils.GetBaseAppFolder();
 
         public override string AppSettingsFilename
-            => "AppSettings.json";
+            => "DesktopAppSettings.json";
 
         #region Properties
         public AppLanguageType Language

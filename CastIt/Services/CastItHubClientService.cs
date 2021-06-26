@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 
 namespace CastIt.Services
 {
-    //TODO: TRY CATCH THEM ALL (the events)
     public class CastItHubClientService : ICastItHubClientService
     {
         private readonly ILogger<CastItHubClientService> _logger;
