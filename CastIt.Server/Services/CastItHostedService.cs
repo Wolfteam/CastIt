@@ -1,4 +1,5 @@
-﻿using CastIt.Application.Interfaces;
+﻿using AutoMapper;
+using CastIt.Application.Interfaces;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
@@ -27,6 +28,7 @@ namespace CastIt.Server.Services
         private readonly IBaseWebServer _baseWebServer;
         private readonly IFileService _fileService;
         private readonly ITelemetryService _telemetryService;
+        private readonly IMapper _mapper;
 
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
@@ -38,7 +40,8 @@ namespace CastIt.Server.Services
             IFileWatcherService fileWatcherService,
             IFileService fileService,
             IBaseWebServer baseWebServer,
-            ITelemetryService telemetryService)
+            ITelemetryService telemetryService,
+            IMapper mapper)
         {
             _logger = logger;
             _castService = castService;
@@ -48,6 +51,7 @@ namespace CastIt.Server.Services
             _fileService = fileService;
             _baseWebServer = baseWebServer;
             _telemetryService = telemetryService;
+            _mapper = mapper;
 
             SetCastItEventHandlers();
         }
@@ -85,7 +89,7 @@ namespace CastIt.Server.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
+            _logger.LogInformation($"{nameof(StartAsync)}: Deleting server logs and previews...");
             _fileService.DeleteServerLogsAndPreviews();
             _baseWebServer.Init();
 
@@ -393,33 +397,24 @@ namespace CastIt.Server.Services
                 .ToList();
             foreach (var file in files)
             {
-                var playlist = _castService.PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
+                var playlist = _castService.PlayLists.Find(f => f.Id == file.PlayListId);
                 if (playlist == null)
                     continue;
 
                 if (isAFolder)
                 {
+                    //Here I'm not sure how to retain the order
                     await _castService.RemoveFilesThatStartsWith(playlist.Id, oldPath);
                     await _castService.AddFolder(playlist.Id, false, new[] { newPath });
                 }
                 else
                 {
                     await _castService.AddFiles(playlist.Id, new[] { newPath });
+                    _castService.ExchangeLastFilePosition(playlist, file.Id);
                     await _castService.RemoveFiles(playlist.Id, file.Id);
                 }
-                //if (isAFolder)
-                //{
-                //    //Here I'm not sure how to retain the order
-                //    await playlist.RemoveFilesThatStartsWith(oldPath);
-                //    await playlist.OnFolderAddedCommand.ExecuteAsync(new[] { newPath });
-                //}
-                //else
-                //{
-                //    await playlist.OnFilesAddedCommand.ExecuteAsync(new[] { newPath });
-                //    playlist.ExchangeLastFilePosition(file.Id);
-                //    await playlist.RemoveFile(file.Id);
-                //}
-                //_appWebServer?.OnPlayListChanged(playlist.Id);
+
+                OnPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playlist));
             }
         }
         #endregion
