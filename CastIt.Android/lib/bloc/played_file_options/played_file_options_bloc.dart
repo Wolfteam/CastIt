@@ -24,7 +24,7 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
     });
 
     _serverWsBloc.volumeLevelChanged.stream.listen((event) {
-      add(PlayedFileOptionsEvent.volumeChanged(volumeLvl: event.volumeLevel, isMuted: event.isMuted));
+      add(PlayedFileOptionsEvent.volumeChanged(volumeLvl: event!.volumeLevel, isMuted: event.isMuted));
     });
 
     _serverWsBloc.fileLoading.stream.listen((event) {

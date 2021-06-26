@@ -10,13 +10,13 @@ class DeletePlayListBottomSheet extends StatelessWidget {
   final String playListName;
 
   const DeletePlayListBottomSheet({
-    @required this.playListId,
-    @required this.playListName,
+    required this.playListId,
+    required this.playListName,
   });
 
   @override
   Widget build(BuildContext context) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return ConfirmBottomSheet(
       title: i18n.delete,
       icon: Icons.delete,
@@ -27,7 +27,7 @@ class DeletePlayListBottomSheet extends StatelessWidget {
   }
 
   Future<void> _onOk(BuildContext context) async {
-    await context.bloc<ServerWsBloc>().deletePlayList(playListId);
+    await context.read<ServerWsBloc>().deletePlayList(playListId);
     _onCancel(context);
   }
 

@@ -19,7 +19,7 @@ class IntroPage extends StatefulWidget {
 
 class _IntroPageState extends State<IntroPage> {
   final int _maxNumberOfPages = 3;
-  PageController _pageController;
+  late PageController _pageController;
 
   @override
   void initState() {
@@ -30,7 +30,7 @@ class _IntroPageState extends State<IntroPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    context.bloc<SettingsBloc>().add(SettingsEvent.load());
+    context.read<SettingsBloc>().add(SettingsEvent.load());
   }
 
   @override
@@ -65,10 +65,10 @@ class _IntroPageState extends State<IntroPage> {
       loading: (s) => PageView(),
       loaded: (s) => PageView(
         controller: _pageController,
-        onPageChanged: (index) => context.bloc<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
+        onPageChanged: (index) => context.read<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
         children: [
           IntroPageItem(
-            mainTitle: i18n.welcome(i18n.appName),
+            mainTitle: i18n!.welcome(i18n.appName),
             subTitle: i18n.aboutSummary,
             content: i18n.welcomeSummary,
             extraContent: _buildLanguageSettings(s.currentLang),
@@ -88,7 +88,7 @@ class _IntroPageState extends State<IntroPage> {
     );
   }
 
-  Widget _buildBottomSheet(IntroState state) {
+  Widget? _buildBottomSheet(IntroState state) {
     return state.map(
       loading: (_) => null,
       loaded: (s) {
@@ -100,22 +100,21 @@ class _IntroPageState extends State<IntroPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    FlatButton(
+                    TextButton(
                       onPressed: () async {
                         await _showSkipDialog();
                       },
                       child: Text(
-                        i18n.skip.toUpperCase(),
+                        i18n!.skip.toUpperCase(),
                         style: TextStyle(color: theme.accentColor, fontWeight: FontWeight.w600),
                       ),
                     ),
                     Row(
                       children: [
-                        for (int i = 0; i < _maxNumberOfPages; i++)
-                          i == s.page ? _buildPageIndicator(true) : _buildPageIndicator(false),
+                        for (int i = 0; i < _maxNumberOfPages; i++) i == s.page ? _buildPageIndicator(true) : _buildPageIndicator(false),
                       ],
                     ),
-                    FlatButton(
+                    TextButton(
                       onPressed: () => _onNext(s.page, s.currentCastItUrl),
                       child: Text(
                         i18n.next.toUpperCase(),
@@ -132,7 +131,7 @@ class _IntroPageState extends State<IntroPage> {
                   color: theme.accentColor,
                   alignment: Alignment.center,
                   child: Text(
-                    i18n.start.toUpperCase(),
+                    i18n!.start.toUpperCase(),
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -157,7 +156,7 @@ class _IntroPageState extends State<IntroPage> {
   Widget _buildLanguageSettings(
     AppLanguageType currentLang,
   ) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     final dropdown = [AppLanguageType.english, AppLanguageType.spanish]
         .map<DropdownMenuItem<AppLanguageType>>(
           (lang) => DropdownMenuItem<AppLanguageType>(
@@ -188,7 +187,7 @@ class _IntroPageState extends State<IntroPage> {
             hint: Text(i18n.chooseLanguage),
             value: currentLang,
             underline: Container(height: 0, color: Colors.transparent),
-            onChanged: (newValue) => context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
+            onChanged: (newValue) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue!)),
             items: dropdown,
           ),
         ),
@@ -208,7 +207,7 @@ class _IntroPageState extends State<IntroPage> {
       isScrollControlled: true,
       builder: (_) => ChangeConnectionBottomSheetDialog(
         icon: Icons.info_outline,
-        title: i18n.webServerUrl,
+        title: i18n!.webServerUrl,
         currentUrl: castItUrl,
         showRefreshButton: false,
         showOkButton: true,
@@ -227,13 +226,13 @@ class _IntroPageState extends State<IntroPage> {
     );
 
     if (skipped == true) {
-      context.bloc<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
+      context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
     }
   }
 
   void _onUrlSet(String url) {
     Navigator.of(context).pop();
-    context.bloc<IntroBloc>().add(IntroEvent.urlWasSet(url: url));
+    context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: url));
   }
 
   void _onNext(int currentPage, String castitUrl) {
@@ -249,5 +248,5 @@ class _IntroPageState extends State<IntroPage> {
     _pageController.animateToPage(newPage, duration: const Duration(milliseconds: 300), curve: Curves.linear);
   }
 
-  void _onStart() => context.bloc<MainBloc>().add(MainEvent.introCompleted());
+  void _onStart() => context.read<MainBloc>().add(MainEvent.introCompleted());
 }

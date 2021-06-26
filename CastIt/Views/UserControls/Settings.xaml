@@ -38,11 +38,10 @@
         </materialDesign:ColorZone>
         <ScrollViewer
             Grid.Row="1"
-            Padding="16"
             VerticalAlignment="Stretch"
             materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True"
             VerticalScrollBarVisibility="Auto">
-            <Grid HorizontalAlignment="Stretch">
+            <Grid Margin="16" HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />

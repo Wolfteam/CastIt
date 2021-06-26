@@ -45,7 +45,7 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
     });
 
     _serverWsBloc.filePaused.stream.listen((_) {
-      if (state is PlayingState && !currentState.isPaused) {
+      if (state is PlayingState && !currentState.isPaused!) {
         add(PlayEvent.paused());
       }
     });
@@ -55,7 +55,7 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
     });
 
     _serverWsBloc.fileTimeChanged.stream.listen((seconds) {
-      add(PlayEvent.timeChanged(seconds: seconds));
+      add(PlayEvent.timeChanged(seconds: seconds!));
     });
 
     _serverWsBloc.disconnected.stream.listen((_) {
@@ -92,14 +92,14 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       },
       timeChanged: (e) {
         if (!isPlaying) return null;
-        if (currentState.isDraggingSlider) {
+        if (currentState.isDraggingSlider!) {
           return currentState.copyWith.call(isPaused: false);
         }
         //A live stream is being played
-        if (currentState.duration <= 0) {
+        if (currentState.duration! <= 0) {
           return currentState.copyWith.call(currentSeconds: e.seconds, isPaused: false);
         }
-        final s = e.seconds >= currentState.duration ? currentState.duration : e.seconds;
+        final s = e.seconds >= currentState.duration! ? currentState.duration : e.seconds;
         return currentState.copyWith.call(currentSeconds: s, isPaused: false);
       },
       paused: (_) {

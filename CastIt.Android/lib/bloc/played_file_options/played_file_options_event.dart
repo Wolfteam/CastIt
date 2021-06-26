@@ -1,30 +1,30 @@
 part of 'played_file_options_bloc.dart';
 
 @freezed
-abstract class PlayedFileOptionsEvent implements _$PlayedFileOptionsEvent {
+class PlayedFileOptionsEvent with _$PlayedFileOptionsEvent {
   factory PlayedFileOptionsEvent.load({
-    @required int id,
+    required int id,
   }) = PlayedFileOptionsLoadEvent;
 
   factory PlayedFileOptionsEvent.loaded({
-    @required List<FileItemOptionsResponseDto> options,
+    required List<FileItemOptionsResponseDto> options,
   }) = PlayedFileOptionsLoadedEvent;
 
   factory PlayedFileOptionsEvent.setFileOption({
-    @required int streamIndex,
-    @required bool isAudio,
-    @required bool isSubtitle,
-    @required bool isQuality,
+    required int streamIndex,
+    required bool isAudio,
+    required bool isSubtitle,
+    required bool isQuality,
   }) = PlayedFileOptionsSetEvent;
 
   factory PlayedFileOptionsEvent.volumeChanged({
-    @required double volumeLvl,
-    @required bool isMuted,
+    required double volumeLvl,
+    required bool isMuted,
   }) = PlayedFileOptionsVolumeLevelChangedEvent;
 
   factory PlayedFileOptionsEvent.setVolume({
-    @required double volumeLvl,
-    @required bool isMuted,
+    required double volumeLvl,
+    required bool isMuted,
   }) = PlayedFileOptionsSetVolumeEvent;
 
   factory PlayedFileOptionsEvent.closeModal() = PlayedFileOptionsCloseModalEvent;

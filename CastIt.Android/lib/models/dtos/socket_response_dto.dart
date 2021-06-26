@@ -8,17 +8,16 @@ part 'socket_response_dto.g.dart';
 @JsonSerializable()
 class SocketResponseDto<T> extends EmptyResponseDto {
   @JsonKey(name: 'MessageType')
-  final String messageType;
+  final String? messageType;
 
   @JsonGenericConverter()
   @JsonKey(name: 'Result')
-  T result;
+  T? result;
 
   SocketResponseDto({
     this.messageType,
     this.result,
   });
 
-  factory SocketResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$SocketResponseDtoFromJson(json);
+  factory SocketResponseDto.fromJson(Map<String, dynamic> json) => _$SocketResponseDtoFromJson(json);
 }

@@ -42,7 +42,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     BuildContext context,
     SettingsState state,
   ) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     final headerTitle = PageHeader(
       title: i18n.settings,
       icon: Icons.settings,
@@ -62,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           _buildThemeSettings(context, i18n, state.appTheme),
           _buildAccentColorSettings(context, i18n, state.accentColor),
           _buildLanguageSettings(context, i18n, state.appLanguage),
-          if (state.isConected)
+          if (state.isConnected)
             _buildOtherSettings(
               context,
               i18n,
@@ -284,7 +284,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         color: Colors.transparent,
       ),
       onChanged: (newValue) => _updateSettings(
-        newValue,
+        newValue!,
         playFromTheStart,
         playNextFileAutomatically,
         forceVideoTranscode,
@@ -331,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           onTap: () => _showConnectionDialog(i18n.webServerUrl, castItUrl),
         ),
         ListTile(
-          onTap: _showCloseappDialog,
+          onTap: _showCloseAppDialog,
           contentPadding: const EdgeInsets.only(right: 20, left: 16),
           title: Text(i18n.closeDesktopApp),
           trailing: const Icon(Icons.cast),
@@ -474,7 +474,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
                   i18n.donations,
-                  style: textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.subtitle1!.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Text(
@@ -484,7 +484,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                 margin: const EdgeInsets.only(top: 10),
                 child: Text(
                   i18n.support,
-                  style: textTheme.subtitle1.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.subtitle1!.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Container(
@@ -530,7 +530,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                 decoration: TextDecoration.underline,
                 decorationColor: Colors.blue,
               ),
-              recognizer: TapGestureRecognizer()..onTap = () => _lauchUrl(url),
+              recognizer: TapGestureRecognizer()..onTap = () => _launchUrl(url),
             ),
           ],
         ),
@@ -538,24 +538,24 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     );
   }
 
-  Future<void> _lauchUrl(String url) async {
+  Future<void> _launchUrl(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
     }
   }
 
-  void _appThemeChanged(AppThemeType newValue) {
-    context.bloc<SettingsBloc>().add(SettingsEvent.themeChanged(theme: newValue));
-    context.bloc<MainBloc>().add(MainEvent.themeChanged(theme: newValue));
+  void _appThemeChanged(AppThemeType? newValue) {
+    context.read<SettingsBloc>().add(SettingsEvent.themeChanged(theme: newValue!));
+    context.read<MainBloc>().add(MainEvent.themeChanged(theme: newValue));
   }
 
   void _accentColorChanged(AppAccentColorType newValue) {
-    context.bloc<SettingsBloc>().add(SettingsEvent.accentColorChanged(accentColor: newValue));
-    context.bloc<MainBloc>().add(MainEvent.accentColorChanged(accentColor: newValue));
+    context.read<SettingsBloc>().add(SettingsEvent.accentColorChanged(accentColor: newValue));
+    context.read<MainBloc>().add(MainEvent.accentColorChanged(accentColor: newValue));
   }
 
-  void _languageChanged(AppLanguageType newValue) {
-    context.bloc<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue));
+  void _languageChanged(AppLanguageType? newValue) {
+    context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue!));
   }
 
 //TODO: SOMETIMES SETTINGS ARE NOT UPDATING
@@ -567,7 +567,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     bool forceAudioTranscode,
     bool enableHwAccel,
   ) {
-    final bloc = context.bloc<ServerWsBloc>();
+    final bloc = context.read<ServerWsBloc>();
     return bloc.updateSettings(
       enableHwAccel: enableHwAccel,
       forceAudioTranscode: forceAudioTranscode,
@@ -592,17 +592,17 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     );
   }
 
-  void _showCloseappDialog() {
-    final i18n = I18n.of(context);
+  void _showCloseAppDialog() {
+    final i18n = I18n.of(context)!;
     final theme = Theme.of(context);
-    final cancelButton = OutlineButton(
+    final cancelButton = OutlinedButton(
       onPressed: () => Navigator.of(context).pop(),
       child: Text(i18n.cancel, style: TextStyle(color: theme.primaryColor)),
     );
-    final continueButton = RaisedButton(
+    final continueButton = ElevatedButton(
       onPressed: () async {
         Navigator.of(context).pop();
-        await context.bloc<ServerWsBloc>().closeDesktopApp();
+        await context.read<ServerWsBloc>().closeDesktopApp();
       },
       child: Text(i18n.ok),
     );

@@ -31,7 +31,7 @@ class PlayProgressBar extends StatelessWidget {
 
   Slider _buildPlayingSlider(PlayingState state, BuildContext context) {
     final theme = Theme.of(context);
-    if (state.duration <= 0) {
+    if (state.duration! <= 0) {
       return Slider(
         onChanged: null,
         value: 100,
@@ -40,17 +40,15 @@ class PlayProgressBar extends StatelessWidget {
       );
     }
     return Slider(
-      onChanged: (double value) =>
-          context.bloc<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
-      value: state.currentSeconds,
-      max: state.duration,
+      onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
+      value: state.currentSeconds!,
+      max: state.duration!,
       activeColor: theme.accentColor,
-      label: _generateLabel(state.currentSeconds),
-      divisions: state.duration.round(),
-      onChangeStart: (startValue) => context.bloc<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
-      onChangeEnd: (finalValue) => context
-          .bloc<PlayBloc>()
-          .add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
+      label: _generateLabel(state.currentSeconds!),
+      divisions: state.duration!.round(),
+      onChangeStart: (startValue) => context.read<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
+      onChangeEnd: (finalValue) =>
+          context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
     );
   }
 

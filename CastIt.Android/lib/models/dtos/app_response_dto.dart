@@ -9,12 +9,11 @@ part 'app_response_dto.g.dart';
 class AppResponseDto<T> extends EmptyResponseDto {
   @JsonGenericConverter()
   @JsonKey(name: 'Result')
-  T result;
+  T? result;
 
   AppResponseDto({
     this.result,
   });
 
-  factory AppResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$AppResponseDtoFromJson(json);
+  factory AppResponseDto.fromJson(Map<String, dynamic> json) => _$AppResponseDtoFromJson(json);
 }

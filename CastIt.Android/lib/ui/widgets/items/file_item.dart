@@ -28,24 +28,24 @@ class FileItem extends StatelessWidget {
   final double playedSeconds;
 
   const FileItem({
-    @required this.position,
-    @required this.id,
-    @required this.playListId,
-    @required this.totalSeconds,
-    @required this.isBeingPlayed,
-    @required this.name,
-    @required this.path,
-    @required this.size,
-    @required this.ext,
-    @required this.playedPercentage,
-    @required this.exists,
-    @required this.isLocalFile,
-    @required this.isUrlFile,
-    @required this.loop,
-    @required this.itemHeight,
-    @required this.subtitle,
-    @required this.playedSeconds,
-    Key key,
+    required this.position,
+    required this.id,
+    required this.playListId,
+    required this.totalSeconds,
+    required this.isBeingPlayed,
+    required this.name,
+    required this.path,
+    required this.size,
+    required this.ext,
+    required this.playedPercentage,
+    required this.exists,
+    required this.isLocalFile,
+    required this.isUrlFile,
+    required this.loop,
+    required this.itemHeight,
+    required this.subtitle,
+    required this.playedSeconds,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -129,13 +129,13 @@ class FileItem extends StatelessWidget {
   }
 
   void _playFile(BuildContext ctx) {
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.playFile(id, playListId);
     _goToMainPage(ctx);
   }
 
   void _goToMainPage(BuildContext ctx) {
-    ctx.bloc<MainBloc>().add(MainEvent.goToTab(index: 0));
+    ctx.read<MainBloc>().add(MainEvent.goToTab(index: 0));
     Navigator.of(ctx).pop();
   }
 

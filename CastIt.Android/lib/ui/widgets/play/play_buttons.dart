@@ -10,7 +10,7 @@ class PlayButtons extends StatelessWidget {
   final bool areDisabled;
 
   const PlayButtons({
-    Key key,
+    Key? key,
     this.areDisabled = false,
   }) : super(key: key);
 
@@ -44,7 +44,7 @@ class PlayButtons extends StatelessWidget {
             child: BlocBuilder<PlayBloc, PlayState>(
               builder: (ctx, state) {
                 if (state is PlayingState) {
-                  return _buildPlayBackButton(context, state.isPaused);
+                  return _buildPlayBackButton(context, state.isPaused!);
                 }
                 return _buildPlayBackButton(context, false);
               },
@@ -79,18 +79,18 @@ class PlayButtons extends StatelessWidget {
   }
 
   void _togglePlayBack(BuildContext ctx) {
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.togglePlayBack();
   }
 
   void _goTo(BuildContext ctx, bool next, bool previous) {
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.goTo(next: next, previous: previous);
   }
 
   void _skipThirtySeconds(BuildContext ctx, bool forward) {
     final seconds = 30.0 * (forward ? 1 : -1);
-    final bloc = ctx.bloc<ServerWsBloc>();
+    final bloc = ctx.read<ServerWsBloc>();
     bloc.skipSeconds(seconds);
   }
 }

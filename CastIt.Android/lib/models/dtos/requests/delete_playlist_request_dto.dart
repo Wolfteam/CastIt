@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../base_socket_request_dto.dart';
@@ -6,16 +5,15 @@ import '../base_socket_request_dto.dart';
 part 'delete_playlist_request_dto.g.dart';
 
 @JsonSerializable()
-class DeletePlayListRequestDto extends BaseSocketRequestDto {
+class DeletePlayListRequestDto extends AbstractBaseSocketRequestDto {
   @JsonKey(name: 'Id')
   final int id;
 
   DeletePlayListRequestDto({
-    @required String msgType,
-    @required this.id,
-  }) : super(messageType: msgType);
+    required this.id,
+  }) : super();
 
   factory DeletePlayListRequestDto.fromJson(Map<String, dynamic> json) => _$DeletePlayListRequestDtoFromJson(json);
-  @override
+
   Map<String, dynamic> toJson() => _$DeletePlayListRequestDtoToJson(this);
 }

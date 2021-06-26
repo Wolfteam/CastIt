@@ -10,16 +10,16 @@ import 'modal_sheet_separator.dart';
 
 class ChangeConnectionBottomSheetDialog extends StatefulWidget {
   final String currentUrl;
-  final String title;
-  final IconData icon;
+  final String? title;
+  final IconData? icon;
   final bool showRefreshButton;
   final bool showOkButton;
-  final Function(String) onOk;
-  final Function onCancel;
+  final Function(String)? onOk;
+  final Function? onCancel;
 
   const ChangeConnectionBottomSheetDialog({
-    Key key,
-    @required this.currentUrl,
+    Key? key,
+    required this.currentUrl,
     this.title,
     this.icon,
     this.showOkButton = false,
@@ -33,7 +33,7 @@ class ChangeConnectionBottomSheetDialog extends StatefulWidget {
 }
 
 class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBottomSheetDialog> {
-  TextEditingController _urlController;
+  late TextEditingController _urlController;
 
   @override
   void initState() {
@@ -47,7 +47,6 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
     final theme = Theme.of(context);
     final i18n = I18n.of(context);
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
@@ -58,13 +57,13 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
             children: <Widget>[
               ModalSheetSeparator(),
               BottomSheetTitle(
-                title: widget.title ?? i18n.noConnectionToDesktopApp,
+                title: widget.title ?? i18n!.noConnectionToDesktopApp,
                 icon: widget.icon ?? Icons.warning,
               ),
               TextFormField(
                 minLines: 1,
-                validator: (_) => (state as SettingsLoadedState).isCastItUrlValid ? null : i18n.invalidUrl,
-                autovalidate: true,
+                validator: (_) => (state as SettingsLoadedState).isCastItUrlValid ? null : i18n!.invalidUrl,
+                autovalidateMode: AutovalidateMode.always,
                 controller: _urlController,
                 keyboardType: TextInputType.url,
                 textInputAction: TextInputAction.done,
@@ -77,7 +76,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                           onPressed: !(state as SettingsLoadedState).isCastItUrlValid ? null : _onRefreshClick,
                         ),
                   alignLabelWithHint: true,
-                  hintText: i18n.url,
+                  hintText: i18n!.url,
                   labelText: i18n.url,
                 ),
               ),
@@ -101,19 +100,20 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
               ButtonBar(
                 buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
                 children: <Widget>[
-                  OutlineButton(
-                    onPressed: widget.onCancel != null ? () => widget.onCancel() : _onCancel,
+                  OutlinedButton(
+                    onPressed: widget.onCancel != null ? () => widget.onCancel!() : _onCancel,
                     child: Text(
                       i18n.cancel,
                       style: TextStyle(color: theme.primaryColor),
                     ),
                   ),
                   if (widget.showOkButton)
-                    RaisedButton(
-                      color: theme.primaryColor,
+                    ElevatedButton(
                       onPressed: !(state as SettingsLoadedState).isCastItUrlValid
                           ? null
-                          : widget.onOk != null ? () => widget.onOk(_urlController.text) : _onRefreshClick,
+                          : widget.onOk != null
+                              ? () => widget.onOk!(_urlController.text)
+                              : _onRefreshClick,
                       child: Text(i18n.ok),
                     )
                 ],
@@ -132,14 +132,14 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
   }
 
   void _urlChanged() {
-    context.bloc<SettingsBloc>().add(SettingsEvent.castItUrlChanged(castItUrl: _urlController.text));
+    context.read<SettingsBloc>().add(SettingsEvent.castItUrlChanged(castItUrl: _urlController.text));
   }
 
   void _onCancel() => Navigator.pop(context);
 
   void _onRefreshClick() {
-    // context.bloc<PlayListsBloc>().add(PlayListsEvent.load());
-    context.bloc<ServerWsBloc>().add(ServerWsEvent.updateUrlAndConnectToWs(castItUrl: _urlController.text));
+    // context.read<PlayListsBloc>().add(PlayListsEvent.load());
+    context.read<ServerWsBloc>().add(ServerWsEvent.updateUrlAndConnectToWs(castItUrl: _urlController.text));
     _onCancel();
   }
 }

@@ -6,9 +6,9 @@ class PageHeader extends StatelessWidget {
   final double iconSize;
   final EdgeInsetsGeometry margin;
   const PageHeader({
-    Key key,
-    @required this.title,
-    @required this.icon,
+    Key? key,
+    required this.title,
+    required this.icon,
     this.iconSize = 40,
     this.margin = const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
   }) : super(key: key);

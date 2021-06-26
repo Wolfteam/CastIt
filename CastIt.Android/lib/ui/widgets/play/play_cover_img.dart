@@ -12,21 +12,21 @@ import '../../pages/playlist_page.dart';
 import '../modals/played_file_options_bottom_sheet_dialog.dart';
 
 class PlayCoverImg extends StatelessWidget {
-  final int fileId;
-  final String thumbUrl;
-  final int playListId;
-  final String playListName;
-  final String fileName;
+  final int? fileId;
+  final String? thumbUrl;
+  final int? playListId;
+  final String? playListName;
+  final String? fileName;
   final bool showLoading;
   final bool loopFile;
   final bool loopPlayList;
   final bool shufflePlayList;
 
-  bool get fileIdIsValid => fileId != null && fileId > 0;
-  bool get playListIsValid => playListId != null && playListId > 0;
+  bool get fileIdIsValid => fileId != null && fileId! > 0;
+  bool get playListIsValid => playListId != null && playListId! > 0;
 
   const PlayCoverImg({
-    Key key,
+    Key? key,
     this.fileId,
     this.playListId,
     this.playListName,
@@ -45,7 +45,7 @@ class PlayCoverImg extends StatelessWidget {
       children: <Widget>[
         if (!thumbUrl.isNullEmptyOrWhitespace && !showLoading)
           CachedNetworkImage(
-            imageUrl: thumbUrl,
+            imageUrl: thumbUrl!,
             imageBuilder: (ctx, imageProvider) => Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -93,7 +93,7 @@ class PlayCoverImg extends StatelessWidget {
   }
 
   Widget _buildTop(BuildContext context) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
@@ -114,7 +114,7 @@ class PlayCoverImg extends StatelessWidget {
               ),
             ),
             Text(
-              playListName.isNullEmptyOrWhitespace ? '' : playListName,
+              playListName.isNullEmptyOrWhitespace ? '' : playListName!,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white),
             ),
@@ -133,7 +133,7 @@ class PlayCoverImg extends StatelessWidget {
 
   Widget _buildBottom(BuildContext context) {
     final theme = Theme.of(context);
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
@@ -146,9 +146,9 @@ class PlayCoverImg extends StatelessWidget {
           ),
           Flexible(
             child: Tooltip(
-              message: fileName.isNullEmptyOrWhitespace ? i18n.na : fileName,
+              message: fileName.isNullEmptyOrWhitespace ? i18n.na : fileName!,
               child: Text(
-                fileName.isNullEmptyOrWhitespace ? '' : fileName,
+                fileName.isNullEmptyOrWhitespace ? '' : fileName!,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28.0),
@@ -166,13 +166,13 @@ class PlayCoverImg extends StatelessWidget {
   }
 
   void _goToPlayList(BuildContext context) {
-    context.bloc<PlayListBloc>().add(PlayListEvent.load(id: playListId));
-    final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId, scrollToFileId: fileId));
+    context.read<PlayListBloc>().add(PlayListEvent.load(id: playListId!));
+    final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId!, scrollToFileId: fileId));
     Navigator.of(context).push(route);
   }
 
   void _showFileOptionsModal(BuildContext context) {
-    context.bloc<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.load(id: fileId));
+    context.read<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.load(id: fileId!));
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
@@ -183,8 +183,7 @@ class PlayCoverImg extends StatelessWidget {
   }
 
   Future<void> _togglePlayListShuffle(BuildContext context) =>
-      context.bloc<ServerWsBloc>().setPlayListOptions(playListId, loop: loopPlayList, shuffle: !shufflePlayList);
+      context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
 
-  Future<void> _toggleFileLoop(BuildContext context) =>
-      context.bloc<ServerWsBloc>().loopFile(fileId, playListId, loop: !loopFile);
+  Future<void> _toggleFileLoop(BuildContext context) => context.read<ServerWsBloc>().loopFile(fileId!, playListId!, loop: !loopFile);
 }

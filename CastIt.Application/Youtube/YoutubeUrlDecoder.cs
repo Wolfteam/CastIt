@@ -616,6 +616,12 @@ namespace CastIt.Application.Youtube
         {
             string livePattern = @"(?<=hlsManifestUrl\\"":\\"").*?(?=\\)";
             var liveMatch = Regex.Match(body, livePattern);
+            if (!liveMatch.Success)
+            {
+                livePattern = "(?<=hlsManifestUrl\":\").*?(?=\")";
+            }
+
+            liveMatch = Regex.Match(body, livePattern);
             return (liveMatch.Success, liveMatch.Value);
         }
 

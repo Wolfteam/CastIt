@@ -13,7 +13,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         margin: Styles.modalBottomSheetContainerMargin,
         padding: Styles.modalBottomSheetContainerPadding,
@@ -21,7 +20,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           listener: (ctx, state) {
             state.maybeWhen(
               closed: () {
-                if (ModalRoute.of(context).isCurrent) {
+                if (ModalRoute.of(context)!.isCurrent) {
                   Navigator.of(ctx).pop();
                 }
               },
@@ -41,7 +40,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
   }
 
   List<Widget> _buildPage(BuildContext context, PlayedFileOptionsState state) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     final separator = ModalSheetSeparator();
     final title = BottomSheetTitle(icon: Icons.play_circle_filled, title: i18n.fileOptions);
     return state.map(
@@ -58,7 +57,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
           _buildSubtitleOptions(context, i18n, s.options),
           _buildQualitiesOptions(context, i18n, s.options),
           _buildVolumeOptions(context, i18n, s.volumeLvl, s.isMuted),
-          OutlineButton.icon(
+          OutlinedButton.icon(
             onPressed: () => _stopPlayback(context),
             icon: const Icon(Icons.stop),
             label: Text(i18n.stopPlayback),
@@ -120,7 +119,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
         height: 0,
         color: Colors.transparent,
       ),
-      onChanged: options.length <= 1 ? null : (newValue) => _setOption(context, newValue),
+      onChanged: options.length <= 1 ? null : (newValue) => _setOption(context, newValue!),
       items: options
           .map<DropdownMenuItem<FileItemOptionsResponseDto>>(
             (fo) => DropdownMenuItem<FileItemOptionsResponseDto>(
@@ -199,15 +198,14 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       isQuality: option.isQuality,
     );
     Navigator.of(context).pop();
-    context.bloc<PlayedFileOptionsBloc>().add(event);
+    context.read<PlayedFileOptionsBloc>().add(event);
   }
 
-  void _setVolume(BuildContext context, double volumeLevel, bool isMuted) => context
-      .bloc<PlayedFileOptionsBloc>()
-      .add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
+  void _setVolume(BuildContext context, double volumeLevel, bool isMuted) =>
+      context.read<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.setVolume(volumeLvl: volumeLevel, isMuted: isMuted));
 
   Future<void> _stopPlayback(BuildContext context) async {
-    await context.bloc<ServerWsBloc>().stopPlayBack();
+    await context.read<ServerWsBloc>().stopPlayBack();
     Navigator.of(context).pop();
   }
 }

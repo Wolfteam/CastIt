@@ -6,7 +6,7 @@ import 'confirm_bottom_sheet.dart';
 class SkipIntroBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return ConfirmBottomSheet(
       title: i18n.confirm,
       icon: Icons.skip_next,

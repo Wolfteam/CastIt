@@ -6,8 +6,8 @@ part 'refresh_playlist_response_dto.g.dart';
 @freezed
 abstract class RefreshPlayListResponseDto implements _$RefreshPlayListResponseDto {
   factory RefreshPlayListResponseDto({
-    @required @JsonKey(name: 'Id') int id,
-    @required @JsonKey(name: 'WasDeleted') bool wasDeleted,
+    @JsonKey(name: 'Id') required int id,
+    @JsonKey(name: 'WasDeleted') required bool wasDeleted,
   }) = _RefreshPlayListResponseDto;
 
   factory RefreshPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$RefreshPlayListResponseDtoFromJson(json);

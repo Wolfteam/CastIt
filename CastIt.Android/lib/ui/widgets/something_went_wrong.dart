@@ -7,7 +7,7 @@ class SomethingWentWrong extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final i18n = I18n.of(context);
+    final i18n = I18n.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Column(

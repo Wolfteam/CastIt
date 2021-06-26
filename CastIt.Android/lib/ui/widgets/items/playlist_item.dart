@@ -16,12 +16,12 @@ class PlayListItem extends StatelessWidget {
   final String totalDuration;
 
   const PlayListItem({
-    @required this.id,
-    @required this.name,
-    @required this.numberOfFiles,
-    @required this.loop,
-    @required this.shuffle,
-    @required this.totalDuration,
+    required this.id,
+    required this.name,
+    required this.numberOfFiles,
+    required this.loop,
+    required this.shuffle,
+    required this.totalDuration,
   });
 
   @override
@@ -57,7 +57,7 @@ class PlayListItem extends StatelessWidget {
   }
 
   void _goToPlayListPage(BuildContext context) {
-    context.bloc<PlayListBloc>().add(PlayListEvent.load(id: id));
+    context.read<PlayListBloc>().add(PlayListEvent.load(id: id));
     final route = MaterialPageRoute(
       builder: (ctx) => PlayListPage(id: id),
     );

@@ -61,16 +61,16 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   final StreamController<void> fileLoading = StreamController.broadcast();
   final StreamController<FileLoadedResponseDto> fileLoaded = StreamController.broadcast();
   final StreamController<String> fileLoadingError = StreamController.broadcast();
-  final StreamController<double> fileTimeChanged = StreamController.broadcast();
+  final StreamController<double?> fileTimeChanged = StreamController.broadcast();
   final StreamController<void> filePaused = StreamController.broadcast();
   final StreamController<void> fileEndReached = StreamController.broadcast();
   final StreamController<void> disconnected = StreamController.broadcast();
   final StreamController<void> appClosing = StreamController.broadcast();
-  final StreamController<AppSettingsResponseDto> settingsChanged = StreamController.broadcast();
+  final StreamController<AppSettingsResponseDto?> settingsChanged = StreamController.broadcast();
   final StreamController<List<GetAllPlayListResponseDto>> playlistsLoaded = StreamController.broadcast();
-  final StreamController<PlayListItemResponseDto> playlistLoaded = StreamController.broadcast();
+  final StreamController<PlayListItemResponseDto?> playlistLoaded = StreamController.broadcast();
   final StreamController<List<FileItemOptionsResponseDto>> fileOptionsLoaded = StreamController.broadcast();
-  final StreamController<VolumeLevelChangedResponseDto> volumeLevelChanged = StreamController.broadcast();
+  final StreamController<VolumeLevelChangedResponseDto?> volumeLevelChanged = StreamController.broadcast();
   final StreamController<RefreshPlayListResponseDto> refreshPlayList = StreamController.broadcast();
 
   final SettingsService _settings;
@@ -78,7 +78,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   bool isServerRunning = false;
 
-  IOWebSocketChannel _channel;
+  IOWebSocketChannel? _channel;
 
   ServerWsState get initialState => ServerWsState.loading();
 
@@ -113,7 +113,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         return currentState.copyWith(
           isConnectedToWs: false,
           castItUrl: _settings.castItUrl,
-          connectionRetries: currentState.connectionRetries + 1,
+          connectionRetries: currentState.connectionRetries! + 1,
         );
       },
       disconnectFromWs: () {
@@ -121,7 +121,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         return currentState.copyWith(
           isConnectedToWs: false,
           castItUrl: _settings.castItUrl,
-          connectionRetries: currentState.connectionRetries + 1,
+          connectionRetries: currentState.connectionRetries! + 1,
         );
       },
       updateUrlAndConnectToWs: (castitUrl) {
@@ -132,7 +132,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         return currentState.copyWith(
           isConnectedToWs: isServerRunning,
           castItUrl: castitUrl,
-          connectionRetries: currentState.connectionRetries + 1,
+          connectionRetries: currentState.connectionRetries! + 1,
         );
       },
       showMsg: (msg) {
@@ -207,7 +207,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       final url = _getWsUrl();
       _channel = IOWebSocketChannel.connect(url, pingInterval: const Duration(seconds: 2));
 
-      _channel.stream.listen((event) {
+      _channel!.stream.listen((event) {
         final jsonMap = json.decode(event as String) as Map<String, dynamic>;
         _handleSocketMsg(jsonMap);
       }, onError: (e, StackTrace s) async {
@@ -225,7 +225,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   void _disconnectFromWs({bool triggerEvent = true}) {
     if (_channel != null) {
-      _channel.sink.close(status_codes.goingAway, 'Disconnected');
+      _channel!.sink.close(status_codes.goingAway, 'Disconnected');
     }
 
     // isServerRunning = false;
@@ -237,7 +237,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   void _handleSocketMsg(Map<String, dynamic> json) {
     if (!json.containsKey('MessageType')) return;
-    final msgType = json['MessageType'] as String;
+    final msgType = json['MessageType'] as String?;
     final response = SocketResponseDto.fromJson(json);
     switch (msgType) {
       case _clientConnectedMsgType:
@@ -260,10 +260,10 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         // final filePositionChanged = SocketResponseDto.fromJson(json);
         break;
       case _fileTimeChangedMsgType:
-        fileTimeChanged.add(response.result as double);
+        fileTimeChanged.add(response.result as double?);
         break;
       case _volumeChangedMsgType:
-        final volumeChanged = response.result as VolumeLevelChangedResponseDto;
+        final volumeChanged = response.result as VolumeLevelChangedResponseDto?;
         volumeLevelChanged.add(volumeChanged);
         break;
       case _fileEndReachedMsgType:
@@ -286,7 +286,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         break;
       case _settingsChangedMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Settings were loaded');
-        final settings = response.result as AppSettingsResponseDto;
+        final settings = response.result as AppSettingsResponseDto?;
         settingsChanged.add(settings);
         break;
       case _infoMsg:
@@ -301,7 +301,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         break;
       case _gotPlayListMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Playlist loaded');
-        final pl = response.result as PlayListItemResponseDto;
+        final pl = response.result as PlayListItemResponseDto?;
         playlistLoaded.add(pl);
         break;
       case _sendFileOptionsMsgType:
@@ -315,10 +315,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         refreshPlayList.add(refreshDto);
         break;
       default:
-        _logger.warning(
-          runtimeType,
-          '_handleSocketMsg: Msg = $msgType is not being handled',
-        );
+        _logger.warning(runtimeType, '_handleSocketMsg: Msg = $msgType is not being handled');
         break;
     }
   }
@@ -330,7 +327,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     }
   }
 
-  Future<void> _sendMsg(BaseSocketRequestDto dto) async {
+  Future<void> _sendMsg(BaseSocketRequest dto) async {
     try {
       _logger.info(runtimeType, '_sendMsg: Trying to send msgType = ${dto.messageType}');
       final msg = json.encode(dto);
@@ -341,7 +338,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       if (_channel == null) {
         _connectToWs();
       }
-      _channel.sink.add(msg);
+      _channel!.sink.add(msg);
     } catch (e, s) {
       _disconnectFromWs();
       _logger.error(runtimeType, '_sendMsg: Unknown errror', e, s);
@@ -349,22 +346,22 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   }
 
   Future<void> playFile(int id, int playListId, {bool force = false}) {
-    final dto = PlayFileRequestDto(msgType: _playMsgType, id: id, playListId: playListId, force: force);
+    final dto = PlayFileRequestDto(id: id, playListId: playListId, force: force)..messageType = _playMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> gotoSeconds(double seconds) {
-    final dto = GoToSecondsRequestDto(msgType: _goToSecondsMsgType, seconds: seconds);
+    final dto = GoToSecondsRequestDto(seconds: seconds)..messageType = _goToSecondsMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> skipSeconds(double seconds) {
-    final dto = GoToSecondsRequestDto(msgType: _skipSecondsMsgType, seconds: seconds);
+    final dto = GoToSecondsRequestDto(seconds: seconds)..messageType = _skipSecondsMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> goTo({bool next = false, bool previous = false}) {
-    final dto = GoToRequestDto(msgType: _goToMsgType, next: next, previous: previous);
+    final dto = GoToRequestDto(next: next, previous: previous)..messageType = _goToMsgType;
     return _sendMsg(dto);
   }
 
@@ -379,22 +376,22 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   }
 
   Future<void> setPlayListOptions(int id, {bool loop = false, bool shuffle = false}) {
-    final dto = SetPlayListOptionsRequestDto(msgType: _setPlayListOptionsMsgType, id: id, loop: loop, shuffle: shuffle);
+    final dto = SetPlayListOptionsRequestDto(id: id, loop: loop, shuffle: shuffle)..messageType = _setPlayListOptionsMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> deletePlayList(int id) {
-    final dto = DeletePlayListRequestDto(msgType: _deletePlayListMsgType, id: id);
+    final dto = DeletePlayListRequestDto(id: id)..messageType = _deletePlayListMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> deleteFile(int id, int playListId) {
-    final dto = DeleteFileRequestDto(msgType: _deleteFileMsgType, id: id, playListId: playListId);
+    final dto = DeleteFileRequestDto(id: id, playListId: playListId)..messageType = _deleteFileMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> loopFile(int id, int playListId, {bool loop = false}) {
-    final dto = SetLoopFileRequestDto(msgType: _loopFileMsgType, id: id, playListId: playListId, loop: loop);
+    final dto = SetLoopFileRequestDto(id: id, playListId: playListId, loop: loop)..messageType = _loopFileMsgType;
     return _sendMsg(dto);
   }
 
@@ -404,13 +401,8 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     bool isSubtitle = false,
     bool isQuality = false,
   }) {
-    final dto = SetFileOptionsRequestDto(
-      msgType: _setFileOptionsMsgType,
-      streamIndex: streamIndex,
-      isAudio: isAudio,
-      isQuality: isQuality,
-      isSubTitle: isSubtitle,
-    );
+    final dto = SetFileOptionsRequestDto(streamIndex: streamIndex, isAudio: isAudio, isQuality: isQuality, isSubTitle: isSubtitle)
+      ..messageType = _setFileOptionsMsgType;
     return _sendMsg(dto);
   }
 
@@ -423,14 +415,13 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     bool enableHwAccel = false,
   }) {
     final dto = AppSettingsRequestDto(
-      msgType: _updateSettingsMsgType,
       enableHwAccel: enableHwAccel,
       forceAudioTranscode: forceAudioTranscode,
       forceVideoTranscode: forceVideoTranscode,
       playFromTheStart: playFromTheStart,
       playNextFileAutomatically: playNextFileAutomatically,
       videoScale: getVideoScaleValue(videoScale),
-    );
+    )..messageType = _updateSettingsMsgType;
     return _sendMsg(dto);
   }
 
@@ -440,22 +431,24 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   }
 
   Future<void> loadPlayList(int playListId) {
-    final dto = BaseItemRequestDto(id: playListId, msgType: _getPlayListMsgType);
+    final dto = BaseItemRequestDto(id: playListId)..messageType = _getPlayListMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> loadFileOptions(int id) {
-    final dto = BaseItemRequestDto(id: id, msgType: _getFileOptionsMsgType);
+    final dto = BaseItemRequestDto(id: id)..messageType = _getFileOptionsMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> setVolume(double volumeLvl, {bool isMuted = false}) {
-    final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted, msgType: _setVolumeMsgType);
+    final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted)..messageType = _setVolumeMsgType;
     return _sendMsg(dto);
   }
 
   Future<void> renamePlayList(int id, String name) {
-    final dto = RenamePlayListRequestDto(id: id, name: name, msgType: _renamePlayListMsgType);
+    final dto = RenamePlayListRequestDto(name: name)
+      ..messageType = _renamePlayListMsgType
+      ..id = id;
     return _sendMsg(dto);
   }
 
