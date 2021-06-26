@@ -368,7 +368,7 @@ namespace CastIt.Server.Services
                     .Where(f => isAFolder ? f.Path.StartsWith(path) : f.Path == path)
                     .ToList();
 
-                if (files.Any())
+                if (!files.Any())
                 {
                     continue;
                 }
@@ -378,6 +378,7 @@ namespace CastIt.Server.Services
                 foreach (var file in files)
                 {
                     await _castService.UpdateFileItem(file);
+                    OnFileChanged(_mapper.Map<FileItemResponseDto>(file));
                 }
 
                 await _castItHub.Clients.All.PlayListIsBusy(playList.Id, false);
