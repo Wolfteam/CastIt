@@ -23,6 +23,7 @@ class PlayCoverImg extends StatelessWidget {
   final bool shufflePlayList;
 
   bool get fileIdIsValid => fileId != null && fileId! > 0;
+
   bool get playListIsValid => playListId != null && playListId! > 0;
 
   const PlayCoverImg({
@@ -104,21 +105,21 @@ class PlayCoverImg extends StatelessWidget {
           ),
           onPressed: !fileIdIsValid && !playListIsValid ? null : () => _goToPlayList(context),
         ),
-        Column(
-          children: <Widget>[
-            Text(
-              i18n.playlist,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+        Expanded(
+          child: Column(
+            children: <Widget>[
+              Text(
+                i18n.playlist,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.white.withOpacity(0.6)),
               ),
-            ),
-            Text(
-              playListName.isNullEmptyOrWhitespace ? '' : playListName!,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
+              Text(
+                playListName.isNullEmptyOrWhitespace ? '' : playListName!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
         IconButton(
           icon: const Icon(
