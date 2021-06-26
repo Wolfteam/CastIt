@@ -145,7 +145,7 @@ namespace CastIt.Services
         {
             try
             {
-                 await _connection.InvokeAsync(nameof(GoToSeconds), seconds);
+                await _connection.InvokeAsync(nameof(GoToSeconds), seconds);
             }
             catch (Exception e)
             {
@@ -299,12 +299,11 @@ namespace CastIt.Services
         {
             var request = new UpdatePlayListRequestDto
             {
-                Id = id,
                 Name = name,
             };
             try
             {
-                await _connection.InvokeAsync(nameof(UpdatePlayList), request);
+                await _connection.InvokeAsync(nameof(UpdatePlayList), id, request);
             }
             catch (Exception e)
             {
@@ -328,13 +327,12 @@ namespace CastIt.Services
         {
             var request = new SetPlayListOptionsRequestDto
             {
-                Id = playListId,
                 Loop = loop,
                 Shuffle = shuffle
             };
             try
             {
-                await _connection.InvokeAsync(nameof(SetPlayListOptions), request);
+                await _connection.InvokeAsync(nameof(SetPlayListOptions), playListId, request);
             }
             catch (Exception e)
             {
@@ -471,16 +469,9 @@ namespace CastIt.Services
         #region File Methods
         public async Task LoopFile(long playListId, long id, bool loop)
         {
-            var request = new SetLoopFileRequestDto
-            {
-                PlayListId = playListId,
-                Id = id,
-                Loop = loop
-            };
-
             try
             {
-                await _connection.InvokeAsync(nameof(LoopFile), request);
+                await _connection.InvokeAsync(nameof(LoopFile), playListId, id, loop);
             }
             catch (Exception e)
             {
