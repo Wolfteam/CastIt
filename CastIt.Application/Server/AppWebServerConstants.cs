@@ -22,6 +22,9 @@
         //The number of images per row in a tile
         public const int ThumbnailsPerImageRow = 5;
 
+        //The number of images per column in a tile
+        public const int ThumbnailsPerImageColumn = 5;
+
         //The width of a thumbnail inside a tile
         public const double ThumbnailImageWidth = 350;
 
@@ -34,6 +37,12 @@
         //This represents how many seconds are in the generated images of a thumbnail
         public const int ThumbnailTileDuration = 25;
 
-        public static string ThumbnailScale = $"{ThumbnailImageWidth}x{ThumbnailImageHeight}";
+        public static string ThumbnailWidthXHeightScale = $"{ThumbnailImageWidth}x{ThumbnailImageHeight}";
+
+        public static string ThumbnailTileRowXColumn = $"{ThumbnailsPerImageRow}x{ThumbnailsPerImageColumn}";
+
+        public static double ThumbnailTileTotalWidth = ThumbnailImageWidth * ThumbnailsPerImageColumn;
+
+        public static double ThumbnailTileTotalHeight = ThumbnailImageHeight * ThumbnailsPerImageRow;
     }
 }

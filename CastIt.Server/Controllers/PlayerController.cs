@@ -195,7 +195,7 @@ namespace CastIt.Server.Controllers
             Logger.LogTrace(
                 $"{nameof(GetPreviewImageForPlayedFile)}: Checking if we can retrieve an image for " +
                 $"file = {CastService.CurrentPlayedFile?.Filename} on second = {tentativeSecond}...");
-
+            DisableCaching();
             var bytes = await CastService.GetClosestPreviewThumbnail(tentativeSecond);
             return File(new MemoryStream(bytes), MediaTypeNames.Image.Jpeg);
         }

@@ -241,8 +241,8 @@ namespace CastIt.Application.FFMpeg
 
                 foreach (var hwAccel in hwAccels)
                 {
-                    var cmd = BuildThumbnailTileCommand(mrl, tentativeSecond, hwAccel);
-                    _logger.LogInformation($"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with cmd = {cmd} ...");
+                    var cmd = BuildThumbnailTileCommand(mrl, tentativeSecond, fps, hwAccel);
+                    _logger.LogInformation($"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with hwAccel = {hwAccel} and cmd = {cmd} ...");
 
                     await using var memStream = new MemoryStream();
                     _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
@@ -782,34 +782,40 @@ namespace CastIt.Application.FFMpeg
             _checkTranscodeProcess = true;
         }
 
-        private string BuildThumbnailTileCommand(string mrl, long seek, HwAccelDeviceType deviceType)
+        private string BuildThumbnailTileCommand(string mrl, long seek, int fps, HwAccelDeviceType deviceType)
         {
             //TODO: MOVE SOME PARTS TO THE ARGS BUILDER
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
             var outputArgs = builder.AddStdOut().SetFormat("mjpeg");
+
+            //create a thumbnail tile of WxH
+            var title = $"tile={AppWebServerConstants.ThumbnailTileRowXColumn}";
+
+            //select only the {FPS}th frames
+            var select = @$"select='not(mod(n\,{fps}))'";
             switch (deviceType)
             {
                 case HwAccelDeviceType.None:
                 case HwAccelDeviceType.AMD:
                     inputArgs.Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
                     break;
                 case HwAccelDeviceType.Intel:
                     inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel).Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale_qsv={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    outputArgs.WithVideoFilters(select, $"scale_qsv={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
                     break;
                 case HwAccelDeviceType.Nvidia:
                     inputArgs.SetHwAccel("nvdec").AddArg("hwaccel_output_format cuda").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                    outputArgs.WithVideoFilters("hwdownload", "format=nv12", @"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    outputArgs.WithVideoFilters("hwdownload", "format=nv12", select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
                     break;
                 case HwAccelDeviceType.Dxva2:
                     inputArgs.SetHwAccel("dxva2").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
                     break;
                 case HwAccelDeviceType.Auto:
                     inputArgs.SetHwAccel("auto").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                    outputArgs.WithVideoFilters(@"select='not(mod(n\,24))'", $"scale={AppWebServerConstants.ThumbnailScale}", "tile=5x5").SetVideoFrames(1);
+                    outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
