@@ -1,6 +1,6 @@
 ﻿using CastIt.Common.Extensions;
 using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Interfaces;
+using CastIt.Interfaces;
 using CastIt.ViewModels;
 using CastIt.Views;
 using MaterialDesignThemes.Wpf;
@@ -24,7 +24,7 @@ namespace CastIt.Common.Utils
         //TODO: CANT REMOVE THE BLUE BORDER 
         private class MinimizeToTrayInstance
         {
-            private readonly IAppSettingsService _settingsService;
+            private readonly IDesktopAppSettingsService _settingsService;
             private readonly MainWindow _window;
             private NotifyIcon _notifyIcon;
             private bool _balloonShown;
@@ -34,7 +34,7 @@ namespace CastIt.Common.Utils
 
             public MinimizeToTrayInstance(MainWindow window)
             {
-                _settingsService = Mvx.IoCProvider.Resolve<IAppSettingsService>();
+                _settingsService = Mvx.IoCProvider.Resolve<IDesktopAppSettingsService>();
                 _window = window;
                 _window.StateChanged += HandleStateChanged;
             }

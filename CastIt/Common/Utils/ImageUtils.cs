@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Common;
-using CastIt.Application.Interfaces;
+﻿using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
 using CastIt.ViewModels.Items;
 using MaterialDesignThemes.Wpf;
 using System;
@@ -45,7 +45,7 @@ namespace CastIt.Common.Utils
 
         public static Bitmap LoadImage(string path)
         {
-            if (String.IsNullOrEmpty(path) || !File.Exists(path))
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
                 return null;
             }
@@ -53,10 +53,10 @@ namespace CastIt.Common.Utils
             return (Bitmap)Image.FromStream(ms);
         }
 
-        public static BitmapImage LoadImageFromUri(
+        public static ImageSource LoadImageFromUri(
             string url,
-            double width = FileFormatConstants.ThumbnailWidth,
-            double height = FileFormatConstants.ThumbnailHeight)
+            double width = AppWebServerConstants.ThumbnailImageWidth,
+            double height = AppWebServerConstants.ThumbnailImageHeight)
         {
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
