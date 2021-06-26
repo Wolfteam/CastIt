@@ -9,7 +9,7 @@ namespace CastIt.Views.UserControls
         public Devices()
         {
             InitializeComponent();
-            ViewModel = Mvx.IoCProvider.IoCConstruct<DevicesViewModel>();
+            ViewModel = Mvx.IoCProvider.Resolve<DevicesViewModel>();
         }
     }
 }

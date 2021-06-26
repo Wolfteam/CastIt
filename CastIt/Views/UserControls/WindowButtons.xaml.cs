@@ -45,7 +45,7 @@ namespace CastIt.Views.UserControls
 
         public void CloseApp()
         {
-            Dispatcher.Invoke(() =>
+            Dispatcher.Invoke(async () =>
             {
                 var window = System.Windows.Application.Current.MainWindow as MainWindow;
                 if (window?.Content is MainPage view)
@@ -53,8 +53,7 @@ namespace CastIt.Views.UserControls
                     var vm = DataContext as MainViewModel;
                     if (vm?.PlayLists.Any() == true)
                     {
-                        var positions = view.GetFinalPlayListsPositions();
-                        vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
+                        await vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight);
                     }
                     view.ButtonsBar.DisposeViewModels();
                 }

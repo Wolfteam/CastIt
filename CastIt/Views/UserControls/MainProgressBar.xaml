@@ -6,6 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:serverConstants="clr-namespace:CastIt.Application.Server;assembly=CastIt.Application"
+    xmlns:utils="clr-namespace:CastIt.Common.Utils"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     d:DataContext="{d:DesignInstance Type=vms:MainViewModel}"
     d:DesignHeight="450"
@@ -51,8 +53,8 @@
 
         <Popup
             Name="SliderPopup"
-            Width="350"
-            Height="230"
+            Width="{x:Static serverConstants:AppWebServerConstants.ThumbnailImageWidth}"
+            Height="{x:Static serverConstants:AppWebServerConstants.ThumbnailImageHeight}"
             AllowsTransparency="True"
             HorizontalOffset="0"
             IsOpen="False"
@@ -60,9 +62,31 @@
             PlacementTarget="{Binding ElementName=MainSlider}"
             StaysOpen="True">
             <Grid>
+                <!--  https://stackoverflow.com/questions/1028519/trying-to-change-a-croppedbitmaps-sourcerect-at-runtime  -->
+                <!--<Image x:Name="ImageThumbnail" Source="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, IsAsync=True, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}">
+                    <Image.Clip>
+                        <RectangleGeometry Rect="0, 0, 350, 200" />
+                    </Image.Clip>
+                    <Image.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="5" ScaleY="5" />
+                            <MatrixTransform Matrix="1, 0, 0, 1, -350, -200" />
+                        </TransformGroup>
+                    </Image.RenderTransform>
+                </Image>-->
                 <Rectangle RadiusX="30" RadiusY="30">
                     <Rectangle.Fill>
-                        <ImageBrush ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}" />
+                        <ImageBrush x:Name="ImageThumbnail" ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, IsAsync=False, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}, ConverterParameter=true}">
+                            <!--<ImageBrush.Transform>
+                            -->
+                            <!--  Dummy transforms that gets updated in the code behind  -->
+                            <!--
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="5" ScaleY="5" />
+                                    <MatrixTransform Matrix="1, 0, 0, 1, -350, -200" />
+                                </TransformGroup>
+                            </ImageBrush.Transform>-->
+                        </ImageBrush>
                     </Rectangle.Fill>
                 </Rectangle>
                 <TextBlock

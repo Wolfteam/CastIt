@@ -17,6 +17,8 @@ namespace CastIt.Views.UserControls
         {
             var devicesVm = DevicesUserControl.DataContext as DevicesViewModel;
             devicesVm?.CleanUp();
+            var settingsVm = SettingsUserControl.DataContext as SettingsViewModel;
+            settingsVm?.CleanUp();
         }
 
         private void ToggleCollapse(object sender, RoutedEventArgs e)

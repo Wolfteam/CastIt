@@ -50,6 +50,7 @@
                     Grid.Column="0"
                     Margin="10,5,10,5"
                     VerticalAlignment="Center"
+                    IsManipulationEnabled="True"
                     IsSnapToTickEnabled="True"
                     LargeChange="0.1"
                     Maximum="1"
@@ -306,13 +307,26 @@
                     <Button
                         Grid.Column="4"
                         Height="36"
-                        Margin="-5,0"
+                        materialDesign:RippleAssist.Feedback="{DynamicResource PrimaryHueDarkBrush}"
+                        materialDesign:RippleAssist.IsCentered="True"
                         Command="{Binding ScrollToSelectedFileCommand}"
                         ToolTip="{Binding [GoToSelectedFile]}">
                         <Button.Style>
-                            <Style BasedOn="{StaticResource MainButtonStyle}" TargetType="{x:Type Button}">
+                            <Style BasedOn="{StaticResource MaterialDesignFloatingActionMiniLightButton}" TargetType="{x:Type Button}">
                                 <Setter Property="Visibility" Value="Visible" />
+                                <Setter Property="IsTabStop" Value="False" />
+                                <Setter Property="Focusable" Value="False" />
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="BorderBrush" Value="Transparent" />
                                 <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="False">
+                                        <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
+                                    </Trigger>
                                     <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
