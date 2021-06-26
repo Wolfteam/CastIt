@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CastIt.Application;
 using CastIt.Application.Common.Utils;
 using CastIt.Application.FFMpeg;
 using CastIt.Application.FilePaths;
@@ -9,12 +10,8 @@ using CastIt.Common;
 using CastIt.Domain.Models.Logging;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Interfaces;
-using CastIt.Infrastructure.Interfaces;
-using CastIt.Infrastructure.Services;
 using CastIt.Interfaces;
 using CastIt.Resources;
-using CastIt.Server;
-using CastIt.Server.Interfaces;
 using CastIt.Services;
 using CastIt.Shared.Extensions;
 using CastIt.ViewModels;
@@ -53,8 +50,7 @@ namespace CastIt
             Mvx.IoCProvider.RegisterSingleton(typeof(IFileService), () => fileService);
             Mvx.IoCProvider.RegisterSingleton(typeof(ICommonFileService), () => fileService);
             Mvx.IoCProvider.ConstructAndRegisterSingleton<ITelemetryService, TelemetryService>();
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppSettingsService, AppSettingsService>();
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppDataService, AppDataService>();
+            Mvx.IoCProvider.ConstructAndRegisterSingleton<IDesktopAppSettingsService, DesktopAppSettingsService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IYoutubeUrlDecoder, YoutubeUrlDecoder>();
 
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IPlayer>(() =>
@@ -64,11 +60,7 @@ namespace CastIt
             });
 
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<ICastService, CastService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
-
-            Mvx.IoCProvider.ConstructAndRegisterSingleton<IAppWebServer, AppWebServer>();
-            Mvx.IoCProvider.RegisterSingleton(typeof(IBaseWebServer), () => Mvx.IoCProvider.Resolve<IAppWebServer>());
 
             var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
             var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger);
@@ -79,7 +71,7 @@ namespace CastIt
             Mvx.IoCProvider.RegisterType<FileItemViewModel>();
             Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(SettingsViewModel));
-
+            Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(DevicesViewModel));
             RegisterAppStart<SplashViewModel>();
         }
 
@@ -110,13 +102,10 @@ namespace CastIt
                 new FileToLog(typeof(DeviceItemViewModel), "vm_deviceitem"),
                 new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
                 new FileToLog(typeof(SplashViewModel), "vm_splash"),
-                //Others
-                new FileToLog(typeof(Player), "cast_player"),
             };
 
-            logs.AddRange(Application.DependencyInjection.GetApplicationLogs());
+            logs.AddApplicationLogs();
             logs.AddRange(Infrastructure.DependencyInjection.GetInfrastructureLogs());
-            logs.AddRange(Server.DependencyInjection.GetServerLogs());
 
             logs.SetupLogging(basePath);
             var loggerFactory = new LoggerFactory()
