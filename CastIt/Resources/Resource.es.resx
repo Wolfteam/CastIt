@@ -561,4 +561,28 @@
   <data name="RemoveSelected" xml:space="preserve">
     <value>Remover los seleccionados</value>
   </data>
+  <data name="OneOrMoreFilesAreNotReadyYet" xml:space="preserve">
+    <value>Uno o más archivos no están listos</value>
+  </data>
+  <data name="ConnectionToServerLost" xml:space="preserve">
+    <value>Se perdió la conexión con el servidor</value>
+  </data>
+  <data name="InvalidRequest" xml:space="preserve">
+    <value>Solicitud inválida</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>El recurso que estabas buscando no fue encontrado</value>
+  </data>
+  <data name="UnknownErrorLoadingFile" xml:space="preserve">
+    <value>Un error desconocido ocurrió al intentar cargar el archivo</value>
+  </data>
+  <data name="FilesAreNotValid" xml:space="preserve">
+    <value>Uno o varios archivos no son válidos</value>
+  </data>
+  <data name="ChangeServerUrl" xml:space="preserve">
+    <value>Cambiar la ruta del servidor</value>
+  </data>
+  <data name="ConnectionCouldNotBeEstablished" xml:space="preserve">
+    <value>La conexión no pudo ser establecida</value>
+  </data>
 </root>

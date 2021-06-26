@@ -259,6 +259,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change server url.
+        /// </summary>
+        public static string ChangeServerUrl {
+            get {
+                return ResourceManager.GetString("ChangeServerUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click Cancel to close the app.
         /// </summary>
         public static string ClickCancelToCloseTheApp {
@@ -322,11 +331,29 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connection could not be established.
+        /// </summary>
+        public static string ConnectionCouldNotBeEstablished {
+            get {
+                return ResourceManager.GetString("ConnectionCouldNotBeEstablished", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A connection is in progress.
         /// </summary>
         public static string ConnectionInProgress {
             get {
                 return ResourceManager.GetString("ConnectionInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection to the server was lost.
+        /// </summary>
+        public static string ConnectionToServerLost {
+            get {
+                return ResourceManager.GetString("ConnectionToServerLost", resourceCulture);
             }
         }
         
@@ -574,6 +601,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to One or more files are not valid.
+        /// </summary>
+        public static string FilesAreNotValid {
+            get {
+                return ResourceManager.GetString("FilesAreNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Font background color.
         /// </summary>
         public static string FontBackgroundColor {
@@ -696,6 +732,15 @@ namespace CastIt.Resources {
         public static string InvalidPlayListName {
             get {
                 return ResourceManager.GetString("InvalidPlayListName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid request.
+        /// </summary>
+        public static string InvalidRequest {
+            get {
+                return ResourceManager.GetString("InvalidRequest", resourceCulture);
             }
         }
         
@@ -862,6 +907,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The resource you were looking for was not found.
+        /// </summary>
+        public static string NotFound {
+            get {
+                return ResourceManager.GetString("NotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Now Loading....
         /// </summary>
         public static string NowLoading {
@@ -885,6 +939,15 @@ namespace CastIt.Resources {
         public static string Ok {
             get {
                 return ResourceManager.GetString("Ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One or more files are not ready yet.
+        /// </summary>
+        public static string OneOrMoreFilesAreNotReadyYet {
+            get {
+                return ResourceManager.GetString("OneOrMoreFilesAreNotReadyYet", resourceCulture);
             }
         }
         
@@ -1290,6 +1353,15 @@ namespace CastIt.Resources {
         public static string Transparent {
             get {
                 return ResourceManager.GetString("Transparent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error occurred while loading the file.
+        /// </summary>
+        public static string UnknownErrorLoadingFile {
+            get {
+                return ResourceManager.GetString("UnknownErrorLoadingFile", resourceCulture);
             }
         }
         
