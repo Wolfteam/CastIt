@@ -291,6 +291,39 @@ namespace CastIt.Server.Services
                 SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
         }
 
+        public void ExchangeLastFilePosition(long playListId, long toFileId)
+        {
+            var playList = GetPlayListInternal(playListId, false);
+            ExchangeLastFilePosition(playList, toFileId);
+        }
+
+        public void ExchangeLastFilePosition(ServerPlayList playList, long toFileId)
+        {
+            var newFile = playList?.Files.LastOrDefault();
+            if (newFile == null)
+                return;
+            ExchangeFilePosition(playList, newFile.Id, toFileId);
+        }
+
+        public void ExchangeFilePosition(long playListId, long fromFileId, long toFileId)
+        {
+            var playList = GetPlayListInternal(playListId, false);
+            ExchangeFilePosition(playList, fromFileId, toFileId);
+        }
+
+        public void ExchangeFilePosition(ServerPlayList playList, long fromFileId, long toFileId)
+        {
+            var fromFile = playList?.Files.Find(f => f.Id == fromFileId);
+            var toFile = playList?.Files.Find(f => f.Id == toFileId);
+            if (fromFile == null || toFile == null)
+            {
+                return;
+            }
+
+            var toIndex = playList.Files.IndexOf(toFile);
+            UpdateFilePosition(playList.Id, fromFileId, toIndex);
+        }
+
         private ServerPlayList GetPlayListInternal(long id, bool throwOnNotFound = true)
         {
             var playList = PlayLists.Find(pl => pl.Id == id);

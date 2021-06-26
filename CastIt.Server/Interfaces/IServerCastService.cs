@@ -65,5 +65,7 @@ namespace CastIt.Server.Interfaces
         Task SetFileSubtitlesFromPath(string filePath);
 
         Task<byte[]> GetClosestPreviewThumbnail(long tentativeSecond);
+
+        void ExchangeLastFilePosition(ServerPlayList playList, long toFileId);
     }
 }
