@@ -1,32 +1,24 @@
-﻿using CastIt.Application.Common;
-using CastIt.Application.Common.Extensions;
-using CastIt.Application.Interfaces;
-using CastIt.Domain.Models.FFmpeg.Info;
-using CastIt.Infrastructure.Interfaces;
+﻿using AutoMapper;
+using CastIt.Application.Common;
+using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Enums;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
-using CastIt.Server.Interfaces;
 using Microsoft.Extensions.Logging;
+using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Items
 {
     public class FileItemViewModel : BaseViewModel
     {
         #region Members
-        private readonly ICastService _castService;
-        private readonly IAppSettingsService _settingsService;
-        private readonly IFFmpegService _ffmpegService;
-        private readonly IAppWebServer _appWebServer;
-        private readonly IAppDataService _playListsService;
-        private readonly IFileService _fileService;
+        private readonly IDesktopAppSettingsService _settingsService;
+        private readonly ICastItHubClientService _castItHub;
 
         private bool _isSeparatorTopLineVisible;
         private bool _isSeparatorBottomLineVisible;
@@ -73,16 +65,14 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isBeingPlayed, value);
         }
 
-        public bool CanStartPlayingFromCurrentPercentage
-            => PlayedPercentage > 0 && PlayedPercentage < 100;
+        public bool CanStartPlayingFromCurrentPercentage { get; set; }
 
-        public bool WasPlayed
-            => PlayedPercentage > 0 && PlayedPercentage <= 100;
+        public bool WasPlayed { get; set; }
 
         public string Duration
         {
             get => _duration;
-            private set => this.RaiseAndSetIfChanged(ref _duration, value);
+            set => this.RaiseAndSetIfChanged(ref _duration, value);
         }
 
         public bool IsSeparatorTopLineVisible
@@ -102,57 +92,43 @@ namespace CastIt.ViewModels.Items
             get => _loop;
             set
             {
+                bool triggerChange = _loop != value;
                 SetProperty(ref _loop, value);
-                _appWebServer.OnFileChanged?.Invoke(PlayListId);
+                if (triggerChange && !Loading)
+                    LoopFile();
             }
         }
 
         public bool ShowFileDetails
             => _settingsService.ShowFileDetails;
-        public bool IsLocalFile
-            => _fileService.IsLocalFile(Path);
-        public bool IsUrlFile
-            => _fileService.IsUrlFile(Path);
-        public bool Exists
-            => IsLocalFile || IsUrlFile;
+        public bool IsLocalFile { get; set; }
+        public bool IsUrlFile { get; set; }
+        public bool Exists { get; set; }
 
         public string Filename
         {
-            get => _fileName ??= IsCached
-                ? Name
-                : _fileService.IsLocalFile(Path)
-                    ? _fileService.GetFileName(Path)
-                    : !string.IsNullOrEmpty(Name)
-                        ? Name
-                        : Path;
+            get => _fileName;
             set => this.RaiseAndSetIfChanged(ref _fileName, value);
         }
 
-        public string Size
-            => _fileService.GetFileSizeString(Path);
-        public string Extension
-            => _fileService.GetExtension(Path);
-        public string Resolution
-            => !IsLocalFile
-                ? string.Empty
-                : FileInfo?.GetVideoResolution();
-        public string SubTitle
-            => IsCached ? Description : Extension.AppendDelimiter("|", Size, Resolution);
+        public string Size { get; set; }
+        public string Extension { get; set; }
+        public string Resolution { get; set; }
+        public string SubTitle { get; set; }
+        public bool IsCached { get; set; }
 
-        public bool IsCached
-            => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Path);
-
-        public FFProbeFileInfo FileInfo { get; set; }
-
-        public double PlayedSeconds
-            => PlayedPercentage * TotalSeconds / 100;
+        public double PlayedSeconds { get; set; }
 
         //had to do it this way, so the ui does not call this prop each time i scroll
         public string PlayedTime
         {
-            get => _playedTime ??= FileFormatConstants.FormatDuration(PlayedSeconds);
+            get => _playedTime;
             set => this.RaiseAndSetIfChanged(ref _playedTime, value);
         }
+
+        public AppFileType Type { get; set; }
+
+        public bool Loading { get; private set; }
         #endregion
 
         #region Commands
@@ -166,20 +142,21 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<FileItemViewModel> logger,
-            ICastService castService,
-            IAppSettingsService settingsService,
-            IFFmpegService ffmpegService,
-            IAppWebServer appWebServer,
-            IAppDataService playListsService,
-            IFileService fileService)
+            IDesktopAppSettingsService settingsService,
+            ICastItHubClientService castItHub)
             : base(textProvider, messenger, logger)
         {
-            _castService = castService;
             _settingsService = settingsService;
-            _ffmpegService = ffmpegService;
-            _appWebServer = appWebServer;
-            _playListsService = playListsService;
-            _fileService = fileService;
+            _castItHub = castItHub;
+        }
+
+        public static FileItemViewModel From(FileItemResponseDto file, IMapper mapper)
+        {
+            var vm = Mvx.IoCProvider.Resolve<FileItemViewModel>();
+            vm.Loading = true;
+            mapper.Map(file, vm);
+            vm.Loading = false;
+            return vm;
         }
 
         public override void SetCommands()
@@ -217,84 +194,27 @@ namespace CastIt.ViewModels.Items
                 = IsSeparatorTopLineVisible = false;
         }
 
-        public async Task SetFileInfo(CancellationToken token, bool force = true)
+        public void OnChange(FileItemResponseDto file)
         {
-            if (IsUrlFile)
-            {
-                FileInfo = new FFProbeFileInfo
-                {
-                    Format = new FileInfoFormat()
-                };
-                await SetDuration(TotalSeconds > 0 ? TotalSeconds : -1);
-                return;
-            }
-
-            if (IsCached && !force)
-            {
-                var maxDate = DateTime.Now.AddDays(-3);
-                bool update = Exists && File.GetLastAccessTime(Path) < maxDate && UpdatedAt <= maxDate;
-                await SetDuration(TotalSeconds, update);
-                return;
-            }
-
-            var fileInfo = await _ffmpegService.GetFileInfo(Path, token);
-            if (fileInfo != null)
-            {
-                FileInfo = fileInfo;
-            }
-
-            var duration = FileInfo?.Format?.Duration ?? -1;
-            await SetDuration(duration);
-            await RaisePropertyChanged(nameof(SubTitle));
-        }
-
-        public async Task SetDuration(double seconds, bool update = true)
-        {
-            await RaisePropertyChanged(() => IsLocalFile);
-            await RaisePropertyChanged(() => IsUrlFile);
-            await RaisePropertyChanged(() => Exists);
-            if (!Exists)
-            {
-                TotalSeconds = 0;
-                Duration = GetText("Missing");
-                return;
-            }
-            TotalSeconds = seconds;
-
-            if (update)
-                await _playListsService.UpdateFile(Id, Filename, SubTitle, seconds);
-
-            if (seconds <= 0)
-            {
-                Duration = "N/A";
-                return;
-            }
-            Duration = FileFormatConstants.FormatDuration(seconds);
-        }
-
-        public void ListenEvents()
-        {
-            CleanUp();
-            _castService.OnPositionChanged += OnPositionChanged;
-            _castService.OnEndReached += OnEndReached;
-            IsBeingPlayed = true;
-        }
-
-        public void CleanUp()
-        {
-            _castService.OnPositionChanged -= OnPositionChanged;
-            _castService.OnEndReached -= OnEndReached;
-            IsBeingPlayed = false;
-        }
-
-        private void OnPositionChanged(double position)
-        {
-            PlayedPercentage = position;
+            IsBeingPlayed = file.IsBeingPlayed;
+            Position = file.Position;
+            Duration = file.Duration;
+            PlayedSeconds = file.PlayedSeconds;
+            PlayedPercentage = file.PlayedPercentage;
+            Loop = file.Loop;
             PlayedTime = FileFormatConstants.FormatDuration(PlayedSeconds);
         }
 
-        private void OnEndReached()
-            => OnPositionChanged(100);
+        public void OnStopped()
+        {
+            IsBeingPlayed = false;
+        }
+
+        public void OnEndReached()
+        {
+            OnStopped();
+            PlayedPercentage = 100;
+        }
 
         private void OpenFileLocation()
         {
@@ -314,6 +234,11 @@ namespace CastIt.ViewModels.Items
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("FileCouldntBeOpened")));
             }
+        }
+
+        private async void LoopFile()
+        {
+            await _castItHub.LoopFile(PlayListId, Id, Loop);
         }
     }
 }

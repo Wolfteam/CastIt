@@ -17,19 +17,19 @@ namespace CastIt.ViewModels.Items
         public string Text
         {
             get => _text;
-            set => SetProperty(ref _text, value);
+            set => this.RaiseAndSetIfChanged(ref _text, value);
         }
 
         public bool IsSelected
         {
             get => _isSelected;
-            set => SetProperty(ref _isSelected, value);
+            set => this.RaiseAndSetIfChanged(ref _isSelected, value);
         }
 
         public bool IsEnabled
         {
             get => _isEnabled;
-            set => SetProperty(ref _isEnabled, value);
+            set => this.RaiseAndSetIfChanged(ref _isEnabled, value);
         }
     }
 }
