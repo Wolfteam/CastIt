@@ -54,7 +54,7 @@ namespace CastIt.Infrastructure.Models
             => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Path);
 
         public bool Exists
-            => IsLocalFile || IsUrlFile;
+            => _fileService.Exists(Path);
         public string Filename
         {
             get => _fileName ??= IsCached
@@ -164,7 +164,7 @@ namespace CastIt.Infrastructure.Models
             if (!Exists)
             {
                 TotalSeconds = 0;
-                Duration = "Missing";
+                Duration = AppWebServerConstants.MissingFileText;
                 return this;
             }
 

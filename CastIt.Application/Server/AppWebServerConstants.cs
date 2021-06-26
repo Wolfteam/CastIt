@@ -37,6 +37,8 @@
         //This represents how many seconds are in the generated images of a thumbnail
         public const int ThumbnailTileDuration = 25;
 
+        public const string MissingFileText = "Missing";
+
         public static string ThumbnailWidthXHeightScale = $"{ThumbnailImageWidth}x{ThumbnailImageHeight}";
 
         public static string ThumbnailTileRowXColumn = $"{ThumbnailsPerImageRow}x{ThumbnailsPerImageColumn}";

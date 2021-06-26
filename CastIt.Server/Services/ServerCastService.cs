@@ -499,7 +499,7 @@ namespace CastIt.Server.Services
             else
             {
                 var fileInfo = await GetFileInfo(file.Path, FileCancellationTokenSource.Token);
-                file.UpdateFileInfo(fileInfo, fileInfo.Format?.Duration ?? -1);
+                file.UpdateFileInfo(fileInfo, fileInfo?.Format?.Duration ?? -1);
                 update = true;
             }
 
