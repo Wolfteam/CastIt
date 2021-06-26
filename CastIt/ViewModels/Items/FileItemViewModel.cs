@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CastIt.Application.Common;
+using CastIt.Application.Server;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Interfaces;
@@ -72,7 +73,11 @@ namespace CastIt.ViewModels.Items
         public string Duration
         {
             get => _duration;
-            set => this.RaiseAndSetIfChanged(ref _duration, value);
+            set
+            {
+                var updated = value.Replace(AppWebServerConstants.MissingFileText, GetText("Missing"));
+                this.RaiseAndSetIfChanged(ref _duration, updated);
+            }
         }
 
         public bool IsSeparatorTopLineVisible

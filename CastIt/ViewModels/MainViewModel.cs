@@ -47,7 +47,6 @@ namespace CastIt.ViewModels
         private string _currentFileThumbnail;
         private double _currentPlayedSeconds;
         private string _previewThumbnailImg;
-        private bool _onSkipOrPrevious;
         private bool _showSnackbar;
         private string _snackbarMsg;
         private string _snackBarActionMsg;
