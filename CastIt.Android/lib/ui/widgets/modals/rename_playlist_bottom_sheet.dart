@@ -117,7 +117,7 @@ class _RenamePlayListBottomSheetState extends State<RenamePlayListBottomSheet> {
   void _cancel() => Navigator.of(context).pop();
 
   void _rename() {
-    context.read<ServerWsBloc>().renamePlayList(widget.id, _nameController!.text);
+    context.read<ServerWsBloc>().updatePlayList(widget.id, _nameController!.text);
     _cancel();
   }
 }

@@ -17,10 +17,19 @@ import '../widgets/something_went_wrong.dart';
 class PlayListPage extends StatefulWidget {
   final int id;
   final int? scrollToFileId;
+
   const PlayListPage({
     required this.id,
     this.scrollToFileId,
   });
+
+  static Future<void> forDetails(int playListId, int? scrollToFileId, BuildContext context) async {
+    context.read<PlayListBloc>().add(PlayListEvent.load(id: playListId));
+    final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId, scrollToFileId: scrollToFileId));
+    await Navigator.of(context).push(route);
+    await route.completed;
+    context.read<PlayListBloc>().add(const PlayListEvent.closePage());
+  }
 
   @override
   _PlayListPageState createState() => _PlayListPageState();
@@ -208,14 +217,12 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             totalSeconds: file.totalSeconds,
             name: file.filename,
             path: file.path,
-            size: file.size,
-            ext: file.ext,
             exists: file.exists,
             isLocalFile: file.isLocalFile,
             isUrlFile: file.isUrlFile,
             playedPercentage: file.playedPercentage,
             loop: file.loop,
-            subtitle: file.subtitle,
+            subtitle: file.subTitle,
             playedSeconds: file.playedSeconds,
           );
         },

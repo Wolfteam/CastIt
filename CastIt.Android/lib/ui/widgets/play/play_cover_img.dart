@@ -1,9 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../bloc/played_file_options/played_file_options_bloc.dart';
-import '../../../bloc/playlist/playlist_bloc.dart';
 import '../../../bloc/server_ws/server_ws_bloc.dart';
 import '../../../common/extensions/string_extensions.dart';
 import '../../../common/styles.dart';
@@ -166,14 +163,11 @@ class PlayCoverImg extends StatelessWidget {
     );
   }
 
-  void _goToPlayList(BuildContext context) {
-    context.read<PlayListBloc>().add(PlayListEvent.load(id: playListId!));
-    final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId!, scrollToFileId: fileId));
-    Navigator.of(context).push(route);
+  Future<void> _goToPlayList(BuildContext context) async {
+    await PlayListPage.forDetails(playListId!, fileId, context);
   }
 
   void _showFileOptionsModal(BuildContext context) {
-    context.read<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.load(id: fileId!));
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,

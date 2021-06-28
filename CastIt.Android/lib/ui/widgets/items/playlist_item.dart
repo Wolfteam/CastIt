@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../bloc/playlist/playlist_bloc.dart';
 import '../../../common/styles.dart';
 import '../../pages/playlist_page.dart';
 import '../modals/playlist_options_bottom_sheet_dialog.dart';
@@ -56,11 +53,7 @@ class PlayListItem extends StatelessWidget {
     );
   }
 
-  void _goToPlayListPage(BuildContext context) {
-    context.read<PlayListBloc>().add(PlayListEvent.load(id: id));
-    final route = MaterialPageRoute(
-      builder: (ctx) => PlayListPage(id: id),
-    );
-    Navigator.push(context, route);
+  Future<void> _goToPlayListPage(BuildContext context) async {
+    await PlayListPage.forDetails(id, null, context);
   }
 }

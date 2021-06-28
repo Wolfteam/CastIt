@@ -16,8 +16,6 @@ class FileItem extends StatelessWidget {
   final bool isBeingPlayed;
   final String name;
   final String path;
-  final String size;
-  final String ext;
   final double playedPercentage;
   final bool isLocalFile;
   final bool isUrlFile;
@@ -35,8 +33,6 @@ class FileItem extends StatelessWidget {
     required this.isBeingPlayed,
     required this.name,
     required this.path,
-    required this.size,
-    required this.ext,
     required this.playedPercentage,
     required this.exists,
     required this.isLocalFile,

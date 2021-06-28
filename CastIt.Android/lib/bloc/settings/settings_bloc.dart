@@ -1,9 +1,15 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:castit/common/enums/subtitle_bg_color_type.dart';
+import 'package:castit/common/enums/subtitle_fg_color_type.dart';
+import 'package:castit/common/enums/subtitle_font_scale_type.dart';
+import 'package:castit/common/enums/text_track_font_generic_family_type.dart';
+import 'package:castit/common/enums/text_track_font_style_type.dart';
+import 'package:castit/models/server_app_settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../common/enums/app_accent_color_type.dart';
 import '../../common/enums/app_language_type.dart';
@@ -11,7 +17,6 @@ import '../../common/enums/app_theme_type.dart';
 import '../../common/enums/video_scale_type.dart';
 import '../../common/extensions/string_extensions.dart';
 import '../../generated/i18n.dart';
-import '../../models/dtos/responses/app_settings_response_dto.dart';
 import '../../services/settings_service.dart';
 import '../server_ws/server_ws_bloc.dart';
 
@@ -26,19 +31,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   SettingsState get initialState => SettingsState.loading();
 
-  SettingsBloc(this._settings, this._serverWsBloc) : super(SettingsState.loading()) {
-    _serverWsBloc.connected.stream.listen((event) {
-      add(SettingsEvent.load());
-    });
-
-    _serverWsBloc.settingsChanged.stream.listen((settings) {
-      add(SettingsEvent.connected(settings: settings!));
-    });
-
-    _serverWsBloc.disconnected.stream.listen((_) {
-      add(SettingsEvent.disconnected());
-    });
-  }
+  SettingsBloc(this._settings, this._serverWsBloc) : super(SettingsState.loading());
 
   SettingsLoadedState get currentState => state as SettingsLoadedState;
 
@@ -67,17 +60,32 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           playNextFileAutomatically: false,
           appName: packageInfo.appName,
           appVersion: packageInfo.version,
+          currentSubtitleBgColor: SubtitleBgColorType.transparent,
+          currentSubtitleFgColor: SubtitleFgColorType.white,
+          currentSubtitleFontScale: SubtitleFontScaleType.hundredAndFifty,
+          currentSubtitleFontFamily: TextTrackFontGenericFamilyType.casual,
+          currentSubtitleFontStyle: TextTrackFontStyleType.normal,
+          loadFirstSubtitleFoundAutomatically: true,
+          subtitleDelayInSeconds: 0,
         );
       },
       connected: (event) async {
         return currentState.copyWith(
           isConnected: true,
           videoScale: event.settings.videoScaleType,
-          enableHwAccel: event.settings.enableHwAccel,
+          enableHwAccel: event.settings.enableHardwareAcceleration,
           forceAudioTranscode: event.settings.forceAudioTranscode,
           forceVideoTranscode: event.settings.forceVideoTranscode,
-          playFromTheStart: event.settings.playFromTheStart,
+          playFromTheStart: event.settings.startFilesFromTheStart,
           playNextFileAutomatically: event.settings.playNextFileAutomatically,
+          //subs
+          currentSubtitleBgColor: event.settings.currentSubtitleBgColorType,
+          currentSubtitleFgColor: event.settings.currentSubtitleFgColorType,
+          currentSubtitleFontScale: event.settings.currentSubtitleFontScaleType,
+          currentSubtitleFontFamily: event.settings.currentSubtitleFontFamilyType,
+          currentSubtitleFontStyle: event.settings.currentSubtitleFontStyleType,
+          loadFirstSubtitleFoundAutomatically: event.settings.loadFirstSubtitleFoundAutomatically,
+          subtitleDelayInSeconds: event.settings.subtitleDelayInSeconds,
         );
       },
       disconnected: (event) async => currentState.copyWith(isConnected: false),
@@ -103,6 +111,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     );
 
     yield s;
+  }
+
+  void listenHubEvents() {
+    _serverWsBloc.connected.stream.listen((event) {
+      add(SettingsEvent.load());
+    });
+
+    _serverWsBloc.settingsChanged.stream.listen((settings) {
+      add(SettingsEvent.connected(settings: settings!));
+    });
+
+    _serverWsBloc.disconnected.stream.listen((_) {
+      add(SettingsEvent.disconnected());
+    });
   }
 
   bool _isCastItUrlValid(String url) {

@@ -1,11 +1,13 @@
+import 'package:castit/bloc/playlist/playlist_bloc.dart';
+import 'package:castit/bloc/playlists/playlists_bloc.dart';
+import 'package:castit/common/enums/app_message_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/main/main_bloc.dart';
-import '../../bloc/playlists/playlists_bloc.dart';
 import '../../bloc/server_ws/server_ws_bloc.dart';
 import '../../bloc/settings/settings_bloc.dart';
-import '../../common/extensions/string_extensions.dart';
+import '../../common/extensions/i18n_extensions.dart';
 import '../../common/styles.dart';
 import '../../generated/i18n.dart';
 import '../widgets/modals/change_connection_bottom_sheet_dialog.dart';
@@ -41,9 +43,13 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_didChangeDependencies) return;
-    context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
-    context.read<PlayListsBloc>().add(PlayListsEvent.load());
+    //If we don't do this, the PlayListsBloc and SettingsBloc constructors won't be called
+    //ending in the fact that we won't listen to the hub events
     context.read<SettingsBloc>().add(SettingsEvent.load());
+    context.read<PlayListsBloc>().listenHubEvents();
+    context.read<PlayListBloc>().listenHubEvents();
+    context.read<SettingsBloc>().listenHubEvents();
+    context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
     _didChangeDependencies = true;
   }
 
@@ -73,7 +79,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
             listener: (ctx2, state2) async {
               state2.map(
                 loaded: (s) async {
-                  if (!s.msgToShow.isNullEmptyOrWhitespace) {
+                  if (s.msgToShow != null) {
                     _showServerMsg(ctx2, s.msgToShow!);
                   }
                   await _showConnectionDialog(s.isConnectedToWs!, s.castItUrl);
@@ -154,9 +160,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     }
   }
 
-  void _showServerMsg(BuildContext ctx, String msg) {
+  void _showServerMsg(BuildContext ctx, AppMessageType msg) {
     final theme = Theme.of(ctx);
     final color = theme.accentColor.withOpacity(0.8);
+    final s = I18n.of(context);
 
     final snackBar = SnackBar(
       behavior: SnackBarBehavior.floating,
@@ -167,7 +174,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           Container(
             margin: const EdgeInsets.only(left: 10),
             child: Text(
-              msg,
+              s!.translateAppMsgType(msg),
               style: const TextStyle(color: Colors.white),
               overflow: TextOverflow.ellipsis,
             ),

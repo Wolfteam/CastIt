@@ -44,11 +44,6 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     final separator = ModalSheetSeparator();
     final title = BottomSheetTitle(icon: Icons.play_circle_filled, title: i18n.fileOptions);
     return state.map(
-      loading: (s) => [
-        separator,
-        title,
-        const Center(child: CircularProgressIndicator()),
-      ],
       loaded: (s) {
         return [
           separator,

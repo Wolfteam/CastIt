@@ -1,3 +1,5 @@
+import 'package:castit/common/enums/subtitle_font_scale_type.dart';
+import 'package:castit/models/server_app_settings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,10 +40,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     );
   }
 
-  List<Widget> _buildPage(
-    BuildContext context,
-    SettingsState state,
-  ) {
+  List<Widget> _buildPage(BuildContext context, SettingsState state) {
     final i18n = I18n.of(context)!;
     final headerTitle = PageHeader(
       title: i18n.settings,
@@ -62,18 +61,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           _buildThemeSettings(context, i18n, state.appTheme),
           _buildAccentColorSettings(context, i18n, state.accentColor),
           _buildLanguageSettings(context, i18n, state.appLanguage),
-          if (state.isConnected)
-            _buildOtherSettings(
-              context,
-              i18n,
-              state.castItUrl,
-              state.videoScale,
-              state.playFromTheStart,
-              state.playNextFileAutomatically,
-              state.forceVideoTranscode,
-              state.forceAudioTranscode,
-              state.enableHwAccel,
-            ),
+          if (state.isConnected) _buildOtherSettings(context, i18n, state),
           _buildAboutSettings(context, i18n, state.appName, state.appVersion),
         ];
       },
@@ -261,36 +249,19 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     return _buildCard(content);
   }
 
-  Widget _buildOtherSettings(
-    BuildContext context,
-    I18n i18n,
-    String castItUrl,
-    VideoScaleType videoScale,
-    bool playFromTheStart,
-    bool playNextFileAutomatically,
-    bool forceVideoTranscode,
-    bool forceAudioTranscode,
-    bool enableHwAccel,
-  ) {
+  Widget _buildOtherSettings(BuildContext context, I18n i18n, SettingsLoadedState state) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
     final videoScaleDropdown = DropdownButton<VideoScaleType>(
       isExpanded: true,
       hint: Text(i18n.videoScale),
-      value: videoScale,
+      value: state.videoScale,
       underline: Container(
         height: 0,
         color: Colors.transparent,
       ),
-      onChanged: (newValue) => _updateSettings(
-        newValue!,
-        playFromTheStart,
-        playNextFileAutomatically,
-        forceVideoTranscode,
-        forceAudioTranscode,
-        enableHwAccel,
-      ),
+      onChanged: (newValue) => _updateServerSettings(state.copyWith.call(videoScale: newValue!)),
       items: VideoScaleType.values
           .map<DropdownMenuItem<VideoScaleType>>(
             (type) => DropdownMenuItem<VideoScaleType>(
@@ -327,14 +298,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         ),
         ListTile(
           title: Text(i18n.webServerUrl),
-          subtitle: Text(castItUrl),
-          onTap: () => _showConnectionDialog(i18n.webServerUrl, castItUrl),
-        ),
-        ListTile(
-          onTap: _showCloseAppDialog,
-          contentPadding: const EdgeInsets.only(right: 20, left: 16),
-          title: Text(i18n.closeDesktopApp),
-          trailing: const Icon(Icons.cast),
+          subtitle: Text(state.castItUrl),
+          onTap: () => _showConnectionDialog(i18n.webServerUrl, state.castItUrl),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 16, right: 16),
@@ -342,68 +307,33 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
-          value: playFromTheStart,
+          value: state.playFromTheStart,
           title: Text(i18n.playFromTheStart),
-          onChanged: (newValue) => _updateSettings(
-            videoScale,
-            newValue,
-            playNextFileAutomatically,
-            forceVideoTranscode,
-            forceAudioTranscode,
-            enableHwAccel,
-          ),
+          onChanged: (newValue) => _updateServerSettings(state.copyWith.call(playFromTheStart: newValue)),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
-          value: playNextFileAutomatically,
+          value: state.playNextFileAutomatically,
           title: Text(i18n.playNextFileAutomatically),
-          onChanged: (newValue) => _updateSettings(
-            videoScale,
-            playFromTheStart,
-            newValue,
-            forceVideoTranscode,
-            forceAudioTranscode,
-            enableHwAccel,
-          ),
+          onChanged: (newValue) => _updateServerSettings(state.copyWith.call(playNextFileAutomatically: newValue)),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
-          value: forceVideoTranscode,
+          value: state.forceVideoTranscode,
           title: Text(i18n.forceVideoTranscode),
-          onChanged: (newValue) => _updateSettings(
-            videoScale,
-            playFromTheStart,
-            playNextFileAutomatically,
-            newValue,
-            forceAudioTranscode,
-            enableHwAccel,
-          ),
+          onChanged: (newValue) => _updateServerSettings(state.copyWith.call(forceVideoTranscode: newValue)),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
-          value: forceAudioTranscode,
+          value: state.forceAudioTranscode,
           title: Text(i18n.forceAudioTranscode),
-          onChanged: (newValue) => _updateSettings(
-            videoScale,
-            playFromTheStart,
-            playNextFileAutomatically,
-            forceVideoTranscode,
-            newValue,
-            enableHwAccel,
-          ),
+          onChanged: (newValue) => _updateServerSettings(state.copyWith.call(forceAudioTranscode: newValue)),
         ),
         SwitchListTile(
           activeColor: theme.accentColor,
-          value: enableHwAccel,
+          value: state.enableHwAccel,
           title: Text(i18n.enableHwAccel),
-          onChanged: (newValue) => _updateSettings(
-            videoScale,
-            playFromTheStart,
-            playNextFileAutomatically,
-            forceVideoTranscode,
-            forceAudioTranscode,
-            newValue,
-          ),
+          onChanged: (newValue) => _updateServerSettings(state.copyWith.call(enableHwAccel: newValue)),
         ),
       ],
     );
@@ -559,23 +489,24 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   }
 
 //TODO: SOMETIMES SETTINGS ARE NOT UPDATING
-  Future<void> _updateSettings(
-    VideoScaleType videoScale,
-    bool playFromTheStart,
-    bool playNextFileAutomatically,
-    bool forceVideoTranscode,
-    bool forceAudioTranscode,
-    bool enableHwAccel,
-  ) {
+  Future<void> _updateServerSettings(SettingsLoadedState state) async {
     final bloc = context.read<ServerWsBloc>();
-    return bloc.updateSettings(
-      enableHwAccel: enableHwAccel,
-      forceAudioTranscode: forceAudioTranscode,
-      forceVideoTranscode: forceVideoTranscode,
-      playFromTheStart: playFromTheStart,
-      playNextFileAutomatically: playNextFileAutomatically,
-      videoScale: videoScale,
+    final settings = ServerAppSettings(
+      enableHardwareAcceleration: state.enableHwAccel,
+      forceAudioTranscode: state.forceAudioTranscode,
+      forceVideoTranscode: state.forceVideoTranscode,
+      startFilesFromTheStart: state.playFromTheStart,
+      playNextFileAutomatically: state.playNextFileAutomatically,
+      videoScale: getVideoScaleValue(state.videoScale),
+      loadFirstSubtitleFoundAutomatically: state.loadFirstSubtitleFoundAutomatically,
+      currentSubtitleFgColor: state.currentSubtitleFgColor.index,
+      subtitleDelayInSeconds: state.subtitleDelayInSeconds,
+      currentSubtitleFontFamily: state.currentSubtitleFontFamily.index,
+      currentSubtitleBgColor: state.currentSubtitleBgColor.index,
+      currentSubtitleFontScale: getSubtitleFontScaleValue(state.currentSubtitleFontScale),
+      currentSubtitleFontStyle: state.currentSubtitleFontStyle.index,
     );
+    return bloc.updateSettings(settings);
   }
 
   Future<void> _showConnectionDialog(String title, String currentCastIt) async {
@@ -590,28 +521,5 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         icon: Icons.link,
       ),
     );
-  }
-
-  void _showCloseAppDialog() {
-    final i18n = I18n.of(context)!;
-    final theme = Theme.of(context);
-    final cancelButton = OutlinedButton(
-      onPressed: () => Navigator.of(context).pop(),
-      child: Text(i18n.cancel, style: TextStyle(color: theme.primaryColor)),
-    );
-    final continueButton = ElevatedButton(
-      onPressed: () async {
-        Navigator.of(context).pop();
-        await context.read<ServerWsBloc>().closeDesktopApp();
-      },
-      child: Text(i18n.ok),
-    );
-
-    final alert = AlertDialog(
-      title: Text(i18n.closeDesktopApp),
-      content: Text(i18n.closeDesktopAppConfirmation),
-      actions: [cancelButton, continueButton],
-    );
-    showDialog(context: context, builder: (ctx) => alert);
   }
 }

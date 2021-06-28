@@ -5,7 +5,7 @@ class SettingsEvent with _$SettingsEvent {
   factory SettingsEvent.load() = SettingsLoadEvent;
 
   factory SettingsEvent.connected({
-    required AppSettingsResponseDto settings,
+    required ServerAppSettings settings,
   }) = SettingsConnectedEvent;
 
   factory SettingsEvent.disconnected() = SettingsDisconnectedEvent;
