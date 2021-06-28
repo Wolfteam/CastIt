@@ -1,11 +1,8 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/generated/l10n.dart';
-import 'package:castit/presentation/shared/extensions/styles.dart';
+import 'package:castit/presentation/shared/common_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'bottom_sheet_title.dart';
-import 'modal_sheet_separator.dart';
 
 class ChangeConnectionBottomSheetDialog extends StatefulWidget {
   final String currentUrl;
@@ -45,87 +42,68 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final i18n = S.of(context);
-    return SingleChildScrollView(
-      child: Container(
-        margin: Styles.modalBottomSheetContainerMargin,
-        padding: Styles.modalBottomSheetContainerPadding,
-        child: BlocBuilder<SettingsBloc, SettingsState>(
-          builder: (ctx, state) => state.map(
-            loading: (_) => Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                CircularProgressIndicator(),
-              ],
-            ),
-            loaded: (state) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                ModalSheetSeparator(),
-                BottomSheetTitle(
-                  title: widget.title ?? i18n.noConnectionToDesktopApp,
-                  icon: widget.icon ?? Icons.warning,
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (ctx, state) => CommonBottomSheet(
+        title: widget.title ?? i18n.noConnectionToDesktopApp,
+        titleIcon: widget.icon ?? Icons.warning,
+        onCancel: widget.onCancel != null ? () => widget.onCancel!() : _onCancel,
+        showOkButton: widget.showOkButton,
+        onOk: state.map(
+            loading: (_) => null,
+            loaded: (state) => !state.isCastItUrlValid
+                ? null
+                : widget.onOk != null
+                    ? () => widget.onOk!(_urlController.text)
+                    : _onRefreshClick),
+        child: state.map(
+          loading: (_) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(),
+            ],
+          ),
+          loaded: (state) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              TextFormField(
+                minLines: 1,
+                validator: (_) => state.isCastItUrlValid ? null : i18n.invalidUrl,
+                autovalidateMode: AutovalidateMode.always,
+                controller: _urlController,
+                keyboardType: TextInputType.url,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  suffixIcon: !widget.showRefreshButton
+                      ? null
+                      : IconButton(
+                          alignment: Alignment.bottomCenter,
+                          icon: const Icon(Icons.sync),
+                          onPressed: !state.isCastItUrlValid ? null : _onRefreshClick,
+                        ),
+                  alignLabelWithHint: true,
+                  hintText: i18n.url,
+                  labelText: i18n.url,
                 ),
-                TextFormField(
-                  minLines: 1,
-                  validator: (_) => state.isCastItUrlValid ? null : i18n.invalidUrl,
-                  autovalidateMode: AutovalidateMode.always,
-                  controller: _urlController,
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    suffixIcon: !widget.showRefreshButton
-                        ? null
-                        : IconButton(
-                            alignment: Alignment.bottomCenter,
-                            icon: const Icon(Icons.sync),
-                            onPressed: !state.isCastItUrlValid ? null : _onRefreshClick,
-                          ),
-                    alignLabelWithHint: true,
-                    hintText: i18n.url,
-                    labelText: i18n.url,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        i18n.verifyCastItUrl,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.caption,
-                      ),
-                      Text(
-                        i18n.makeSureYouAreConnected,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.caption,
-                      )
-                    ],
-                  ),
-                ),
-                ButtonBar(
-                  buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
+                child: Column(
                   children: <Widget>[
-                    OutlinedButton(
-                      onPressed: widget.onCancel != null ? () => widget.onCancel!() : _onCancel,
-                      child: Text(
-                        i18n.cancel,
-                        style: TextStyle(color: theme.primaryColor),
-                      ),
+                    Text(
+                      i18n.verifyCastItUrl,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.caption,
                     ),
-                    if (widget.showOkButton)
-                      ElevatedButton(
-                        onPressed: !state.isCastItUrlValid
-                            ? null
-                            : widget.onOk != null
-                                ? () => widget.onOk!(_urlController.text)
-                                : _onRefreshClick,
-                        child: Text(i18n.ok),
-                      )
+                    Text(
+                      i18n.makeSureYouAreConnected,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.caption,
+                    )
                   ],
-                )
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

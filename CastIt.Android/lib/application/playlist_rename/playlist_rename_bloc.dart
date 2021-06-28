@@ -8,19 +8,15 @@ part 'playlist_rename_bloc.freezed.dart';
 part 'playlist_rename_event.dart';
 part 'playlist_rename_state.dart';
 
+final _initialState = PlayListRenameState.loaded(currentName: '', isNameValid: false);
+
 class PlayListRenameBloc extends Bloc<PlayListRenameEvent, PlayListRenameState> {
-  PlayListRenameBloc() : super(PlayListRenameState.initial());
+  PlayListRenameBloc() : super(_initialState);
 
   _LoadedState get currentState => state as _LoadedState;
 
   @override
-  Stream<PlayListRenameState> mapEventToState(
-    PlayListRenameEvent event,
-  ) async* {
-    if (event is! _LoadedState) {
-      yield PlayListRenameState.initial();
-    }
-
+  Stream<PlayListRenameState> mapEventToState(PlayListRenameEvent event) async* {
     final s = event.map(
       load: (e) => PlayListRenameState.loaded(currentName: e.name, isNameValid: _isNameValid(e.name)),
       nameChanged: (e) => currentState.copyWith(isNameValid: _isNameValid(e.name)),

@@ -19,7 +19,7 @@ class DeleteFileBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final i18n = S.of(context)!;
+    final i18n = S.of(context);
     return ConfirmBottomSheet(
       title: i18n.delete,
       icon: Icons.delete,

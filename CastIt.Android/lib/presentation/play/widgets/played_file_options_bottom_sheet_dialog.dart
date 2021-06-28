@@ -1,68 +1,49 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/generated/l10n.dart';
-import 'package:castit/presentation/shared/bottom_sheet_title.dart';
-import 'package:castit/presentation/shared/extensions/styles.dart';
-import 'package:castit/presentation/shared/modal_sheet_separator.dart';
+import 'package:castit/presentation/shared/common_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        margin: Styles.modalBottomSheetContainerMargin,
-        padding: Styles.modalBottomSheetContainerPadding,
-        child: BlocConsumer<PlayedFileOptionsBloc, PlayedFileOptionsState>(
-          listener: (ctx, state) {
-            state.maybeWhen(
-              closed: () {
-                if (ModalRoute.of(context)!.isCurrent) {
-                  Navigator.of(ctx).pop();
-                }
-              },
-              orElse: () {},
-            );
+    final s = S.of(context);
+    return BlocConsumer<PlayedFileOptionsBloc, PlayedFileOptionsState>(
+      listener: (ctx, state) {
+        state.maybeWhen(
+          closed: () {
+            if (ModalRoute.of(context)!.isCurrent) {
+              Navigator.of(ctx).pop();
+            }
           },
-          builder: (ctx, state) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              ..._buildPage(ctx, state),
+          orElse: () {},
+        );
+      },
+      builder: (ctx, state) => CommonBottomSheet(
+        title: s.fileOptions,
+        titleIcon: Icons.play_circle_filled,
+        showOkButton: false,
+        showCancelButton: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: state.map(
+            loaded: (state) => <Widget>[
+              _buildAudioOptions(context, s, state.options),
+              _buildSubtitleOptions(context, s, state.options),
+              _buildQualitiesOptions(context, s, state.options),
+              _buildVolumeOptions(context, s, state.volumeLvl, state.isMuted),
+              OutlinedButton.icon(
+                onPressed: () => _stopPlayback(context),
+                icon: const Icon(Icons.stop),
+                label: Text(s.stopPlayback),
+              ),
             ],
+            closed: (_) => [],
           ),
         ),
       ),
-    );
-  }
-
-  List<Widget> _buildPage(BuildContext context, PlayedFileOptionsState state) {
-    final i18n = S.of(context);
-    final separator = ModalSheetSeparator();
-    final title = BottomSheetTitle(icon: Icons.play_circle_filled, title: i18n.fileOptions);
-    return state.map(
-      loaded: (s) {
-        return [
-          separator,
-          title,
-          _buildAudioOptions(context, i18n, s.options),
-          _buildSubtitleOptions(context, i18n, s.options),
-          _buildQualitiesOptions(context, i18n, s.options),
-          _buildVolumeOptions(context, i18n, s.volumeLvl, s.isMuted),
-          OutlinedButton.icon(
-            onPressed: () => _stopPlayback(context),
-            icon: const Icon(Icons.stop),
-            label: Text(i18n.stopPlayback),
-          ),
-        ];
-      },
-      closed: (s) {
-        return [
-          separator,
-          title,
-        ];
-      },
     );
   }
 
@@ -81,14 +62,7 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     return _buildDropDown(context, i18n, i18n.quality, i18n.quality, Icons.high_quality, qualitiesOptions);
   }
 
-  Widget _buildDropDown(
-    BuildContext context,
-    S i18n,
-    String title,
-    String hint,
-    IconData icon,
-    List<FileItemOptionsResponseDto> options,
-  ) {
+  Widget _buildDropDown(BuildContext context, S i18n, String title, String hint, IconData icon, List<FileItemOptionsResponseDto> options) {
     final theme = Theme.of(context);
     final dummy = FileItemOptionsResponseDto(
       id: -1,
