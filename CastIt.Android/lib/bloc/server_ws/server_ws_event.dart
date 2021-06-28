@@ -10,7 +10,7 @@ class ServerWsEvent with _$ServerWsEvent {
     required String castItUrl,
   }) = ServerUpdateUrlAndConnectToWsEvent;
   factory ServerWsEvent.showMsg({
-    required String msg,
+    required AppMessageType type,
   }) = ShowMsgEvent;
 
   const ServerWsEvent._();

@@ -10,6 +10,6 @@ class ServerWsState with _$ServerWsState {
     required String castItUrl,
     bool? isConnectedToWs,
     int? connectionRetries,
-    String? msgToShow,
+    AppMessageType? msgToShow,
   }) = ServerLoadedState;
 }

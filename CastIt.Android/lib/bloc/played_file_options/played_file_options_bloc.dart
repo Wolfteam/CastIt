@@ -11,14 +11,12 @@ part 'played_file_options_bloc.freezed.dart';
 part 'played_file_options_event.dart';
 part 'played_file_options_state.dart';
 
+const _initialState = PlayedFileOptionsState.loaded(options: []);
+
 class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptionsState> {
   final ServerWsBloc _serverWsBloc;
 
-  PlayedFileOptionsState get initialState => PlayedFileOptionsState.loading();
-
-  PlayedFileOptionsLoadedState get currentState => state as PlayedFileOptionsLoadedState;
-
-  PlayedFileOptionsBloc(this._serverWsBloc) : super(PlayedFileOptionsState.loading()) {
+  PlayedFileOptionsBloc(this._serverWsBloc) : super(_initialState) {
     _serverWsBloc.fileOptionsLoaded.stream.listen((event) {
       add(PlayedFileOptionsEvent.loaded(options: event));
     });
@@ -36,15 +34,7 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
   Stream<PlayedFileOptionsState> mapEventToState(
     PlayedFileOptionsEvent event,
   ) async* {
-    if (event is PlayedFileOptionsVolumeLevelChangedEvent && state is! PlayedFileOptionsLoadedState) {
-      return;
-    }
-
     final s = event.map(
-      load: (e) async {
-        await _serverWsBloc.loadFileOptions(e.id);
-        return initialState;
-      },
       loaded: (e) async => PlayedFileOptionsState.loaded(options: e.options),
       setFileOption: (e) async {
         await _serverWsBloc.setFileOptions(
@@ -53,16 +43,20 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
           isQuality: e.isQuality,
           isSubtitle: e.isSubtitle,
         );
-        return initialState;
+        return state;
       },
-      volumeChanged: (e) async {
-        return currentState.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted);
-      },
+      volumeChanged: (e) async => state.map(
+        loaded: (state) => state.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted),
+        closed: (s) => s,
+      ),
       setVolume: (e) async {
         await _serverWsBloc.setVolume(e.volumeLvl, isMuted: e.isMuted);
-        return currentState.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted);
+        return state.map(
+          loaded: (state) => state.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted),
+          closed: (s) => s,
+        );
       },
-      closeModal: (e) async => PlayedFileOptionsState.closed(),
+      closeModal: (e) async => _initialState,
     );
 
     yield await s;

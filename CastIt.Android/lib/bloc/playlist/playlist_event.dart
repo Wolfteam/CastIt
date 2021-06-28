@@ -25,5 +25,30 @@ class PlayListEvent with _$PlayListEvent {
 
   const factory PlayListEvent.closePage() = PlayListClosePageEvent;
 
-  factory PlayListEvent.notFound() = PlayListNotFoundEvent;
+  const factory PlayListEvent.notFound() = PlayListNotFoundEvent;
+
+  const factory PlayListEvent.playListChanged({
+    required GetAllPlayListResponseDto playList,
+  }) = _PlayListChanged;
+
+  const factory PlayListEvent.playListDeleted({
+    required int id,
+  }) = _PlayListDeleted;
+
+  const factory PlayListEvent.fileAdded({
+    required FileItemResponseDto file,
+  }) = _FileAdded;
+
+  const factory PlayListEvent.fileChanged({
+    required FileItemResponseDto file,
+  }) = _FileChanged;
+
+  const factory PlayListEvent.filesChanged({
+    required List<FileItemResponseDto> files,
+  }) = _FilesChanged;
+
+  const factory PlayListEvent.fileDeleted({
+    required int playListId,
+    required int id,
+  }) = _FilesDeleted;
 }

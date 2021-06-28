@@ -2,10 +2,6 @@ part of 'played_file_options_bloc.dart';
 
 @freezed
 class PlayedFileOptionsEvent with _$PlayedFileOptionsEvent {
-  factory PlayedFileOptionsEvent.load({
-    required int id,
-  }) = PlayedFileOptionsLoadEvent;
-
   factory PlayedFileOptionsEvent.loaded({
     required List<FileItemOptionsResponseDto> options,
   }) = PlayedFileOptionsLoadedEvent;
