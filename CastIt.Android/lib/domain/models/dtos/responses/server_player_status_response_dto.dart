@@ -1,4 +1,4 @@
-import 'package:castit/models/dtos/dtos.dart';
+import 'package:castit/domain/models/models.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'server_player_status_response_dto.freezed.dart';

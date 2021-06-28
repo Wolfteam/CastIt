@@ -1,11 +1,9 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../base_socket_request_dto.dart';
-
 part 'set_loop_file_request_dto.g.dart';
 
 @JsonSerializable()
-class SetLoopFileRequestDto extends AbstractBaseSocketRequestDto {
+class SetLoopFileRequestDto {
   @JsonKey(name: 'Id')
   final int id;
 

@@ -1,10 +1,7 @@
+import 'package:castit/domain/enums/enums.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-import '../common/enums/app_accent_color_type.dart';
-import '../common/enums/app_language_type.dart';
-import '../common/enums/app_theme_type.dart';
 
 part 'app_settings.freezed.dart';
 part 'app_settings.g.dart';

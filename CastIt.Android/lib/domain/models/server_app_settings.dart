@@ -1,9 +1,6 @@
-import 'package:castit/common/enums/subtitle_bg_color_type.dart';
-import 'package:castit/common/enums/subtitle_fg_color_type.dart';
-import 'package:castit/common/enums/subtitle_font_scale_type.dart';
-import 'package:castit/common/enums/text_track_font_generic_family_type.dart';
-import 'package:castit/common/enums/text_track_font_style_type.dart';
-import 'package:castit/common/enums/video_scale_type.dart';
+import 'package:castit/domain/enums/enums.dart';
+import 'package:castit/domain/enums/subtitle_bg_color_type.dart';
+import 'package:castit/domain/enums/text_track_font_generic_family_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'server_app_settings.g.dart';
