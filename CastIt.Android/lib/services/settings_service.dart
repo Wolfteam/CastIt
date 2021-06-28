@@ -1,5 +1,5 @@
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wifi_info_flutter/wifi_info_flutter.dart';
 
 import '../common/app_constants.dart';
 import '../common/enums/app_accent_color_type.dart';
@@ -130,9 +130,9 @@ class SettingsServiceImpl extends SettingsService {
 
   Future<String> _getWifiIP() async {
     try {
-      final ip = await WifiInfo().getWifiIP();
+      final ip = await NetworkInfo().getWifiIP();
 
-      if (ip.isNullEmptyOrWhitespace) {
+      if (!ip.isNullEmptyOrWhitespace) {
         return 'http://$ip:9696';
       }
       return AppConstants.baseCastItUrl;
