@@ -1,14 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:bloc/bloc.dart';
+import 'package:castit/common/enums/app_message_type.dart';
+import 'package:castit/models/server_app_settings.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/status.dart' as status_codes;
+import 'package:signalr_core/signalr_core.dart';
+import 'package:tuple/tuple.dart';
 
-import '../../common/enums/video_scale_type.dart';
 import '../../models/dtos/dtos.dart';
 import '../../services/logging_service.dart';
 import '../../services/settings_service.dart';
@@ -18,26 +18,6 @@ part 'server_ws_event.dart';
 part 'server_ws_state.dart';
 
 class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
-  //Client Msg
-  static const String _getPlayListsMsgType = 'CLIENT_PLAYLISTS_ALL';
-  static const String _getPlayListMsgType = 'CLIENT_PLAYLIST_ONE';
-  static const String _playMsgType = 'CLIENT_PLAYBLACK_PLAY';
-  static const String _goToSecondsMsgType = 'CLIENT_PLAYBLACK_GOTO_SECONDS';
-  static const String _skipSecondsMsgType = 'CLIENT_PLAYBLACK_SKIP_SECONDS';
-  static const String _goToMsgType = 'CLIENT_PLAYBLACK_GOTO';
-  static const String _togglePlayBackMsgType = 'CLIENT_PLAYBLACK_TOGGLE';
-  static const String _stopPlaybackMsgType = 'CLIENT_PLAYBACK_STOP';
-  static const String _setPlayListOptionsMsgType = 'CLIENT_PLAYLIST_OPTIONS';
-  static const String _deletePlayListMsgType = 'CLIENT_PLAYLIST_DELETE';
-  static const String _renamePlayListMsgType = 'CLIENT_PLAYLIST_RENAME';
-  static const String _deleteFileMsgType = 'CLIENT_FILE_DELETE';
-  static const String _loopFileMsgType = 'CLIENT_FILE_LOOP';
-  static const String _setFileOptionsMsgType = 'CLIENT_FILE_SET_OPTIONS';
-  static const String _getFileOptionsMsgType = 'CLIENT_GET_FILE_OPTIONS';
-  static const String _updateSettingsMsgType = 'CLIENT_SETTINGS_UPDATE';
-  static const String _setVolumeMsgType = 'CLIENT_SET_VOLUME';
-  static const String _closeAppMsgType = 'CLIENT_CLOSE_APP';
-
   //Server Msg
   static const String _gotPlayListsMsgType = 'SERVER_PLAYLISTS_ALL';
   static const String _gotPlayListMsgType = 'SERVER_PLAYLISTS_ONE';
@@ -57,28 +37,57 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   static const String _settingsChangedMsgType = 'SERVER_SETTINGS_CHANGED';
   static const String _infoMsg = 'SERVER_INFO_MSG';
 
+  static const String _sendPlayLists = 'SendPlayLists';
+  static const String _stoppedPlayback = 'StoppedPlayBack';
+  static const String _playListAdded = 'PlayListAdded';
+  static const String _playListChanged = 'PlayListChanged';
+  static const String _playListsChanged = 'PlayListsChanged';
+  static const String _playListDeleted = 'PlayListDeleted';
+  static const String _playListBusy = 'PlayListIsBusy';
+  static const String _fileAdded = 'FileAdded';
+  static const String _fileChanged = 'FileChanged';
+  static const String _filesChanged = 'FilesChanged';
+  static const String _fileDeleted = 'FileDeleted';
+  static const String _fileLoading = 'FileLoading';
+  static const String _fileLoaded = 'FileLoaded';
+  static const String _fileEndReached = 'FileEndReached';
+  static const String _playerStatusChanged = 'PlayerStatusChanged';
+  static const String _playerSettingsChanged = 'PlayerSettingsChanged';
+  static const String _serverMessage = 'ServerMessage';
+  static const String _castDeviceSet = 'CastDeviceSet';
+  static const String _castDevicesChanged = 'CastDevicesChanged';
+  static const String _castDeviceDisconnected = 'CastDeviceDisconnected';
+
   final StreamController<void> connected = StreamController.broadcast();
   final StreamController<void> fileLoading = StreamController.broadcast();
-  final StreamController<FileLoadedResponseDto> fileLoaded = StreamController.broadcast();
+  final StreamController<PlayedFile> fileLoaded = StreamController.broadcast();
   final StreamController<String> fileLoadingError = StreamController.broadcast();
   final StreamController<double?> fileTimeChanged = StreamController.broadcast();
   final StreamController<void> filePaused = StreamController.broadcast();
   final StreamController<void> fileEndReached = StreamController.broadcast();
   final StreamController<void> disconnected = StreamController.broadcast();
   final StreamController<void> appClosing = StreamController.broadcast();
-  final StreamController<AppSettingsResponseDto?> settingsChanged = StreamController.broadcast();
-  final StreamController<List<GetAllPlayListResponseDto>> playlistsLoaded = StreamController.broadcast();
+  final StreamController<ServerAppSettings?> settingsChanged = StreamController.broadcast();
   final StreamController<PlayListItemResponseDto?> playlistLoaded = StreamController.broadcast();
   final StreamController<List<FileItemOptionsResponseDto>> fileOptionsLoaded = StreamController.broadcast();
   final StreamController<VolumeLevelChangedResponseDto?> volumeLevelChanged = StreamController.broadcast();
   final StreamController<RefreshPlayListResponseDto> refreshPlayList = StreamController.broadcast();
 
+  final StreamController<GetAllPlayListResponseDto> playListAdded = StreamController.broadcast();
+  final StreamController<List<GetAllPlayListResponseDto>> playListsChanged = StreamController.broadcast();
+  final StreamController<GetAllPlayListResponseDto> playListChanged = StreamController.broadcast();
+  final StreamController<int> playListDeleted = StreamController.broadcast();
+
+  final StreamController<FileItemResponseDto> fileAdded = StreamController.broadcast();
+  final StreamController<FileItemResponseDto> fileChanged = StreamController.broadcast();
+  final StreamController<List<FileItemResponseDto>> filesChanged = StreamController.broadcast();
+  final StreamController<Tuple2<int, int>> fileDeleted = StreamController.broadcast();
+
   final SettingsService _settings;
   final LoggingService _logger;
+  HubConnection? _connection;
 
-  bool isServerRunning = false;
-
-  IOWebSocketChannel? _channel;
+  bool get isServerRunning => _connection?.state == HubConnectionState.connected;
 
   ServerWsState get initialState => ServerWsState.loading();
 
@@ -87,20 +96,18 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   ServerWsBloc(this._logger, this._settings) : super(ServerWsState.loading());
 
   @override
-  Stream<ServerWsState> mapEventToState(
-    ServerWsEvent event,
-  ) async* {
-    await _isServerRunning();
+  Stream<ServerWsState> mapEventToState(ServerWsEvent event) async* {
+    // await _isServerRunning();
 
     if (event is ServerDisconnectedFromWsEvent && isServerRunning) {
       _logger.info(runtimeType, 'A server disconnected from ws event was raised but the server is running');
       return;
     }
-
+    _logger.info(runtimeType, 'Handling event = $event');
     final s = event.when(
-      connectToWs: () {
-        if (isServerRunning) {
-          _connectToWs();
+      connectToWs: () async {
+        if (!isServerRunning) {
+          await _connectToHub();
         }
         return ServerWsState.loaded(
           castItUrl: _settings.castItUrl,
@@ -108,39 +115,40 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
           isConnectedToWs: isServerRunning,
         );
       },
-      disconnectedFromWs: () {
-        _disconnectFromWs(triggerEvent: false);
+      disconnectedFromWs: () async {
+        await _disconnectFromHub(triggerEvent: false);
         return currentState.copyWith(
           isConnectedToWs: false,
           castItUrl: _settings.castItUrl,
           connectionRetries: currentState.connectionRetries! + 1,
         );
       },
-      disconnectFromWs: () {
-        _disconnectFromWs();
+      disconnectFromWs: () async {
+        await _disconnectFromHub();
         return currentState.copyWith(
           isConnectedToWs: false,
           castItUrl: _settings.castItUrl,
           connectionRetries: currentState.connectionRetries! + 1,
         );
       },
-      updateUrlAndConnectToWs: (castitUrl) {
-        _settings.castItUrl = castitUrl;
-        if (isServerRunning) {
-          _connectToWs();
+      updateUrlAndConnectToWs: (newUrl) async {
+        final changed = _settings.castItUrl != newUrl;
+        _settings.castItUrl = newUrl;
+        if (changed) {
+          await _connectToHub();
         }
         return currentState.copyWith(
           isConnectedToWs: isServerRunning,
-          castItUrl: castitUrl,
+          castItUrl: newUrl,
           connectionRetries: currentState.connectionRetries! + 1,
         );
       },
-      showMsg: (msg) {
+      showMsg: (msg) async {
         return currentState.copyWith(msgToShow: msg);
       },
     );
 
-    yield s;
+    yield await s;
     if (currentState.msgToShow != null) {
       yield currentState.copyWith(msgToShow: null);
     }
@@ -148,7 +156,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
   @override
   Future<void> close() async {
-    _disconnectFromWs();
+    await _disconnectFromHub();
     await Future.wait([
       connected.close(),
       fileLoading.close(),
@@ -160,7 +168,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       disconnected.close(),
       appClosing.close(),
       settingsChanged.close(),
-      playlistsLoaded.close(),
+      playListsChanged.close(),
       playlistLoaded.close(),
       fileOptionsLoaded.close(),
       volumeLevelChanged.close(),
@@ -170,68 +178,252 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     await super.close();
   }
 
-  String _getWsUrl() {
-    final url = _cleanUrl();
-    return 'ws://$url/socket';
-  }
+  // Future<bool> _isServerRunning() async {
+  //   final url = _settings.castItUrl;
+  //   try {
+  //     final uri = Uri.parse(url);
+  //     final socket = await Socket.connect(uri.host, uri.port, timeout: const Duration(seconds: 1));
+  //     socket.destroy();
+  //     _logger.info(runtimeType, '_isServerRunning: Server is running');
+  //     isServerRunning = true;
+  //   } catch (e, s) {
+  //     _logger.error(runtimeType, '_isServerRunning: Connectivity error, server may not be running or url = $url is not valid', e, s);
+  //     isServerRunning = false;
+  //   }
+  //   return isServerRunning;
+  // }
 
-  String _cleanUrl() {
-    String url = _settings.castItUrl;
-    url = url.replaceFirst('http://', '');
-    url = url.replaceFirst('https://', '');
-
-    return url;
-  }
-
-  Future<bool> _isServerRunning() async {
-    final url = _cleanUrl();
+  Future<void> _connectToHub() async {
+    final url = '${_settings.castItUrl}/castithub';
     try {
-      final uri = Uri.http(url, '');
-      final socket = await Socket.connect(uri.host, uri.port, timeout: const Duration(seconds: 1));
-      socket.destroy();
-      _logger.info(runtimeType, '_isServerRunning: Server is running');
-      isServerRunning = true;
-    } catch (e) {
-      _logger.info(
-        runtimeType,
-        '_isServerRunning: Connectivity error, server may not be running or url = $url is not valid',
+      _logger.info(runtimeType, 'Trying to connect to hub on = $url ...');
+      final options = HttpConnectionOptions(
+        logging: (level, message) {
+          switch (level) {
+            case LogLevel.trace:
+            case LogLevel.debug:
+            case LogLevel.none:
+            case LogLevel.information:
+              // _logger.info(runtimeType, message);
+              break;
+            case LogLevel.warning:
+              // _logger.warning(runtimeType, message);
+              break;
+            case LogLevel.error:
+            case LogLevel.critical:
+              _logger.error(runtimeType, message);
+              break;
+          }
+        },
       );
-      isServerRunning = false;
-    }
-    return isServerRunning;
-  }
 
-  void _connectToWs() {
-    try {
-      _disconnectFromWs(triggerEvent: false);
-      final url = _getWsUrl();
-      _channel = IOWebSocketChannel.connect(url, pingInterval: const Duration(seconds: 2));
+      await _disconnectFromHub(triggerEvent: false);
 
-      _channel!.stream.listen((event) {
-        final jsonMap = json.decode(event as String) as Map<String, dynamic>;
-        _handleSocketMsg(jsonMap);
-      }, onError: (e, StackTrace s) async {
-        await _onWsErrorDone(true);
-        _logger.error(runtimeType, '_connectToWs: Error while listening in channel', e, s);
-      }, onDone: () async {
-        await _onWsErrorDone(false);
-        _logger.info(runtimeType, '_connectToWs: Channel done method was called');
-      });
+      _connection = HubConnectionBuilder().withUrl(url, options).build();
+      _listenHubEvents(_connection!);
+      await _connection!.start();
     } catch (e, s) {
-      _disconnectFromWs();
-      _logger.error(runtimeType, '_connectToWs: Unknown error', e, s);
+      _logger.error(runtimeType, '_connectToHub: Error while trying to connect to hub = $url', e, s);
+      await _disconnectFromHub();
     }
   }
 
-  void _disconnectFromWs({bool triggerEvent = true}) {
-    if (_channel != null) {
-      _channel!.sink.close(status_codes.goingAway, 'Disconnected');
+  Future<void> _disconnectFromHub({bool triggerEvent = true}) async {
+    if (_connection != null) {
+      _connection!.off(_sendPlayLists);
+
+      _connection!.off(_playListAdded);
+
+      _connection!.off(_playListChanged);
+
+      _connection!.off(_playListsChanged);
+
+      _connection!.off(_playListDeleted);
+
+      _connection!.off(_playListBusy);
+
+      _connection!.off(_fileAdded);
+
+      _connection!.off(_fileChanged);
+
+      _connection!.off(_filesChanged);
+
+      _connection!.off(_fileDeleted);
+
+      _connection!.off(_fileLoading);
+
+      _connection!.off(_fileLoaded);
+
+      _connection!.off(_fileEndReached);
+
+      _connection!.off(_playerStatusChanged);
+
+      _connection!.off(_playerSettingsChanged);
+
+      _connection!.off(_serverMessage);
+
+      _connection!.off(_castDeviceSet);
+
+      _connection!.off(_castDevicesChanged);
+
+      _connection!.off(_castDeviceDisconnected);
+
+      await _connection!.stop();
+    }
+
+    _connection = null;
+    if (triggerEvent) {
+      disconnected.add(null);
     }
 
     // isServerRunning = false;
-    _channel = null;
-    if (triggerEvent) {
-      disconnected.add(null);
+  }
+
+  void _listenHubEvents(HubConnection connection) {
+    connection.onclose((exception) async {
+      if (exception != null) {
+        await _onHubErrorOrDone(false);
+        _logger.info(runtimeType, '_listenHubEvents: Channel done method was called');
+      } else {
+        await _onHubErrorOrDone(false);
+        _logger.info(runtimeType, '_listenHubEvents: Channel done method was called');
+      }
+    });
+    connection.on(_sendPlayLists, (message) => _handleHubMsg(_sendPlayLists, message?.first));
+
+    //TODO: IT SEEMS METHODS WITHOUT PARAMS FAILS WITH THIS LIB
+    // connection.on(_stoppedPlayback, (message) => _handleHubMsg(_stoppedPlayback, message?.first));
+
+    connection.on(_playListAdded, (message) => _handleHubMsg(_playListAdded, message?.first));
+
+    connection.on(_playListChanged, (message) => _handleHubMsg(_playListChanged, message?.first));
+
+    connection.on(_playListsChanged, (message) => _handleHubMsg(_playListsChanged, message?.first));
+
+    connection.on(_playListDeleted, (message) => _handleHubMsg(_playListDeleted, message?.first));
+
+    connection.on(_playListBusy, (message) => _handleHubMsg(_playListBusy, message?.first));
+
+    connection.on(_fileAdded, (message) => _handleHubMsg(_fileAdded, message?.first));
+
+    connection.on(_fileChanged, (message) => _handleHubMsg(_fileChanged, message?.first));
+
+    connection.on(_filesChanged, (message) => _handleHubMsg(_filesChanged, message?.first));
+
+    connection.on(_fileDeleted, (message) => _handleHubMsg(_fileDeleted, message));
+
+    connection.on(_fileLoading, (message) => _handleHubMsg(_fileLoading, message?.first));
+
+    connection.on(_fileLoaded, (message) => _handleHubMsg(_fileLoaded, message?.first));
+
+    connection.on(_fileEndReached, (message) => _handleHubMsg(_fileEndReached, message?.first));
+
+    connection.on(_playerStatusChanged, (message) => _handleHubMsg(_playerStatusChanged, message?.first));
+
+    connection.on(_playerSettingsChanged, (message) => _handleHubMsg(_playerSettingsChanged, message?.first));
+
+    connection.on(_serverMessage, (message) => _handleHubMsg(_serverMessage, message?.first));
+
+    connection.on(_castDeviceSet, (message) => _handleHubMsg(_castDeviceSet, message?.first));
+
+    connection.on(_castDevicesChanged, (message) => _handleHubMsg(_castDevicesChanged, message?.first));
+
+    connection.on(_castDeviceDisconnected, (message) => _handleHubMsg(_castDeviceDisconnected, message?.first));
+  }
+
+  void _handleHubMsg(String msgType, dynamic message) {
+    if (msgType != _playerStatusChanged) {
+      _logger.info(runtimeType, 'Handling msgType = $msgType');
+    }
+    switch (msgType) {
+      case _sendPlayLists:
+        final pls = message as List<dynamic>;
+        final playlists = pls.map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
+        playListsChanged.add(playlists);
+        break;
+      case _playerSettingsChanged:
+        _logger.info(runtimeType, '_handleSocketMsg: Settings were loaded');
+        final settings = ServerAppSettings.fromJson(message as Map<String, dynamic>);
+        connected.add(null);
+        settingsChanged.add(settings);
+        break;
+      case _playerStatusChanged:
+        final status = ServerPlayerStatusResponseDto.fromJson(message as Map<String, dynamic>);
+        if (status.player.isPaused) {
+          filePaused.add(null);
+        }
+        if (status.playedFile != null) {
+          playListChanged.add(status.playList!);
+          final f = PlayedFile.from(status);
+          fileLoaded.add(f);
+          fileChanged.add(status.playedFile!);
+          fileOptionsLoaded.add(status.playedFile!.streams);
+        } else {
+          fileEndReached.add(null);
+        }
+        final volume = VolumeLevelChangedResponseDto(isMuted: status.player.isMuted, volumeLevel: status.player.volumeLevel);
+        volumeLevelChanged.add(volume);
+        break;
+      case _playListAdded:
+        final newPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
+        playListAdded.add(newPl);
+        break;
+      case _playListChanged:
+        final updatedPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
+        playListChanged.add(updatedPl);
+        break;
+      case _playListsChanged:
+        final playLists = (message as List<dynamic>).map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
+        playListsChanged.add(playLists);
+        break;
+      case _playListDeleted:
+        final id = message as int;
+        playListDeleted.add(id);
+        break;
+      case _playListBusy:
+        break;
+      case _fileAdded:
+        final file = FileItemResponseDto.fromJson(message as Map<String, dynamic>);
+        fileAdded.add(file);
+        break;
+      case _fileChanged:
+        final file = FileItemResponseDto.fromJson(message as Map<String, dynamic>);
+        fileChanged.add(file);
+        break;
+      case _filesChanged:
+        final files = (message as List<dynamic>).map((e) => FileItemResponseDto.fromJson(e as Map<String, dynamic>)).toList();
+        filesChanged.add(files);
+        break;
+      case _fileDeleted:
+        final items = message as List<dynamic>;
+        final playListId = items.first as int;
+        final fileId = items.last as int;
+        fileDeleted.add(Tuple2(playListId, fileId));
+        break;
+      case _fileLoading:
+        _logger.info(runtimeType, '_handleSocketMsg: A file is loading...');
+        fileLoading.add(null);
+        break;
+      case _serverMessage:
+        final code = message as int;
+        add(ServerWsEvent.showMsg(type: getAppMessageType(code)));
+        break;
+      case _stoppedPlayback:
+      case _fileEndReached:
+        _logger.info(runtimeType, '_handleSocketMsg: File end reached');
+        fileEndReached.add(null);
+        break;
+      case _castDevicesChanged:
+        break;
+      case _castDeviceSet:
+        break;
+      case _castDeviceDisconnected:
+        break;
+      case _fileLoaded:
+        break;
+      default:
+        _logger.warning(runtimeType, '_handleSocketMsg: Msg = $msgType is not being handled');
+        break;
     }
   }
 
@@ -248,7 +440,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         fileLoading.add(null);
         break;
       case _fileLoadedMsgType:
-        final file = response.result as FileLoadedResponseDto;
+        final file = response.result as PlayedFile;
         _logger.info(runtimeType, '_handleSocketMsg: File = ${file.filename} was loaded');
         fileLoaded.add(file);
         break;
@@ -281,23 +473,23 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       case _appClosingMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Desktop app is being closed');
         appClosing.add(null);
-        _disconnectFromWs();
-        isServerRunning = false;
+        _disconnectFromHub();
+        // isServerRunning = false;
         break;
       case _settingsChangedMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Settings were loaded');
-        final settings = response.result as AppSettingsResponseDto?;
+        final settings = response.result as ServerAppSettings?;
         settingsChanged.add(settings);
         break;
       case _infoMsg:
         final msg = response.result as String;
         _logger.info(runtimeType, '_handleSocketMsg: Server msg received = $msg');
-        add(ServerWsEvent.showMsg(msg: msg));
+        // add(ServerWsEvent.showMsg(msg: msg));
         break;
       case _gotPlayListsMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Playlists loaded');
         final pls = response.result as List<dynamic>;
-        playlistsLoaded.add(pls.map((e) => e as GetAllPlayListResponseDto).toList());
+        playListsChanged.add(pls.map((e) => e as GetAllPlayListResponseDto).toList());
         break;
       case _gotPlayListMsgType:
         _logger.info(runtimeType, '_handleSocketMsg: Playlist loaded');
@@ -320,140 +512,102 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
     }
   }
 
-  Future<void> _onWsErrorDone(bool error) async {
-    await _isServerRunning();
+  Future<void> _onHubErrorOrDone(bool error) async {
+    // await _isServerRunning();
     if (!isServerRunning) {
-      _disconnectFromWs();
+      _disconnectFromHub();
     }
   }
 
-  Future<void> _sendMsg(BaseSocketRequest dto) async {
+  Future<dynamic> _invokeHubMethod(String methodName, List<dynamic> args) async {
     try {
-      _logger.info(runtimeType, '_sendMsg: Trying to send msgType = ${dto.messageType}');
-      final msg = json.encode(dto);
-      if (!await _isServerRunning()) {
-        _disconnectFromWs();
+      _logger.info(runtimeType, '_invokeHubMethod: Trying to call method  = $methodName');
+      if (_connection == null) {
+        _logger.info(runtimeType, '_invokeHubMethod: Connection is null, trying to establish connection before calling method = $methodName');
+        await _connectToHub();
+      }
+
+      if (!isServerRunning) {
+        _logger.warning(runtimeType, '_invokeHubMethod: Cannot invoke method  = $methodName cause the server is not running');
+        await _disconnectFromHub();
         return;
       }
-      if (_channel == null) {
-        _connectToWs();
-      }
-      _channel!.sink.add(msg);
+
+      return await _connection!.invoke(methodName, args: args);
     } catch (e, s) {
-      _disconnectFromWs();
-      _logger.error(runtimeType, '_sendMsg: Unknown errror', e, s);
+      await _disconnectFromHub();
+      _logger.error(runtimeType, '_invokeHubMethod: Unknown error', e, s);
     }
+    return null;
   }
 
-  Future<void> playFile(int id, int playListId, {bool force = false}) {
-    final dto = PlayFileRequestDto(id: id, playListId: playListId, force: force)..messageType = _playMsgType;
-    return _sendMsg(dto);
+  Future<void> playFile(int id, int playListId, {bool force = false}) async {
+    final dto = PlayFileRequestDto(id: id, playListId: playListId, force: force);
+    await _invokeHubMethod('Play', [dto]);
   }
 
-  Future<void> gotoSeconds(double seconds) {
-    final dto = GoToSecondsRequestDto(seconds: seconds)..messageType = _goToSecondsMsgType;
-    return _sendMsg(dto);
+  Future<void> gotoSeconds(double seconds) async {
+    await _invokeHubMethod('GoToSeconds', [seconds]);
   }
 
-  Future<void> skipSeconds(double seconds) {
-    final dto = GoToSecondsRequestDto(seconds: seconds)..messageType = _skipSecondsMsgType;
-    return _sendMsg(dto);
+  Future<void> skipSeconds(double seconds) async {
+    await _invokeHubMethod('SkipSeconds', [seconds]);
   }
 
-  Future<void> goTo({bool next = false, bool previous = false}) {
-    final dto = GoToRequestDto(next: next, previous: previous)..messageType = _goToMsgType;
-    return _sendMsg(dto);
+  Future<void> goTo({bool next = false, bool previous = false}) async {
+    await _invokeHubMethod('GoTo', [next, previous]);
   }
 
-  Future<void> togglePlayBack() {
-    final dto = BaseSocketRequestDto(messageType: _togglePlayBackMsgType);
-    return _sendMsg(dto);
+  Future<void> togglePlayBack() async {
+    await _invokeHubMethod('TogglePlayBack', []);
   }
 
-  Future<void> stopPlayBack() {
-    final dto = BaseSocketRequestDto(messageType: _stopPlaybackMsgType);
-    return _sendMsg(dto);
+  Future<void> stopPlayBack() async {
+    await _invokeHubMethod('StopPlayback', []);
   }
 
-  Future<void> setPlayListOptions(int id, {bool loop = false, bool shuffle = false}) {
-    final dto = SetPlayListOptionsRequestDto(id: id, loop: loop, shuffle: shuffle)..messageType = _setPlayListOptionsMsgType;
-    return _sendMsg(dto);
+  Future<void> setPlayListOptions(int id, {bool loop = false, bool shuffle = false}) async {
+    final dto = SetPlayListOptionsRequestDto(loop: loop, shuffle: shuffle);
+    await _invokeHubMethod('SetPlayListOptions', [id, dto]);
   }
 
-  Future<void> deletePlayList(int id) {
-    final dto = DeletePlayListRequestDto(id: id)..messageType = _deletePlayListMsgType;
-    return _sendMsg(dto);
+  Future<void> deletePlayList(int id) async {
+    await _invokeHubMethod('DeletePlayList', [id]);
   }
 
-  Future<void> deleteFile(int id, int playListId) {
-    final dto = DeleteFileRequestDto(id: id, playListId: playListId)..messageType = _deleteFileMsgType;
-    return _sendMsg(dto);
+  Future<void> deleteFile(int id, int playListId) async {
+    await _invokeHubMethod('DeleteFile', [playListId, id]);
   }
 
-  Future<void> loopFile(int id, int playListId, {bool loop = false}) {
-    final dto = SetLoopFileRequestDto(id: id, playListId: playListId, loop: loop)..messageType = _loopFileMsgType;
-    return _sendMsg(dto);
+  Future<void> loopFile(int id, int playListId, {bool loop = false}) async {
+    await _invokeHubMethod('LoopFile', [playListId, id, loop]);
   }
 
-  Future<void> setFileOptions(
-    int streamIndex, {
-    bool isAudio = false,
-    bool isSubtitle = false,
-    bool isQuality = false,
-  }) {
-    final dto = SetFileOptionsRequestDto(streamIndex: streamIndex, isAudio: isAudio, isQuality: isQuality, isSubTitle: isSubtitle)
-      ..messageType = _setFileOptionsMsgType;
-    return _sendMsg(dto);
+  Future<void> setFileOptions(int streamIndex, {bool isAudio = false, bool isSubtitle = false, bool isQuality = false}) async {
+    final dto = SetFileOptionsRequestDto(streamIndex: streamIndex, isAudio: isAudio, isQuality: isQuality, isSubTitle: isSubtitle);
+    await _invokeHubMethod('SetFileOptions', [dto]);
   }
 
-  Future<void> updateSettings({
-    VideoScaleType videoScale = VideoScaleType.original,
-    bool playFromTheStart = false,
-    bool playNextFileAutomatically = false,
-    bool forceAudioTranscode = false,
-    bool forceVideoTranscode = false,
-    bool enableHwAccel = false,
-  }) {
-    final dto = AppSettingsRequestDto(
-      enableHwAccel: enableHwAccel,
-      forceAudioTranscode: forceAudioTranscode,
-      forceVideoTranscode: forceVideoTranscode,
-      playFromTheStart: playFromTheStart,
-      playNextFileAutomatically: playNextFileAutomatically,
-      videoScale: getVideoScaleValue(videoScale),
-    )..messageType = _updateSettingsMsgType;
-    return _sendMsg(dto);
+  Future<void> updateSettings(ServerAppSettings dto) async {
+    await _invokeHubMethod('UpdateSettings', [dto]);
   }
 
-  Future<void> loadPlayLists() {
-    final dto = BaseSocketRequestDto(messageType: _getPlayListsMsgType);
-    return _sendMsg(dto);
+  Future<void> loadPlayLists() async {
+    await _invokeHubMethod('SendPlayListsToClient', []);
   }
 
-  Future<void> loadPlayList(int playListId) {
-    final dto = BaseItemRequestDto(id: playListId)..messageType = _getPlayListMsgType;
-    return _sendMsg(dto);
+  Future<PlayListItemResponseDto> loadPlayList(int playListId) async {
+    final response = await _invokeHubMethod('GetPlayList', [playListId]);
+    return PlayListItemResponseDto.fromJson(response as Map<String, dynamic>);
   }
 
-  Future<void> loadFileOptions(int id) {
-    final dto = BaseItemRequestDto(id: id)..messageType = _getFileOptionsMsgType;
-    return _sendMsg(dto);
+  Future<void> setVolume(double volumeLvl, {bool isMuted = false}) async {
+    final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted);
+    await _invokeHubMethod('SetVolume', [dto]);
   }
 
-  Future<void> setVolume(double volumeLvl, {bool isMuted = false}) {
-    final dto = SetVolumeRequestDto(volumeLevel: volumeLvl, isMuted: isMuted)..messageType = _setVolumeMsgType;
-    return _sendMsg(dto);
-  }
-
-  Future<void> renamePlayList(int id, String name) {
-    final dto = RenamePlayListRequestDto(name: name)
-      ..messageType = _renamePlayListMsgType
-      ..id = id;
-    return _sendMsg(dto);
-  }
-
-  Future<void> closeDesktopApp() {
-    final dto = BaseSocketRequestDto(messageType: _closeAppMsgType);
-    return _sendMsg(dto);
+  Future<void> updatePlayList(int id, String name) async {
+    final dto = UpdatePlayListRequestDto(name: name);
+    await _invokeHubMethod('UpdatePlayList', [id, dto]);
   }
 }
