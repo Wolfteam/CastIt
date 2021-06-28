@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands.PlayLists
 {
-    [Command(Name = "add", Description = "Deletes all the play lists except the provided one", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
+    [Command(Name = "add", Description = "Adds folder / files to the specified playlist", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class AddCommand : BaseCommand
     {
         [Argument(0, Description = "The playlist id", ShowInHelpText = true)]
