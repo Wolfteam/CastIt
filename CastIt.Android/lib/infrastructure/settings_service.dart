@@ -1,39 +1,11 @@
+import 'package:castit/domain/app_constants.dart';
+import 'package:castit/domain/enums/enums.dart';
+import 'package:castit/domain/extensions/string_extensions.dart';
+import 'package:castit/domain/models/models.dart';
+import 'package:castit/domain/services/logging_service.dart';
+import 'package:castit/domain/services/settings_service.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../common/app_constants.dart';
-import '../common/enums/app_accent_color_type.dart';
-import '../common/enums/app_language_type.dart';
-import '../common/enums/app_theme_type.dart';
-import '../common/extensions/string_extensions.dart';
-import '../models/app_settings.dart';
-import 'logging_service.dart';
-
-abstract class SettingsService {
-  AppSettings get appSettings;
-
-  AppThemeType get appTheme;
-
-  set appTheme(AppThemeType theme);
-
-  AppAccentColorType get accentColor;
-
-  set accentColor(AppAccentColorType accentColor);
-
-  AppLanguageType get language;
-
-  set language(AppLanguageType lang);
-
-  String get castItUrl;
-
-  set castItUrl(String url);
-
-  bool get isFirstInstall;
-
-  set isFirstInstall(bool itIs);
-
-  Future init();
-}
 
 class SettingsServiceImpl extends SettingsService {
   final _appThemeKey = 'AppTheme';

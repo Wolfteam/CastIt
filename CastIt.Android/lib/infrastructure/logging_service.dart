@@ -1,22 +1,17 @@
+import 'package:castit/domain/extensions/string_extensions.dart';
+import 'package:castit/domain/services/device_info_service.dart';
+import 'package:castit/domain/services/logging_service.dart';
+import 'package:castit/domain/services/telemetry_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:sprintf/sprintf.dart';
 
-import '../common/extensions/string_extensions.dart';
-import '../telemetry.dart';
-
-abstract class LoggingService {
-  void info(Type type, String msg, [List<Object>? args]);
-
-  void warning(Type type, String msg, [dynamic ex, StackTrace? trace]);
-
-  void error(Type type, String msg, [dynamic ex, StackTrace? trace]);
-}
-
 class LoggingServiceImpl implements LoggingService {
+  final TelemetryService _telemetryService;
+  final DeviceInfoService _deviceInfoService;
   final _logger = Logger();
 
-  LoggingServiceImpl();
+  LoggingServiceImpl(this._telemetryService, this._deviceInfoService);
 
   @override
   void info(Type type, String msg, [List<Object>? args]) {
@@ -34,6 +29,7 @@ class LoggingServiceImpl implements LoggingService {
     assert(!msg.isNullEmptyOrWhitespace);
     final tag = type.toString();
     _logger.w('$tag - ${_formatEx(msg, ex)}', ex, trace);
+
     if (kReleaseMode) {
       _trackWarning(tag, msg, ex, trace);
     }
@@ -58,20 +54,25 @@ class LoggingServiceImpl implements LoggingService {
   }
 
   void _trackError(String tag, String msg, [dynamic ex, StackTrace? trace]) {
-    final map = {
-      'tag': tag,
-      'msg': _formatEx(msg, ex),
-      'trace': trace?.toString() ?? 'No trace available',
-    };
-    trackEventAsync('Error - ${DateTime.now()}', map);
+    final map = _buildError(tag, msg, ex, trace);
+    _telemetryService.trackEventAsync('Error - ${DateTime.now()}', map);
   }
 
   void _trackWarning(String tag, String msg, [dynamic ex, StackTrace? trace]) {
+    final map = _buildError(tag, msg, ex, trace);
+    _telemetryService.trackEventAsync('Warning - ${DateTime.now()}', map);
+  }
+
+  Map<String, String> _buildError(String tag, String msg, [dynamic ex, StackTrace? trace]) {
     final map = {
       'tag': tag,
-      'msg': _formatEx(msg, ex),
+      'msg': msg,
+      'ex': ex?.toString() ?? 'No exception available',
       'trace': trace?.toString() ?? 'No trace available',
     };
-    trackEventAsync('Warning - ${DateTime.now()}', map);
+
+    map.addAll(_deviceInfoService.deviceInfo);
+
+    return map;
   }
 }
