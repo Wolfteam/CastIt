@@ -1,3 +1,5 @@
+import 'package:castit/common/enums/app_message_type.dart';
+
 import '../../common/enums/app_language_type.dart';
 import '../../common/enums/app_theme_type.dart';
 import '../../generated/i18n.dart';
@@ -36,6 +38,68 @@ extension I18nExtensions on I18n {
         return original;
       default:
         throw Exception('The provided video scale = $scale is not valid');
+    }
+  }
+
+  String translateAppMsgType(AppMessageType type) {
+    //TODO: SWITCH THE I18N PROVIDER
+    return 'N/A';
+
+    switch (type) {
+      case AppMessageType.unknownErrorOccurred:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.invalidRequest:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.notFound:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.playListNotFound:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.unknownErrorLoadingFile:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.fileNotFound:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.fileIsAlreadyBeingPlayed:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.fileNotSupported:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.filesAreNotValid:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.noFilesToBeAdded:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.urlNotSupported:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.urlCouldntBeParsed:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.oneOrMoreFilesAreNotReadyYet:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.noDevicesFound:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.noInternetConnection:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.connectionToDeviceIsStillInProgress:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.ffmpegError:
+        // TODO: Handle this case.
+        break;
+      case AppMessageType.serverIsClosing:
+        // TODO: Handle this case.
+        break;
     }
   }
 }
