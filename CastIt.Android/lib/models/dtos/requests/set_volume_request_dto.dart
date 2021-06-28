@@ -1,15 +1,10 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../base_socket_request_dto.dart';
-
 part 'set_volume_request_dto.g.dart';
 
 @JsonSerializable()
-class SetVolumeRequestDto extends AbstractBaseSocketRequestDto {
-  @JsonKey(name: 'VolumeLevel')
+class SetVolumeRequestDto {
   final double volumeLevel;
-
-  @JsonKey(name: 'IsMuted')
   final bool isMuted;
 
   SetVolumeRequestDto({

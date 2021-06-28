@@ -1,17 +1,11 @@
-import 'package:castit/models/dtos/base_socket_request_dto.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'play_file_request_dto.g.dart';
 
 @JsonSerializable()
-class PlayFileRequestDto extends AbstractBaseSocketRequestDto {
-  @JsonKey(name: 'Id')
+class PlayFileRequestDto {
   final int id;
-
-  @JsonKey(name: 'PlayListId')
   final int playListId;
-
-  @JsonKey(name: 'Force')
   final bool force;
 
   PlayFileRequestDto({

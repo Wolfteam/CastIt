@@ -6,7 +6,6 @@ part 'delete_playlist_request_dto.g.dart';
 
 @JsonSerializable()
 class DeletePlayListRequestDto extends AbstractBaseSocketRequestDto {
-  @JsonKey(name: 'Id')
   final int id;
 
   DeletePlayListRequestDto({

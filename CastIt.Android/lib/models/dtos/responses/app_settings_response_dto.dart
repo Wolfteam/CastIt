@@ -5,17 +5,19 @@ import '../../../common/enums/video_scale_type.dart';
 part 'app_settings_response_dto.freezed.dart';
 part 'app_settings_response_dto.g.dart';
 
+//TODO: RENAME TO SERVER SETTINGS
 @freezed
-abstract class AppSettingsResponseDto implements _$AppSettingsResponseDto {
+class AppSettingsResponseDto with _$AppSettingsResponseDto {
   VideoScaleType get videoScaleType => getVideoScaleType(videoScale);
 
   factory AppSettingsResponseDto({
-    @JsonKey(name: 'StartFilesFromTheStart') required bool playFromTheStart,
-    @JsonKey(name: 'PlayNextFileAutomatically') required bool playNextFileAutomatically,
-    @JsonKey(name: 'ForceVideoTranscode') required bool forceVideoTranscode,
-    @JsonKey(name: 'ForceAudioTranscode') required bool forceAudioTranscode,
-    @JsonKey(name: 'VideoScale') required int videoScale,
-    @JsonKey(name: 'EnableHardwareAcceleration') required bool enableHwAccel,
+    @JsonKey(name: 'startFilesFromTheStart') required bool playFromTheStart,
+    @JsonKey(name: 'playNextFileAutomatically') required bool playNextFileAutomatically,
+    @JsonKey(name: 'forceVideoTranscode') required bool forceVideoTranscode,
+    @JsonKey(name: 'forceAudioTranscode') required bool forceAudioTranscode,
+    @JsonKey(name: 'videoScale') required int videoScale,
+    @JsonKey(name: 'enableHardwareAcceleration') required bool enableHwAccel,
+    @JsonKey(name: 'loadFirstSubtitleFoundAutomatically') required bool loadFirstSubtitleFoundAutomatically,
   }) = _AppSettingsResponseDto;
 
   factory AppSettingsResponseDto.fromJson(Map<String, dynamic> json) => _$AppSettingsResponseDtoFromJson(json);
@@ -23,11 +25,12 @@ abstract class AppSettingsResponseDto implements _$AppSettingsResponseDto {
   AppSettingsResponseDto._();
 
   static List<String> get jsonKeys => [
-        'StartFilesFromTheStart',
-        'PlayNextFileAutomatically',
-        'ForceVideoTranscode',
-        'ForceAudioTranscode',
-        'VideoScale',
-        'EnableHardwareAcceleration',
+        'startFilesFromTheStart',
+        'playNextFileAutomatically',
+        'forceVideoTranscode',
+        'forceAudioTranscode',
+        'videoScale',
+        'enableHardwareAcceleration',
+        'loadFirstSubtitleFoundAutomatically',
       ];
 }

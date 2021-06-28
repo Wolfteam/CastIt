@@ -7,24 +7,28 @@ part 'get_all_playlist_response_dto.g.dart';
 @freezed
 abstract class GetAllPlayListResponseDto implements _$GetAllPlayListResponseDto {
   const factory GetAllPlayListResponseDto({
-    @JsonKey(name: 'Id') required int id,
-    @JsonKey(name: 'Name') required String name,
-    @JsonKey(name: 'Position') required int position,
-    @JsonKey(name: 'Loop') required bool loop,
-    @JsonKey(name: 'Shuffle') required bool shuffle,
-    @JsonKey(name: 'NumberOfFiles') required int numberOfFiles,
-    @JsonKey(name: 'TotalDuration') required String totalDuration,
+    required int id,
+    required String name,
+    required int position,
+    required bool loop,
+    required bool shuffle,
+    required int numberOfFiles,
+    required String playedTime,
+    required String totalDuration,
+    String? imageUrl,
   }) = _GetAllPlayListResponseDto;
 
   factory GetAllPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$GetAllPlayListResponseDtoFromJson(json);
-
-  static List<String> get jsonKeys => [
-        'Id',
-        'Name',
-        'Position',
-        'Loop',
-        'Shuffle',
-        'NumberOfFiles',
-        'TotalDuration',
-      ];
+  //
+  // static List<String> get jsonKeys => [
+  //       'id',
+  //       'name',
+  //       'position',
+  //       'loop',
+  //       'shuffle',
+  //       'numberOfFiles',
+  //       'playedTime',
+  //       'totalDuration',
+  //       'imageUrl',
+  //     ];
 }
