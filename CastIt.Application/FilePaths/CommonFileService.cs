@@ -1,6 +1,7 @@
 ﻿using CastIt.Application.Common;
 using CastIt.Application.Common.Utils;
 using CastIt.Application.Interfaces;
+using CastIt.Domain.Enums;
 using System;
 using System.IO;
 using System.Linq;
@@ -103,6 +104,9 @@ namespace CastIt.Application.FilePaths
 
         public (bool, string) IsSubtitle(string filePath)
         {
+            if (!IsLocalFile(filePath))
+                return (false, null);
+
             string filename = Path.GetFileName(filePath);
             return !FileFormatConstants.AllowedSubtitleFormats.Contains(Path.GetExtension(filePath).ToLower())
                 ? (false, filename)
@@ -163,10 +167,52 @@ namespace CastIt.Application.FilePaths
 
         public bool IsVideoOrMusicFile(string mrl, bool checkForVideo)
         {
+            if (!IsLocalFile(mrl))
+                return false;
             string ext = Path.GetExtension(mrl);
             return checkForVideo
                 ? FileFormatConstants.AllowedVideoFormats.Contains(ext, StringComparer.OrdinalIgnoreCase)
                 : FileFormatConstants.AllowedMusicFormats.Contains(ext, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public AppFileType GetFileType(string mrl)
+        {
+            if (!Exists(mrl))
+            {
+                return AppFileType.Na;
+            }
+
+            bool isLocal = IsLocalFile(mrl);
+            bool isUrl = IsUrlFile(mrl);
+            bool isVideo = IsVideoFile(mrl);
+            bool isMusic = IsMusicFile(mrl);
+            bool isHls = IsHls(mrl);
+            (bool isSubtitle, _) = IsSubtitle(mrl);
+
+            var value = AppFileType.Na;
+
+            if (isLocal)
+                value |= AppFileType.Local;
+
+            if (isUrl)
+                value |= AppFileType.Url;
+
+            if (isVideo)
+                value |= AppFileType.LocalVideo;
+
+            if (isMusic)
+                value |= AppFileType.LocalMusic;
+
+            if (isHls)
+                value |= AppFileType.Hls;
+
+            if (isSubtitle)
+                value |= AppFileType.LocalSubtitle;
+
+            if (value != AppFileType.Na)
+                value &= ~AppFileType.Na;
+
+            return value;
         }
     }
 }

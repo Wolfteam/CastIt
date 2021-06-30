@@ -1,5 +1,6 @@
 ﻿using CastIt.Application.Common;
 using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Models.FFmpeg.Args;
@@ -28,6 +29,9 @@ namespace CastIt.Application.FFMpeg
         private readonly Process _generateAllThumbnailsProcess;
         private readonly Process _transcodeProcess;
         private readonly List<HwAccelDeviceType> _availableHwDevices = new List<HwAccelDeviceType>();
+
+        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private bool _checkTranscodeProcess;
 
         private static readonly IReadOnlyList<string> AllowedVideoContainers = new List<string>
         {
@@ -63,6 +67,8 @@ namespace CastIt.Application.FFMpeg
         private bool _checkGenerateThumbnailProcess;
         private bool _checkGenerateAllThumbnailsProcess;
 
+        //TODO: READ THIS
+        //https://github.com/jellyfin/jellyfin/blob/master/MediaBrowser.MediaEncoding/Encoder/MediaEncoder.cs
         public FFmpegService(
             ILogger<FFmpegService> logger,
             IFileService fileService,
@@ -85,12 +91,15 @@ namespace CastIt.Application.FFMpeg
                     CreateNoWindow = true
                 }
             };
-
             var startInfo = new ProcessStartInfo
             {
                 WindowStyle = ProcessWindowStyle.Hidden,
                 FileName = fileService.GetFFmpegPath(),
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
             };
 
             _generateThumbnailProcess = new Process
@@ -218,7 +227,48 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
-        public void KillThumbnailProcess()
+        public async Task<byte[]> GetThumbnailTile(string mrl, long tentativeSecond, int fps)
+        {
+            try
+            {
+                var device = GetHwAccelDeviceType();
+                var hwAccels = new List<HwAccelDeviceType>
+                {
+                    HwAccelDeviceType.Auto,
+                    device,
+                    HwAccelDeviceType.None
+                };
+
+                foreach (var hwAccel in hwAccels)
+                {
+                    var cmd = BuildThumbnailTileCommand(mrl, tentativeSecond, fps, hwAccel);
+                    _logger.LogInformation($"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with hwAccel = {hwAccel} and cmd = {cmd} ...");
+
+                    await using var memStream = new MemoryStream();
+                    _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
+                    _generateAllThumbnailsProcess.Start();
+                    await _generateAllThumbnailsProcess.StandardOutput.BaseStream.CopyToAsync(memStream);
+                    await _generateAllThumbnailsProcess.WaitForExitAsync();
+
+                    if (_generateAllThumbnailsProcess.ExitCode == 0)
+                    {
+                        _logger.LogInformation($"{nameof(GetThumbnailTile)}: Thumbnail tiles were generated successfully with hwaccel = {hwAccel}");
+                        return memStream.ToArray();
+                    }
+
+                    _logger.LogWarning($"{nameof(GetThumbnailTile)}: Couldn't generate thumbnail tile with hwaccel = {hwAccel}");
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(GenerateThumbnails)}: Unknown error occurred");
+            }
+
+            _logger.LogWarning($"{nameof(GetThumbnailTile)}: Couldn't generate thumbnail with any of the provided hwaccels");
+            return null;
+        }
+
+        public async Task KillThumbnailProcess()
         {
             _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing thumbnail process");
             try
@@ -228,7 +278,7 @@ namespace CastIt.Application.FFMpeg
                 {
                     _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing the generate all thumbnails process");
                     _generateAllThumbnailsProcess.Kill(true);
-                    _generateAllThumbnailsProcess.WaitForExit();
+                    await _generateAllThumbnailsProcess.WaitForExitAsync(_tokenSource.Token);
                 }
             }
             catch (Exception ex)
@@ -246,7 +296,7 @@ namespace CastIt.Application.FFMpeg
                 {
                     _logger.LogInformation($"{nameof(KillThumbnailProcess)}: Killing the generate thumbnail process");
                     _generateThumbnailProcess.Kill(true);
-                    _generateThumbnailProcess.WaitForExit();
+                    await _generateThumbnailProcess.WaitForExitAsync(_tokenSource.Token);
                 }
             }
             catch (Exception ex)
@@ -258,7 +308,7 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
-        public void KillTranscodeProcess()
+        public async Task KillTranscodeProcess()
         {
             _logger.LogInformation($"{nameof(KillTranscodeProcess)}: Killing transcode process");
             try
@@ -266,7 +316,7 @@ namespace CastIt.Application.FFMpeg
                 if (!_transcodeProcess.HasExited)
                 {
                     _transcodeProcess.Kill(true);
-                    _transcodeProcess.WaitForExit();
+                    await _transcodeProcess.WaitForExitAsync(_tokenSource.Token);
                 }
             }
             catch (Exception e)
@@ -320,6 +370,12 @@ namespace CastIt.Application.FFMpeg
             }
         }
 
+        public async Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options)
+        {
+            await CheckBeforeTranscode();
+            await TranscodeVideo(outputStream, options, _tokenSource.Token);
+        }
+
         public async Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options, CancellationToken token)
         {
             string cmd;
@@ -333,6 +389,7 @@ namespace CastIt.Application.FFMpeg
                 await using var memStream = new MemoryStream();
                 var testStream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
                 await testStream.CopyToAsync(memStream, token).ConfigureAwait(false);
+                await _transcodeProcess.WaitForExitAsync(token);
                 if (_transcodeProcess.ExitCode != 0)
                 {
                     _logger.LogWarning(
@@ -353,6 +410,12 @@ namespace CastIt.Application.FFMpeg
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
             await stream.CopyToAsync(outputStream, token).ConfigureAwait(false);
             _logger.LogInformation($"{nameof(TranscodeVideo)}: Transcode completed for file = {options.FilePath}");
+        }
+
+        public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options)
+        {
+            await CheckBeforeTranscode();
+            return await TranscodeMusic(options, _tokenSource.Token);
         }
 
         public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token)
@@ -467,7 +530,11 @@ namespace CastIt.Application.FFMpeg
 
             var videoInfo = fileInfo.Videos.Find(f => f.Index == videoStreamIndex && f.IsVideo) ?? fileInfo.HlsVideos.Find(f => f.Index == videoStreamIndex && f.IsHlsVideo);
             if (videoInfo is null)
-                throw new NullReferenceException("The file does not have a valid video stream");
+            {
+                var msg = $"The file does not have a valid video stream for videoIndex = {videoStreamIndex}";
+                _logger.LogError($"{nameof(VideoNeedsTranscode)}: {msg}.{Environment.NewLine}{{@FileInfo}}", fileInfo);
+                throw new NullReferenceException(msg);
+            }
 
             bool videoCodecIsValid = videoInfo.VideoCodecIsValid(AllowedVideoCodecs);
             bool videoLevelIsValid = videoInfo.VideoLevelIsValid(MaxVideoLevel);
@@ -518,10 +585,7 @@ namespace CastIt.Application.FFMpeg
             return hwAccelType;
         }
 
-        private static string BuildVideoTranscodeCmd(
-            TranscodeVideoFile options,
-            double? from = null,
-            double? to = null)
+        private static string BuildVideoTranscodeCmd(TranscodeVideoFile options, double? from = null, double? to = null)
         {
             var builder = new FFmpegArgsBuilder();
             var inputArgs = builder.AddInputFile(options.FilePath)
@@ -531,9 +595,17 @@ namespace CastIt.Application.FFMpeg
                 .SetHwAccel(options.HwAccelDeviceType)
                 .SetVideoCodec(options.HwAccelDeviceType);
             var outputArgs = builder.AddOutputPipe()
-                .SetPreset(options.HwAccelDeviceType)
                 .AddArg("map_metadata", -1)
                 .AddArg("map_chapters", -1); //for some reason the chromecast doesnt like chapters o.o
+
+            if (options.Quality >= 720)
+                outputArgs.SetFastPreset();
+            else if (options.Quality >= 480)
+                outputArgs.SetVeryFastPreset();
+            else if (options.Quality >= 144)
+                outputArgs.SetUltraFastPreset();
+            else
+                outputArgs.SetPreset(options.HwAccelDeviceType);
 
             if (options.VideoStreamIndex >= 0)
                 outputArgs.SetMap(options.VideoStreamIndex);
@@ -636,6 +708,8 @@ namespace CastIt.Application.FFMpeg
                     adapters.Add(obj["AdapterCompatibility"].ToString());
                 }
 
+                _availableHwDevices.Add(HwAccelDeviceType.Auto);
+
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Nvidia), StringComparison.OrdinalIgnoreCase)))
                 {
                     _availableHwDevices.Add(HwAccelDeviceType.Nvidia);
@@ -649,6 +723,11 @@ namespace CastIt.Application.FFMpeg
                 if (adapters.Any(a => a.Contains(nameof(HwAccelDeviceType.Intel), StringComparison.OrdinalIgnoreCase)))
                 {
                     _availableHwDevices.Add(HwAccelDeviceType.Intel);
+                }
+
+                if (OperatingSystem.IsWindows())
+                {
+                    _availableHwDevices.Add(HwAccelDeviceType.Dxva2);
                 }
 
                 _logger.LogInformation($"{nameof(SetAvailableHwAccelDevices)}: Got the following devices: {string.Join(",", _availableHwDevices)}");
@@ -688,6 +767,59 @@ namespace CastIt.Application.FFMpeg
                 outputArgs.SetFilters($"fps=1/5,scale={ThumbnailScale}");
             }
 
+            return builder.GetArgs();
+        }
+
+        private async Task CheckBeforeTranscode()
+        {
+            if (_checkTranscodeProcess)
+            {
+                _tokenSource.Cancel();
+                _tokenSource = new CancellationTokenSource();
+                await KillTranscodeProcess();
+            }
+
+            _checkTranscodeProcess = true;
+        }
+
+        private string BuildThumbnailTileCommand(string mrl, long seek, int fps, HwAccelDeviceType deviceType)
+        {
+            //TODO: MOVE SOME PARTS TO THE ARGS BUILDER
+            var builder = new FFmpegArgsBuilder();
+            var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
+            var outputArgs = builder.AddStdOut().SetFormat("mjpeg");
+
+            //create a thumbnail tile of WxH
+            var title = $"tile={AppWebServerConstants.ThumbnailTileRowXColumn}";
+
+            //select only the {FPS}th frames
+            var select = @$"select='not(mod(n\,{fps}))'";
+            switch (deviceType)
+            {
+                case HwAccelDeviceType.None:
+                case HwAccelDeviceType.AMD:
+                    inputArgs.Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Intel:
+                    inputArgs.SetHwAccel(HwAccelDeviceType.Intel).SetVideoCodec(HwAccelDeviceType.Intel).Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(select, $"scale_qsv={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Nvidia:
+                    inputArgs.SetHwAccel("nvdec").AddArg("hwaccel_output_format cuda").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters("hwdownload", "format=nv12", select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Dxva2:
+                    inputArgs.SetHwAccel("dxva2").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                    break;
+                case HwAccelDeviceType.Auto:
+                    inputArgs.SetHwAccel("auto").Seek(seek).Duration(AppWebServerConstants.ThumbnailTileDuration);
+                    outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             return builder.GetArgs();
         }
     }

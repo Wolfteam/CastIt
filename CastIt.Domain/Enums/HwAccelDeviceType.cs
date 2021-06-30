@@ -5,6 +5,8 @@
         None,
         Intel,
         Nvidia,
-        AMD
+        AMD,
+        Dxva2,
+        Auto
     }
 }

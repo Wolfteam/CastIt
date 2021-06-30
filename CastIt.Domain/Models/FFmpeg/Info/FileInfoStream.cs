@@ -38,14 +38,34 @@ namespace CastIt.Domain.Models.FFmpeg.Info
         public long NumberOfFrames { get; set; }
 
         [JsonProperty(PropertyName = "avg_frame_rate")]
-        public string AverageFrameRate { get; set; }
+        public string AverageFrameRateString { get; set; }
+
+        public int AverageFrameRate
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(AverageFrameRateString))
+                    return 0;
+
+                var split = AverageFrameRateString.Split("/");
+                if (split.Length != 2)
+                    return 0;
+
+                var x = split.First();
+                var y = split.Last();
+
+                var fps = Convert.ToDouble(x) / Convert.ToDouble(y);
+
+                return (int)fps;
+            }
+        }
 
         [JsonProperty(PropertyName = "tags")]
         public FileInfoTag Tag { get; set; }
 
         //The CodecType in an audio file may return video if the stream is a png img
         public bool IsVideo
-            => CodecType == "video" && Level != 0 && (NumberOfFrames > 1 || AverageFrameRate != "0/0");
+            => CodecType == "video" && Level != 0 && (NumberOfFrames > 1 || AverageFrameRateString != "0/0");
 
         //Live videos does not have neither number of frames nor avg frame rate, that's why I use this one instead
         public bool IsHlsVideo

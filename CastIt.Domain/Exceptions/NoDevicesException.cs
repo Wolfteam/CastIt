@@ -1,18 +1,11 @@
-﻿using System;
+﻿using CastIt.Domain.Enums;
 
 namespace CastIt.Domain.Exceptions
 {
-    public class NoDevicesException : Exception
+    public class NoDevicesException : BaseAppException
     {
-        public NoDevicesException() : base()
-        {
-        }
-
-        public NoDevicesException(string message) : base(message)
-        {
-        }
-
-        public NoDevicesException(string message, Exception innerException) : base(message, innerException)
+        public NoDevicesException(string message, AppMessageType errorMessageId = AppMessageType.NoDevicesFound)
+            : base(message, errorMessageId)
         {
         }
     }

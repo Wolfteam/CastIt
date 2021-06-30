@@ -1,6 +1,6 @@
 ﻿namespace CastIt.Domain.Dtos.Requests
 {
-    public class SetVolumeRequestDto : BaseSocketRequestDto
+    public class SetVolumeRequestDto
     {
         public double VolumeLevel { get; set; }
         public bool IsMuted { get; set; }

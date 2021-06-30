@@ -26,8 +26,11 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public TArgs AddArg(string arg)
         {
-            Args.Add($"-{arg}");
-
+            var newArg = $"-{arg}";
+            if (!Args.Contains(newArg))
+            {
+                Args.Add(newArg);
+            }
             return this as TArgs;
         }
 
@@ -40,6 +43,7 @@ namespace CastIt.Domain.Models.FFmpeg.Args
                 float v => v.ToString(CultureInfo.InvariantCulture),
                 _ => $"{value}"
             };
+
             return AddArg($"{key} {arg}");
         }
     }

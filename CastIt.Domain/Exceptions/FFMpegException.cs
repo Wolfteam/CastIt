@@ -1,30 +1,22 @@
-﻿using System;
+﻿using CastIt.Domain.Enums;
 
 namespace CastIt.Domain.Exceptions
 {
-    public class FFmpegException : Exception
+    public class FFmpegException : BaseAppException
     {
         public string Command { get; }
 
-        public FFmpegException() : base()
-        {
-        }
-
-        public FFmpegException(string message) : base(message)
-        {
-        }
-
         public FFmpegException(
             string message,
-            Exception innerException) : base(message, innerException)
-        {
-        }
-
-        public FFmpegException(
-            string message,
-            string cmd) : this(message)
+            string cmd,
+            AppMessageType errorMessageId = AppMessageType.FFmpegError)
+            : this(message, errorMessageId)
         {
             Command = cmd;
+        }
+
+        private FFmpegException(string message, AppMessageType errorMessageId) : base(message, errorMessageId)
+        {
         }
     }
 }

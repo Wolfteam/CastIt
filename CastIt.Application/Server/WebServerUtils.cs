@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -9,6 +10,17 @@ namespace CastIt.Application.Server
     public static class WebServerUtils
     {
         public const string ServerProcessName = "CastIt.Server";
+
+        public static string GetWebServerIpAddress()
+        {
+            if (!IsServerAlive())
+                return null;
+            var port = GetServerPort();
+            if (port.HasValue)
+                return GetWebServerIpAddress(port.Value);
+            return null;
+        }
+
         public static string GetWebServerIpAddress(int port)
         {
             string localIp = GetLocalIpAddress();
@@ -72,6 +84,19 @@ namespace CastIt.Application.Server
             };
 
             return process.Start();
+        }
+
+        public static bool StartServer()
+            => StartServer($"{AppWebServerConstants.PortArgument} {GetOpenPort()}", GetServerPhysicalPath());
+
+        public static string GetServerPhysicalPath()
+        {
+            var dir = Directory.GetCurrentDirectory();
+            var path = Path.Combine(dir, "Server", ServerProcessName);
+#if DEBUG
+            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
+#endif
+            return path;
         }
     }
 }

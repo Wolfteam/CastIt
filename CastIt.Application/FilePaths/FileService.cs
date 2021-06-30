@@ -3,6 +3,8 @@ using CastIt.Application.Interfaces;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace CastIt.Application.FilePaths
 {
@@ -18,6 +20,7 @@ namespace CastIt.Application.FilePaths
         public const string DefaultFFprobeExecutableName = "ffprobe.exe";
         public const string PreviewsFolderName = "Previews";
         public const string SubTitlesFolderName = "SubTitles";
+        public const string TemporalImagePreviewFilename = "TEMP";
 
         public FileService(string generatedFilesFolderPath, int thumbnailsEachSeconds = 5)
         {
@@ -98,8 +101,8 @@ namespace CastIt.Application.FilePaths
             {
                 var files = Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
                     .Where(p => p.EndsWith(".jpg"))
-                    .Select(p => p.Substring(p.IndexOf(filename)).Replace(filename, string.Empty))
-                    .Select(p => p.Substring(p.LastIndexOf("_") + 1, p.IndexOf(".") - 1))
+                    .Select(p => p.Substring(p.IndexOf(filename, StringComparison.OrdinalIgnoreCase)).Replace(filename, string.Empty))
+                    .Select(p => p.Substring(p.LastIndexOf("_", StringComparison.OrdinalIgnoreCase) + 1, p.IndexOf(".", StringComparison.OrdinalIgnoreCase) - 1))
                     .Select(long.Parse)
                     .ToList();
 
@@ -135,6 +138,46 @@ namespace CastIt.Application.FilePaths
         {
             DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
             DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-3));
+        }
+
+        public string GetTemporalPreviewImagePath(long id)
+        {
+            var filename = $"{id}_{TemporalImagePreviewFilename}";
+            var path = GetPreviewThumbnailFilePath(filename);
+            return !Exists(path) ? null : path;
+        }
+
+        public Task<string> DownloadAndSavePreviewImage(long id, string url, bool overrideIfExists = true)
+        {
+            var filename = $"{id}_{TemporalImagePreviewFilename}";
+            return DownloadAndSavePreviewImage(filename, url, overrideIfExists);
+        }
+
+        public async Task<string> DownloadAndSavePreviewImage(string filename, string url, bool overrideIfExists = true)
+        {
+            var path = GetPreviewThumbnailFilePath(filename);
+            if (Exists(path) && !overrideIfExists)
+            {
+                return path;
+            }
+
+            using var client = new HttpClient();
+            try
+            {
+                var response = await client.GetAsync(url);
+                var content = await response.Content.ReadAsByteArrayAsync();
+                if (Exists(path))
+                {
+                    File.Delete(path);
+                }
+
+                await File.WriteAllBytesAsync(path, content);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return path;
         }
     }
 }

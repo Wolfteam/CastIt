@@ -82,6 +82,8 @@ namespace CastIt.GoogleCast
             await secureStream.AuthenticateAsClientAsync(CurrentReceiver.Host);
             NetworkStream = secureStream;
 
+            CurrentReceiver.IsConnected = true;
+
             CancellationTokenSource = new CancellationTokenSource();
             Receive(CancellationTokenSource.Token);
         }
@@ -147,7 +149,7 @@ namespace CastIt.GoogleCast
                 _logger.LogTrace($"{nameof(SendAsync)}: {castMessage.DestinationId}: {castMessage.PayloadUtf8}");
 
                 byte[] message;
-                using (var ms = new MemoryStream())
+                await using (var ms = new MemoryStream())
                 {
                     Serializer.Serialize(ms, castMessage);
                     message = ms.ToArray();
@@ -179,7 +181,7 @@ namespace CastIt.GoogleCast
             {
                 var tcsType = kvp.Value.GetType();
                 var methodToInvoke = tcsType.GetMethod("SetResult");
-                methodToInvoke.Invoke(kvp.Value, new object[] { null });
+                methodToInvoke?.Invoke(kvp.Value, new object[] { null });
                 _logger.LogInfo($"{nameof(Dispose)}: Calling set result for a pending task...");
             }
             WaitingTasks.Clear();
@@ -192,6 +194,7 @@ namespace CastIt.GoogleCast
 
             if (triggerDisconnectEvent)
             {
+                CurrentReceiver = null;
                 _logger.LogInfo($"{nameof(Dispose)}: Triggering disconnected event");
                 Disconnected?.Invoke(this, EventArgs.Empty);
             }

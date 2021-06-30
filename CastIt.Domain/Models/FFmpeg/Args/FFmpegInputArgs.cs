@@ -62,6 +62,9 @@ namespace CastIt.Domain.Models.FFmpeg.Args
         public FFmpegInputArgs Seek(double seconds)
             => AddArg("ss", seconds);
 
+        public FFmpegInputArgs Duration(double seconds)
+            => AddArg("t", seconds);
+
         public FFmpegInputArgs SetVSync(int value)
             => AddArg("vsync", value);
 

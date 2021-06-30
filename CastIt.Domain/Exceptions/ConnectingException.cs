@@ -1,18 +1,11 @@
-﻿using System;
+﻿using CastIt.Domain.Enums;
 
 namespace CastIt.Domain.Exceptions
 {
-    public class ConnectingException : Exception
+    public class ConnectingException : BaseAppException
     {
-        public ConnectingException() : base()
-        {
-        }
-
-        public ConnectingException(string message) : base(message)
-        {
-        }
-
-        public ConnectingException(string message, Exception innerException) : base(message, innerException)
+        public ConnectingException(string message, AppMessageType errorMessageId = AppMessageType.ConnectionToDeviceIsStillInProgress)
+            : base(message, errorMessageId)
         {
         }
     }

@@ -22,14 +22,16 @@ namespace CastIt.GoogleCast.Interfaces
         public event EventHandler<bool> IsMutedChanged;
         public event EventHandler LoadFailed;
 
-        public bool IsPlaying { get; }
-        public bool IsPaused { get; }
-        public string CurrentContentId { get; }
-        public double CurrentMediaDuration { get; }
-        public double ElapsedSeconds { get; }
-        public double PlayedPercentage { get; }
-        public double CurrentVolumeLevel { get; }
-        public bool IsMuted { get; }
+        bool IsPlaying { get; }
+        bool IsPaused { get; }
+        bool IsPlayingOrPaused { get; }
+        string CurrentContentId { get; }
+        double CurrentMediaDuration { get; }
+        double ElapsedSeconds { get; }
+        double PlayedPercentage { get; }
+        double CurrentVolumeLevel { get; }
+        bool IsMuted { get; }
+        PlayerStatus State { get; }
 
         void ListenForDevices();
 

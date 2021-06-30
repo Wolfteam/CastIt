@@ -1,18 +1,20 @@
-﻿namespace CastIt.Application.Server
-{
-    public delegate void OnFileLoadedWsHandler();
-    public delegate void OnFileLoadingErrorHandler(string error);
+﻿using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Interfaces;
+using System.Collections.Generic;
 
+namespace CastIt.Application.Server
+{
     public delegate void OnAppClosingHandler();
     public delegate void OnAppSettingsChangedHandler();
+    public delegate void OnCastDevicesChangedHandler(List<IReceiver> devices);
 
-    public delegate void OnPlayListAddedHandler(long id);
-    public delegate void OnPlayListChangedHandler(long id);
+    public delegate void OnPlayListAddedHandler(GetAllPlayListResponseDto playList);
+    public delegate void OnPlayListChangedHandler(GetAllPlayListResponseDto playList);
+    public delegate void OnPlayListsChangedHandler(List<GetAllPlayListResponseDto> playList);
     public delegate void OnPlayListDeletedHandler(long id);
 
-    public delegate void OnFileAddedHandler(long playlistId);
-    public delegate void OnFileChangedHandler(long playlistId);
-    public delegate void OnFileDeletedHandler(long playlistId);
-
-    public delegate void OnServerMsgHandler(string msg);
+    public delegate void OnFileAddedHandler(FileItemResponseDto file);
+    public delegate void OnFileChangedHandler(FileItemResponseDto file);
+    public delegate void OnFilesChangedHandler(List<FileItemResponseDto> file);
+    public delegate void OnFileDeletedHandler(long playlistId, long id);
 }

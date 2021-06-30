@@ -1,6 +1,6 @@
 ﻿namespace CastIt.Domain.Dtos.Requests
 {
-    public class GoToSecondsRequestDto : BaseSocketRequestDto
+    public class GoToSecondsRequestDto
     {
         public double Seconds { get; set; }
     }

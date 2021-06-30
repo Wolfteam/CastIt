@@ -2,7 +2,7 @@
 
 namespace CastIt.Domain.Dtos.Requests
 {
-    public class AppSettingsRequestDto : BaseSocketRequestDto
+    public class AppSettingsRequestDto
     {
         public bool StartFilesFromTheStart { get; set; }
         public bool PlayNextFileAutomatically { get; set; }
