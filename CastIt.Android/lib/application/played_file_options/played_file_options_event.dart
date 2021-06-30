@@ -21,7 +21,10 @@ class PlayedFileOptionsEvent with _$PlayedFileOptionsEvent {
   factory PlayedFileOptionsEvent.setVolume({
     required double volumeLvl,
     required bool isMuted,
+    required bool triggerChange,
   }) = _SetVolume;
+
+  factory PlayedFileOptionsEvent.volumeSliderDragStarted() = _VolumeSliderDragStarted;
 
   factory PlayedFileOptionsEvent.closeModal() = _CloseModal;
 }
