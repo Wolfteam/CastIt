@@ -44,20 +44,4 @@ class PlayedFile with _$PlayedFile {
       playListTotalDuration: status.playList?.totalDuration,
     );
   }
-//
-// static List<String> get jsonKeys => [
-//       'Id',
-//       'Filename',
-//       'ThumbnailUrl',
-//       'Duration',
-//       'LoopFile',
-//       'CurrentSeconds',
-//       'IsPaused',
-//       'VolumeLevel',
-//       'IsMuted',
-//       'PlayListId',
-//       'PlayListName',
-//       'LoopPlayList',
-//       'ShufflePlayList'
-//     ];
 }

@@ -49,23 +49,4 @@ class FileItemResponseDto with _$FileItemResponseDto {
   FileItemResponseDto._();
 
   factory FileItemResponseDto.fromJson(Map<String, dynamic> json) => _$FileItemResponseDtoFromJson(json);
-
-// static List<String> get jsonKeys => [
-//       'Id',
-//       'Position',
-//       'Path',
-//       'TotalSeconds',
-//       'PlayedPercentage',
-//       'IsBeingPlayed',
-//       'PlayListId',
-//       'IsLocalFile',
-//       'IsUrlFile',
-//       'Exists',
-//       'Filename',
-//       'Size',
-//       'Extension',
-//       'Loop',
-//       'SubTitle',
-//       'PlayedSeconds',
-//     ];
 }

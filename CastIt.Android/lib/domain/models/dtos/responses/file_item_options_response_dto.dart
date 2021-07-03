@@ -19,16 +19,4 @@ class FileItemOptionsResponseDto with _$FileItemOptionsResponseDto {
   }) = _FileItemOptionsResponseDto;
 
   factory FileItemOptionsResponseDto.fromJson(Map<String, dynamic> json) => _$FileItemOptionsResponseDtoFromJson(json);
-
-  // static List<String> get jsonKeys => [
-  //       'Id',
-  //       'IsVideo',
-  //       'IsAudio',
-  //       'IsSubTitle',
-  //       'IsQuality',
-  //       'Path',
-  //       'Text',
-  //       'IsSelected',
-  //       'IsEnabled',
-  //     ];
 }

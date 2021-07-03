@@ -5,7 +5,7 @@ part 'get_all_playlist_response_dto.freezed.dart';
 part 'get_all_playlist_response_dto.g.dart';
 
 @freezed
-abstract class GetAllPlayListResponseDto implements _$GetAllPlayListResponseDto {
+class GetAllPlayListResponseDto with _$GetAllPlayListResponseDto {
   const factory GetAllPlayListResponseDto({
     required int id,
     required String name,
@@ -19,16 +19,4 @@ abstract class GetAllPlayListResponseDto implements _$GetAllPlayListResponseDto 
   }) = _GetAllPlayListResponseDto;
 
   factory GetAllPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$GetAllPlayListResponseDtoFromJson(json);
-  //
-  // static List<String> get jsonKeys => [
-  //       'id',
-  //       'name',
-  //       'position',
-  //       'loop',
-  //       'shuffle',
-  //       'numberOfFiles',
-  //       'playedTime',
-  //       'totalDuration',
-  //       'imageUrl',
-  //     ];
 }

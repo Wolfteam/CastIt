@@ -25,7 +25,6 @@ class PlayListFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     const iconSize = 30.0;
-    print('fab');
     return FadeTransition(
       opacity: hideFabAnimController,
       child: Card(

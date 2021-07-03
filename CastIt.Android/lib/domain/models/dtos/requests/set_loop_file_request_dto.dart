@@ -4,13 +4,8 @@ part 'set_loop_file_request_dto.g.dart';
 
 @JsonSerializable()
 class SetLoopFileRequestDto {
-  @JsonKey(name: 'Id')
   final int id;
-
-  @JsonKey(name: 'PlayListId')
   final int playListId;
-
-  @JsonKey(name: 'Loop')
   final bool loop;
 
   SetLoopFileRequestDto({

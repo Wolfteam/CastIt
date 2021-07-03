@@ -22,15 +22,4 @@ class PlayListItemResponseDto with _$PlayListItemResponseDto {
   }) = _PlayListItemResponseDto;
 
   factory PlayListItemResponseDto.fromJson(Map<String, dynamic> json) => _$PlayListItemResponseDtoFromJson(json);
-
-  // static List<String> get jsonKeys => [
-  //       'Id',
-  //       'Name',
-  //       'Position',
-  //       'Loop',
-  //       'Shuffle',
-  //       'NumberOfFiles',
-  //       'TotalDuration',
-  //       'Files',
-  //     ];
 }

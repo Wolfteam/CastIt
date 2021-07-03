@@ -4,13 +4,11 @@ part 'refresh_playlist_response_dto.freezed.dart';
 part 'refresh_playlist_response_dto.g.dart';
 
 @freezed
-abstract class RefreshPlayListResponseDto implements _$RefreshPlayListResponseDto {
+class RefreshPlayListResponseDto with _$RefreshPlayListResponseDto {
   factory RefreshPlayListResponseDto({
-    @JsonKey(name: 'Id') required int id,
-    @JsonKey(name: 'WasDeleted') required bool wasDeleted,
+    required int id,
+    required bool wasDeleted,
   }) = _RefreshPlayListResponseDto;
 
   factory RefreshPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$RefreshPlayListResponseDtoFromJson(json);
-
-  static List<String> get jsonKeys => ['Id', 'WasDeleted'];
 }
