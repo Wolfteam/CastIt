@@ -60,11 +60,8 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         );
       },
       updateUrlAndConnectToWs: (newUrl) async {
-        final changed = _settings.castItUrl != newUrl;
-        _settings.castItUrl = newUrl;
-        if (changed) {
-          await _castItHub.connectToHub();
-        }
+        _settings.castItUrl = newUrl.trim();
+        await _castItHub.connectToHub();
         return currentState.copyWith(
           isConnectedToWs: _castItHub.isConnected,
           castItUrl: newUrl,
