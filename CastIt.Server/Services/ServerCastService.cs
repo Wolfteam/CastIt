@@ -269,7 +269,10 @@ namespace CastIt.Server.Services
                     CurrentPlayedFile.SetSubtitleStreams(localSubsPath, filename, AppSettings.LoadFirstSubtitleFoundAutomatically);
                 }
 
-                bool resume = file.CanStartPlayingFromCurrentPercentage && !type.IsUrl() && !force && !AppSettings.StartFilesFromTheStart;
+                bool resume = file.CanStartPlayingFromCurrentPercentage &&
+                              !type.IsUrl() &&
+                              !force &&
+                              (!AppSettings.StartFilesFromTheStart || fileOptionsChanged);
                 if (resume)
                 {
                     Logger.LogInformation($"{nameof(PlayFile)}: File will be resumed from = {file.PlayedPercentage}% ...");
