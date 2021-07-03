@@ -5,7 +5,6 @@ import 'package:castit/domain/enums/enums.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
-import 'package:castit/infrastructure/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -42,24 +41,24 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   final StreamController<void> fileLoading = StreamController.broadcast();
   final StreamController<PlayedFile> fileLoaded = StreamController.broadcast();
   final StreamController<String> fileLoadingError = StreamController.broadcast();
-  final StreamController<double?> fileTimeChanged = StreamController.broadcast();
+  final StreamController<double> fileTimeChanged = StreamController.broadcast();
   final StreamController<void> filePaused = StreamController.broadcast();
   final StreamController<void> fileEndReached = StreamController.broadcast();
   final StreamController<void> disconnected = StreamController.broadcast();
   final StreamController<void> appClosing = StreamController.broadcast();
-  final StreamController<ServerAppSettings?> settingsChanged = StreamController.broadcast();
+  final StreamController<ServerAppSettings> settingsChanged = StreamController.broadcast();
   final StreamController<PlayListItemResponseDto?> playlistLoaded = StreamController.broadcast();
   final StreamController<List<FileItemOptionsResponseDto>> fileOptionsLoaded = StreamController.broadcast();
-  final StreamController<VolumeLevelChangedResponseDto?> volumeLevelChanged = StreamController.broadcast();
+  final StreamController<VolumeLevelChangedResponseDto> volumeLevelChanged = StreamController.broadcast();
   final StreamController<RefreshPlayListResponseDto> refreshPlayList = StreamController.broadcast();
 
   final StreamController<GetAllPlayListResponseDto> playListAdded = StreamController.broadcast();
   final StreamController<List<GetAllPlayListResponseDto>> playListsChanged = StreamController.broadcast();
-  final StreamController<GetAllPlayListResponseDto> playListChanged = StreamController.broadcast();
+  final StreamController<Tuple2<bool, GetAllPlayListResponseDto>> playListChanged = StreamController.broadcast();
   final StreamController<int> playListDeleted = StreamController.broadcast();
 
   final StreamController<FileItemResponseDto> fileAdded = StreamController.broadcast();
-  final StreamController<FileItemResponseDto> fileChanged = StreamController.broadcast();
+  final StreamController<Tuple2<bool, FileItemResponseDto>> fileChanged = StreamController.broadcast();
   final StreamController<List<FileItemResponseDto>> filesChanged = StreamController.broadcast();
   final StreamController<Tuple2<int, int>> fileDeleted = StreamController.broadcast();
 
@@ -333,11 +332,12 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
           filePaused.add(null);
         }
         if (status.playedFile != null) {
-          playListChanged.add(status.playList!);
+          playListChanged.add(Tuple2(true, status.playList!));
           final f = PlayedFile.from(status);
           fileLoaded.add(f);
-          fileChanged.add(status.playedFile!);
+          fileChanged.add(Tuple2(true, status.playedFile!));
           fileOptionsLoaded.add(status.playedFile!.streams);
+          fileTimeChanged.add(f.currentSeconds);
         } else {
           fileEndReached.add(null);
         }
@@ -350,7 +350,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         break;
       case _playListChanged:
         final updatedPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
-        playListChanged.add(updatedPl);
+        playListChanged.add(Tuple2(false, updatedPl));
         break;
       case _playListsChanged:
         final playLists = (message as List<dynamic>).map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
@@ -368,7 +368,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
         break;
       case _fileChanged:
         final file = FileItemResponseDto.fromJson(message as Map<String, dynamic>);
-        fileChanged.add(file);
+        fileChanged.add(Tuple2(false, file));
         break;
       case _filesChanged:
         final files = (message as List<dynamic>).map((e) => FileItemResponseDto.fromJson(e as Map<String, dynamic>)).toList();

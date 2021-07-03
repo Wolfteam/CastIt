@@ -114,7 +114,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     });
 
     _serverWsBloc.settingsChanged.stream.listen((settings) {
-      add(SettingsEvent.connected(settings: settings!));
+      add(SettingsEvent.connected(settings: settings));
     });
 
     _serverWsBloc.disconnected.stream.listen((_) {

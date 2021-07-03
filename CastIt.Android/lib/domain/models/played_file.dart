@@ -20,6 +20,8 @@ class PlayedFile with _$PlayedFile {
     required bool loopPlayList,
     required bool shufflePlayList,
     String? thumbnailUrl,
+    String? playListPlayedTime,
+    String? playListTotalDuration,
   }) = _PlayedFile;
 
   // ignore: prefer_constructors_over_static_methods
@@ -33,11 +35,13 @@ class PlayedFile with _$PlayedFile {
       id: status.playedFile!.id,
       isPaused: status.player.isPaused,
       loopFile: status.playedFile!.loop,
-      loopPlayList: status.playList!.loop,
-      playListId: status.playList!.id,
-      playListName: status.playList!.name,
-      shufflePlayList: status.playList!.shuffle,
+      loopPlayList: status.playList?.loop ?? false,
+      playListId: status.playList?.id ?? -1,
+      playListName: status.playList?.name ?? 'N/A',
+      shufflePlayList: status.playList?.shuffle ?? false,
       thumbnailUrl: status.playedFile!.thumbnailUrl,
+      playListPlayedTime: status.playList?.playedTime,
+      playListTotalDuration: status.playList?.totalDuration,
     );
   }
 //

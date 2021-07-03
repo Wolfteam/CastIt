@@ -8,6 +8,7 @@ class PlayListEvent with _$PlayListEvent {
 
   const factory PlayListEvent.load({
     required int id,
+    int? scrollToFileId,
   }) = _Load;
 
   const factory PlayListEvent.playListOptionsChanged({

@@ -1,7 +1,9 @@
 export 'intro/intro_bloc.dart';
 export 'main/main_bloc.dart';
 export 'play/play_bloc.dart';
+export 'played_file_item/played_file_item_bloc.dart';
 export 'played_file_options/played_file_options_bloc.dart';
+export 'played_play_list_item/played_play_list_item_bloc.dart';
 export 'playlist/playlist_bloc.dart';
 export 'playlist_rename/playlist_rename_bloc.dart';
 export 'playlists/playlists_bloc.dart';

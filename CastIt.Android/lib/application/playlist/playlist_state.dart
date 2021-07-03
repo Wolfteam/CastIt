@@ -15,6 +15,7 @@ class PlayListState with _$PlayListState {
     @Default([]) List<FileItemResponseDto> filteredFiles,
     @Default(false) bool searchBoxIsVisible,
     @Default(false) bool isFiltering,
+    int? scrollToFileId,
   }) = _LoadedState;
 
   factory PlayListState.disconnected({int? playListId}) = _DisconnectedState;

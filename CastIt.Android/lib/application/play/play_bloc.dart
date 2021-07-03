@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:castit/domain/models/models.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:meta/meta.dart';
 
@@ -14,34 +15,17 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
   final ServerWsBloc _serverWsBloc;
 
   PlayBloc(this._serverWsBloc) : super(PlayState.connected()) {
-    _serverWsBloc.connected.stream.listen((_) {
-      add(PlayEvent.connected());
-    });
+    _serverWsBloc.connected.stream.listen((_) => add(PlayEvent.connected()));
 
-    _serverWsBloc.fileLoading.stream.listen((_) {
-      add(PlayEvent.fileLoading());
-    });
+    _serverWsBloc.fileLoading.stream.listen((_) => add(PlayEvent.fileLoading()));
 
-    _serverWsBloc.fileLoadingError.stream.listen((msg) {
-      add(PlayEvent.fileLoadingError(msg: msg));
-    });
+    _serverWsBloc.fileLoadingError.stream.listen((msg) => add(PlayEvent.fileLoadingError(msg: msg)));
 
     _serverWsBloc.fileLoaded.stream.listen((file) {
-      add(PlayEvent.fileLoaded(
-        id: file.id,
-        filename: file.filename,
-        thumbPath: file.thumbnailUrl,
-        duration: file.duration,
-        loopFile: file.loopFile,
-        currentSeconds: file.currentSeconds,
-        isPaused: file.isPaused,
-        volumeLevel: file.volumeLevel,
-        isMuted: file.isMuted,
-        playListId: file.playListId,
-        playlistName: file.playListName,
-        loopPlayList: file.loopPlayList,
-        shufflePlayList: file.shufflePlayList,
-      ));
+      if (isPlaying && currentState.id == file.id) {
+        return;
+      }
+      add(PlayEvent.fileLoaded(file: file));
     });
 
     _serverWsBloc.filePaused.stream.listen((_) {
@@ -55,43 +39,44 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
     });
 
     _serverWsBloc.fileTimeChanged.stream.listen((seconds) {
-      add(PlayEvent.timeChanged(seconds: seconds!));
+      if (isPlaying && (currentState.currentSeconds! - seconds).abs() >= 1) {
+        add(PlayEvent.timeChanged(seconds: seconds));
+      }
     });
 
-    _serverWsBloc.disconnected.stream.listen((_) {
-      add(PlayEvent.disconnected());
-    });
+    _serverWsBloc.disconnected.stream.listen((_) => add(PlayEvent.disconnected()));
   }
 
   bool get isPlaying => state is _PlayingState;
+
   _PlayingState get currentState => state as _PlayingState;
 
   @override
-  Stream<PlayState> mapEventToState(
-    PlayEvent event,
-  ) async* {
+  Stream<PlayState> mapEventToState(PlayEvent event) async* {
     final s = event.map(
       connected: (_) => PlayState.connected(),
       fileLoading: (_) => PlayState.fileLoading(),
       fileLoadingError: (e) => PlayState.fileLoadingFailed(msg: e.msg),
-      fileLoaded: (e) {
-        return PlayState.playing(
-          id: e.id,
-          playListId: e.playListId,
-          filename: e.filename,
-          thumbPath: e.thumbPath,
-          duration: e.duration,
-          isPaused: e.isPaused,
-          currentSeconds: e.currentSeconds,
-          playlistName: e.playlistName,
-          loopFile: e.loopFile,
-          loopPlayList: e.loopPlayList,
-          shufflePlayList: e.shufflePlayList,
-          isDraggingSlider: false,
-        );
-      },
+      fileLoaded: (e) => PlayState.playing(
+        id: e.file.id,
+        playListId: e.file.playListId,
+        filename: e.file.filename,
+        thumbPath: e.file.thumbnailUrl,
+        duration: e.file.duration,
+        isPaused: e.file.isPaused,
+        currentSeconds: e.file.currentSeconds,
+        playlistName: e.file.playListName,
+        loopFile: e.file.loopFile,
+        loopPlayList: e.file.loopPlayList,
+        shufflePlayList: e.file.shufflePlayList,
+        isDraggingSlider: false,
+        playListTotalDuration: e.file.playListTotalDuration,
+        playListPlayedTime: e.file.playListPlayedTime,
+      ),
       timeChanged: (e) {
-        if (!isPlaying) return null;
+        if (!isPlaying) {
+          return null;
+        }
         if (currentState.isDraggingSlider!) {
           return currentState.copyWith.call(isPaused: false);
         }
@@ -103,23 +88,33 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         return currentState.copyWith.call(currentSeconds: s, isPaused: false);
       },
       paused: (_) {
-        if (!isPlaying) return null;
+        if (!isPlaying) {
+          return null;
+        }
         return currentState.copyWith.call(isPaused: true);
       },
       stopped: (_) {
-        if (!isPlaying) return null;
+        if (!isPlaying) {
+          return null;
+        }
         return PlayState.connected();
       },
       disconnected: (_) {
-        if (!isPlaying) return null;
+        if (!isPlaying) {
+          return null;
+        }
         return PlayState.connected();
       },
       sliderDragChanged: (e) {
-        if (!isPlaying) return null;
+        if (!isPlaying) {
+          return null;
+        }
         return currentState.copyWith.call(isDraggingSlider: e.isSliding);
       },
       sliderValueChanged: (e) {
-        if (!isPlaying) return null;
+        if (!isPlaying) {
+          return null;
+        }
 
         if (e.triggerGoToSeconds) {
           _serverWsBloc.gotoSeconds(e.newValue);

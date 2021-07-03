@@ -15,7 +15,6 @@ part 'playlist_state.dart';
 
 class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   final ServerWsBloc _serverWsBloc;
-  bool _canUpdate = true;
 
   PlayListState get initialState => PlayListState.loading();
 
@@ -24,10 +23,8 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   PlayListBloc(this._serverWsBloc) : super(PlayListState.loading());
 
   @override
-  Stream<PlayListState> mapEventToState(
-    PlayListEvent event,
-  ) async* {
-    if (event is _Load || event is _LoadedState) {
+  Stream<PlayListState> mapEventToState(PlayListEvent event) async* {
+    if (event is _Load || event is _Loaded) {
       //If there were playlists loaded, hide them all!
       yield initialState;
     }
@@ -35,7 +32,6 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     final s = event.map(
       disconnected: (e) async => PlayListState.disconnected(playListId: e.playListId),
       load: (e) async {
-        _canUpdate = true;
         final playList = await _serverWsBloc.loadPlayList(e.id);
         return PlayListState.loaded(
           playlistId: playList.id,
@@ -45,6 +41,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
           shuffle: playList.shuffle,
           files: playList.files,
           loaded: true,
+          scrollToFileId: e.scrollToFileId,
         );
       },
       loaded: (e) async => PlayListState.loaded(
@@ -79,6 +76,11 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     );
 
     yield await s;
+
+    //Clear any previous scrolled file
+    if (state is _LoadedState && currentState.scrollToFileId != null) {
+      yield currentState.copyWith.call(scrollToFileId: null);
+    }
   }
 
   void listenHubEvents() {
@@ -96,12 +98,14 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     });
 
     _serverWsBloc.connected.stream.listen((event) {
-      if (state is _DisconnectedState) {
-        final playListId = (state as _DisconnectedState).playListId;
-        if (playListId != null) {
-          add(PlayListEvent.load(id: playListId));
-        }
-      }
+      state.maybeMap(
+        disconnected: (state) {
+          if (state.playListId != null) {
+            add(PlayListEvent.load(id: state.playListId!));
+          }
+        },
+        orElse: () {},
+      );
     });
 
     _serverWsBloc.disconnected.stream.listen((event) {
@@ -136,25 +140,62 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
       );
     });
 
-    _serverWsBloc.playListChanged.stream.listen((event) => add(PlayListEvent.playListChanged(playList: event)));
+    _serverWsBloc.playListChanged.stream.listen((event) {
+      state.maybeMap(
+        loaded: (_) {
+          final changeComesFromPlayedFile = event.item1;
+          final playList = event.item2;
+          if (!changeComesFromPlayedFile) {
+            add(PlayListEvent.playListChanged(playList: playList));
+          }
+        },
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.playListDeleted.stream.listen((event) => add(PlayListEvent.playListDeleted(id: event)));
+    _serverWsBloc.playListDeleted.stream.listen((event) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListEvent.playListDeleted(id: event)),
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.fileAdded.stream.listen((event) => add(PlayListEvent.fileAdded(file: event)));
+    _serverWsBloc.fileAdded.stream.listen((event) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListEvent.fileAdded(file: event)),
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.fileChanged.stream.listen((event) => add(PlayListEvent.fileChanged(file: event)));
+    _serverWsBloc.fileChanged.stream.listen((event) {
+      state.maybeMap(
+        loaded: (state) {
+          //The second part of the if is to make sure that we only trigger the change
+          // if we had a previously played file
+          final changeComesFromPlayedFile = event.item1;
+          final file = event.item2;
+          final currentPlayedFile = state.files.firstWhereOrNull((el) => el.isBeingPlayed);
+          if (!changeComesFromPlayedFile || currentPlayedFile?.id != file.id) {
+            add(PlayListEvent.fileChanged(file: file));
+          }
+        },
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.filesChanged.stream.listen((event) => add(PlayListEvent.filesChanged(files: event)));
+    _serverWsBloc.filesChanged.stream.listen((event) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListEvent.filesChanged(files: event)),
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.fileDeleted.stream.listen((event) => add(PlayListEvent.fileDeleted(playListId: event.item1, id: event.item2)));
-  }
-
-  void scrollStarted() {
-    _canUpdate = false;
-  }
-
-  void scrollCompleted() {
-    _canUpdate = true;
+    _serverWsBloc.fileDeleted.stream.listen((event) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListEvent.fileDeleted(playListId: event.item1, id: event.item2)),
+        orElse: () {},
+      );
+    });
   }
 
   PlayListState _handlePlayListChanged(GetAllPlayListResponseDto playList) {
@@ -214,16 +255,13 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   PlayListState _handleFileChanged(FileItemResponseDto file) {
     return state.maybeMap(
       loaded: (s) {
-        if (s.playlistId != file.playListId || !_canUpdate) {
+        if (s.playlistId != file.playListId) {
           return s;
         }
-        return s;
-//TODO: SCROLL IS LAGGED
-        print('Updating file');
 
         final files = [...s.files];
         final current = files.firstWhereOrNull((el) => el.id == file.id);
-        if (current == null) {
+        if (current == null || file == current) {
           return s;
         }
         final updated = current.copyWith.call(

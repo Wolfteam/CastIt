@@ -9,19 +9,7 @@ class PlayEvent with _$PlayEvent {
   factory PlayEvent.fileLoadingError({required String msg}) = _FileLoadingError;
 
   factory PlayEvent.fileLoaded({
-    required int id,
-    required String filename,
-    String? thumbPath,
-    required double duration,
-    required bool loopFile,
-    required double currentSeconds,
-    required bool isPaused,
-    required double volumeLevel,
-    required bool isMuted,
-    required int playListId,
-    required String playlistName,
-    required bool loopPlayList,
-    required bool shufflePlayList,
+    required PlayedFile file,
   }) = _FileLoaded;
 
   factory PlayEvent.timeChanged({

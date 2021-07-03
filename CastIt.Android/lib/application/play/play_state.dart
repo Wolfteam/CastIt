@@ -25,5 +25,7 @@ class PlayState with _$PlayState {
     bool? isPaused,
     String? thumbPath,
     bool? isDraggingSlider,
+    String? playListPlayedTime,
+    String? playListTotalDuration,
   }) = _PlayingState;
 }

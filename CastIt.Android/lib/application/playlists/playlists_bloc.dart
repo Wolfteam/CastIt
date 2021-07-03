@@ -53,13 +53,39 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
   void listenHubEvents() {
     _serverWsBloc.disconnected.stream.listen((event) => add(PlayListsEvent.disconnected()));
 
-    _serverWsBloc.playListsChanged.stream.listen((event) => add(PlayListsEvent.loaded(playlists: event)));
+    _serverWsBloc.playListsChanged.stream.listen((event) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListsEvent.loaded(playlists: event)),
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.playListAdded.stream.listen((e) => add(PlayListsEvent.added(playList: e)));
+    _serverWsBloc.playListAdded.stream.listen((e) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListsEvent.added(playList: e)),
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.playListChanged.stream.listen((e) => add(PlayListsEvent.changed(playList: e)));
+    _serverWsBloc.playListChanged.stream.listen((e) {
+      state.maybeMap(
+        loaded: (state) {
+          final changeComesFromPlayedFile = e.item1;
+          final playList = e.item2;
+          if (!changeComesFromPlayedFile) {
+            add(PlayListsEvent.changed(playList: playList));
+          }
+        },
+        orElse: () {},
+      );
+    });
 
-    _serverWsBloc.playListDeleted.stream.listen((e) => add(PlayListsEvent.deleted(id: e)));
+    _serverWsBloc.playListDeleted.stream.listen((e) {
+      state.maybeMap(
+        loaded: (_) => add(PlayListsEvent.deleted(id: e)),
+        orElse: () {},
+      );
+    });
   }
 
   PlayListsState _handlePlayListAdded(GetAllPlayListResponseDto playList) {
@@ -80,7 +106,7 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
       loading: (s) => s,
       loaded: (s) {
         final current = s.playlists.firstWhereOrNull((el) => el.id == playList.id);
-        if (current == null) {
+        if (current == null || current == playList) {
           return s;
         }
         final updated = current.copyWith.call(
