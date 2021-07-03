@@ -17,7 +17,7 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
 
   PlayListsState get initialState => PlayListsState.loading();
 
-  PlayListsBloc(this._castItHub) : super(PlayListsState.loaded(playlists: [], reloads: 0));
+  PlayListsBloc(this._castItHub) : super(PlayListsState.disconnected());
 
   _LoadedState get currentState => state as _LoadedState;
 
@@ -50,7 +50,9 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
       add(PlayListsEvent.load());
     });
 
-    _castItHub.disconnected.stream.listen((event) => add(PlayListsEvent.disconnected()));
+    _castItHub.disconnected.stream.listen((event) {
+      add(PlayListsEvent.disconnected());
+    });
 
     _castItHub.playListsChanged.stream.listen((event) {
       add(PlayListsEvent.loaded(playlists: event));

@@ -219,13 +219,7 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
 
   void _listenHubEvents(HubConnection connection) {
     connection.onclose((exception) async {
-      if (exception != null) {
-        await _onHubErrorOrDone(false);
-        _logger.info(runtimeType, '_listenHubEvents: Channel done method was called');
-      } else {
-        await _onHubErrorOrDone(false);
-        _logger.info(runtimeType, '_listenHubEvents: Channel done method was called');
-      }
+      await _onHubErrorOrDone(exception);
     });
     connection.on(_sendPlayLists, (message) => _handleHubMsg(_sendPlayLists, message?.first));
 
@@ -366,10 +360,14 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
     }
   }
 
-  Future<void> _onHubErrorOrDone(bool error) async {
-    // await _isServerRunning();
+  Future<void> _onHubErrorOrDone(Exception? exception) async {
+    if (exception != null) {
+      _logger.error(runtimeType, '_listenHubEvents: Channel error method was called', exception);
+    } else {
+      _logger.info(runtimeType, '_listenHubEvents: Channel done method was called');
+    }
     if (!isConnected) {
-      disconnectFromHub();
+      await disconnectFromHub();
     }
   }
 

@@ -38,64 +38,43 @@ extension I18nExtensions on S {
   }
 
   String translateAppMsgType(AppMessageType type) {
-    //TODO: SWITCH THE I18N PROVIDER
-    return 'N/A';
-
     switch (type) {
       case AppMessageType.unknownErrorOccurred:
-        // TODO: Handle this case.
-        break;
+        return unknownErrorOccurred;
       case AppMessageType.invalidRequest:
-        // TODO: Handle this case.
-        break;
+        return invalidRequest;
       case AppMessageType.notFound:
-        // TODO: Handle this case.
-        break;
+        return notFound;
       case AppMessageType.playListNotFound:
-        // TODO: Handle this case.
-        break;
+        return playListNotFound;
       case AppMessageType.unknownErrorLoadingFile:
-        // TODO: Handle this case.
-        break;
+        return unknownErrorLoadingFile;
       case AppMessageType.fileNotFound:
-        // TODO: Handle this case.
-        break;
+        return fileNotFound;
       case AppMessageType.fileIsAlreadyBeingPlayed:
-        // TODO: Handle this case.
-        break;
+        return fileIsAlreadyBeingPlayed;
       case AppMessageType.fileNotSupported:
-        // TODO: Handle this case.
-        break;
+        return fileNotSupported;
       case AppMessageType.filesAreNotValid:
-        // TODO: Handle this case.
-        break;
+        return filesAreNotValid;
       case AppMessageType.noFilesToBeAdded:
-        // TODO: Handle this case.
-        break;
+        return noFilesToBeAdded;
       case AppMessageType.urlNotSupported:
-        // TODO: Handle this case.
-        break;
+        return urlNotSupported;
       case AppMessageType.urlCouldntBeParsed:
-        // TODO: Handle this case.
-        break;
+        return urlCouldntBeParsed;
       case AppMessageType.oneOrMoreFilesAreNotReadyYet:
-        // TODO: Handle this case.
-        break;
+        return oneOrMoreFilesAreNotReadyYet;
       case AppMessageType.noDevicesFound:
-        // TODO: Handle this case.
-        break;
+        return noDevicesFound;
       case AppMessageType.noInternetConnection:
-        // TODO: Handle this case.
-        break;
+        return noInternetConnection;
       case AppMessageType.connectionToDeviceIsStillInProgress:
-        // TODO: Handle this case.
-        break;
+        return connectionToDeviceIsStillInProgress;
       case AppMessageType.ffmpegError:
-        // TODO: Handle this case.
-        break;
+        return ffmpegError;
       case AppMessageType.serverIsClosing:
-        // TODO: Handle this case.
-        break;
+        return serverIsClosing;
     }
   }
 }
