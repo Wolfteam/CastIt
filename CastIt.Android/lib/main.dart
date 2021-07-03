@@ -78,6 +78,14 @@ class MyApp extends StatelessWidget {
           final settingsBloc = ctx.read<SettingsBloc>();
           return IntroBloc(settings, settingsBloc);
         }),
+        BlocProvider(create: (ctx) {
+          final serverWsBloc = ctx.read<ServerWsBloc>();
+          return PlayedPlayListItemBloc(serverWsBloc);
+        }),
+        BlocProvider(create: (ctx) {
+          final serverWsBloc = ctx.read<ServerWsBloc>();
+          return PlayedFileItemBloc(serverWsBloc);
+        }),
       ],
       child: BlocBuilder<MainBloc, MainState>(
         builder: (ctx, state) => _buildApp(state),

@@ -26,69 +26,48 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        PageHeader(
-          title: i18n.playlists,
-          icon: Icons.library_music,
-        ),
+        PageHeader(title: i18n.playlists, icon: Icons.library_music),
         Expanded(
           child: BlocConsumer<PlayListsBloc, PlayListsState>(
-            listener: (ctx, state) {
-              state.maybeMap(
-                loaded: (_) {
-                  _refreshController.refreshCompleted();
-                },
-                disconnected: (_) {
-                  _refreshController.refreshCompleted();
-                },
-                orElse: () {},
-              );
-            },
+            listener: (ctx, state) => state.maybeMap(
+              loaded: (_) => _refreshController.refreshCompleted(),
+              disconnected: (_) => _refreshController.refreshCompleted(),
+              orElse: () {},
+            ),
             builder: (ctx, state) => SmartRefresher(
               header: const MaterialClassicHeader(),
               controller: _refreshController,
-              onRefresh: () {
-                context.read<PlayListsBloc>().add(PlayListsEvent.load());
-              },
-              child: _buildPage(ctx, state),
+              onRefresh: () => context.read<PlayListsBloc>().add(PlayListsEvent.load()),
+              child: state.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                loaded: (playlists, _) {
+                  //TODO: CREATE A WAY TO FORCE A RECONNECT
+                  // context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+                  return ListView.builder(
+                    itemCount: playlists.length,
+                    itemBuilder: (ctx, i) {
+                      final playlist = playlists[i];
+                      return PlayListItem(
+                        key: Key('playlist_$i'),
+                        id: playlist.id,
+                        name: playlist.name,
+                        numberOfFiles: playlist.numberOfFiles,
+                        loop: playlist.loop,
+                        shuffle: playlist.shuffle,
+                        totalDuration: playlist.totalDuration,
+                      );
+                    },
+                  );
+                },
+                disconnected: () {
+                  context.read<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
+                  return const SomethingWentWrong();
+                },
+              ),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPage(BuildContext context, PlayListsState state) {
-    return state.when(
-      loading: () {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-      loaded: (playlists, _) {
-        //TODO: CREATE A WAY TO FORCE A RECONNECT
-        // context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
-        return ListView.builder(
-          itemCount: playlists.length,
-          itemBuilder: (ctx, i) {
-            final playlist = playlists[i];
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: PlayListItem(
-                id: playlist.id,
-                name: playlist.name,
-                numberOfFiles: playlist.numberOfFiles,
-                loop: playlist.loop,
-                shuffle: playlist.shuffle,
-                totalDuration: playlist.totalDuration,
-              ),
-            );
-          },
-        );
-      },
-      disconnected: () {
-        context.read<ServerWsBloc>().add(ServerWsEvent.disconnectedFromWs());
-        return const SomethingWentWrong();
-      },
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:castit/application/bloc.dart';
-import 'package:castit/domain/extensions/duration_extensions.dart';
+import 'package:castit/domain/models/models.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,28 +23,32 @@ class FileItem extends StatelessWidget {
   final double itemHeight;
   final String subtitle;
   final double playedSeconds;
+  final String fullTotalDuration;
 
-  const FileItem({
-    required this.position,
-    required this.id,
-    required this.playListId,
-    required this.totalSeconds,
-    required this.isBeingPlayed,
-    required this.name,
-    required this.path,
-    required this.playedPercentage,
-    required this.exists,
-    required this.isLocalFile,
-    required this.isUrlFile,
-    required this.loop,
+  FileItem.fromItem({
     required this.itemHeight,
-    required this.subtitle,
-    required this.playedSeconds,
+    required FileItemResponseDto file,
     Key? key,
-  }) : super(key: key);
+  })  : id = file.id,
+        position = file.position,
+        playListId = file.playListId,
+        isBeingPlayed = file.isBeingPlayed,
+        totalSeconds = file.totalSeconds,
+        name = file.filename,
+        path = file.path,
+        exists = file.exists,
+        isLocalFile = file.isLocalFile,
+        isUrlFile = file.isUrlFile,
+        playedPercentage = file.playedPercentage,
+        loop = file.loop,
+        subtitle = file.subTitle,
+        playedSeconds = file.playedSeconds,
+        fullTotalDuration = file.fullTotalDuration,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // print('Building item = $id');
     final theme = Theme.of(context);
     final title = !loop
         ? Text(
@@ -72,8 +76,6 @@ class FileItem extends StatelessWidget {
             ],
           );
 
-    final playedDurationText = playedSeconds >= 0 ? Duration(seconds: playedSeconds.round()).formatDuration() : 'N/A';
-    final totalDurationText = totalSeconds > 0 ? Duration(seconds: totalSeconds.round()).formatDuration() : 'N/A';
     return Container(
       color: isBeingPlayed ? theme.accentColor.withOpacity(0.5) : null,
       height: itemHeight,
@@ -91,7 +93,15 @@ class FileItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(subtitle, overflow: TextOverflow.ellipsis),
-                Text('$playedDurationText / $totalDurationText', overflow: TextOverflow.ellipsis),
+                BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
+                  builder: (ctx, state) => Text(
+                    state.maybeMap(
+                      playing: (state) => state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
+                      orElse: () => fullTotalDuration,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             Container(
@@ -105,12 +115,17 @@ class FileItem extends StatelessWidget {
                   thumbColor: Colors.transparent,
                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0.0, disabledThumbRadius: 0.0),
                 ),
-                child: Slider(
-                  value: playedPercentage,
-                  max: 100,
-                  activeColor: Colors.black,
-                  inactiveColor: Colors.grey,
-                  onChanged: null,
+                child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
+                  builder: (ctx, state) => Slider(
+                    value: state.maybeMap(
+                      playing: (state) => state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
+                      orElse: () => playedPercentage,
+                    ),
+                    max: 100,
+                    activeColor: Colors.black,
+                    inactiveColor: Colors.grey,
+                    onChanged: null,
+                  ),
                 ),
               ),
             ),
