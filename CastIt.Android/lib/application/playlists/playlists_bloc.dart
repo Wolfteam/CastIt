@@ -2,27 +2,22 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/models/models.dart';
+import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-import '../server_ws/server_ws_bloc.dart';
 
 part 'playlists_bloc.freezed.dart';
 part 'playlists_event.dart';
 part 'playlists_state.dart';
 
 class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
-  final ServerWsBloc _serverWsBloc;
+  final CastItHubClientService _castItHub;
 
   PlayListsState get initialState => PlayListsState.loading();
 
-  PlayListsBloc(this._serverWsBloc) : super(PlayListsState.loaded(playlists: [], reloads: 0)) {
-    // _serverWsBloc.connected.stream.listen((event) {
-    //   add(PlayListsEvent.load());
-    // });
-  }
+  PlayListsBloc(this._castItHub) : super(PlayListsState.loaded(playlists: [], reloads: 0));
 
   _LoadedState get currentState => state as _LoadedState;
 
@@ -34,7 +29,7 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
 
     final s = event.map(
       load: (e) async {
-        await _serverWsBloc.loadPlayLists();
+        await _castItHub.loadPlayLists();
         return initialState;
       },
       loaded: (e) async => PlayListsState.loaded(
@@ -51,23 +46,24 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
   }
 
   void listenHubEvents() {
-    _serverWsBloc.disconnected.stream.listen((event) => add(PlayListsEvent.disconnected()));
-
-    _serverWsBloc.playListsChanged.stream.listen((event) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListsEvent.loaded(playlists: event)),
-        orElse: () {},
-      );
+    _castItHub.connected.stream.listen((event) {
+      add(PlayListsEvent.load());
     });
 
-    _serverWsBloc.playListAdded.stream.listen((e) {
+    _castItHub.disconnected.stream.listen((event) => add(PlayListsEvent.disconnected()));
+
+    _castItHub.playListsChanged.stream.listen((event) {
+      add(PlayListsEvent.loaded(playlists: event));
+    });
+
+    _castItHub.playListAdded.stream.listen((e) {
       state.maybeMap(
         loaded: (_) => add(PlayListsEvent.added(playList: e)),
         orElse: () {},
       );
     });
 
-    _serverWsBloc.playListChanged.stream.listen((e) {
+    _castItHub.playListChanged.stream.listen((e) {
       state.maybeMap(
         loaded: (state) {
           final changeComesFromPlayedFile = e.item1;
@@ -80,7 +76,7 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
       );
     });
 
-    _serverWsBloc.playListDeleted.stream.listen((e) {
+    _castItHub.playListDeleted.stream.listen((e) {
       state.maybeMap(
         loaded: (_) => add(PlayListsEvent.deleted(id: e)),
         orElse: () {},

@@ -1,8 +1,10 @@
+import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:castit/domain/services/device_info_service.dart';
 import 'package:castit/domain/services/locale_service.dart';
 import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
 import 'package:castit/domain/services/telemetry_service.dart';
+import 'package:castit/infrastructure/castit_hub_client_service.dart';
 import 'package:castit/infrastructure/device_info_service.dart';
 import 'package:castit/infrastructure/locale_service.dart';
 import 'package:castit/infrastructure/logging_service.dart';
@@ -29,4 +31,6 @@ Future<void> initInjection() async {
   getIt.registerSingleton<SettingsService>(settingsService);
 
   getIt.registerSingleton<LocaleService>(LocaleServiceImpl(getIt<SettingsService>()));
+
+  getIt.registerSingleton<CastItHubClientService>(CastItHubClientServiceImpl(loggingService, settingsService));
 }

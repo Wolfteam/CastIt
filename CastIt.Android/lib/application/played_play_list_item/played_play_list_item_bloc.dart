@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:castit/application/bloc.dart';
+import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'played_play_list_item_bloc.freezed.dart';
@@ -9,14 +9,14 @@ part 'played_play_list_item_event.dart';
 part 'played_play_list_item_state.dart';
 
 class PlayedPlayListItemBloc extends Bloc<PlayedPlayListItemEvent, PlayedPlayListItemState> {
-  final ServerWsBloc _serverWsBloc;
+  final CastItHubClientService _castItHub;
 
-  PlayedPlayListItemBloc(this._serverWsBloc) : super(const PlayedPlayListItemState.notPlaying()) {
-    _serverWsBloc.fileLoaded.stream.listen((file) {
+  PlayedPlayListItemBloc(this._castItHub) : super(const PlayedPlayListItemState.notPlaying()) {
+    _castItHub.fileLoaded.stream.listen((file) {
       add(PlayedPlayListItemEvent.playing(id: file.playListId, totalDuration: file.playListTotalDuration!));
     });
 
-    _serverWsBloc.fileEndReached.stream.listen((file) {
+    _castItHub.fileEndReached.stream.listen((file) {
       add(PlayedPlayListItemEvent.endReached());
     });
   }

@@ -1,3 +1,4 @@
+import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:castit/domain/services/device_info_service.dart';
 import 'package:castit/domain/services/locale_service.dart';
 import 'package:castit/domain/services/logging_service.dart';
@@ -15,7 +16,7 @@ import 'application/bloc.dart';
 import 'presentation/intro/intro_page.dart';
 import 'presentation/main/main_page.dart';
 
-Future main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initInjection();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -40,37 +41,38 @@ class MyApp extends StatelessWidget {
           create: (ctx) {
             final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
-            return ServerWsBloc(logger, settings);
+            final castItHub = getIt<CastItHubClientService>();
+            return ServerWsBloc(logger, settings, castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return PlayListBloc(serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayListBloc(castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return PlayListsBloc(serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayListsBloc(castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return PlayBloc(serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayBloc(castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
             final settings = getIt<SettingsService>();
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return SettingsBloc(settings, serverWsBloc, ctx.read<MainBloc>());
+            final castItHub = getIt<CastItHubClientService>();
+            return SettingsBloc(settings, ctx.read<MainBloc>(), castItHub);
           },
         ),
         BlocProvider(create: (ctx) {
-          final serverWsBloc = ctx.read<ServerWsBloc>();
-          return PlayedFileOptionsBloc(serverWsBloc);
+          final castItHub = getIt<CastItHubClientService>();
+          return PlayedFileOptionsBloc(castItHub);
         }),
         BlocProvider(create: (ctx) => PlayListRenameBloc()),
         BlocProvider(create: (ctx) {
@@ -79,12 +81,12 @@ class MyApp extends StatelessWidget {
           return IntroBloc(settings, settingsBloc);
         }),
         BlocProvider(create: (ctx) {
-          final serverWsBloc = ctx.read<ServerWsBloc>();
-          return PlayedPlayListItemBloc(serverWsBloc);
+          final castItHub = getIt<CastItHubClientService>();
+          return PlayedPlayListItemBloc(castItHub);
         }),
         BlocProvider(create: (ctx) {
-          final serverWsBloc = ctx.read<ServerWsBloc>();
-          return PlayedFileItemBloc(serverWsBloc);
+          final castItHub = getIt<CastItHubClientService>();
+          return PlayedFileItemBloc(castItHub);
         }),
       ],
       child: BlocBuilder<MainBloc, MainState>(
@@ -101,9 +103,7 @@ class MyApp extends StatelessWidget {
       GlobalCupertinoLocalizations.delegate,
     ];
     return state.map<Widget>(
-      loading: (_) {
-        return const CircularProgressIndicator();
-      },
+      loading: (_) => const CircularProgressIndicator(),
       loaded: (s) {
         final locale = Locale(s.language.code, s.language.countryCode);
         final themeData = s.accentColor.getThemeData(s.theme);

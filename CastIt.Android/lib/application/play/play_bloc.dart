@@ -2,49 +2,48 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/models/models.dart';
+import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:meta/meta.dart';
-
-import '../server_ws/server_ws_bloc.dart';
 
 part 'play_bloc.freezed.dart';
 part 'play_event.dart';
 part 'play_state.dart';
 
 class PlayBloc extends Bloc<PlayEvent, PlayState> {
-  final ServerWsBloc _serverWsBloc;
+  final CastItHubClientService _castItHub;
 
-  PlayBloc(this._serverWsBloc) : super(PlayState.connected()) {
-    _serverWsBloc.connected.stream.listen((_) => add(PlayEvent.connected()));
+  PlayBloc(this._castItHub) : super(PlayState.connected()) {
+    _castItHub.connected.stream.listen((_) => add(PlayEvent.connected()));
 
-    _serverWsBloc.fileLoading.stream.listen((_) => add(PlayEvent.fileLoading()));
+    _castItHub.fileLoading.stream.listen((_) => add(PlayEvent.fileLoading()));
 
-    _serverWsBloc.fileLoadingError.stream.listen((msg) => add(PlayEvent.fileLoadingError(msg: msg)));
+    _castItHub.fileLoadingError.stream.listen((msg) => add(PlayEvent.fileLoadingError(msg: msg)));
 
-    _serverWsBloc.fileLoaded.stream.listen((file) {
+    _castItHub.fileLoaded.stream.listen((file) {
       if (isPlaying && currentState.id == file.id) {
         return;
       }
       add(PlayEvent.fileLoaded(file: file));
     });
 
-    _serverWsBloc.filePaused.stream.listen((_) {
+    _castItHub.filePaused.stream.listen((_) {
       if (isPlaying && !currentState.isPaused!) {
         add(PlayEvent.paused());
       }
     });
 
-    _serverWsBloc.fileEndReached.stream.listen((_) {
+    _castItHub.fileEndReached.stream.listen((_) {
       add(PlayEvent.stopped());
     });
 
-    _serverWsBloc.fileTimeChanged.stream.listen((seconds) {
+    _castItHub.fileTimeChanged.stream.listen((seconds) {
       if (isPlaying && (currentState.currentSeconds! - seconds).abs() >= 1) {
         add(PlayEvent.timeChanged(seconds: seconds));
       }
     });
 
-    _serverWsBloc.disconnected.stream.listen((_) => add(PlayEvent.disconnected()));
+    _castItHub.disconnected.stream.listen((_) => add(PlayEvent.disconnected()));
   }
 
   bool get isPlaying => state is _PlayingState;
@@ -117,7 +116,7 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         }
 
         if (e.triggerGoToSeconds) {
-          _serverWsBloc.gotoSeconds(e.newValue);
+          _castItHub.gotoSeconds(e.newValue);
         }
 
         return currentState.copyWith.call(currentSeconds: e.newValue, isDraggingSlider: !e.triggerGoToSeconds);

@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/app_constants.dart';
 import 'package:castit/domain/models/models.dart';
+import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:meta/meta.dart';
-
-import '../server_ws/server_ws_bloc.dart';
 
 part 'played_file_options_bloc.freezed.dart';
 part 'played_file_options_event.dart';
@@ -15,17 +14,17 @@ part 'played_file_options_state.dart';
 const _initialState = PlayedFileOptionsState.loaded(options: []);
 
 class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptionsState> {
-  final ServerWsBloc _serverWsBloc;
+  final CastItHubClientService _castItHub;
 
-  PlayedFileOptionsBloc(this._serverWsBloc) : super(_initialState) {
-    _serverWsBloc.fileOptionsLoaded.stream.listen((event) {
+  PlayedFileOptionsBloc(this._castItHub) : super(_initialState) {
+    _castItHub.fileOptionsLoaded.stream.listen((event) {
       final optionsChanged = _hasFileOptionsChanged(event);
       if (optionsChanged) {
         add(PlayedFileOptionsEvent.loaded(options: event));
       }
     });
 
-    _serverWsBloc.volumeLevelChanged.stream.listen((event) {
+    _castItHub.volumeLevelChanged.stream.listen((event) {
       state.map(
         loaded: (s) {
           final volumeChanged = (s.volumeLvl - event.volumeLevel).abs() >= 1 || s.isMuted != event.isMuted;
@@ -37,7 +36,7 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
       );
     });
 
-    _serverWsBloc.fileLoading.stream.listen((event) {
+    _castItHub.fileLoading.stream.listen((event) {
       add(PlayedFileOptionsEvent.closeModal());
     });
   }
@@ -50,7 +49,7 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
         closed: (_) => PlayedFileOptionsState.loaded(options: e.options),
       ),
       setFileOption: (e) async {
-        await _serverWsBloc.setFileOptions(e.streamIndex, isAudio: e.isAudio, isQuality: e.isQuality, isSubtitle: e.isSubtitle);
+        await _castItHub.setFileOptions(e.streamIndex, isAudio: e.isAudio, isQuality: e.isQuality, isSubtitle: e.isSubtitle);
         return state;
       },
       volumeChanged: (e) async => state.map(
@@ -60,7 +59,7 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
       ),
       setVolume: (e) async {
         if (e.triggerChange) {
-          await _serverWsBloc.setVolume(e.volumeLvl, isMuted: e.isMuted);
+          await _castItHub.setVolume(e.volumeLvl, isMuted: e.isMuted);
         }
 
         return state.map(
