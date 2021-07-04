@@ -341,6 +341,7 @@ namespace CastIt.GoogleCast
 
         public Task<MediaStatus> StopPlaybackAsync()
         {
+            CleanLoadedFile();
             CurrentContentId = null;
             IsPlaying = false;
             CancelAndSetListenerToken(false);

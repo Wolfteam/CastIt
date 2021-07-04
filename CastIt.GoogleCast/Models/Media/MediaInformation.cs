@@ -1,8 +1,7 @@
-﻿using CastIt.GoogleCast.Enums;
-using CastIt.GoogleCast.Extensions;
+﻿using CastIt.GoogleCast.Extensions;
+using CastIt.GoogleCast.Shared.Enums;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using CastIt.GoogleCast.Shared.Enums;
 
 namespace CastIt.GoogleCast.Models.Media
 {
@@ -29,7 +28,7 @@ namespace CastIt.GoogleCast.Models.Media
         public Dictionary<string, string> CustomData { get; set; }
             = new Dictionary<string, string>();
 
-        public List<Track> Tracks { get; set; } 
+        public List<Track> Tracks { get; set; }
             = new List<Track>();
 
         public TextTrackStyle TextTrackStyle { get; set; }
