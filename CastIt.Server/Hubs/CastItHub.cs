@@ -1,8 +1,9 @@
-﻿using CastIt.Domain.Dtos.Requests;
+﻿using CastIt.Application.Interfaces;
+using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Interfaces;
 using CastIt.Infrastructure.Models;
+using CastIt.Server.Common.Extensions;
 using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -12,69 +13,24 @@ using System.Threading.Tasks;
 
 namespace CastIt.Server.Hubs
 {
-    //The exposed name methods here must match the ones that the client listens for
-    public interface ICastItHub
-    {
-        Task SendPlayLists(List<GetAllPlayListResponseDto> playLists);
-
-        Task StoppedPlayBack();
-
-        Task PlayListAdded(GetAllPlayListResponseDto playList);
-
-        Task PlayListChanged(GetAllPlayListResponseDto playList);
-
-        Task PlayListsChanged(List<GetAllPlayListResponseDto> playLists);
-
-        Task PlayListDeleted(long id);
-
-        Task PlayListIsBusy(long id, bool isBusy);
-
-        Task FileAdded(FileItemResponseDto file);
-
-        Task FileChanged(FileItemResponseDto file);
-
-        Task FilesChanged(List<FileItemResponseDto> files);
-
-        Task FileDeleted(long playListId, long id);
-
-        Task FileLoading(FileItemResponseDto file);
-
-        Task FileLoaded(FileItemResponseDto file);
-
-        Task FileEndReached(FileItemResponseDto file);
-
-        //Task FileStoppedPlayback(FileItemResponseDto file);
-
-        //Task CurrentPlayedFileStatusChanged(ServerFileItem file);
-
-        Task PlayerStatusChanged(ServerPlayerStatusResponseDto status);
-
-        Task PlayerSettingsChanged(ServerAppSettings settings);
-
-        Task ServerMessage(AppMessageType type);
-
-        Task CastDeviceSet(IReceiver device);
-
-        Task CastDevicesChanged(List<IReceiver> devices);
-
-        Task CastDeviceDisconnected();
-    }
-
     //The exposed name methods here must match the ones that the client can call
     public class CastItHub : Hub<ICastItHub>
     {
         private readonly ILogger<CastItHub> _logger;
         private readonly IServerCastService _castService;
         private readonly IServerAppSettingsService _settingsService;
+        private readonly ITelemetryService _telemetryService;
 
         public CastItHub(
             ILogger<CastItHub> logger,
             IServerCastService castService,
-            IServerAppSettingsService settingsService)
+            IServerAppSettingsService settingsService,
+            ITelemetryService telemetryService)
         {
             _logger = logger;
             _castService = castService;
             _settingsService = settingsService;
+            _telemetryService = telemetryService;
         }
 
         public override async Task OnConnectedAsync()
@@ -89,68 +45,143 @@ namespace CastIt.Server.Hubs
         }
 
         #region Client Msgs
-        public Task Play(PlayFileRequestDto dto)
+        public async Task Play(PlayFileRequestDto dto)
         {
-            return _castService.PlayFile(dto.PlayListId, dto.Id, dto.Force, dto.FileOptionsChanged);
+            try
+            {
+                await _castService.PlayFile(dto.PlayListId, dto.Id, dto.Force, dto.FileOptionsChanged);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task GoToSeconds(double seconds)
+        public async Task GoToSeconds(double seconds)
         {
-            return _castService.GoToSeconds(seconds);
+            try
+            {
+                await _castService.GoToSeconds(seconds);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task SkipSeconds(double seconds)
+        public async Task SkipSeconds(double seconds)
         {
-            return _castService.AddSeconds(seconds);
+            try
+            {
+                await _castService.AddSeconds(seconds);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task GoTo(bool next, bool previous)
+        public async Task GoTo(bool next, bool previous)
         {
-            if (next)
-                return _castService.GoTo(true);
+            try
+            {
+                if (next)
+                    await _castService.GoTo(true);
 
-            if (previous)
-                return _castService.GoTo(false);
-
-            return Task.CompletedTask;
+                if (previous)
+                    await _castService.GoTo(false);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task TogglePlayBack()
+        public async Task TogglePlayBack()
         {
-            return _castService.TogglePlayback();
+            try
+            {
+                await _castService.TogglePlayback();
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task StopPlayback()
+        public async Task StopPlayback()
         {
-            return _castService.StopPlayback();
+            try
+            {
+                await _castService.StopPlayback();
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task DeleteFile(long playlistId, long id)
+        public async Task DeleteFile(long playlistId, long id)
         {
-            return _castService.RemoveFiles(playlistId, id);
+            try
+            {
+                await _castService.RemoveFiles(playlistId, id);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
         public Task LoopFile(long playlistId, long id, bool loop)
         {
-            _castService.LoopFile(playlistId, id, loop);
+            try
+            {
+                _castService.LoopFile(playlistId, id, loop);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
             return Task.CompletedTask;
         }
 
-        public Task SetFileOptions(SetFileOptionsRequestDto dto)
+        public async Task SetFileOptions(SetFileOptionsRequestDto dto)
         {
-            return _castService.SetCurrentPlayedFileOptions(dto.StreamIndex, dto.IsAudio, dto.IsSubTitle, dto.IsQuality);
+            try
+            {
+                await _castService.SetCurrentPlayedFileOptions(dto.StreamIndex, dto.IsAudio, dto.IsSubTitle, dto.IsQuality);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
         public async Task UpdateSettings(ServerAppSettings settings)
         {
-            await _settingsService.UpdateSettings(settings);
-            await SendSettingsChanged();
+            try
+            {
+                await _settingsService.UpdateSettings(settings);
+                await SendSettingsChanged();
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
         public async Task SetVolume(SetVolumeRequestDto dto)
         {
-            await _castService.SetVolume(dto.VolumeLevel);
-            await _castService.SetIsMuted(dto.IsMuted);
+            try
+            {
+                await _castService.SetVolume(dto.VolumeLevel);
+                await _castService.SetIsMuted(dto.IsMuted);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
         public Task<PlayListItemResponseDto> AddNewPlayList()
@@ -164,9 +195,16 @@ namespace CastIt.Server.Hubs
             return Task.FromResult(playList);
         }
 
-        public Task UpdatePlayList(long id, UpdatePlayListRequestDto dto)
+        public async Task UpdatePlayList(long id, UpdatePlayListRequestDto dto)
         {
-            return _castService.UpdatePlayList(id, dto.Name);
+            try
+            {
+                await _castService.UpdatePlayList(id, dto.Name);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
         public Task UpdatePlayListPosition(long id, int newIndex)
@@ -181,59 +219,136 @@ namespace CastIt.Server.Hubs
             return Task.CompletedTask;
         }
 
-        public Task DeletePlayList(long id)
+        public async Task DeletePlayList(long id)
         {
-            return _castService.DeletePlayList(id);
+            try
+            {
+                await _castService.DeletePlayList(id);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task DeleteAllPlayLists(long exceptId = -1)
+        public async Task DeleteAllPlayLists(long exceptId = -1)
         {
-            return _castService.DeleteAllPlayLists(exceptId);
+            try
+            {
+                await _castService.DeleteAllPlayLists(exceptId);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task RemoveFiles(long id, List<long> ids)
+        public async Task RemoveFiles(long id, List<long> ids)
         {
-            return _castService.RemoveFiles(id, ids.ToArray());
+            try
+            {
+                await _castService.RemoveFiles(id, ids.ToArray());
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task RemoveFilesThatStartsWith(long playListId, string path)
+        public async Task RemoveFilesThatStartsWith(long playListId, string path)
         {
-            return _castService.RemoveFilesThatStartsWith(playListId, path);
+            try
+            {
+                await _castService.RemoveFilesThatStartsWith(playListId, path);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task RemoveAllMissingFiles(long playListId)
+        public async Task RemoveAllMissingFiles(long playListId)
         {
-            return _castService.RemoveAllMissingFiles(playListId);
+            try
+            {
+                await _castService.RemoveAllMissingFiles(playListId);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task AddFolders(long playListId, AddFolderOrFilesToPlayListRequestDto dto)
+        public async Task AddFolders(long playListId, AddFolderOrFilesToPlayListRequestDto dto)
         {
-            return _castService.AddFolder(playListId, dto.IncludeSubFolders, dto.Folders.ToArray());
+            try
+            {
+                await _castService.AddFolder(playListId, dto.IncludeSubFolders, dto.Folders.ToArray());
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task AddFiles(long playListId, AddFolderOrFilesToPlayListRequestDto dto)
+        public async Task AddFiles(long playListId, AddFolderOrFilesToPlayListRequestDto dto)
         {
-            return _castService.AddFiles(playListId, dto.Files.ToArray());
+            try
+            {
+                await _castService.AddFiles(playListId, dto.Files.ToArray());
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task AddUrlFile(long playListId, AddUrlToPlayListRequestDto dto)
+        public async Task AddUrlFile(long playListId, AddUrlToPlayListRequestDto dto)
         {
-            return _castService.AddUrl(playListId, dto.Url, dto.OnlyVideo);
+            try
+            {
+                await _castService.AddUrl(playListId, dto.Url, dto.OnlyVideo);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task SetFileSubtitlesFromPath(string filePath)
+        public async Task SetFileSubtitlesFromPath(string filePath)
         {
-            return _castService.SetFileSubtitlesFromPath(filePath);
+            try
+            {
+                await _castService.SetFileSubtitlesFromPath(filePath);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task ConnectToCastDevice(string id)
+        public async Task ConnectToCastDevice(string id)
         {
-            return _castService.SetCastRenderer(id);
+            try
+            {
+                await _castService.SetCastRenderer(id);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
-        public Task RefreshCastDevices(TimeSpan ts)
+        public async Task RefreshCastDevices(TimeSpan ts)
         {
-            return _castService.RefreshCastDevices(ts);
+            try
+            {
+                await _castService.RefreshCastDevices(ts);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
         }
 
         public Task SortFiles(long playListId, SortModeType sortMode)
