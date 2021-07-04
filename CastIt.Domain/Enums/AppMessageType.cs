@@ -23,5 +23,6 @@
         ConnectionToDeviceIsStillInProgress = 302,
         FFmpegError = 303,
         ServerIsClosing = 304,
+        FFmpegExecutableNotFound = 305,
     }
 }

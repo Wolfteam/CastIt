@@ -27,6 +27,7 @@ namespace CastIt.Domain.Extensions
                 AppMessageType.FileNotFound => "File was not found",
                 AppMessageType.FFmpegError => "Unknown error on FFmpeg",
                 AppMessageType.ServerIsClosing => "Server is closing",
+                AppMessageType.FFmpegExecutableNotFound => "Ffmpeg executable is not valid or was not found",
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, $"The provided type = {type} is not valid")
             };
         }
