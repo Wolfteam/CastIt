@@ -45,7 +45,7 @@ namespace CastIt.Infrastructure.Models
             => Type.IsVideoOrMusic();
 
         public double PlayedSeconds { get; private set; }
-        
+
         public bool CanStartPlayingFromCurrentPercentage
             => PlayedPercentage > 0 && PlayedPercentage < 100;
         public bool WasPlayed
@@ -66,6 +66,7 @@ namespace CastIt.Infrastructure.Models
                         : Path;
             set => _fileName = value;
         }
+
         public string Size
             => _size ??= _fileService.GetFileSizeString(Path);
         public string Extension
@@ -78,30 +79,13 @@ namespace CastIt.Infrastructure.Models
             => IsCached ? Description : Extension.AppendDelimiter("|", Size, Resolution);
 
         public string PlayedTime
-        {
-            get
-            {
-                var formatted = FileFormatConstants.FormatDuration(PlayedSeconds);
-                return $"{formatted}";
-            }
-        }
+            => FileFormatConstants.FormatDuration(PlayedSeconds);
 
         public string TotalDuration
             => $"{PlayedTime} / {Duration}";
 
         public string FullTotalDuration
-        {
-            get
-            {
-                var elapsed = TimeSpan.FromSeconds(PlayedSeconds)
-                    .ToString(FileFormatConstants.FullElapsedTimeFormat);
-                var total = TimeSpan.FromSeconds(TotalSeconds)
-                    .ToString(FileFormatConstants.FullElapsedTimeFormat);
-                if (IsUrlFile && TotalSeconds <= 0)
-                    return $"{elapsed}";
-                return $"{elapsed} / {total}";
-            }
-        }
+            => FileFormatConstants.FormatDuration(PlayedSeconds, TotalSeconds, IsUrlFile);
 
         public FFProbeFileInfo FileInfo { get; private set; }
 
@@ -146,7 +130,7 @@ namespace CastIt.Infrastructure.Models
                 UpdatedAt = file.UpdatedAt,
                 PlayListId = file.PlayListId,
                 Type = fileService.GetFileType(file.Path),
-                PlayedSeconds =  file.PlayedPercentage * file.TotalSeconds / 100
+                PlayedSeconds = file.PlayedPercentage * file.TotalSeconds / 100
             };
 
             return serverFileItem.UpdateFileInfo(fileInfo);

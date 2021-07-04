@@ -2,7 +2,7 @@
 using CastIt.Application.Interfaces;
 using CastIt.Application.Settings;
 using CastIt.Domain.Enums;
-using CastIt.GoogleCast.Enums;
+using CastIt.GoogleCast.Shared.Enums;
 using CastIt.Infrastructure.Models;
 using CastIt.Server.Interfaces;
 using Microsoft.Extensions.Logging;

@@ -16,6 +16,7 @@
     <RepositoryUrl>https://github.com/Wolfteam/CastIt</RepositoryUrl>
     <Authors>Efrain Bastidas</Authors>
     <Company>MiraiSoft</Company>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>

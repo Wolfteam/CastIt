@@ -1,5 +1,6 @@
 ﻿using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Extensions;
+using CastIt.GoogleCast.Shared.Enums;
 using Newtonsoft.Json;
 
 namespace CastIt.GoogleCast.Models.Media

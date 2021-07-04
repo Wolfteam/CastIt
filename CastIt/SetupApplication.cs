@@ -8,8 +8,6 @@ using CastIt.Application.Telemetry;
 using CastIt.Application.Youtube;
 using CastIt.Common;
 using CastIt.Domain.Models.Logging;
-using CastIt.GoogleCast;
-using CastIt.GoogleCast.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Resources;
 using CastIt.Services;
@@ -52,12 +50,6 @@ namespace CastIt
             Mvx.IoCProvider.ConstructAndRegisterSingleton<ITelemetryService, TelemetryService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IDesktopAppSettingsService, DesktopAppSettingsService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IYoutubeUrlDecoder, YoutubeUrlDecoder>();
-
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IPlayer>(() =>
-            {
-                var logger = Mvx.IoCProvider.Resolve<ILogger<Player>>();
-                return new Player(logger, logToConsole: false);
-            });
 
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
             Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
@@ -108,7 +100,6 @@ namespace CastIt
             };
 
             logs.AddApplicationLogs();
-            logs.AddRange(Infrastructure.DependencyInjection.GetInfrastructureLogs());
 
             logs.SetupLogging(basePath);
             var loggerFactory = new LoggerFactory()

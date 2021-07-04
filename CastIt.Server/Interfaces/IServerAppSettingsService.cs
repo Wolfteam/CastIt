@@ -1,6 +1,6 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
-using CastIt.GoogleCast.Enums;
+using CastIt.GoogleCast.Shared.Enums;
 using CastIt.Infrastructure.Models;
 
 namespace CastIt.Server.Interfaces

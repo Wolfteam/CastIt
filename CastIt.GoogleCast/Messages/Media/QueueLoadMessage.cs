@@ -13,7 +13,7 @@ namespace CastIt.GoogleCast.Messages.Media
             = new List<QueueItem>();
 
         [JsonIgnore]
-        public RepeatMode RepeatMode { get; set; }
+        internal RepeatMode RepeatMode { get; set; }
 
         [JsonProperty(PropertyName = "repeatMode")]
         private string RepeatModeString

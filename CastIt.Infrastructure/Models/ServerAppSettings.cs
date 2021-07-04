@@ -1,5 +1,5 @@
 ﻿using CastIt.Domain.Enums;
-using CastIt.GoogleCast.Enums;
+using CastIt.GoogleCast.Shared.Enums;
 
 namespace CastIt.Infrastructure.Models
 {

@@ -1,4 +1,4 @@
-﻿namespace CastIt.GoogleCast.Enums
+﻿namespace CastIt.GoogleCast.Shared.Enums
 {
     public enum TextTrackWindowType
     {

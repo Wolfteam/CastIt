@@ -27,6 +27,8 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "CastIt.Cli.Setup", "CastIt.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CastIt.Server", "CastIt.Server\CastIt.Server.csproj", "{B9D63988-20D5-4825-BCC9-1C20F0B8C89D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CastIt.GoogleCast.Shared", "CastIt.GoogleCast.Shared\CastIt.GoogleCast.Shared.csproj", "{61B96245-1E21-4008-A021-DB20ECAE707F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -163,6 +165,18 @@ Global
 		{B9D63988-20D5-4825-BCC9-1C20F0B8C89D}.Release|x64.Build.0 = Release|Any CPU
 		{B9D63988-20D5-4825-BCC9-1C20F0B8C89D}.Release|x86.ActiveCfg = Release|Any CPU
 		{B9D63988-20D5-4825-BCC9-1C20F0B8C89D}.Release|x86.Build.0 = Release|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Debug|x64.Build.0 = Debug|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Debug|x86.Build.0 = Debug|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Release|x64.ActiveCfg = Release|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Release|x64.Build.0 = Release|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Release|x86.ActiveCfg = Release|Any CPU
+		{61B96245-1E21-4008-A021-DB20ECAE707F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

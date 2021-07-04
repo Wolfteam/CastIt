@@ -2,6 +2,7 @@
 using CastIt.GoogleCast.Extensions;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using CastIt.GoogleCast.Shared.Enums;
 
 namespace CastIt.GoogleCast.Models.Media
 {
