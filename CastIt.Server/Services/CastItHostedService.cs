@@ -4,6 +4,7 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Interfaces;
+using CastIt.Infrastructure.Models;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.SignalR;
@@ -25,7 +26,7 @@ namespace CastIt.Server.Services
         private readonly IHubContext<CastItHub, ICastItHub> _castItHub;
         private readonly IServerAppSettingsService _appSettings;
         private readonly IFileWatcherService _fileWatcherService;
-        private readonly IBaseWebServer _baseWebServer;
+        private readonly IServerService _serverService;
         private readonly IFileService _fileService;
         private readonly ITelemetryService _telemetryService;
         private readonly IMapper _mapper;
@@ -39,7 +40,7 @@ namespace CastIt.Server.Services
             IServerAppSettingsService appSettings,
             IFileWatcherService fileWatcherService,
             IFileService fileService,
-            IBaseWebServer baseWebServer,
+            IServerService serverService,
             ITelemetryService telemetryService,
             IMapper mapper)
         {
@@ -49,7 +50,7 @@ namespace CastIt.Server.Services
             _appSettings = appSettings;
             _fileWatcherService = fileWatcherService;
             _fileService = fileService;
-            _baseWebServer = baseWebServer;
+            _serverService = serverService;
             _telemetryService = telemetryService;
             _mapper = mapper;
 
@@ -58,40 +59,41 @@ namespace CastIt.Server.Services
 
         private void SetCastItEventHandlers()
         {
-            _castService.OnCastRendererSet = OnCastDeviceSet;
-            _castService.OnCastableDeviceAdded = OnCastDeviceDiscovered;
-            _castService.OnCastableDeviceDeleted = OnCastableDeviceDeleted;
-            _castService.OnCastDevicesChanged = OnCastDevicesChanged;
-            _castService.OnFileLoading = OnFileLoading;
-            _castService.OnFileLoaded = OnFileLoaded;
-            _castService.OnPositionChanged = OnPositionChanged;
-            _castService.OnTimeChanged = OnTimeChanged;
-            _castService.OnEndReached = OnEndReached;
-            _castService.QualitiesChanged = QualitiesChanged;
-            _castService.OnPaused = OnPaused;
-            _castService.OnDisconnected = OnCastDeviceDisconnected;
-            _castService.OnVolumeChanged = OnVolumeChanged;
-            _castService.OnServerMessage = OnServerMessage;
-            _castService.OnAppClosing = OnAppClosing;
-            _castService.OnStoppedPlayback = OnStoppedPlayback;
+            _serverService.OnCastRendererSet = OnCastDeviceSet;
+            _serverService.OnCastableDeviceAdded = OnCastDeviceDiscovered;
+            _serverService.OnCastableDeviceDeleted = OnCastableDeviceDeleted;
+            _serverService.OnCastDevicesChanged = OnCastDevicesChanged;
+            _serverService.OnFileLoading = OnFileLoading;
+            _serverService.OnFileLoaded = OnFileLoaded;
+            _serverService.OnPositionChanged = OnPositionChanged;
+            _serverService.OnTimeChanged = OnTimeChanged;
+            _serverService.OnEndReached = OnEndReached;
+            _serverService.QualitiesChanged = QualitiesChanged;
+            _serverService.OnPaused = OnPaused;
+            _serverService.OnDisconnected = OnCastDeviceDisconnected;
+            _serverService.OnVolumeChanged = OnVolumeChanged;
+            _serverService.OnServerMessage = OnServerMessage;
+            _serverService.OnAppClosing = OnAppClosing;
+            _serverService.OnStoppedPlayback = OnStoppedPlayback;
+            _serverService.OnSettingsChanged = OnSettingsChanged;
 
-            _castService.OnPlayListAdded = OnPlayListAdded;
-            _castService.OnPlayListChanged = OnPlayListChanged;
-            _castService.OnPlayListsChanged = OnPlayListsChanged;
-            _castService.OnPlayListDeleted = OnPlayListDeleted;
-            _castService.OnPlayListBusy = OnPlayListBusy;
-            _castService.OnFileAdded = OnFileAdded;
-            _castService.OnFileChanged = OnFileChanged;
-            _castService.OnFilesChanged = OnFilesChanged;
-            _castService.OnFileDeleted = OnFileDeleted;
-            _castService.OnFilesAdded = OnFilesAdded;
+            _serverService.OnPlayListAdded = OnPlayListAdded;
+            _serverService.OnPlayListChanged = OnPlayListChanged;
+            _serverService.OnPlayListsChanged = OnPlayListsChanged;
+            _serverService.OnPlayListDeleted = OnPlayListDeleted;
+            _serverService.OnPlayListBusy = OnPlayListBusy;
+            _serverService.OnFileAdded = OnFileAdded;
+            _serverService.OnFileChanged = OnFileChanged;
+            _serverService.OnFilesChanged = OnFilesChanged;
+            _serverService.OnFileDeleted = OnFileDeleted;
+            _serverService.OnFilesAdded = OnFilesAdded;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{nameof(StartAsync)}: Deleting server logs and previews...");
             _fileService.DeleteServerLogsAndPreviews();
-            _baseWebServer.Init();
+            _serverService.Init();
 
             _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
             await _castService.Init();
@@ -131,7 +133,7 @@ namespace CastIt.Server.Services
             _fileWatcherService.StopListening();
 
             _logger.LogInformation($"{nameof(StopAsync)}: Cleaning the cast service...");
-            await _castService.CleanThemAll();
+            await _castService.StopAsync();
 
             _logger.LogInformation($"{nameof(StopAsync)}: Saving current settings...");
             await _appSettings.SaveCurrentSettings();
@@ -352,6 +354,10 @@ namespace CastIt.Server.Services
             await _castItHub.Clients.All.PlayListIsBusy(id, isBusy);
         }
 
+        private async void OnSettingsChanged(ServerAppSettings obj)
+        {
+            await _castItHub.Clients.All.PlayerSettingsChanged(_appSettings.Settings);
+        }
         #endregion
 
         #region FileWatcher Handlers

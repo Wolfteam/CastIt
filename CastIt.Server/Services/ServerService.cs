@@ -1,52 +1,76 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Application.Server;
+﻿using CastIt.Application.Server;
 using CastIt.Domain.Dtos.Requests;
+using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
+using CastIt.Domain.Interfaces;
+using CastIt.Infrastructure.Models;
+using CastIt.Server.Interfaces;
 using CastIt.Shared.Extensions;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
-namespace CastIt.Server
+namespace CastIt.Server.Services
 {
-    public class FakeAppWebServer : IBaseWebServer
+    public class ServerService : IServerService
     {
-        private readonly ILogger<FakeAppWebServer> _logger;
+        private readonly ILogger<ServerService> _logger;
         private readonly IServer _server;
+        private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private string _baseIpAddress;
 
-        #region Events
-        //public OnFileLoadingHandler OnFileLoading { get; set; }
-        //public OnFileLoadedWsHandler OnFileLoaded { get; set; }
-        //public OnFileLoadingErrorHandler OnFileLoadingError { get; set; }
-        //public OnPositionChangedHandler OnPositionChanged { get; set; }
-        //public OnTimeChangedHandler OnTimeChanged { get; set; }
-        //public OnEndReachedHandler OnEndReached { get; set; }
-        //public OnPausedHandler OnPaused { get; set; }
-        //public OnDisconnectedHandler OnDisconnected { get; set; }
-        //public OnVolumeChangedHandler OnVolumeChanged { get; set; }
-        //public OnAppClosingHandler OnAppClosing { get; set; }
-        //public OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
-
-        //public OnPlayListAddedHandler OnPlayListAdded { get; set; }
-        //public OnPlayListChangedHandler OnPlayListChanged { get; set; }
-        //public OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
-
-        //public OnFileAddedHandler OnFileAdded { get; set; }
-        //public OnFileChangedHandler OnFileChanged { get; set; }
-        //public OnFileDeletedHandler OnFileDeleted { get; set; }
-
-        //public OnServerMsgHandler OnServerMsg { get; set; }
+        #region Player Delegates
+        public Action<IReceiver> OnCastRendererSet { get; set; }
+        public Action<IReceiver> OnCastableDeviceAdded { get; set; }
+        public Action<string> OnCastableDeviceDeleted { get; set; }
+        public Action<List<IReceiver>> OnCastDevicesChanged { get; set; }
+        public Action<double> OnPositionChanged { get; set; }
+        public Action<double> OnTimeChanged { get; set; }
+        public Action OnEndReached { get; set; }
+        public Action<int, List<int>> QualitiesChanged { get; set; }
+        public Action OnPaused { get; set; }
+        public Action OnDisconnected { get; set; }
+        public Action<double, bool> OnVolumeChanged { get; set; }
+        public Action<AppMessageType> OnServerMessage { get; set; }
         #endregion
 
-        public FakeAppWebServer(ILogger<FakeAppWebServer> logger, IServer server)
+        #region Server Delegates
+        public Action OnAppClosing { get; set; }
+        public Action<ServerAppSettings> OnSettingsChanged { get; set; }
+
+        public Action<GetAllPlayListResponseDto> OnPlayListAdded { get; set; }
+        public Action<GetAllPlayListResponseDto> OnPlayListChanged { get; set; }
+        public Action<List<GetAllPlayListResponseDto>> OnPlayListsChanged { get; set; }
+        public Action<long> OnPlayListDeleted { get; set; }
+        public Action<long, bool> OnPlayListBusy { get; set; }
+
+        public Action<FileItemResponseDto> OnFileAdded { get; set; }
+        public Action<FileItemResponseDto> OnFileChanged { get; set; }
+        public Action<List<FileItemResponseDto>> OnFilesChanged { get; set; }
+        public Action<long, long> OnFileDeleted { get; set; }
+
+        public Action<long, FileItem[]> OnFilesAdded { get; set; }
+        public Action<FileItemResponseDto> OnFileLoading { get; set; }
+        public Action<FileItemResponseDto> OnFileLoaded { get; set; }
+        public Action OnStoppedPlayback { get; set; }
+        #endregion
+
+        public ServerService(
+            ILogger<ServerService> logger,
+            IServer server,
+            IHostApplicationLifetime hostApplicationLifetime)
         {
             _logger = logger;
             _server = server;
+            _hostApplicationLifetime = hostApplicationLifetime;
         }
 
         //Keep in mind that this method should be called AFTER the server has completely started
@@ -130,13 +154,16 @@ namespace CastIt.Server
             return $"{baseUrl}/{AppWebServerConstants.ChromeCastSubTitlesPath}";
         }
 
+        public async Task StopAsync()
+        {
+            _logger.LogInformation("Stopping the server...");
+            await _server.StopAsync(default);
+            _hostApplicationLifetime.StopApplication();
+        }
+
         private string SetUrlParameters(string baseUrl, object dto)
         {
             return QueryHelpers.AddQueryString(baseUrl, dto.ToKeyValue());
-        }
-
-        public void Dispose()
-        {
         }
 
         private void CheckIpAddress()

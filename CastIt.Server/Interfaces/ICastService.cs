@@ -1,8 +1,6 @@
-﻿using CastIt.Application.Common;
-using CastIt.Application.Server;
+﻿using CastIt.Domain.Enums;
 using CastIt.Domain.Interfaces;
 using CastIt.Domain.Models.FFmpeg.Info;
-using CastIt.Server.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,33 +10,6 @@ namespace CastIt.Server.Interfaces
     public interface ICastService
     {
         List<IReceiver> AvailableDevices { get; }
-        OnCastRendererSetHandler OnCastRendererSet { get; set; }
-        OnCastableDeviceAddedHandler OnCastableDeviceAdded { get; set; }
-        OnCastableDeviceDeletedHandler OnCastableDeviceDeleted { get; set; }
-        OnCastDevicesChangedHandler OnCastDevicesChanged { get; set; }
-        //OnFileLoadedHandler OnFileLoaded { get; set; }
-        OnEndReachedHandler OnEndReached { get; set; }
-        OnPositionChangedHandler OnPositionChanged { get; set; }
-        OnTimeChangedHandler OnTimeChanged { get; set; }
-        OnQualitiesChangedHandler QualitiesChanged { get; set; }
-        OnPausedHandler OnPaused { get; set; }
-        OnDisconnectedHandler OnDisconnected { get; set; }
-        OnVolumeChangedHandler OnVolumeChanged { get; set; }
-        OnServerMessageHandler OnServerMessage { get; set; }
-        OnAppClosingHandler OnAppClosing { get; set; }
-        OnAppSettingsChangedHandler OnAppSettingsChanged { get; set; }
-
-        OnPlayListAddedHandler OnPlayListAdded { get; set; }
-        OnPlayListChangedHandler OnPlayListChanged { get; set; }
-        OnPlayListsChangedHandler OnPlayListsChanged { get; set; }
-        OnPlayListDeletedHandler OnPlayListDeleted { get; set; }
-        OnPlayListBusyHandler OnPlayListBusy { get; set; }
-
-        OnFileAddedHandler OnFileAdded { get; set; }
-        OnFileChangedHandler OnFileChanged { get; set; }
-        OnFilesChangedHandler OnFilesChanged { get; set; }
-        OnFileDeletedHandler OnFileDeleted { get; set; }
-
         bool IsPlayingOrPaused { get; }
         int CurrentVideoStreamIndex { get; }
         int CurrentAudioStreamIndex { get; }
@@ -48,7 +19,7 @@ namespace CastIt.Server.Interfaces
         FFProbeFileInfo CurrentFileInfo { get; }
 
         Task Init();
-        Task CleanThemAll();
+        Task StopAsync();
         Task StopRunningProcess();
         Task AddSeconds(
             int videoStreamIndex,
@@ -58,8 +29,7 @@ namespace CastIt.Server.Interfaces
             double seconds,
             FFProbeFileInfo fileInfo);
         Task AddSeconds(double seconds);
-        Task GoToSeconds(
-            int videoStreamIndex,
+        Task GoToSeconds(string filePath, int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,
             int quality,
@@ -125,6 +95,8 @@ namespace CastIt.Server.Interfaces
         void SendFileNotFound();
 
         void SendInvalidRequest();
+
+        void SendServerMsg(AppMessageType type);
 
         Task RefreshCastDevices(TimeSpan ts);
     }

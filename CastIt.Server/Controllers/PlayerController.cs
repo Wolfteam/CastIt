@@ -26,6 +26,7 @@ namespace CastIt.Server.Controllers
         private readonly IFFmpegService _ffmpegService;
         private readonly IServerAppSettingsService _settingsService;
         private readonly IImageProviderService _imageProviderService;
+        private readonly IServerService _serverService;
 
         public PlayerController(
             ILogger<PlayerController> logger,
@@ -33,16 +34,17 @@ namespace CastIt.Server.Controllers
             IFFmpegService fFmpegService,
             IServerCastService castService,
             IServerAppSettingsService settingsService,
-            IImageProviderService imageProviderService)
+            IImageProviderService imageProviderService,
+            IServerService serverService)
             : base(logger, castService)
         {
             _fileService = fileService;
             _ffmpegService = fFmpegService;
             _settingsService = settingsService;
             _imageProviderService = imageProviderService;
+            _serverService = serverService;
         }
 
-        //TODO: ADD THE APPMESSAGE TYPE TO EACH RESPONSE ?
         //TODO: ADD A SETTING THAT ALLOWS YOU TO CHANGE THE MAXIMUM DAYS TO WAIT BEFORE DELETING PREVIEWS
 
         [HttpGet("Status")]
@@ -183,8 +185,8 @@ namespace CastIt.Server.Controllers
             {
                 return new BadRequestObjectResult(ModelState);
             }
-
             await _settingsService.SaveSettings(updated);
+            _serverService.OnSettingsChanged?.Invoke(_settingsService.Settings);
             Logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
             return Ok(new EmptyResponseDto(true));
         }
@@ -209,9 +211,6 @@ namespace CastIt.Server.Controllers
             {
                 //TODO: MOVE THIS TO THE FFMPEG SERVICE
                 var type = _fileService.GetFileType(dto.Mrl);
-                //bool isVideoFile = _fileService.IsVideoFile(dto.Mrl);
-                //bool isMusicFile = _fileService.IsMusicFile(dto.Mrl);
-                //bool isHls = _fileService.IsHls(dto.Mrl);
                 if (!type.IsLocalOrHls())
                 {
                     Response.StatusCode = StatusCodes.Status400BadRequest;
@@ -219,12 +218,6 @@ namespace CastIt.Server.Controllers
                     return;
                 }
 
-                //if (!isVideoFile && !isMusicFile && !isHls)
-                //{
-                //    Response.StatusCode = StatusCodes.Status400BadRequest;
-                //    Logger.LogWarning($"{nameof(Play)}: File = {dto.Mrl} is not a video nor music file.");
-                //    return;
-                //}
                 HttpContext.Response.ContentType = _ffmpegService.GetOutputTranscodeMimeType(dto.Mrl);
                 DisableCaching();
 

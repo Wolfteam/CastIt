@@ -1,7 +1,5 @@
 using CastIt.Application;
-using CastIt.Application.Interfaces;
 using CastIt.GoogleCast;
-using CastIt.GoogleCast.Interfaces;
 using CastIt.Infrastructure.Models;
 using CastIt.Server.Common;
 using CastIt.Server.Common.Extensions;
@@ -63,7 +61,7 @@ namespace CastIt.Server
             services.AddCors();
 
             //Should be more than enough for the hosted service to complete
-            services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(3));
+            services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(15));
 
             services.AddApplication(defaultSettings.FFmpegPath, defaultSettings.FFprobePath);
             services.AddSingleton(defaultSettings);
@@ -82,16 +80,14 @@ namespace CastIt.Server
             });
             services.AddSingleton<IAppDataService, AppDataService>();
             services.AddSingleton<IServerCastService, ServerCastService>();
-            services.AddSingleton<IBaseWebServer, FakeAppWebServer>();
             services.AddSingleton<IServerAppSettingsService, ServerAppSettingsService>();
-            services.AddSingleton<IBaseWebServer, FakeAppWebServer>();
-            services.AddSingleton<IPlayer>(provider => new Player(provider.GetRequiredService<ILogger<Player>>()));
-            services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
+            services.AddSingleton<IServerService, ServerService>();
             services.AddSingleton<IImageProviderService, ImageProviderService>();
+            services.AddGoogleCast();
+            services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
             services.AddSwagger("CastIt", "CastIt.xml");
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -117,11 +113,6 @@ namespace CastIt.Server
                 endpoints.MapHub<CastItHub>("/CastItHub");
             });
             app.UseSwagger("CastIt");
-
-            //Since the hosted service is started after this, we need to make sure that this thing is initialized
-            //using var scope = app.ApplicationServices.CreateScope();
-            //var castService = scope.ServiceProvider.GetRequiredService<IServerCastService>();
-            //castService.Init().GetAwaiter().GetResult();
         }
     }
 }

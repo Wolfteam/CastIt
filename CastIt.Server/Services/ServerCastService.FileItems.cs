@@ -131,7 +131,7 @@ namespace CastIt.Server.Services
             if ((sortBy == SortModeType.DurationAsc || sortBy == SortModeType.DurationDesc) &&
                 playList.Files.Any(f => string.IsNullOrEmpty(f.Duration)))
             {
-                OnServerMessage?.Invoke(AppMessageType.OneOrMoreFilesAreNotReadyYet);
+                ServerService.OnServerMessage?.Invoke(AppMessageType.OneOrMoreFilesAreNotReadyYet);
                 return;
             }
 

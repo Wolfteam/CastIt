@@ -1,27 +1,27 @@
 ﻿using CastIt.Domain.Dtos;
 using CastIt.Server.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace CastIt.Server.Controllers
 {
     public class ServerController : BaseController<ServerController>
     {
-        private readonly IHostApplicationLifetime _hostApplicationLifetime;
+        private readonly IServerService _serverService;
         public ServerController(
             ILogger<ServerController> logger,
             IServerCastService castService,
-            IHostApplicationLifetime hostApplicationLifetime)
+            IServerService serverService)
             : base(logger, castService)
         {
-            _hostApplicationLifetime = hostApplicationLifetime;
+            _serverService = serverService;
         }
 
         [HttpPost("Stop")]
-        public IActionResult StopServer()
+        public async Task<IActionResult> StopServer()
         {
-            _hostApplicationLifetime.StopApplication();
+            await _serverService.StopAsync();
             return Ok(new EmptyResponseDto(true));
         }
     }

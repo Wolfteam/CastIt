@@ -77,8 +77,7 @@ namespace CastIt.Server.Services
         {
             if (string.IsNullOrWhiteSpace(newName))
             {
-                SendInvalidRequest();
-                return;
+                throw new InvalidRequestException($"The provided name for playlistId = {playListId} cannot be null");
             }
 
             var playList = GetPlayListInternal(playListId);
@@ -136,22 +135,19 @@ namespace CastIt.Server.Services
             if (paths == null || paths.Length == 0)
             {
                 Logger.LogInformation($"{nameof(AddFiles)}: No paths were provided");
-                OnServerMessage?.Invoke(AppMessageType.NoFilesToBeAdded);
                 throw new InvalidRequestException("No paths were provided", AppMessageType.NoFilesToBeAdded);
             }
 
             if (paths.Any(p => string.IsNullOrEmpty(p) || p.Length > 1000))
             {
                 Logger.LogInformation($"{nameof(AddFiles)}: One of the provided paths is not valid");
-                OnServerMessage?.Invoke(AppMessageType.FilesAreNotValid);
-                throw new FileNotSupportedException("One of the provided paths is not valid");
+                throw new FileNotSupportedException("One of the provided paths is not valid", AppMessageType.FilesAreNotValid);
             }
 
             var playList = PlayLists.Find(pl => pl.Id == playListId);
             if (playList == null)
             {
                 Logger.LogWarning($"{nameof(AddFiles)}: PlayListId = {playListId} does not exist");
-                OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
                 throw new PlayListNotFoundException($"PlayListId = {playListId} does not exist");
             }
 
@@ -170,7 +166,7 @@ namespace CastIt.Server.Services
                 }).ToList();
 
             var createdFiles = await _appDataService.AddFiles(files);
-            OnFilesAdded.Invoke(playListId, createdFiles.ToArray());
+            ServerService.OnFilesAdded.Invoke(playListId, createdFiles.ToArray());
         }
 
         public async Task AddFile(long playListId, FileItem file)
@@ -201,9 +197,9 @@ namespace CastIt.Server.Services
             bool isUrlFile = FileService.IsUrlFile(url);
             if (!isUrlFile || !YoutubeUrlDecoder.IsYoutubeUrl(url))
             {
-                Logger.LogInformation($"{nameof(AddUrl)}: Url = {url} is not supported");
-                OnServerMessage?.Invoke(AppMessageType.UrlNotSupported);
-                return;
+                var msg = $"Url = {url} is not supported";
+                Logger.LogInformation($"{nameof(AddUrl)}: {msg}");
+                throw new FileNotSupportedException(msg, AppMessageType.UrlNotSupported);
             }
 
             try
@@ -230,9 +226,9 @@ namespace CastIt.Server.Services
             }
             catch (Exception e)
             {
-                OnServerMessage?.Invoke(AppMessageType.UrlCouldntBeParsed);
-                TelemetryService.TrackError(e);
                 Logger.LogError(e, $"{nameof(AddUrl)}: Couldn't parse url = {url}");
+                TelemetryService.TrackError(e);
+                throw;
             }
             finally
             {
@@ -243,12 +239,6 @@ namespace CastIt.Server.Services
         private async Task AddYoutubeUrl(long playListId, string url)
         {
             var media = await YoutubeUrlDecoder.Parse(url, null, false);
-            if (media == null)
-            {
-                Logger.LogWarning($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
-                OnServerMessage?.Invoke(AppMessageType.UrlCouldntBeParsed);
-                return;
-            }
             if (!string.IsNullOrEmpty(media.Title) && media.Title.Length > AppWebServerConstants.MaxCharsPerString)
             {
                 media.Title = media.Title.Substring(0, AppWebServerConstants.MaxCharsPerString);
@@ -330,7 +320,7 @@ namespace CastIt.Server.Services
             if (playList != null)
                 return playList;
             Logger.LogWarning($"{nameof(GetPlayListInternal)}: PlaylistId = {id} doesn't exists");
-            OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
+            ServerService.OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
             if (throwOnNotFound)
                 throw new PlayListNotFoundException($"PlayListId = {id} does not exist");
             return null;
