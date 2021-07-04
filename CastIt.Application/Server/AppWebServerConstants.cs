@@ -13,8 +13,6 @@
         public const int DefaultPort = 9696;
 
         public const string PortArgument = "--port";
-        public const string FFmpegPathArgument = "--ffmpegBasePath";
-        public const string FFprobePathArgument = "--ffprobeBasePath";
 
         //The number of images in a tile
         public const int ThumbnailsPerImage = 25;

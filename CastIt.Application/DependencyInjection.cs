@@ -12,14 +12,31 @@ namespace CastIt.Application
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddApplication(this IServiceCollection services, string ffmpegPath, string ffprobePath, string generatedFilesFolderPath = null)
+        public static IServiceCollection AddApplication(
+            this IServiceCollection services)
+            => services
+                .AddFileService()
+                .AddCommonAppServices()
+                .AddFFmpegService();
+
+        public static IServiceCollection AddApplication(
+            this IServiceCollection services,
+            string generatedFilesFolderPath)
+            => services
+                .AddFileService(generatedFilesFolderPath)
+                .AddCommonAppServices()
+                .AddFFmpegService();
+
+        public static IServiceCollection AddFileService(
+            this IServiceCollection services,
+            string generatedFilesFolderPath = null)
         {
             if (string.IsNullOrWhiteSpace(generatedFilesFolderPath))
                 generatedFilesFolderPath = AppFileUtils.GetBaseAppFolder();
-            var fileService = new FileService(ffmpegPath, ffprobePath, generatedFilesFolderPath);
+            var fileService = new FileService(generatedFilesFolderPath);
             services.AddSingleton<ICommonFileService>(fileService);
             services.AddSingleton<IFileService>(fileService);
-            return services.AddCommonAppServices().AddFFmpegService();
+            return services;
         }
 
         public static IServiceCollection AddApplicationForCli(this IServiceCollection services)

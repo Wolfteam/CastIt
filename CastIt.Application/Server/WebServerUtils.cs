@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -83,7 +84,14 @@ namespace CastIt.Application.Server
                 },
             };
 
-            return process.Start();
+            try
+            {
+                return process.Start();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public static bool StartServer()

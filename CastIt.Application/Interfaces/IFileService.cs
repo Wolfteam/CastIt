@@ -6,10 +6,6 @@ namespace CastIt.Application.Interfaces
     {
         string GetFFmpegFolder();
 
-        string GetFFmpegPath();
-
-        string GetFFprobePath();
-
         string GetPreviewsPath();
 
         string GetFirstThumbnailFilePath(string filename);
@@ -18,7 +14,7 @@ namespace CastIt.Application.Interfaces
 
         string GetPreviewThumbnailFilePath(string filename);
 
-        string GetClosestThumbnail(string filePath, long tentativeSecond);
+        string GetClosestThumbnail(string filePath, long tentativeSecond, int thumbnailsEachSeconds = 5);
 
         string GetSubTitleFolder();
 
