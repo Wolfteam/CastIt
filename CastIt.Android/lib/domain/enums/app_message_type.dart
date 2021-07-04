@@ -17,6 +17,7 @@ enum AppMessageType {
   connectionToDeviceIsStillInProgress,
   ffmpegError,
   serverIsClosing,
+  ffmpegExecutableNotFound,
 }
 
 AppMessageType getAppMessageType(int value) {
@@ -57,6 +58,8 @@ AppMessageType getAppMessageType(int value) {
       return AppMessageType.ffmpegError;
     case 304:
       return AppMessageType.serverIsClosing;
+    case 305:
+      return AppMessageType.ffmpegExecutableNotFound;
   }
   throw Exception('The provided code = $value is not valid');
 }

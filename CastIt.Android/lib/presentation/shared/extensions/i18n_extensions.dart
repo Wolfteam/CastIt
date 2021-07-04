@@ -75,6 +75,8 @@ extension I18nExtensions on S {
         return ffmpegError;
       case AppMessageType.serverIsClosing:
         return serverIsClosing;
+      case AppMessageType.ffmpegExecutableNotFound:
+        return ffmpegExecutableNotFound;
     }
   }
 }

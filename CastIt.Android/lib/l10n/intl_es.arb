@@ -95,5 +95,6 @@
   "noInternetConnection": "No hay conexión a internet",
   "connectionToDeviceIsStillInProgress": "La conexión a un dispositivo está en progreso",
   "ffmpegError": "Ffmpeg error",
-  "serverIsClosing": "El servidor está cerrando"
+  "serverIsClosing": "El servidor está cerrando",
+  "ffmpegExecutableNotFound": "El ejecutable de Ffmpeg no es válido o no pudo ser encontrado"
 }
