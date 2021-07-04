@@ -504,6 +504,7 @@ namespace CastIt.Server.Services
         }
 
         public Task AddSeconds(
+            string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,
@@ -538,11 +539,10 @@ namespace CastIt.Server.Services
                     $"they will be set to = {Player.CurrentMediaDuration}");
                 newValue = Player.CurrentMediaDuration;
             }
-            //TODO: MOVE THE _currentFilePath TO A PARAM
             FileLoading();
-            if (!FileService.IsLocalFile(_currentFilePath))
+            if (!FileService.IsLocalFile(filePath))
                 return Player.SeekAsync(newValue);
-            return StartPlay(_currentFilePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
+            return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
         }
 
         public Task AddSeconds(double seconds)
@@ -554,6 +554,7 @@ namespace CastIt.Server.Services
             }
 
             return AddSeconds(
+                _currentFilePath, 
                 CurrentVideoStreamIndex, CurrentAudioStreamIndex, CurrentSubtitleStreamIndex,
                 CurrentVideoQuality, seconds, CurrentFileInfo);
         }

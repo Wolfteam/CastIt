@@ -119,7 +119,6 @@ namespace CastIt.ViewModels
             }
         }
 
-        //TODO: IS THIS BEING USED ?
         public double PlayedPercentage
         {
             get => _playedPercentage;
@@ -506,9 +505,6 @@ namespace CastIt.ViewModels
                 return;
             }
 
-            //TODO: MOVE THE URL TO A COMMON PLACE
-            //TODO: MAYBE YOU SHOULD DOWNLOAD THE YT IMAGE BEFORE PLAYING
-            //PreviewThumbnailImg = $"{_currentPlayedFile.Path}|{tentativeSecond}";
             var range = _thumbnailRanges.Find(r => r.ThumbnailRange.ContainsValue(tentativeSecond));
             PreviewThumbnailImg = range.PreviewThumbnailUrl;
         }

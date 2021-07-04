@@ -11,6 +11,7 @@
         public const string ChromeCastSubTitlesPath = "ChromeCastSubtitles";
         public const string ThumbnailPreviewImagesPath = "Images/Previews";
         public const int DefaultPort = 9696;
+        public const string CastItHub = "CastItHub";
 
         public const string PortArgument = "--port";
 

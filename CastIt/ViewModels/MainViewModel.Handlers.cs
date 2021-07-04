@@ -87,7 +87,6 @@ namespace CastIt.ViewModels
                     PlayLists.Move(currentIndex, playList.Position);
             }
             vm.IsBusy = false;
-            //TODO: THIS METHODS IS BEING TRIGGERED IN THE DETAIL PAGE
             _mapper.Map(playList, vm);
         }
 
@@ -236,8 +235,6 @@ namespace CastIt.ViewModels
                 return;
             }
 
-            //TODO: SOMETIMES I'M GETTING AN EXCEPTION HERE
-            //TODO: IF YOU ARE USING THE GRIDVIEW, YOU WON'T HAVE ITEMS UNTIL YOU HAVE LOAD THEM
             CurrentPlayedFile = playlist?.Items.FirstOrDefault(pl => pl.Id == playedFile.Id);
 
             //The playlist hasn't been loaded, so we add the file item in order to have preview thumbnails

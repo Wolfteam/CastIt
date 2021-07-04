@@ -100,7 +100,6 @@ namespace CastIt.ViewModels.Items
             set => SetProperty(ref _isBusy, value);
         }
 
-        //TODO: DO NOT USE ITEMS.COUNT
         public int NumberOfFiles
         {
             get => _numberOfFiles;

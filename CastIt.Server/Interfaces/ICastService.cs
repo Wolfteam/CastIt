@@ -22,6 +22,7 @@ namespace CastIt.Server.Interfaces
         Task StopAsync();
         Task StopRunningProcess();
         Task AddSeconds(
+            string filePath, 
             int videoStreamIndex,
             int audioStreamIndex,
             int subtitleStreamIndex,

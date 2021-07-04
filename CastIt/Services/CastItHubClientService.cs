@@ -582,8 +582,7 @@ namespace CastIt.Services
                         await _connection.DisposeAsync();
                     }
 
-                    //TODO: MOVE THE CastItHub TO A CONSTANT 
-                    var url = $"{ipAddress}/CastItHub";
+                    var url = $"{ipAddress}/{AppWebServerConstants.CastItHub}";
                     _connection = new HubConnectionBuilder()
                         .WithUrl(url)
                         .Build();
