@@ -45,7 +45,7 @@ namespace CastIt.Cli
                         services.AddLogging(c =>
                         {
                             c.ClearProviders();
-                            c.AddProvider(new SerilogLoggerProvider(Log.Logger));
+                            c.AddProvider(new SerilogLoggerProvider(Log.Logger)).AddDebug();
                         });
 
                         services.AddSingleton<ICastItApiService, CastItApiService>();

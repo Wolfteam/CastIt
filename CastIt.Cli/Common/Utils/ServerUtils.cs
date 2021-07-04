@@ -8,7 +8,7 @@ namespace CastIt.Cli.Common.Utils
 {
     public static class ServerUtils
     {
-        public static string StartServerIfNotStarted(string ffmpegPath = null, string ffprobePath = null)
+        public static string StartServerIfNotStarted()
         {
             if (WebServerUtils.IsServerAlive())
             {
@@ -28,18 +28,6 @@ namespace CastIt.Cli.Common.Utils
             {
                 AppWebServerConstants.PortArgument, $"{openPort}"
             };
-
-            if (!string.IsNullOrWhiteSpace(ffmpegPath))
-            {
-                args.Add(AppWebServerConstants.FFmpegPathArgument);
-                args.Add(ffmpegPath);
-            }
-
-            if (!string.IsNullOrWhiteSpace(ffprobePath))
-            {
-                args.Add(AppWebServerConstants.FFprobePathArgument);
-                args.Add(ffprobePath);
-            }
 
             var escapedArgs = ArgumentEscaper.EscapeAndConcatenate(args);
             Console.WriteLine($"Trying to start process located in = {path} with args = {escapedArgs}");

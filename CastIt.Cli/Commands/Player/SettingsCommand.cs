@@ -14,10 +14,10 @@ namespace CastIt.Cli.Commands.Player
     public class SettingsCommand : BaseCommand
     {
         //General
-        [Option(CommandOptionType.SingleOrNoValue, Description = "The ffmpeg path", LongName = "ffmpeg", ShortName = "ffmpeg")]
+        [Option(CommandOptionType.SingleOrNoValue, Description = "The ffmpeg exe path", LongName = "ffmpeg", ShortName = "ffmpeg")]
         public string FFmpegPath { get; set; }
 
-        [Option(CommandOptionType.SingleOrNoValue, Description = "The ffmpeg path", LongName = "ffprobe", ShortName = "ffprobe")]
+        [Option(CommandOptionType.SingleOrNoValue, Description = "The ffprobe exe path", LongName = "ffprobe", ShortName = "ffprobe")]
         public string FFprobePath { get; set; }
 
         [Option(CommandOptionType.SingleOrNoValue, Description = "Sets if files should start from the start or if they should start where they were left", LongName = "play-from-start", ShortName = "play-from-start")]
@@ -73,6 +73,7 @@ namespace CastIt.Cli.Commands.Player
 
             if (!patch.Operations.Any())
             {
+                AppConsole.WriteLine("Retrieving server settings...");
                 var response = await CastItApi.GetCurrentSettings();
                 CheckServerResponse(response);
 
@@ -80,6 +81,7 @@ namespace CastIt.Cli.Commands.Player
             }
             else
             {
+                AppConsole.WriteLine("Updating server settings...");
                 var response = await CastItApi.UpdateSettings(patch);
                 CheckServerResponse(response);
             }
@@ -92,10 +94,10 @@ namespace CastIt.Cli.Commands.Player
             var patch = new JsonPatchDocument<ServerAppSettings>();
 
             if (!string.IsNullOrWhiteSpace(FFmpegPath))
-                patch.Replace(p => p.FFmpegPath, FFmpegPath);
+                patch.Replace(p => p.FFmpegExePath, FFmpegPath);
 
             if (!string.IsNullOrWhiteSpace(FFprobePath))
-                patch.Replace(p => p.FFprobePath, FFprobePath);
+                patch.Replace(p => p.FFprobeExePath, FFprobePath);
 
             if (StartFilesFromTheStart.HasValue)
                 patch.Replace(p => p.StartFilesFromTheStart, StartFilesFromTheStart.Value);
