@@ -4,5 +4,255 @@
         <name>CastIt.Server</name>
     </assembly>
     <members>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GetStatus">
+            <summary>
+            Gets the player status (It may contain the current played file and playlist)
+            </summary>
+            <returns>The player status</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GetAllDevices">
+            <summary>
+            Returns a list of all the available devices on the network
+            </summary>
+            <returns>A list of devices</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.RefreshDevices(System.Double)">
+            <summary>
+            Refreshes the devices for the provided amount of <paramref name="seconds"/>
+            </summary>
+            <param name="seconds">The seconds to scan the network</param>
+            <returns>An updated list of devices</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Connect(CastIt.Domain.Dtos.Requests.ConnectRequestDto)">
+            <summary>
+            Connects to a particular device
+            </summary>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Disconnect">
+            <summary>
+            Disconnects from the current connected device (if any)
+            </summary>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.TogglePlayback">
+            <summary>
+            Toggles the playback. If it is paused, it resumes the playback,
+            otherwise it will be paused
+            </summary>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Stop">
+            <summary>
+            Stops the playback of the current played file (if any)
+            </summary>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.SetVolume(CastIt.Domain.Dtos.Requests.SetVolumeRequestDto)">
+            <summary>
+            Sets the volume of the current connected device
+            </summary>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Next">
+            <summary>
+            Tries to go to the next file in the current playlist
+            </summary>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Previous">
+            <summary>
+            Tries to go to the previous file in the current playlist
+            </summary>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GoToSeconds(System.Double)">
+            <summary>
+            Goes to the specified <paramref name="seconds"/> in the current played file
+            </summary>
+            <param name="seconds">The seconds</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GoToPosition(System.Double)">
+            <summary>
+            Goes to the specified <paramref name="position"/> in the current played file
+            </summary>
+            <param name="position">The position (0 - 100%)</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Seek(System.Double)">
+            <summary>
+            Seeks the current played file by the provided <paramref name="seconds"/>
+            </summary>
+            <param name="seconds">The seconds to add / subtract to the current played file</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GetSettings">
+            <summary>
+            Returns the current server settings
+            </summary>
+            <returns>Returns the server settings</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.UpdateSettings(Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{CastIt.Infrastructure.Models.ServerAppSettings})">
+            <summary>
+            Partially updates the server settings with the provided values in the patch
+            </summary>
+            <param name="patch">The values to update</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GetPreviewImageForPlayedFile(System.Int64)">
+            <summary>
+            Retrieves a preview in the <paramref name="tentativeSecond"/>
+            of the current played file
+            </summary>
+            <param name="tentativeSecond">The second to retrieve the preview</param>
+            <returns>The preview thumbnail</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.GetAllPlayLists">
+            <summary>
+            Gets a list with all the play lists
+            </summary>
+            <returns>Returns a list of play lists</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.GetPlayList(System.Int64)">
+            <summary>
+            Gets a particular playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <returns>Returns the playlist</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.AddNewPlayList">
+            <summary>
+            Creates a new playlist
+            </summary>
+            <returns>Returns the created playlist</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.UpdatePlayList(System.Int64,CastIt.Domain.Dtos.Requests.UpdatePlayListRequestDto)">
+            <summary>
+            Updates a particular playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="dto">The update request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.UpdatePlayListPosition(System.Int64,System.Int32)">
+            <summary>
+            Updates the position of a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="newIndex">The new position in the list</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.SetOptions(System.Int64,CastIt.Domain.Dtos.Requests.SetPlayListOptionsRequestDto)">
+            <summary>
+            Updates the options of a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="dto">The update request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.DeletePlayList(System.Int64)">
+            <summary>
+            Deletes a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.DeleteAllPlayList(System.Int64)">
+            <summary>
+            Deletes all the playlist <paramref name="exceptId"/>
+            </summary>
+            <param name="exceptId">The playlist id that won't be deleted</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.Play(System.Int64,System.Int64)">
+            <summary>
+            Plays a file
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="fileId">The file id</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.LoopFile(System.Int64,System.Int64,System.Boolean)">
+            <summary>
+            Sets if a file should be looped
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="fileId">The file id</param>
+            <param name="loop">True to loop, otherwise false</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.UpdateFilePosition(System.Int64,System.Int64,System.Int32)">
+            <summary>
+            Updates the file's position
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="fileId">The file id</param>
+            <param name="newIndex">The new position in the list</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.AddFolders(System.Int64,CastIt.Domain.Dtos.Requests.AddFolderOrFilesToPlayListRequestDto)">
+            <summary>
+            Adds the media inside the provided folders to a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.AddFiles(System.Int64,CastIt.Domain.Dtos.Requests.AddFolderOrFilesToPlayListRequestDto)">
+            <summary>
+            Adds the provided media to a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.AddUrl(System.Int64,CastIt.Domain.Dtos.Requests.AddUrlToPlayListRequestDto)">
+            <summary>
+            Adds the provided url to a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.RemoveFilesThatStartsWith(System.Int64,System.String)">
+            <summary>
+            Removes all the files that starts with <paramref name="path"/> from a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="path">The path to check</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.RemoveAllMissingFiles(System.Int64)">
+            <summary>
+            Removes all missing files from a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.RemoveFiles(System.Int64,System.Collections.Generic.List{System.Int64})">
+            <summary>
+            Removes the provided files from a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="fileIds">The file ids to remove</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.SortFiles(System.Int64,CastIt.Domain.Enums.SortModeType)">
+            <summary>
+            Sorts the files of a playlist
+            </summary>
+            <param name="id">The playlist id</param>
+            <param name="modeType">The sorting mode</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.ServerController.StopServer">
+            <summary>
+            Stops the server gracefully
+            </summary>
+            <returns>Returns the result of the operation</returns>
+        </member>
     </members>
 </doc>
