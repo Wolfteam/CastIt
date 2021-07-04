@@ -58,6 +58,8 @@ namespace CastIt.Server.Interfaces
 
         string GetSubTitleUrl();
 
+        string GetOutputMimeType(string mrl);
+
         Task StopAsync();
     }
 }

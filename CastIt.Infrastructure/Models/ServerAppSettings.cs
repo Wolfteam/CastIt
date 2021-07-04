@@ -5,8 +5,8 @@ namespace CastIt.Infrastructure.Models
 {
     public class ServerAppSettings
     {
-        public string FFmpegPath { get; set; }
-        public string FFprobePath { get; set; }
+        public string FFmpegExePath { get; set; }
+        public string FFprobeExePath { get; set; }
 
         public string CurrentAppMigration { get; set; }
         public bool StartFilesFromTheStart { get; set; }
@@ -28,8 +28,8 @@ namespace CastIt.Infrastructure.Models
         {
             return new ServerAppSettings
             {
-                FFmpegPath = FFmpegPath,
-                FFprobePath = FFprobePath,
+                FFmpegExePath = FFmpegExePath,
+                FFprobeExePath = FFprobeExePath,
 
                 CurrentAppMigration = CurrentAppMigration,
                 StartFilesFromTheStart = StartFilesFromTheStart,
@@ -51,7 +51,11 @@ namespace CastIt.Infrastructure.Models
 
         public ServerAppSettings UpdateWith(ServerAppSettings other)
         {
-            //TODO: FFMPEG ?
+            if (!string.IsNullOrWhiteSpace(other.FFmpegExePath))
+                FFmpegExePath = other.FFmpegExePath;
+
+            if (!string.IsNullOrWhiteSpace(other.FFprobeExePath))
+                FFprobeExePath = other.FFprobeExePath;
 
             StartFilesFromTheStart = other.StartFilesFromTheStart;
             PlayNextFileAutomatically = other.PlayNextFileAutomatically;

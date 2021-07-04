@@ -163,7 +163,6 @@ namespace CastIt.Server.Hubs
             try
             {
                 await _settingsService.UpdateSettings(settings);
-                await SendSettingsChanged();
             }
             catch (Exception e)
             {

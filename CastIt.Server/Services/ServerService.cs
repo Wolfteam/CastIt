@@ -1,4 +1,5 @@
-﻿using CastIt.Application.Server;
+﻿using CastIt.Application.Interfaces;
+using CastIt.Application.Server;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
@@ -25,6 +26,7 @@ namespace CastIt.Server.Services
         private readonly ILogger<ServerService> _logger;
         private readonly IServer _server;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
+        private readonly IFileService _fileService;
         private string _baseIpAddress;
 
         #region Player Delegates
@@ -66,11 +68,13 @@ namespace CastIt.Server.Services
         public ServerService(
             ILogger<ServerService> logger,
             IServer server,
-            IHostApplicationLifetime hostApplicationLifetime)
+            IHostApplicationLifetime hostApplicationLifetime,
+            IFileService fileService)
         {
             _logger = logger;
             _server = server;
             _hostApplicationLifetime = hostApplicationLifetime;
+            _fileService = fileService;
         }
 
         //Keep in mind that this method should be called AFTER the server has completely started
@@ -152,6 +156,20 @@ namespace CastIt.Server.Services
         {
             var baseUrl = GetPlayerBaseUrl();
             return $"{baseUrl}/{AppWebServerConstants.ChromeCastSubTitlesPath}";
+        }
+
+        public string GetOutputMimeType(string mrl)
+        {
+            bool isVideoFile = _fileService.IsVideoFile(mrl);
+            bool isMusicFile = _fileService.IsMusicFile(mrl);
+            bool isHls = _fileService.IsHls(mrl);
+            if (isVideoFile || isMusicFile || isHls)
+            {
+                //The transcode process generate either of these
+                return isVideoFile || isHls ? "video/mp4" : "audio/aac";
+            }
+
+            return "video/webm";
         }
 
         public async Task StopAsync()

@@ -23,6 +23,7 @@ namespace CastIt.Server.Common.Extensions
                 FileNotFoundException _ => HttpStatusCode.NotFound,
                 FileNotReadyException _ => HttpStatusCode.BadRequest,
                 FileNotSupportedException _ => HttpStatusCode.BadRequest,
+                FFmpegInvalidExecutable _ => HttpStatusCode.BadRequest,
                 InvalidRequestException _ => HttpStatusCode.BadRequest,
                 NoDevicesException _ => HttpStatusCode.BadRequest,
                 PlayListNotFoundException _ => HttpStatusCode.NotFound,
@@ -64,6 +65,9 @@ namespace CastIt.Server.Common.Extensions
                     break;
                 case FFmpegException _:
                     castService.SendServerMsg(AppMessageType.FFmpegError);
+                    break;
+                case FFmpegInvalidExecutable _:
+                    castService.SendServerMsg(AppMessageType.FFmpegExecutableNotFound);
                     break;
                 case FileNotFoundException _:
                     castService.SendFileNotFound();

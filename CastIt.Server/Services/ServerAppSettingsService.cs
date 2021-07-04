@@ -12,6 +12,9 @@ namespace CastIt.Server.Services
 {
     internal class ServerAppSettingsService : BaseAppSettingsService<ServerAppSettings>, IServerAppSettingsService
     {
+        private readonly IServerService _serverService;
+        private readonly IFFmpegService _fFmpegService;
+
         protected override string BasePath
             => AppFileUtils.GetBaseAppFolder();
 
@@ -102,25 +105,42 @@ namespace CastIt.Server.Services
             get => Settings.LoadFirstSubtitleFoundAutomatically;
             set => Settings.LoadFirstSubtitleFoundAutomatically = value;
         }
+
+        public string FFmpegExePath
+        {
+            get => Settings.FFmpegExePath;
+            set => Settings.FFmpegExePath = value;
+        }
+
+        public string FFprobeExePath
+        {
+            get => Settings.FFprobeExePath;
+            set => Settings.FFprobeExePath = value;
+        }
         #endregion
 
         public ServerAppSettingsService(
             ILogger<ServerAppSettingsService> logger,
-            ITelemetryService telemetryService)
+            ITelemetryService telemetryService,
+            IServerService serverService,
+            IFFmpegService fFmpegService)
             : base(logger, telemetryService)
         {
+            _serverService = serverService;
+            _fFmpegService = fFmpegService;
         }
 
         public override async Task<ServerAppSettings> UpdateSettings(ServerAppSettings settings, bool saveToFileSystem = false)
         {
             Logger.LogInformation($"{nameof(UpdateSettings)}: Trying to update settings...");
+            _fFmpegService.RefreshFfmpegPath(settings.FFmpegExePath, settings.FFprobeExePath);
             Settings.UpdateWith(settings);
             if (saveToFileSystem)
             {
                 Logger.LogInformation($"{nameof(UpdateSettings)}: Saving the updated settings to disk...");
                 await SaveCurrentSettings();
             }
-
+            _serverService.OnSettingsChanged?.Invoke(Settings);
             Logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
             return Settings;
         }
@@ -142,10 +162,7 @@ namespace CastIt.Server.Services
                 ForceVideoTranscode = false,
                 StartFilesFromTheStart = true,
                 SubtitleDelayInSeconds = 0,
-                CurrentSubtitleBgColor = SubtitleBgColorType.Transparent,
-                //TODO THIS
-                FFprobePath = "TODO",
-                FFmpegPath = "TODO"
+                CurrentSubtitleBgColor = SubtitleBgColorType.Transparent
             };
 
             return Task.FromResult(defaultSettings);

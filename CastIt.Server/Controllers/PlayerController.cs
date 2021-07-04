@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net.Mime;
@@ -185,8 +184,7 @@ namespace CastIt.Server.Controllers
             {
                 return new BadRequestObjectResult(ModelState);
             }
-            await _settingsService.SaveSettings(updated);
-            _serverService.OnSettingsChanged?.Invoke(_settingsService.Settings);
+            await _settingsService.UpdateSettings(updated, true);
             Logger.LogInformation($"{nameof(UpdateSettings)}: Settings were successfully updated");
             return Ok(new EmptyResponseDto(true));
         }
@@ -209,33 +207,31 @@ namespace CastIt.Server.Controllers
         {
             try
             {
-                //TODO: MOVE THIS TO THE FFMPEG SERVICE
                 var type = _fileService.GetFileType(dto.Mrl);
                 if (!type.IsLocalOrHls())
                 {
                     Response.StatusCode = StatusCodes.Status400BadRequest;
-                    Logger.LogWarning($"{nameof(Play)}: File = {dto.Mrl} is not a video nor music file.");
+                    Logger.LogWarning($"{nameof(Play)}: File = {dto.Mrl} is neither a local video nor local music file.");
                     return;
                 }
 
-                HttpContext.Response.ContentType = _ffmpegService.GetOutputTranscodeMimeType(dto.Mrl);
+                HttpContext.Response.ContentType = _serverService.GetOutputMimeType(dto.Mrl);
                 DisableCaching();
 
                 if (!type.IsLocalMusic())
                 {
                     var options = GetVideoFileOptions(dto);
-                    Logger.LogInformation($"{nameof(Play)}: Handling request for video file with options = {JsonConvert.SerializeObject(options)}");
+                    Logger.LogInformation($"{nameof(Play)}: Handling request for video file with options = {{@Options}}", options);
                     await _ffmpegService.TranscodeVideo(HttpContext.Response.Body, options).ConfigureAwait(false);
                 }
                 else
                 {
                     var options = GetMusicFileOptions(dto);
-                    Logger.LogInformation($"{nameof(Play)}: Handling request for music file with options = {JsonConvert.SerializeObject(options)}");
+                    Logger.LogInformation($"{nameof(Play)}: Handling request for music file with options = {{@Options}}", options);
                     await using var memoryStream = await _ffmpegService.TranscodeMusic(options).ConfigureAwait(false);
                     //TODO: THIS LENGTH IS NOT WORKING PROPERLY
-                    //TODO: NO CANCELLATION TOKEN HERE !!!
                     HttpContext.Response.ContentLength = memoryStream.Length;
-                    await memoryStream.CopyToAsync(HttpContext.Response.Body).ConfigureAwait(false);
+                    await memoryStream.CopyToAsync(HttpContext.Response.Body, _ffmpegService.TokenSource.Token).ConfigureAwait(false);
                 }
             }
             catch (Exception e)

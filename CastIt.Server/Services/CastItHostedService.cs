@@ -30,6 +30,7 @@ namespace CastIt.Server.Services
         private readonly IFileService _fileService;
         private readonly ITelemetryService _telemetryService;
         private readonly IMapper _mapper;
+        private readonly IFFmpegService _fFmpegService;
 
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
 
@@ -42,7 +43,8 @@ namespace CastIt.Server.Services
             IFileService fileService,
             IServerService serverService,
             ITelemetryService telemetryService,
-            IMapper mapper)
+            IMapper mapper,
+            IFFmpegService fFmpegService)
         {
             _logger = logger;
             _castService = castService;
@@ -53,6 +55,7 @@ namespace CastIt.Server.Services
             _serverService = serverService;
             _telemetryService = telemetryService;
             _mapper = mapper;
+            _fFmpegService = fFmpegService;
 
             SetCastItEventHandlers();
         }
@@ -100,6 +103,9 @@ namespace CastIt.Server.Services
 
             _logger.LogInformation($"{nameof(StartAsync)}: Initializing app settings...");
             await _appSettings.Init();
+
+            _logger.LogInformation($"{nameof(StartAsync)}: Initializing ffmpeg...");
+            await _fFmpegService.Init(_appSettings.FFmpegExePath, _appSettings.FFprobeExePath);
 
             _logger.LogInformation($"{nameof(StartAsync)}: Initializing file watchers...");
             InitializeOrUpdateFileWatcher(false);
@@ -354,9 +360,9 @@ namespace CastIt.Server.Services
             await _castItHub.Clients.All.PlayListIsBusy(id, isBusy);
         }
 
-        private async void OnSettingsChanged(ServerAppSettings obj)
+        private async void OnSettingsChanged(ServerAppSettings settings)
         {
-            await _castItHub.Clients.All.PlayerSettingsChanged(_appSettings.Settings);
+            await _castItHub.Clients.All.PlayerSettingsChanged(settings);
         }
         #endregion
 

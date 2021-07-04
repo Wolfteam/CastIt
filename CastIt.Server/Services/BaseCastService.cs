@@ -213,7 +213,7 @@ namespace CastIt.Server.Services
                     Title = title,
                 },
                 //You have to set the content type before hand, with that, the album art of a music file will be shown
-                ContentType = FFmpegService.GetOutputTranscodeMimeType(filePath),
+                ContentType = ServerService.GetOutputMimeType(filePath),
                 Duration = CurrentFileInfo.Format.Duration
             };
 
@@ -274,7 +274,7 @@ namespace CastIt.Server.Services
                     Subtitle = ytMedia.Description
                 },
                 //You have to set the content type before hand, with that, the album art of a music file will be shown
-                ContentType = FFmpegService.GetOutputTranscodeMimeType(url)
+                ContentType = ServerService.GetOutputMimeType(url)
             };
 
             CurrentVideoQuality = quality;
@@ -335,7 +335,7 @@ namespace CastIt.Server.Services
                 AppSettings.VideoScale,
                 closestQuality,
                 videoInfo.WidthAndHeightText);
-            media.ContentType = FFmpegService.GetOutputTranscodeMimeType(media.ContentId);
+            media.ContentType = ServerService.GetOutputMimeType(media.ContentId);
 
             CurrentFileInfo = fileInfo;
             CurrentVideoStreamIndex = videoStreamIndex;
