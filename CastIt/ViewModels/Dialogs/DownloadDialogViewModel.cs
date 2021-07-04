@@ -1,5 +1,6 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Interfaces;
+using CastIt.Models.Messages;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
@@ -94,6 +95,7 @@ namespace CastIt.ViewModels.Dialogs
                 await Task.Delay(500);
                 await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, path, progress).ConfigureAwait(false);
                 filesWereDownloaded = true;
+                Messenger.Publish(new FfmpegPathChangedMessage(this, path));
             }
             catch (Exception e)
             {

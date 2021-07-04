@@ -349,14 +349,7 @@ namespace CastIt.ViewModels
 
             GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
 
-            ShowDownloadDialogCommand = new MvxAsyncCommand(async () =>
-            {
-                bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
-                if (!filesWereDownloaded)
-                    CloseAppCommand.Execute();
-                else
-                    await ShowSnackbarMsg(GetText("AppIsRdyToUse"));
-            });
+            ShowDownloadDialogCommand = new MvxAsyncCommand(ShowDownloadFfmpegDialog);
 
             FileOptionsChangedCommand = new MvxAsyncCommand<FileItemOptionsViewModel>(FileOptionsChanged);
 
@@ -382,7 +375,8 @@ namespace CastIt.ViewModels
                 Messenger.Subscribe<ManualDisconnectMessage>(_ => OnStoppedPlayBack()),
                 Messenger.Subscribe<SnackbarMessage>(async msg => await ShowSnackbarMsg(msg.Message)),
                 Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy),
-                Messenger.Subscribe<UseGridViewMessage>(async (_) => await GoToPlayLists())
+                Messenger.Subscribe<UseGridViewMessage>(async (_) => await GoToPlayLists()),
+                Messenger.Subscribe<ShowDownloadFFmpegDialogMessage>(async _ => await ShowDownloadDialogCommand.ExecuteAsync()),
             });
         }
 
@@ -390,14 +384,6 @@ namespace CastIt.ViewModels
         {
             base.ViewAppeared();
             await GoToPlayLists();
-
-            string path = _fileService.GetFFmpegPath();
-            if (_fileService.Exists(path))
-                return;
-
-            //TODO: FFMEPG
-            Logger.LogInformation($"{nameof(ViewAppeared)}: FFmpeg is not in user folder, showing download dialog...");
-            ShowDownloadDialogCommand.Execute();
         }
 
         private async Task InitializeCastServer()
@@ -808,6 +794,19 @@ namespace CastIt.ViewModels
         private async Task ShowChangeServerUrlDialog()
         {
             ServerIsRunning = await _navigationService.Navigate<ChangeServerUrlDialogViewModel, bool>();
+        }
+
+        private async Task ShowDownloadFfmpegDialog()
+        {
+            bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
+            if (!filesWereDownloaded)
+            {
+                CloseAppCommand.Execute();
+            }
+            else
+            {
+                await ShowSnackbarMsg(GetText("AppIsRdyToUse"));
+            }
         }
         #endregion
     }

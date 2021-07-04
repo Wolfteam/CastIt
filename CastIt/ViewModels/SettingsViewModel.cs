@@ -14,6 +14,7 @@ using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -40,6 +41,8 @@ namespace CastIt.ViewModels
         private Item _currentSubtitleFontFamily;
         private double _subtitleDelayInSeconds;
         private bool _loadFirstSubtitleFoundAutomatically;
+        private string _fFmpegExePath;
+        private string _ffprobeExePath;
 
         private readonly MvxInteraction<string> _changeSelectedAccentColor = new MvxInteraction<string>();
         #endregion
@@ -329,6 +332,20 @@ namespace CastIt.ViewModels
                 async () => await _navigationService.Navigate<AboutDialogViewModel>());
         }
 
+        public override void RegisterMessages()
+        {
+            base.RegisterMessages();
+            SubscriptionTokens.AddRange(new []
+            {
+                Messenger.Subscribe<FfmpegPathChangedMessage>(msg =>
+                {
+                    _fFmpegExePath = Path.Combine(msg.FolderPath, "ffmpeg.exe");
+                    _ffprobeExePath = Path.Combine(msg.FolderPath, "ffprobe.exe");
+                    TriggerSettingsChanged();
+                })
+            });
+        }
+
         public void CleanUp()
         {
             _castItHub.OnPlayerSettingsChanged -= OnSettingsChange;
@@ -468,6 +485,8 @@ namespace CastIt.ViewModels
         {
             return new ServerAppSettings
             {
+                FFmpegExePath = _fFmpegExePath,
+                FFprobeExePath = _ffprobeExePath,
                 StartFilesFromTheStart = StartFilesFromTheStart,
                 PlayNextFileAutomatically = PlayNextFileAutomatically,
                 ForceAudioTranscode = ForceAudioTranscode,
@@ -500,7 +519,16 @@ namespace CastIt.ViewModels
             CurrentSubtitleFontFamily = SubtitleFontFamilies.First(v => v.Id == settings.CurrentSubtitleFontFamily.ToString());
             SubtitleDelay = settings.SubtitleDelayInSeconds;
             LoadFirstSubtitleFoundAutomatically = settings.LoadFirstSubtitleFoundAutomatically;
+
+            _fFmpegExePath = settings.FFmpegExePath;
+            _ffprobeExePath = settings.FFprobeExePath;
             _updatingSettings = true;
+
+            //These lines must happen AFTER the _updatingSettings
+            if (string.IsNullOrWhiteSpace(_fFmpegExePath) || string.IsNullOrWhiteSpace(_ffprobeExePath))
+            {
+                Messenger.Publish(new ShowDownloadFFmpegDialogMessage(this));
+            }
         }
     }
 }
