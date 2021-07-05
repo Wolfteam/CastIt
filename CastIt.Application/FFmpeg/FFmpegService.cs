@@ -266,8 +266,8 @@ namespace CastIt.Application.FFMpeg
                 foreach (var hwAccel in hwAccels)
                 {
                     var builder = new FFmpegArgsBuilder();
-                    var inputArgs = builder.AddInputFile(mrl).SetAutoConfirmChanges().DisableAudio();
-                    var outputArgs = builder.AddStdOut().SetFormat("mjpeg");
+                    var inputArgs = builder.AddInputFile(mrl).BeQuiet().SetAutoConfirmChanges().DisableAudio();
+                    var outputArgs = builder.AddStdOut().SetFormat("image2pipe");
 
                     //create a thumbnail tile of WxH
                     var title = $"tile={AppWebServerConstants.ThumbnailTileRowXColumn}";
@@ -279,14 +279,16 @@ namespace CastIt.Application.FFMpeg
                         case HwAccelDeviceType.None:
                         case HwAccelDeviceType.AMD:
                             inputArgs.Seek(tentativeSecond).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                            outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                            outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title)
+                                .SetVideoFrames(1);
                             break;
                         case HwAccelDeviceType.Intel:
                             inputArgs.SetHwAccel(HwAccelDeviceType.Intel)
                                 .SetVideoCodec(HwAccelDeviceType.Intel)
                                 .Seek(tentativeSecond)
                                 .Duration(AppWebServerConstants.ThumbnailTileDuration);
-                            outputArgs.WithVideoFilters(select, $"scale_qsv={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                            outputArgs.WithVideoFilters(select, $"scale_qsv={AppWebServerConstants.ThumbnailWidthXHeightScale}", title)
+                                .SetVideoFrames(1);
                             break;
                         case HwAccelDeviceType.Nvidia:
                             inputArgs.SetHwAccel("nvdec")
@@ -298,11 +300,13 @@ namespace CastIt.Application.FFMpeg
                             break;
                         case HwAccelDeviceType.Dxva2:
                             inputArgs.SetHwAccel("dxva2").Seek(tentativeSecond).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                            outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                            outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title)
+                                .SetVideoFrames(1);
                             break;
                         case HwAccelDeviceType.Auto:
                             inputArgs.SetHwAccel("auto").Seek(tentativeSecond).Duration(AppWebServerConstants.ThumbnailTileDuration);
-                            outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title).SetVideoFrames(1);
+                            outputArgs.WithVideoFilters(select, $"scale={AppWebServerConstants.ThumbnailWidthXHeightScale}", title)
+                                .SetVideoFrames(1);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException($"The provided hw accel = {hwAccel} is not supported");
@@ -310,13 +314,28 @@ namespace CastIt.Application.FFMpeg
                     var cmd = builder.GetArgs();
                     _logger.LogInformation($"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with hwAccel = {hwAccel} and cmd = {cmd} ...");
 
+                    using var process = new Process
+                    {
+                        EnableRaisingEvents = true,
+                        StartInfo = new ProcessStartInfo
+                        {
+                            WindowStyle = ProcessWindowStyle.Normal,
+                            FileName = _ffmpegExePath,
+                            CreateNoWindow = true,
+                            UseShellExecute = false,
+                            RedirectStandardInput = true,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            Arguments = cmd
+                        }
+                    };
+                    process.Start();
+                    //We can't use a cancellation token here cause the process may end quickly
                     await using var memStream = new MemoryStream();
-                    _generateAllThumbnailsProcess.StartInfo.Arguments = cmd;
-                    _generateAllThumbnailsProcess.Start();
-                    await _generateAllThumbnailsProcess.StandardOutput.BaseStream.CopyToAsync(memStream);
-                    await _generateAllThumbnailsProcess.WaitForExitAsync();
+                    await process.StandardOutput.BaseStream.CopyToAsync(memStream);
+                    await process.WaitForExitAsync();
 
-                    if (_generateAllThumbnailsProcess.ExitCode == 0)
+                    if (process.ExitCode == 0)
                     {
                         _logger.LogInformation($"{nameof(GetThumbnailTile)}: Thumbnail tiles were generated successfully with hwaccel = {hwAccel}");
                         return memStream.ToArray();
@@ -474,7 +493,7 @@ namespace CastIt.Application.FFMpeg
             _transcodeProcess.StartInfo.Arguments = cmd;
             _transcodeProcess.Start();
             var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-            await stream.CopyToAsync(outputStream, token).ConfigureAwait(false);
+            await stream!.CopyToAsync(outputStream, token).ConfigureAwait(false);
             _logger.LogInformation($"{nameof(TranscodeVideo)}: Transcode completed for file = {options.FilePath}");
         }
 
