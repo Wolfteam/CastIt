@@ -48,8 +48,7 @@ namespace CastIt.Infrastructure.Models
 
         public bool CanStartPlayingFromCurrentPercentage
             => PlayedPercentage > 0 && PlayedPercentage < 100;
-        public bool WasPlayed
-            => PlayedPercentage > 0 && PlayedPercentage <= 100;
+        public bool WasPlayed { get; private set; }
         public bool IsCached
             => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(Path);
 
@@ -166,6 +165,8 @@ namespace CastIt.Infrastructure.Models
         public ServerFileItem BeingPlayed(bool played = true)
         {
             IsBeingPlayed = played;
+            if (IsBeingPlayed)
+                WasPlayed = true;
             return this;
         }
 
