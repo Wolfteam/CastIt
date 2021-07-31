@@ -459,10 +459,12 @@ namespace CastIt.ViewModels
 
         public async Task SaveChangesBeforeClosing(double width, double height)
         {
+            Logger.LogInformation($"{nameof(SaveChangesBeforeClosing)}: Saving settings before closing...");
             _settingsService.WindowWidth = width;
             _settingsService.WindowHeight = height;
             _settingsService.IsPlayListExpanded = IsExpanded;
             await _settingsService.SaveSettings(_settingsService.Settings);
+            Logger.LogInformation($"{nameof(SaveChangesBeforeClosing)}: Settings were successfully saved");
         }
 
         //TODO: WHEN A CHROMECAST DISCONNECT HAPPENS, THE UI IS NOT GETTING NOTIFIED
