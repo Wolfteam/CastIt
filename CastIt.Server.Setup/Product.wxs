@@ -11,6 +11,7 @@
     Version="$(var.InstallerVersion)"
     Manufacturer="!(loc.Company)"
     UpgradeCode="$(var.ProductUpgradeCode)">
+
     <Package
       InstallerVersion="200"
       Compressed="yes"
@@ -32,13 +33,15 @@
 
     <MediaTemplate EmbedCab="yes"/>
     <MajorUpgrade AllowSameVersionUpgrades="no" DowngradeErrorMessage="!(loc.DowngradeErrorMsg)" />
-
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
     <Upgrade Id="$(var.ProductUpgradeCode)">
       <UpgradeVersion
         Minimum="1.0.0.0" Maximum="99.0.0.0"
         Property="PREVIOUSVERSIONSINSTALLED"
         IncludeMinimum="yes" IncludeMaximum="no" />
     </Upgrade>
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\Assets\License.rtf" />
 
     <Feature Id="ServerFeature" Title="Server" Level="1">
       <ComponentGroupRef Id="ServerComponentsGroup" />

@@ -248,11 +248,5 @@
             <param name="modeType">The sorting mode</param>
             <returns>Returns the result of the operation</returns>
         </member>
-        <member name="M:CastIt.Server.Controllers.ServerController.StopServer">
-            <summary>
-            Stops the server gracefully
-            </summary>
-            <returns>Returns the result of the operation</returns>
-        </member>
     </members>
 </doc>
