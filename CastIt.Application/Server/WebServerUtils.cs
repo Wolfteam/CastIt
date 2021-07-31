@@ -5,12 +5,15 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Principal;
 
 namespace CastIt.Application.Server
 {
     public static class WebServerUtils
     {
         public const string ServerProcessName = "CastIt.Server";
+        public const string ServerFolderName = "Server";
+        public static string FullServerProcessName = $"{ServerProcessName}.exe";
 
         public static string GetWebServerIpAddress()
         {
@@ -95,16 +98,43 @@ namespace CastIt.Application.Server
         }
 
         public static bool StartServer()
-            => StartServer($"{AppWebServerConstants.PortArgument} {GetOpenPort()}", GetServerPhysicalPath());
+        {
+            string path = GetServerPhysicalPath();
+            return StartServer(path);
+        }
+
+        public static bool StartServer(string exePath)
+        {
+            string args = $"{AppWebServerConstants.PortArgument} {GetOpenPort()}";
+            return StartServer(args, exePath);
+        }
 
         public static string GetServerPhysicalPath()
         {
-            var dir = Directory.GetCurrentDirectory();
-            var path = Path.Combine(dir, "Server", $"{ServerProcessName}.exe");
-#if DEBUG
-            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
-#endif
+            string dir = Directory.GetCurrentDirectory();
+            return GetServerPhysicalPath(dir);
+        }
+
+        public static string GetServerPhysicalPath(string from)
+        {
+            //C:\Program Files\CastIt
+            string parentDir = Directory.GetParent(from)!.ToString();
+            string path = Path.Combine(parentDir, ServerFolderName, FullServerProcessName);
+            //#if DEBUG
+            //            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
+            //#endif
             return path;
+        }
+
+        public static bool IsElevated()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                var id = WindowsIdentity.GetCurrent();
+                return id.Owner != id.User;
+            }
+
+            return false;
         }
     }
 }

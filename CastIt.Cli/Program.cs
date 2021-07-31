@@ -1,19 +1,17 @@
 ﻿using CastIt.Application;
 using CastIt.Cli.Commands;
-using CastIt.Cli.Common.Utils;
 using CastIt.Cli.Interfaces.Api;
 using CastIt.Cli.Models;
+using CastIt.Cli.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Refit;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using CastIt.Cli.Services;
 
 namespace CastIt.Cli
 {
@@ -50,12 +48,6 @@ namespace CastIt.Cli
 
                         services.AddSingleton<ICastItApiService, CastItApiService>();
 
-                        var url = ServerUtils.StartServerIfNotStarted();
-#if DEBUG
-                        Console.WriteLine($"Using url = {url} for the web server api");
-#endif
-                        services.AddRefitClient<ICastItApi>()
-                            .ConfigureHttpClient(c => c.BaseAddress = new Uri(url));
                     }).ConfigureAppConfiguration(b =>
                     {
                         b.SetBasePath(basePath);

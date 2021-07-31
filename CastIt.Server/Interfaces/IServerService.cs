@@ -5,7 +5,6 @@ using CastIt.Domain.Interfaces;
 using CastIt.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace CastIt.Server.Interfaces
 {
@@ -59,7 +58,5 @@ namespace CastIt.Server.Interfaces
         string GetSubTitleUrl();
 
         string GetOutputMimeType(string mrl);
-
-        Task StopAsync();
     }
 }

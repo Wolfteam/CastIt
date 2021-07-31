@@ -12,7 +12,6 @@ namespace CastIt.Cli.Interfaces.Api
 {
     public interface ICastItApiService
     {
-        Task<EmptyResponseDto> StopServer();
         Task<AppListResponseDto<Receiver>> GetAllDevices();
         Task<EmptyResponseDto> RefreshDevices(double seconds);
         Task<EmptyResponseDto> Connect(string host, int port);

@@ -1,4 +1,5 @@
-﻿using CastIt.Cli.Interfaces.Api;
+﻿using CastIt.Cli.Common.Utils;
+using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
@@ -19,33 +20,14 @@ namespace CastIt.Cli.Services
 {
     public class CastItApiService : BaseApiService, ICastItApiService
     {
-        private readonly ICastItApi _api;
-        public CastItApiService(ILogger<CastItApiService> logger, ICastItApi api) : base(logger)
-        {
-            _api = api;
-        }
+        private ICastItApi _api;
 
-        #region Server
-        public async Task<EmptyResponseDto> StopServer()
+        public ICastItApi Api
+            => _api ??= RestService.For<ICastItApi>(ServerUtils.StartServerIfNotStarted());
+
+        public CastItApiService(ILogger<CastItApiService> logger) : base(logger)
         {
-            var response = new EmptyResponseDto();
-            try
-            {
-                response = await _api.StopServer();
-            }
-            catch (ApiException apiEx)
-            {
-                Logger.LogError(apiEx, $"{nameof(StopServer)}: Api exception occurred");
-                await HandleApiException(apiEx, response);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, $"{nameof(StopServer)}: Unknown error occurred");
-                HandleUnknownException(response);
-            }
-            return response;
         }
-        #endregion
 
         #region Player
         public async Task<AppListResponseDto<Receiver>> GetAllDevices()
@@ -53,7 +35,7 @@ namespace CastIt.Cli.Services
             var response = new AppListResponseDto<Receiver>();
             try
             {
-                response = await _api.GetAllDevices();
+                response = await Api.GetAllDevices();
             }
             catch (ApiException apiEx)
             {
@@ -73,7 +55,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.RefreshDevices(seconds);
+                response = await Api.RefreshDevices(seconds);
             }
             catch (ApiException apiEx)
             {
@@ -93,7 +75,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Connect(new ConnectRequestDto
+                response = await Api.Connect(new ConnectRequestDto
                 {
                     Port = port,
                     Host = host
@@ -117,7 +99,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Disconnect();
+                response = await Api.Disconnect();
             }
             catch (ApiException apiEx)
             {
@@ -137,7 +119,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.TogglePlayback();
+                response = await Api.TogglePlayback();
             }
             catch (ApiException apiEx)
             {
@@ -157,7 +139,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Stop();
+                response = await Api.Stop();
             }
             catch (ApiException apiEx)
             {
@@ -177,7 +159,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.SetVolume(new SetVolumeRequestDto
+                response = await Api.SetVolume(new SetVolumeRequestDto
                 {
                     VolumeLevel = level,
                     IsMuted = isMuted
@@ -201,7 +183,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Next();
+                response = await Api.Next();
             }
             catch (ApiException apiEx)
             {
@@ -221,7 +203,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Previous();
+                response = await Api.Previous();
             }
             catch (ApiException apiEx)
             {
@@ -241,7 +223,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.GoToSeconds(seconds);
+                response = await Api.GoToSeconds(seconds);
             }
             catch (ApiException apiEx)
             {
@@ -261,7 +243,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.GoToPosition(position);
+                response = await Api.GoToPosition(position);
             }
             catch (ApiException apiEx)
             {
@@ -281,7 +263,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Seek(seconds);
+                response = await Api.Seek(seconds);
             }
             catch (ApiException apiEx)
             {
@@ -301,7 +283,7 @@ namespace CastIt.Cli.Services
             var response = new AppResponseDto<ServerAppSettings>();
             try
             {
-                response = await _api.GetCurrentSettings();
+                response = await Api.GetCurrentSettings();
             }
             catch (ApiException apiEx)
             {
@@ -323,7 +305,7 @@ namespace CastIt.Cli.Services
             {
                 var body = JsonConvert.SerializeObject(patch);
                 var content = new StringContent(body, Encoding.UTF8, "application/json");
-                response = await _api.UpdateSettings(content);
+                response = await Api.UpdateSettings(content);
             }
             catch (ApiException apiEx)
             {
@@ -343,7 +325,7 @@ namespace CastIt.Cli.Services
             var response = new AppResponseDto<ServerPlayerStatusResponseDto>();
             try
             {
-                response = await _api.GetStatus();
+                response = await Api.GetStatus();
             }
             catch (ApiException apiEx)
             {
@@ -366,7 +348,7 @@ namespace CastIt.Cli.Services
             var response = new AppListResponseDto<GetAllPlayListResponseDto>();
             try
             {
-                response = await _api.GetAllPlayLists();
+                response = await Api.GetAllPlayLists();
             }
             catch (ApiException apiEx)
             {
@@ -386,7 +368,7 @@ namespace CastIt.Cli.Services
             var response = new AppResponseDto<PlayListItemResponseDto>();
             try
             {
-                response = await _api.GetPlayList(id);
+                response = await Api.GetPlayList(id);
             }
             catch (ApiException apiEx)
             {
@@ -406,7 +388,7 @@ namespace CastIt.Cli.Services
             var response = new AppResponseDto<PlayListItemResponseDto>();
             try
             {
-                response = await _api.AddNewPlayList();
+                response = await Api.AddNewPlayList();
             }
             catch (ApiException apiEx)
             {
@@ -426,7 +408,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.UpdatePlayList(id, new UpdatePlayListRequestDto
+                response = await Api.UpdatePlayList(id, new UpdatePlayListRequestDto
                 {
                     Name = name,
                 });
@@ -449,7 +431,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.UpdatePlayListPosition(id, newIndex);
+                response = await Api.UpdatePlayListPosition(id, newIndex);
             }
             catch (ApiException apiEx)
             {
@@ -469,7 +451,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.SetOptions(id, new SetPlayListOptionsRequestDto
+                response = await Api.SetOptions(id, new SetPlayListOptionsRequestDto
                 {
                     Loop = loop,
                     Shuffle = shuffle
@@ -493,7 +475,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.RemoveFilesThatStartsWith(id, path);
+                response = await Api.RemoveFilesThatStartsWith(id, path);
             }
             catch (ApiException apiEx)
             {
@@ -513,7 +495,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.RemoveAllMissingFiles(id);
+                response = await Api.RemoveAllMissingFiles(id);
             }
             catch (ApiException apiEx)
             {
@@ -533,7 +515,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.RemoveFiles(id, fileIds);
+                response = await Api.RemoveFiles(id, fileIds);
             }
             catch (ApiException apiEx)
             {
@@ -553,7 +535,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.DeletePlayList(id);
+                response = await Api.DeletePlayList(id);
             }
             catch (ApiException apiEx)
             {
@@ -573,7 +555,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.DeleteAllPlayList(exceptId);
+                response = await Api.DeleteAllPlayList(exceptId);
             }
             catch (ApiException apiEx)
             {
@@ -593,7 +575,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.AddFolders(id, new AddFolderOrFilesToPlayListRequestDto
+                response = await Api.AddFolders(id, new AddFolderOrFilesToPlayListRequestDto
                 {
                     Folders = folders,
                     IncludeSubFolders = includeSubFolders,
@@ -617,7 +599,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.AddFiles(id, new AddFolderOrFilesToPlayListRequestDto
+                response = await Api.AddFiles(id, new AddFolderOrFilesToPlayListRequestDto
                 {
                     Files = files
                 });
@@ -640,7 +622,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.AddUrl(id, new AddUrlToPlayListRequestDto
+                response = await Api.AddUrl(id, new AddUrlToPlayListRequestDto
                 {
                     OnlyVideo = onlyVideo,
                     Url = url
@@ -664,7 +646,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.Play(playListId, fileId);
+                response = await Api.Play(playListId, fileId);
             }
             catch (ApiException apiEx)
             {
@@ -684,7 +666,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.UpdateFilePosition(playListId, fileId, newIndex);
+                response = await Api.UpdateFilePosition(playListId, fileId, newIndex);
             }
             catch (ApiException apiEx)
             {
@@ -704,7 +686,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.SortFiles(id, sortMode);
+                response = await Api.SortFiles(id, sortMode);
             }
             catch (ApiException apiEx)
             {
@@ -724,7 +706,7 @@ namespace CastIt.Cli.Services
             var response = new EmptyResponseDto();
             try
             {
-                response = await _api.LoopFile(playListId, fileId, loop);
+                response = await Api.LoopFile(playListId, fileId, loop);
             }
             catch (ApiException apiEx)
             {

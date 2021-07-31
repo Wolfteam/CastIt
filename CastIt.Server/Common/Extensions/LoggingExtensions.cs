@@ -17,7 +17,6 @@ namespace CastIt.Server.Common.Extensions
                    //Controllers
                    new FileToLog(typeof(PlayerController), "controller_castit"),
                    new FileToLog(typeof(PlayListsController), "controller_playlists"),
-                   new FileToLog(typeof(ServerController), "controller_server"),
 
                    //Services
                    new FileToLog(typeof(AppDataService), "service_appdata"),
