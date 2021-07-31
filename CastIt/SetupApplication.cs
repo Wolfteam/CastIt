@@ -82,7 +82,7 @@ namespace CastIt
 
         private static void SetupLogging()
         {
-            var basePath = AppFileUtils.GetLogsPath();
+            var basePath = AppFileUtils.GetDesktopLogsPath();
             var logs = new List<FileToLog>
             {
                 //Services

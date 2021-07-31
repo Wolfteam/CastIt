@@ -2,6 +2,7 @@
 using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using System;
+using System.ServiceProcess;
 using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands
@@ -28,13 +29,19 @@ namespace CastIt.Cli.Commands
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
+            if (!WebServerUtils.IsElevated())
+            {
+                AppConsole.WriteLine("You need to run this command as an administrator");
+                return ErrorCode;
+            }
+
             if (Restart)
             {
-                await RestartServer();
+                RestartServer();
             }
             else if (Stop)
             {
-                await StopServer();
+                StopServer();
             }
             else if (Start)
             {
@@ -52,25 +59,17 @@ namespace CastIt.Cli.Commands
                 return true;
             }
 
-            var port = Port ?? WebServerUtils.GetOpenPort();
-            var args = $"{AppWebServerConstants.PortArgument} {port}";
-            bool started = WebServerUtils.StartServer(args, WebServerUtils.GetServerPhysicalPath());
-            if (!started)
-            {
-                AppConsole.WriteLine($"Server could not be started on port = {port}");
-            }
-
-            return started;
+            StartOrStopService(true, false);
+            return WebServerUtils.IsServerAlive();
         }
 
-        private async Task StopServer()
+        private void StopServer()
         {
             AppConsole.WriteLine("Stopping server...");
 
             if (WebServerUtils.IsServerAlive())
             {
-                var response = await CastItApi.StopServer();
-                CheckServerResponse(response);
+                StartOrStopService(false, true);
                 AppConsole.WriteLine("Server was successfully stopped");
             }
             else
@@ -79,15 +78,39 @@ namespace CastIt.Cli.Commands
             }
         }
 
-        private async Task RestartServer()
+        private void RestartServer()
         {
             AppConsole.WriteLine("Restarting server...");
-            await StopServer();
-            bool started = StartServer();
-
-            if (started)
+            StartOrStopService(true, true);
+            if (WebServerUtils.IsServerAlive())
             {
                 AppConsole.WriteLine("Server was successfully restarted");
+            }
+        }
+
+        public void StartOrStopService(bool start, bool stop)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                AppConsole.WriteLine("Operation is not supported");
+                return;
+            }
+
+            var serviceController = Array.Find(ServiceController.GetServices(), s => s.ServiceName == WebServerUtils.ServerProcessName);
+            if (serviceController == null)
+            {
+                AppConsole.WriteLine("The server service is not installed");
+                return;
+            }
+
+            if (stop)
+            {
+                serviceController.Stop();
+            }
+
+            if (start)
+            {
+                serviceController.Start();
             }
         }
     }
