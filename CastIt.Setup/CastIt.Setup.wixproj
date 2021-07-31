@@ -52,16 +52,6 @@
       <Name>WixUIExtension</Name>
     </WixExtension>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CastIt.Setup.CustomActions\CastIt.Setup.CustomActions.csproj">
-      <Name>CastIt.Setup.CustomActions</Name>
-      <Project>{9771d1a9-11ec-4104-b537-25bb9ec3baf5}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
   <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
@@ -73,7 +63,7 @@
 	-->
   <Target Name="BeforeBuild">
     <!--First we clean delete the bin directories-->
-	<Exec Command="if exist Publish rd /s /q Publish">
+    <Exec Command="if exist Publish rd /s /q Publish">
     </Exec>
     <Exec Command="rd /s /q ..\CastIt\bin\">
     </Exec>
