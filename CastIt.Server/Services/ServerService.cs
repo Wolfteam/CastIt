@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace CastIt.Server.Services
 {
@@ -170,13 +169,6 @@ namespace CastIt.Server.Services
             }
 
             return "video/webm";
-        }
-
-        public async Task StopAsync()
-        {
-            _logger.LogInformation("Stopping the server...");
-            await _server.StopAsync(default);
-            _hostApplicationLifetime.StopApplication();
         }
 
         private string SetUrlParameters(string baseUrl, object dto)

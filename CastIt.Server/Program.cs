@@ -39,6 +39,12 @@ namespace CastIt.Server
 
             logs.SetupLogging(AppFileUtils.GetServerLogsPath());
 
+#if !DEBUG
+            if (startingPort <= 0)
+            {
+                startingPort = WebServerUtils.GetOpenPort();
+            }
+#endif
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
             CreateHostBuilder(args, startingPort).Build().Run();
         }
@@ -57,6 +63,7 @@ namespace CastIt.Server
                 })
                 //This has to happen AFTER ConfigureWebHostDefaults in order to get the server ip address
                 //https://stackoverflow.com/questions/58457143/net-core-3-0-ihostedservice-access-web-server-url-scheme-host-port-etc
-                .ConfigureServices(services => services.AddHostedService<CastItHostedService>());
+                .ConfigureServices(services => services.AddHostedService<CastItHostedService>())
+                .UseWindowsService();
     }
 }
