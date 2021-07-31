@@ -49,13 +49,22 @@ namespace CastIt.Domain.Models.FFmpeg.Args
         public FFmpegOutputArgs SetPreset(string preset)
             => AddArg("preset", $"{preset}");
 
+        public FFmpegOutputArgs SetFastPreset()
+            => AddArg("preset", "fast");
+
+        public FFmpegOutputArgs SetVeryFastPreset()
+            => AddArg("preset", "veryfast");
+
+        public FFmpegOutputArgs SetUltraFastPreset()
+            => AddArg("preset", "ultrafast");
+
         public FFmpegOutputArgs SetPreset(HwAccelDeviceType type)
             => type switch
             {
-                HwAccelDeviceType.Intel => SetPreset("veryfast"),
-                HwAccelDeviceType.Nvidia => SetPreset("fast"),
-                HwAccelDeviceType.AMD => SetPreset("fast"),
-                _ => SetPreset("ultrafast")
+                HwAccelDeviceType.Intel => SetVeryFastPreset(),
+                HwAccelDeviceType.Nvidia => SetFastPreset(),
+                HwAccelDeviceType.AMD => SetFastPreset(),
+                _ => SetUltraFastPreset()
             };
 
         public FFmpegOutputArgs SetProfileVideo(string profile)
@@ -104,5 +113,8 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public FFmpegOutputArgs WithVideoFilter(string filter)
             => AddArg("vf", filter);
+
+        public FFmpegOutputArgs WithVideoFilters(params string[] filters)
+            => AddArg("vf", string.Join(",", filters));
     }
 }

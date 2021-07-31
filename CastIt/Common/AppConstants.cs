@@ -24,8 +24,6 @@ namespace CastIt.Common
         public const string AccentColorViolet = "#8600ff";
         public const string AccentColorLightGrey = "#a8a9aa";
 
-        public const int MaxCharsPerString = 1000;
-
         public static string AppName
             => "CastIt";
 

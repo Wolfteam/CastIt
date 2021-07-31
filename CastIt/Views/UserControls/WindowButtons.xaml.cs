@@ -45,19 +45,18 @@ namespace CastIt.Views.UserControls
 
         public void CloseApp()
         {
-            Dispatcher.Invoke(() =>
+            Dispatcher.Invoke(async () =>
             {
                 var window = System.Windows.Application.Current.MainWindow as MainWindow;
-                if (window?.Content is MainPage view)
+                if (!(window?.Content is MainPage view))
                 {
-                    var vm = DataContext as MainViewModel;
-                    if (vm?.PlayLists.Any() == true)
-                    {
-                        var positions = view.GetFinalPlayListsPositions();
-                        vm.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight, positions);
-                    }
-                    view.ButtonsBar.DisposeViewModels();
+                    System.Windows.Application.Current.Shutdown();
+                    return;
                 }
+
+                var vm = DataContext as MainViewModel;
+                await vm!.SaveChangesBeforeClosing(window.CurrentWidth, window.CurrentHeight);
+                view.ButtonsBar.DisposeViewModels();
                 System.Windows.Application.Current.Shutdown();
             });
         }

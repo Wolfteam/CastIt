@@ -1,240 +1,269 @@
-﻿using CastIt.Application.Common;
+﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.ViewModels.Items;
-using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
     public partial class MainViewModel
     {
-        private void InitializeCastHandlers()
+        private void CastItHubOnOnClientConnected()
         {
-            Logger.LogInformation($"{nameof(InitializeCastHandlers)}: Setting cast events...");
-            _castService.OnFileLoaded += OnFileLoaded;
-            _castService.OnTimeChanged += OnFileDurationChanged;
-            _castService.OnPositionChanged += OnFilePositionChanged;
-            _castService.OnEndReached += OnFileEndReached;
-            _castService.QualitiesChanged += OnQualitiesChanged;
-            _castService.OnPaused += OnPaused;
-            _castService.OnDisconnected += OnDisconnected;
-            _castService.GetSubTitles = () => CurrentFileSubTitles.FirstOrDefault(f => f.IsSelected)?.Path;
-            _castService.OnVolumeChanged += OnVolumeChanged;
-            _castService.OnFileLoadFailed += OnFileLoadFailed;
+            ServerIsRunning = true;
         }
 
-        private void RemoveCastHandlers()
+        private void CastItHubOnOnClientDisconnected()
         {
-            Logger.LogInformation($"{nameof(RemoveCastHandlers)}: Removing cast events...");
-            _castService.OnFileLoaded -= OnFileLoaded;
-            _castService.OnTimeChanged -= OnFileDurationChanged;
-            _castService.OnPositionChanged -= OnFilePositionChanged;
-            _castService.OnEndReached -= OnFileEndReached;
-            _castService.QualitiesChanged -= OnQualitiesChanged;
-            _castService.OnPaused -= OnPaused;
-            _castService.OnDisconnected -= OnDisconnected;
-            _castService.OnVolumeChanged -= OnVolumeChanged;
-            _castService.OnFileLoadFailed -= OnFileLoadFailed;
+            ServerIsRunning = false;
+            OnStoppedPlayBack();
+            PlayLists.Clear();
+            GoBackCommand.Execute();
         }
 
-        private void InitializeOrUpdateFileWatcher(bool update)
+        private void OnPlayerStatusChanged(ServerPlayerStatusResponseDto status)
         {
-            Logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Getting directories to watch...");
-            var dirs = PlayLists.SelectMany(pl => pl.Items)
-                .Where(f => f.IsLocalFile)
-                .Select(f => Path.GetDirectoryName(f.Path))
-                .Distinct()
-                .ToList();
-
-            Logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Got = {dirs.Count} directories...");
-            if (!update)
+            if (_updatingPlayerStatus)
             {
-                Logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Starting to watch for {dirs.Count} directories...");
-                _fileWatcherService.StartListening(dirs);
-                _fileWatcherService.OnFileCreated = OnFwCreated;
-                _fileWatcherService.OnFileChanged = OnFwChanged;
-                _fileWatcherService.OnFileDeleted = OnFwDeleted;
-                _fileWatcherService.OnFileRenamed = OnFwRenamed;
-            }
-            else
-            {
-                Logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Updating watched directories...");
-                _fileWatcherService.UpdateWatchers(dirs);
-            }
-        }
-
-        #region Cast handlers
-        private async void OnFileLoaded(
-            string title,
-            string thumbUrl,
-            double duration,
-            double volumeLevel,
-            bool isMuted)
-        {
-            CurrentFileThumbnail = thumbUrl;
-            VolumeLevel = volumeLevel;
-            IsMuted = isMuted;
-            if (_currentlyPlayedFile?.IsUrlFile == true)
-            {
-                CurrentlyPlayingFilename = title;
-                _currentlyPlayedFile.Name = title;
-                await _currentlyPlayedFile.SetDuration(duration);
-                await RaisePropertyChanged(() => CurrentFileDuration);
-            }
-
-            _appWebServer.OnFileLoaded?.Invoke();
-        }
-
-        private void OnFileDurationChanged(double seconds)
-        {
-            IsPaused = false;
-
-            if (_currentlyPlayedFile is null)
                 return;
+            }
 
-            CurrentPlayedSeconds = seconds;
-
-            var elapsed = TimeSpan.FromSeconds(seconds)
-                .ToString(FileFormatConstants.FullElapsedTimeFormat);
-            var total = TimeSpan.FromSeconds(_currentlyPlayedFile.TotalSeconds)
-                .ToString(FileFormatConstants.FullElapsedTimeFormat);
-            if (_currentlyPlayedFile.IsUrlFile && _currentlyPlayedFile.TotalSeconds <= 0)
-                ElapsedTimeString = $"{elapsed}";
+            _updatingPlayerStatus = true;
+            IsPaused = status.Player.IsPaused;
+            VolumeLevel = status.Player.VolumeLevel;
+            IsMuted = status.Player.IsMuted;
+            CurrentFileThumbnail = status.PlayedFile?.ThumbnailUrl;
+            CurrentFileDuration = status.PlayedFile?.TotalSeconds ?? 1; //Has to be one, in order for the slider to show correctly;
+            var playedFile = status.PlayedFile;
+            if (playedFile != null)
+            {
+                UpdatedCommonPlayedStuff(status.Player.IsPlayingOrPaused, playedFile);
+                UpdatePlayListSpecificStuff(status, playedFile);
+            }
             else
-                ElapsedTimeString = $"{elapsed} / {total}";
+            {
+                OnStoppedPlayBack();
+            }
 
-            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
-            playlist?.UpdatePlayedTime();
+            _updatingPlayerStatus = false;
         }
 
-        private void OnFilePositionChanged(double playedPercentage)
-            => PlayedPercentage = playedPercentage;
-
-        private void OnFileEndReached()
+        private void OnPlayListsLoaded(List<GetAllPlayListResponseDto> playLists)
         {
-            Logger.LogInformation($"{nameof(OnFileEndReached)}: End reached for file = {_currentlyPlayedFile?.Path}");
+            PlayLists.Clear();
+            var mapped = playLists.ConvertAll(pl => PlayListItemViewModel.From(pl, _mapper));
+            PlayLists.ReplaceWith(mapped);
+            IsBusy = false;
+        }
 
+        private void OnPlayListAdded(GetAllPlayListResponseDto playList)
+        {
+            var vm = _mapper.Map<PlayListItemViewModel>(playList);
+            PlayLists.Add(vm);
+            SelectedPlayListIndex = PlayLists.Count - 1;
+        }
+
+        private void OnPlayListsChanged(List<GetAllPlayListResponseDto> playLists)
+        {
+            foreach (var playList in playLists)
+            {
+                OnPlayListChanged(playList);
+            }
+        }
+
+        private void OnPlayListChanged(GetAllPlayListResponseDto playList)
+        {
+            var vm = PlayLists.FirstOrDefault(f => f.Id == playList.Id);
+            if (vm == null)
+            {
+                return;
+            }
+
+            vm.IsBusy = true;
+            if (vm.Position != playList.Position)
+            {
+                var currentIndex = PlayLists.IndexOf(vm);
+                //if the indexes are equal, the move method will throw an exception
+                if (currentIndex != playList.Position)
+                    PlayLists.Move(currentIndex, playList.Position);
+            }
+            vm.IsBusy = false;
+            _mapper.Map(playList, vm);
+        }
+
+        private void OnPlayListDeleted(long id)
+        {
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == id);
+            if (playList != null)
+            {
+                PlayLists.Remove(playList);
+            }
+        }
+
+        private void OnPlayListBusy(long id, bool isBusy)
+        {
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == id);
+            if (playList != null)
+            {
+                playList.IsBusy = isBusy;
+            }
+        }
+
+        private void OnFileAdded(FileItemResponseDto file)
+        {
+            //TODO: IF THE ITEMS ARE NOT LOADED THIS WON'T WORK
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == file.PlayListId);
+            if (playList != null)
+            {
+                var vm = _mapper.Map<FileItemViewModel>(file);
+                playList.Items.Insert(file.Position - 1, vm);
+            }
+        }
+
+        private void OnFilesChanged(List<FileItemResponseDto> files)
+        {
+            foreach (var file in files)
+            {
+                OnFileChanged(file);
+            }
+        }
+
+        private void OnFileChanged(FileItemResponseDto file)
+        {
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == file.PlayListId);
+            var vm = playList?.Items.FirstOrDefault(f => f.Id == file.Id);
+            if (vm == null)
+                return;
+            if (file.Position != vm.Position)
+            {
+                var currentIndex = playList.Items.IndexOf(vm);
+                playList.Items.Move(currentIndex, file.Position - 1);
+            }
+            _mapper.Map(file, vm);
+        }
+
+        private void OnFileDeleted(long playListId, long id)
+        {
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == playListId);
+            var vm = playList?.Items.FirstOrDefault(f => f.Id == id);
+            if (vm != null)
+            {
+                playList.Items.Remove(vm);
+            }
+        }
+
+        private void OnFileLoaded(FileItemResponseDto playedFile)
+        {
+            IsBusy = false;
+            var playList = PlayLists.FirstOrDefault(pl => pl.Id == playedFile.PlayListId);
+
+            if (CurrentPlayedFile != null && playList != null)
+            {
+                playList.SelectedItem = CurrentPlayedFile;
+            }
+        }
+
+        private void OnFileLoading(FileItemResponseDto file)
+        {
+            IsBusy = true;
+            SetCurrentlyPlayingInfo(file.Filename, false, file.PlayedPercentage, file.PlayedSeconds);
+        }
+
+        private void OnFileEndReached(FileItemResponseDto file)
+        {
+            IsBusy = false;
+            IsPaused = false;
+            CurrentPlayedFile?.OnEndReached();
             SetCurrentlyPlayingInfo(null, false);
+        }
 
+        private void OnStoppedPlayBack()
+        {
+            CurrentPlayedFile?.OnStopped();
+            CurrentPlayedFile = null;
+            IsBusy = false;
             IsPaused = false;
+            SetCurrentlyPlayingInfo(null, false);
+        }
 
-            if (_currentlyPlayedFile != null)
+        private void UpdatedCommonPlayedStuff(bool isPlayingOrPaused, FileItemResponseDto playedFile)
+        {
+            if (playedFile.CurrentFileVideos.Any())
             {
-                var playlist = PlayLists.FirstOrDefault(pl => pl.Id == _currentlyPlayedFile.PlayListId);
-                playlist?.UpdatePlayedTime();
+                UpdateFileOptionsIfNeeded(CurrentFileVideos, playedFile.CurrentFileVideos);
             }
 
-            if (_currentlyPlayedFile?.Loop == true)
+            if (playedFile.CurrentFileAudios.Any())
             {
-                Logger.LogInformation($"{nameof(OnFileEndReached)}: Looping file = {_currentlyPlayedFile?.Path}");
-                _currentlyPlayedFile.PlayedPercentage = 0;
-                _currentlyPlayedFile.PlayCommand.Execute();
+                UpdateFileOptionsIfNeeded(CurrentFileAudios, playedFile.CurrentFileAudios);
+            }
+
+            if (playedFile.CurrentFileQualities.Any())
+            {
+                UpdateFileOptionsIfNeeded(CurrentFileQualities, playedFile.CurrentFileQualities);
+            }
+
+            if (playedFile.CurrentFileSubTitles.Any())
+            {
+                UpdateFileOptionsIfNeeded(CurrentFileSubTitles, playedFile.CurrentFileSubTitles);
+            }
+
+            ElapsedTimeString = playedFile.FullTotalDuration;
+            SetCurrentlyPlayingInfo(playedFile.Filename, isPlayingOrPaused, playedFile.PlayedPercentage, playedFile.PlayedSeconds);
+        }
+
+        private void UpdatePlayListSpecificStuff(ServerPlayerStatusResponseDto status, FileItemResponseDto playedFile)
+        {
+            if (status == null || playedFile == null)
+            {
+                return;
+            }
+            //This may happen when you open the app and something was being played
+            bool differentPlayedFile = playedFile.Id != CurrentPlayedFile?.Id;
+            if (differentPlayedFile)
+                CurrentPlayedFile?.OnStopped();
+
+            if (!_thumbnailRanges.Any() || differentPlayedFile)
+            {
+                _thumbnailRanges = status.ThumbnailRanges;
+            }
+
+            var playlist = PlayLists.FirstOrDefault(pl => pl.Id == playedFile.PlayListId);
+            //Do not update the playlist if it hasn't been loaded
+            if (playlist?.Loading == true)
+            {
+                _updatingPlayerStatus = false;
                 return;
             }
 
-            if (_settingsService.PlayNextFileAutomatically)
+            CurrentPlayedFile = playlist?.Items.FirstOrDefault(pl => pl.Id == playedFile.Id);
+
+            //The playlist hasn't been loaded, so we add the file item in order to have preview thumbnails
+            if (CurrentPlayedFile == null)
             {
-                Logger.LogInformation($"{nameof(OnFileEndReached)}: Play next file is enabled. Playing the next file...");
-                GoTo(true, true);
+                CurrentPlayedFile = _mapper.Map<FileItemViewModel>(playedFile);
+                playlist?.Items.Add(CurrentPlayedFile);
             }
-            else
+
+            if (playedFile.Id == CurrentPlayedFile.Id)
             {
-                Logger.LogInformation($"{nameof(OnFileEndReached)}: Play next file is disabled. Next file won't be played, playback will stop now");
-                StopPlayBackCommand.Execute();
+                CurrentPlayedFile.OnChange(playedFile);
             }
-        }
 
-        private void OnQualitiesChanged(int selectedQuality, List<int> qualities)
-        {
-            var vms = qualities.OrderBy(q => q).Select(q => new FileItemOptionsViewModel
+            if (playlist == null)
+                return;
+            playlist.ImageUrl = CurrentFileThumbnail;
+            playlist.PlayedTime = playlist.PlayedTime;
+            playlist.TotalDuration = status.PlayList.TotalDuration;
+            if (CurrentPlayedFile != null && playlist.SelectedItem == null && playlist.SelectedItem != CurrentPlayedFile)
             {
-                Id = q,
-                IsSelected = selectedQuality == q,
-                IsEnabled = qualities.Count > 1,
-                IsQuality = true,
-                Text = $"{q}"
-            }).ToList();
-            CurrentFileQualities.ReplaceWith(vms);
-        }
+                playlist.SelectedItem = CurrentPlayedFile;
+            }
 
-        private void OnPaused()
-            => IsPaused = true;
-
-        private void OnDisconnected()
-            => OnStoppedPlayBack();
-
-        private void OnVolumeChanged(double level, bool isMuted)
-        {
-            VolumeLevel = level;
-            IsMuted = isMuted;
-        }
-
-        private async void OnFileLoadFailed()
-        {
-            _appWebServer.OnFileLoadingError?.Invoke(GetText("CouldntPlayFile"));
-            await StopPlayBack();
-            await ShowSnackbarMsg(GetText("CouldntPlayFile"));
-        }
-        #endregion
-
-        #region FW handlers
-        private Task OnFwCreated(string path, bool isAFolder)
-        {
-            return OnFwChanged(path, isAFolder);
-        }
-
-        private async Task OnFwChanged(string path, bool isAFolder)
-        {
-            var files = PlayLists
-                .SelectMany(f => f.Items)
-                .Where(f => isAFolder ? f.Path.StartsWith(path) : f.Path == path)
-                .ToList();
-            foreach (var file in files)
+            //make sure we don't have nothing being played in this playlist except for the CurrentPlayedFile
+            foreach (var notPlayedFile in playlist.Items.Where(f => f.IsBeingPlayed && f.Id != CurrentPlayedFile?.Id).ToList())
             {
-                var playlist = PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
-                if (playlist == null)
-                    continue;
-
-                await playlist.SetFileInfo(file.Id, _setDurationTokenSource.Token);
-                _appWebServer?.OnFileChanged(playlist.Id);
+                notPlayedFile.OnStopped();
             }
         }
-
-        private Task OnFwDeleted(string path, bool isAFolder)
-        {
-            return OnFwChanged(path, isAFolder);
-        }
-
-        private async Task OnFwRenamed(string oldPath, string newPath, bool isAFolder)
-        {
-            var files = PlayLists
-                .SelectMany(f => f.Items)
-                .Where(f => isAFolder ? f.Path.StartsWith(oldPath) : f.Path == oldPath)
-                .ToList();
-            foreach (var file in files)
-            {
-                var playlist = PlayLists.FirstOrDefault(f => f.Id == file.PlayListId);
-                if (playlist == null)
-                    continue;
-
-                if (isAFolder)
-                {
-                    //Here I'm not sure how to retain the order
-                    await playlist.RemoveFilesThatStartsWith(oldPath);
-                    await playlist.OnFolderAddedCommand.ExecuteAsync(new[] { newPath });
-                }
-                else
-                {
-                    await playlist.OnFilesAddedCommand.ExecuteAsync(new[] { newPath });
-                    playlist.ExchangeLastFilePosition(file.Id);
-                    await playlist.RemoveFile(file.Id);
-                }
-                _appWebServer?.OnPlayListChanged(playlist.Id);
-            }
-        }
-        #endregion
     }
 }

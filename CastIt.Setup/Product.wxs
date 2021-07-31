@@ -32,10 +32,6 @@
     <Property Id="WixShellExecTarget" Value="[DesktopInstallFolder]CastIt.exe" />
     <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
 
-    <!--Custom actions-->
-    <Binary Id="CustomActionBinary" SourceFile="../CastIt.Setup.CustomActions/bin/$(var.Platform)/$(var.Configuration)/CastIt.Setup.CustomActions.CA.dll"/>
-    <CustomAction Id="DeleteUserData" BinaryKey="CustomActionBinary" DllEntry="DeleteUserData"/>
-
     <UI>
       <UIRef Id="WixUI_Minimal" />
       <!--This publish is required to make the 'launch after install' work-->
@@ -54,9 +50,6 @@
          IncludeMinimum="yes" IncludeMaximum="no" />
     </Upgrade>
 
-    <InstallExecuteSequence>
-      <Custom Action='DeleteUserData' Before='RemoveFiles' >(REMOVE~="ALL") AND (NOT UPGRADINGPRODUCTCODE)</Custom>
-    </InstallExecuteSequence>
 
     <!--<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\Assets\Background.bmp"/>-->
     <!--<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\Assets\Banner.bmp"/>-->

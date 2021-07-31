@@ -1,4 +1,5 @@
-﻿using McMaster.Extensions.CommandLineUtils;
+﻿using CastIt.Cli.Interfaces.Api;
+using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -7,19 +8,14 @@ namespace CastIt.Cli.Commands
 {
     [Command(Name = "castit", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]
-    [Subcommand(
-        typeof(StartServerCommand),
-        typeof(ConnectCommand),
-        typeof(DisconnectCommand),
-        typeof(ListDevicesCommand),
-        typeof(PlayCommand),
-        typeof(TogglePlaybackCommand),
-        typeof(StopCommand),
-        typeof(VolumeCommand),
-        typeof(SettingsCommand)
-        )]
+    [Subcommand(typeof(PlayerCommands), typeof(PlayListCommands), typeof(ServerCommands), typeof(FilesCommand))]
     public class MainCommand : BaseCommand
     {
+        public MainCommand(IConsole appConsole, ICastItApiService castItApi)
+            : base(appConsole, castItApi)
+        {
+        }
+
         protected override Task<int> OnExecute(CommandLineApplication app)
         {
             app.ShowHelp();

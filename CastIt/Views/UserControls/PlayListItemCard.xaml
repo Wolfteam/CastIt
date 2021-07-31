@@ -34,22 +34,15 @@
                 VerticalAlignment="Stretch"
                 Focusable="False"
                 RenderOptions.BitmapScalingMode="HighQuality"
+                Source="{Binding ImageUrl, Converter={StaticResource StringToImgConverter}}"
                 Stretch="Fill"
-                ToolTip="{Binding Name}">
-                <Image.Source>
-                    <MultiBinding Converter="{StaticResource PlayListCardItemMultiConverter}">
-                        <Binding Path="ViewModel.CurrentFileThumbnail" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}}" />
-                        <Binding Path="ViewModel.CurrentlyPlayingFilename" RelativeSource="{RelativeSource AncestorType={x:Type uv:MainPage}}" />
-                        <Binding />
-                    </MultiBinding>
-                </Image.Source>
-            </Image>
+                ToolTip="{Binding Name}" />
             <Button
                 Grid.Row="0"
                 Margin="0,0,5,-20"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
-                Content="{Binding Items.Count}"
+                Content="{Binding NumberOfFiles}"
                 Foreground="White"
                 Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" />
             <StackPanel

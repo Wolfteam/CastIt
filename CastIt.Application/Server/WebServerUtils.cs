@@ -1,14 +1,30 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Principal;
 
 namespace CastIt.Application.Server
 {
     public static class WebServerUtils
     {
         public const string ServerProcessName = "CastIt.Server";
+        public const string ServerFolderName = "Server";
+        public static string FullServerProcessName = $"{ServerProcessName}.exe";
+
+        public static string GetWebServerIpAddress()
+        {
+            if (!IsServerAlive())
+                return null;
+            var port = GetServerPort();
+            if (port.HasValue)
+                return GetWebServerIpAddress(port.Value);
+            return null;
+        }
+
         public static string GetWebServerIpAddress(int port)
         {
             string localIp = GetLocalIpAddress();
@@ -71,7 +87,54 @@ namespace CastIt.Application.Server
                 },
             };
 
-            return process.Start();
+            try
+            {
+                return process.Start();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool StartServer()
+        {
+            string path = GetServerPhysicalPath();
+            return StartServer(path);
+        }
+
+        public static bool StartServer(string exePath)
+        {
+            string args = $"{AppWebServerConstants.PortArgument} {GetOpenPort()}";
+            return StartServer(args, exePath);
+        }
+
+        public static string GetServerPhysicalPath()
+        {
+            string dir = Directory.GetCurrentDirectory();
+            return GetServerPhysicalPath(dir);
+        }
+
+        public static string GetServerPhysicalPath(string from)
+        {
+            //C:\Program Files\CastIt
+            string parentDir = Directory.GetParent(from)!.ToString();
+            string path = Path.Combine(parentDir, ServerFolderName, FullServerProcessName);
+            //#if DEBUG
+            //            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
+            //#endif
+            return path;
+        }
+
+        public static bool IsElevated()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                var id = WindowsIdentity.GetCurrent();
+                return id.Owner != id.User;
+            }
+
+            return false;
         }
     }
 }

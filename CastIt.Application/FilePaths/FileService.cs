@@ -3,63 +3,35 @@ using CastIt.Application.Interfaces;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace CastIt.Application.FilePaths
 {
     public class FileService : CommonFileService, IFileService
     {
-        private readonly string _ffmpegBasePath;
-        private readonly string _ffprobeBasePath;
         private readonly string _generatedFilesFolderPath;
-        private readonly int _thumbnailsEachSeconds;
 
         public const string DefaultFFmpegFolder = "FFMpeg";
-        public const string DefaultFFmpegExecutableName = "ffmpeg.exe";
-        public const string DefaultFFprobeExecutableName = "ffprobe.exe";
         public const string PreviewsFolderName = "Previews";
         public const string SubTitlesFolderName = "SubTitles";
+        public const string TemporalImagePreviewFilename = "TEMP";
 
-        public FileService(string generatedFilesFolderPath, int thumbnailsEachSeconds = 5)
+        public FileService()
+            : this(AppFileUtils.GetBaseAppFolder())
         {
-            _generatedFilesFolderPath = generatedFilesFolderPath ?? throw new ArgumentNullException(nameof(generatedFilesFolderPath));
-            var dir = CreateDirectory(generatedFilesFolderPath, DefaultFFmpegFolder);
-            _ffmpegBasePath = Path.Combine(dir, DefaultFFmpegExecutableName);
-            _ffprobeBasePath = Path.Combine(dir, DefaultFFprobeExecutableName);
-            _thumbnailsEachSeconds = thumbnailsEachSeconds <= 0
-                ? throw new ArgumentOutOfRangeException(nameof(thumbnailsEachSeconds))
-                : thumbnailsEachSeconds;
         }
 
-        public FileService(string ffmpegBasePath, string ffprobeBasePath, string generatedFilesFolderPath, int thumbnailsEachSeconds = 5)
+        public FileService(string generatedFilesFolderPath)
         {
-            _ffmpegBasePath = ffmpegBasePath ?? throw new ArgumentNullException(nameof(ffmpegBasePath));
-            _ffprobeBasePath = ffprobeBasePath ?? throw new ArgumentNullException(nameof(ffprobeBasePath));
             _generatedFilesFolderPath = generatedFilesFolderPath ?? throw new ArgumentNullException(nameof(generatedFilesFolderPath));
-            _thumbnailsEachSeconds = thumbnailsEachSeconds <= 0
-                ? throw new ArgumentOutOfRangeException(nameof(thumbnailsEachSeconds))
-                : thumbnailsEachSeconds;
-
-            if (!IsLocalFile(_ffmpegBasePath))
-                throw new ArgumentException($"Path = {_ffmpegBasePath} does not exist");
-
-            if (!IsLocalFile(_ffprobeBasePath))
-                throw new ArgumentException($"Path = {_ffprobeBasePath} does not exist");
         }
+
 
         public string GetFFmpegFolder()
         {
-            var basePath = Path.GetDirectoryName(_ffmpegBasePath);
+            var basePath = Path.Combine(AppFileUtils.GetBaseAppFolder(), DefaultFFmpegFolder);
             return CreateDirectory(basePath, string.Empty);
-        }
-
-        public string GetFFmpegPath()
-        {
-            return _ffmpegBasePath;
-        }
-
-        public string GetFFprobePath()
-        {
-            return _ffprobeBasePath;
         }
 
         public string GetPreviewsPath()
@@ -87,9 +59,9 @@ namespace CastIt.Application.FilePaths
             return Path.Combine(GetPreviewsPath(), $"{filename}_%02d.jpg");
         }
 
-        public string GetClosestThumbnail(string filePath, long tentativeSecond)
+        public string GetClosestThumbnail(string filePath, long tentativeSecond, int thumbnailsEachSeconds = 5)
         {
-            long second = tentativeSecond / _thumbnailsEachSeconds;
+            long second = tentativeSecond / thumbnailsEachSeconds;
             string folder = GetPreviewsPath();
             string filename = Path.GetFileName(filePath);
             string searchPattern = $"{filename}_*";
@@ -98,8 +70,8 @@ namespace CastIt.Application.FilePaths
             {
                 var files = Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
                     .Where(p => p.EndsWith(".jpg"))
-                    .Select(p => p.Substring(p.IndexOf(filename)).Replace(filename, string.Empty))
-                    .Select(p => p.Substring(p.LastIndexOf("_") + 1, p.IndexOf(".") - 1))
+                    .Select(p => p.Substring(p.IndexOf(filename, StringComparison.OrdinalIgnoreCase)).Replace(filename, string.Empty))
+                    .Select(p => p.Substring(p.LastIndexOf("_", StringComparison.OrdinalIgnoreCase) + 1, p.IndexOf(".", StringComparison.OrdinalIgnoreCase) - 1))
                     .Select(long.Parse)
                     .ToList();
 
@@ -108,7 +80,7 @@ namespace CastIt.Application.FilePaths
 
                 long closest = files.Aggregate((x, y) => Math.Abs(x - second) < Math.Abs(y - second) ? x : y);
 
-                if (Math.Abs(closest - second) > _thumbnailsEachSeconds)
+                if (Math.Abs(closest - second) > thumbnailsEachSeconds)
                     return null;
                 string previewPath = GetThumbnailFilePath(filename, closest);
                 return previewPath;
@@ -128,13 +100,53 @@ namespace CastIt.Application.FilePaths
         public void DeleteAppLogsAndPreviews()
         {
             DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
-            DeleteFilesInDirectory(AppFileUtils.GetLogsPath(), DateTime.Now.AddDays(-3));
+            DeleteFilesInDirectory(AppFileUtils.GetDesktopLogsPath(), DateTime.Now.AddDays(-3));
         }
 
         public void DeleteServerLogsAndPreviews()
         {
             DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
             DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-3));
+        }
+
+        public string GetTemporalPreviewImagePath(long id)
+        {
+            var filename = $"{id}_{TemporalImagePreviewFilename}";
+            var path = GetPreviewThumbnailFilePath(filename);
+            return !Exists(path) ? null : path;
+        }
+
+        public Task<string> DownloadAndSavePreviewImage(long id, string url, bool overrideIfExists = true)
+        {
+            var filename = $"{id}_{TemporalImagePreviewFilename}";
+            return DownloadAndSavePreviewImage(filename, url, overrideIfExists);
+        }
+
+        public async Task<string> DownloadAndSavePreviewImage(string filename, string url, bool overrideIfExists = true)
+        {
+            var path = GetPreviewThumbnailFilePath(filename);
+            if (Exists(path) && !overrideIfExists)
+            {
+                return path;
+            }
+
+            using var client = new HttpClient();
+            try
+            {
+                var response = await client.GetAsync(url);
+                var content = await response.Content.ReadAsByteArrayAsync();
+                if (Exists(path))
+                {
+                    File.Delete(path);
+                }
+
+                await File.WriteAllBytesAsync(path, content);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return path;
         }
     }
 }

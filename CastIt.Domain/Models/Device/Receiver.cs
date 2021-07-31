@@ -13,6 +13,7 @@ namespace CastIt.Domain.Models.Device
         public string Host { get; set; }
 
         public int Port { get; set; }
+        public bool IsConnected { get; set; }
 
         public static Receiver Default(string host, int port)
         {

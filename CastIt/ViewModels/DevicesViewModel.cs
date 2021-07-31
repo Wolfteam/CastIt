@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using CastIt.GoogleCast.Interfaces;
-using CastIt.Infrastructure.Interfaces;
+﻿using CastIt.Domain.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Items;
@@ -18,9 +16,7 @@ namespace CastIt.ViewModels
 {
     public class DevicesViewModel : BasePopupViewModel
     {
-        private readonly ICastService _castService;
-        private readonly IMapper _mapper;
-        private readonly IPlayer _player;
+        private readonly ICastItHubClientService _castItHub;
 
         private bool _isConnecting;
         private bool _isRefreshing;
@@ -48,23 +44,14 @@ namespace CastIt.ViewModels
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<DevicesViewModel> logger,
-            ICastService castService,
-            IMapper mapper,
-            IPlayer player)
+            ICastItHubClientService castItHub)
             : base(textProvider, messenger, logger)
         {
-            _castService = castService;
-            _mapper = mapper;
-            _player = player;
-
-            var devices = _mapper.Map<List<DeviceItemViewModel>>(_castService.AvailableDevices);
-
-            Devices.AddRange(devices);
-
-            _castService.OnCastRendererSet += OnCastRendererSet;
-            _castService.OnCastableDeviceAdded += OnCastDeviceAdded;
-            _castService.OnCastableDeviceDeleted += OnCastDeviceDeleted;
-            _castService.OnDisconnected += DeSelectAllDevices;
+            _castItHub = castItHub;
+            _castItHub.OnCastDeviceSet += OnCastDeviceSet;
+            _castItHub.OnCastDevicesChanged += OnCastDevicesChanged;
+            _castItHub.OnCastDeviceDisconnected += DeSelectAllDevices;
+            _castItHub.OnClientDisconnected += CastItHubOnOnClientDisconnected;
         }
 
         public override void SetCommands()
@@ -80,9 +67,11 @@ namespace CastIt.ViewModels
 
         public void CleanUp()
         {
-            _castService.OnCastableDeviceAdded -= OnCastDeviceAdded;
-            _castService.OnCastableDeviceDeleted -= OnCastDeviceDeleted;
-            _castService.OnDisconnected -= DeSelectAllDevices;
+            _castItHub.OnClientDisconnected -= CastItHubOnOnClientDisconnected;
+            _castItHub.OnCastDeviceSet -= OnCastDeviceSet;
+            _castItHub.OnCastDevicesChanged -= OnCastDevicesChanged;
+            _castItHub.OnCastDeviceDisconnected -= DeSelectAllDevices;
+            _castItHub.OnClientDisconnected -= CastItHubOnOnClientDisconnected;
         }
 
         private async Task ToggleConnectedDevice(DeviceItemViewModel device)
@@ -93,7 +82,7 @@ namespace CastIt.ViewModels
             Messenger.Publish(new ManualDisconnectMessage(this));
             try
             {
-                await _castService.SetCastRenderer(device?.Id);
+                await _castItHub.ConnectToCastDevice(device?.Id);
             }
             catch (Exception ex)
             {
@@ -103,32 +92,49 @@ namespace CastIt.ViewModels
             IsConnecting = false;
         }
 
-        private void OnCastRendererSet(string id)
+        private void OnCastDeviceSet(IReceiver device)
         {
-            var renderer = Devices.FirstOrDefault(d => d.Id == id);
+            var renderer = Devices.FirstOrDefault(d => d.Id == device.Id);
             if (renderer == null)
                 return;
 
             DeSelectAllDevices();
-            renderer.IsSelected = true;
+            renderer.IsConnected = device.IsConnected;
         }
 
-        private void OnCastDeviceAdded(string id, string friendlyName, string type, string host, int port)
+        private void OnCastDevicesChanged(List<IReceiver> devices)
         {
-            if (Devices.Any(d => d.Id == id))
+            Devices.Clear();
+            foreach (var device in devices)
+            {
+                OnCastDeviceAdded(device);
+            }
+        }
+
+        private void OnCastDeviceAdded(IReceiver device)
+        {
+            if (Devices.Any(d => d.Id == device.Id))
+            {
+                var existing = Devices.First(d => d.Id == device.Id);
+                existing.FriendlyName = device.FriendlyName;
+                existing.Host = device.Host;
+                existing.Port = device.Port;
+                existing.IsConnected = device.IsConnected;
                 return;
+            }
 
             var vm = Mvx.IoCProvider.Resolve<DeviceItemViewModel>();
-            vm.Id = id;
-            vm.FriendlyName = friendlyName;
-            vm.Host = vm.Host;
-            vm.Port = port;
+            vm.Id = device.Id;
+            vm.FriendlyName = device.FriendlyName;
+            vm.Host = device.Host;
+            vm.Port = device.Port;
+            vm.IsConnected = device.IsConnected;
             Devices.Add(vm);
         }
 
-        private void OnCastDeviceDeleted(string id)
+        private void OnCastDeviceDeleted(IReceiver device)
         {
-            var toDelete = Devices.FirstOrDefault(d => d.Id == id);
+            var toDelete = Devices.FirstOrDefault(d => d.Id == device.Id);
             if (toDelete == null)
                 return;
             Devices.Remove(toDelete);
@@ -138,32 +144,25 @@ namespace CastIt.ViewModels
         {
             foreach (var device in Devices)
             {
-                device.IsSelected = false;
+                device.IsConnected = false;
             }
         }
 
         private async Task RefreshDevices()
         {
-            var selected = Devices.FirstOrDefault(d => d.IsSelected);
+            var selected = Devices.FirstOrDefault(d => d.IsConnected);
             Logger.LogInformation($"{nameof(RefreshDevices)}: Refreshing list of devices, currently we got = {Devices.Count} device(s) and the selected one is = {selected?.FriendlyName}...");
+
             IsRefreshing = true;
-
-            _castService.AvailableDevices.Clear();
             Devices.Clear();
-            var devices = await _player.GetDevicesAsync(TimeSpan.FromSeconds(5));
-            devices = devices.OrderBy(d => d.FriendlyName).ToList();
-            Devices.SwitchTo(_mapper.Map<List<DeviceItemViewModel>>(devices));
-            _castService.AvailableDevices.AddRange(devices);
-
-            if (selected != null)
-            {
-                var refreshed = Devices.FirstOrDefault(d => d.Id == selected.Id);
-                if (refreshed != null)
-                    refreshed.IsSelected = true;
-            }
-            Logger.LogInformation($"{nameof(RefreshDevices)}: Refresh completed, got = {Devices.Count} device(s)");
-
+            //The refresh will take care of populating the devices collection
+            await _castItHub.RefreshCastDevices(TimeSpan.FromSeconds(5));
             IsRefreshing = false;
+        }
+
+        private void CastItHubOnOnClientDisconnected()
+        {
+            Devices.Clear();
         }
     }
 }

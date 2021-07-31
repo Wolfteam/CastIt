@@ -13,7 +13,7 @@ namespace CastIt.GoogleCast.Models.Media
         public string PlayerStateString { get; set; }
 
         [JsonProperty(PropertyName = "playerStateEnum")]
-        public PlayerState PlayerState
+        internal PlayerState PlayerState
             => (PlayerState)Enum.Parse(typeof(PlayerState), PlayerStateString, true);
 
         public double CurrentTime { get; set; }

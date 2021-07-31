@@ -1,12 +1,11 @@
 ﻿using CastIt.Common;
 using CastIt.Common.Utils;
 using CastIt.Domain.Enums;
-using CastIt.GoogleCast.Enums;
-using CastIt.Infrastructure.Interfaces;
+using CastIt.GoogleCast.Shared.Enums;
+using CastIt.Infrastructure.Models;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
-using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
@@ -15,6 +14,7 @@ using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -23,12 +23,29 @@ namespace CastIt.ViewModels
     public class SettingsViewModel : BasePopupViewModel
     {
         #region Members
-        private readonly IAppSettingsService _settingsService;
+        private readonly IDesktopAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
-        private readonly IAppWebServer _appWebServer;
+        private readonly ICastItHubClientService _castItHub;
+
+        private bool _updatingSettings;
+        private bool _startFilesFromTheStart;
+        private bool _playNextFileAutomatically;
+        private bool _forceVideoTranscode;
+        private bool _forceAudioTranscode;
+        private Item _videoScale;
+        private bool _enableHardwareAcceleration;
+        private Item _currentSubtitleFgColor;
+        private Item _currentSubtitleBgColor;
+        private Item _currentSubtitleFontScale;
+        private Item _currentSubtitleFontStyle;
+        private Item _currentSubtitleFontFamily;
+        private double _subtitleDelayInSeconds;
+        private bool _loadFirstSubtitleFoundAutomatically;
+        private string _fFmpegExePath;
+        private string _ffprobeExePath;
 
         private readonly MvxInteraction<string> _changeSelectedAccentColor = new MvxInteraction<string>();
-        #endregion     
+        #endregion
 
         #region Properties
         public MvxObservableCollection<Item> Themes
@@ -82,72 +99,65 @@ namespace CastIt.ViewModels
 
         public bool StartFilesFromTheStart
         {
-            get => _settingsService.StartFilesFromTheStart;
+            get => _startFilesFromTheStart;
             set
             {
-                _settingsService.StartFilesFromTheStart = value;
-                RaisePropertyChanged(() => StartFilesFromTheStart);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _startFilesFromTheStart, value);
+                TriggerSettingsChanged();
             }
         }
 
         public bool PlayNextFileAutomatically
         {
-            get => _settingsService.PlayNextFileAutomatically;
+            get => _playNextFileAutomatically;
             set
             {
-                _settingsService.PlayNextFileAutomatically = value;
-                RaisePropertyChanged(() => PlayNextFileAutomatically);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _playNextFileAutomatically, value);
+                TriggerSettingsChanged();
             }
         }
 
         public bool ForceVideoTranscode
         {
-            get => _settingsService.ForceVideoTranscode;
+            get => _forceVideoTranscode;
             set
             {
-                _settingsService.ForceVideoTranscode = value;
-                RaisePropertyChanged(() => ForceVideoTranscode);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _forceVideoTranscode, value);
+                TriggerSettingsChanged();
             }
         }
 
         public bool ForceAudioTranscode
         {
-            get => _settingsService.ForceAudioTranscode;
+            get => _forceAudioTranscode;
             set
             {
-                _settingsService.ForceAudioTranscode = value;
-                RaisePropertyChanged(() => ForceAudioTranscode);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _forceAudioTranscode, value);
+                TriggerSettingsChanged();
             }
         }
 
-        public MvxObservableCollection<Item> VideoScales
-            => GetVideoScales();
+        public MvxObservableCollection<Item> VideoScales { get; }
 
         public Item CurrentVideoScale
         {
-            get => VideoScales.First(l => l.Id == _settingsService.VideoScale.ToString());
+            get => _videoScale;
             set
             {
                 if (value == null)
                     return;
-                _settingsService.VideoScale = (VideoScaleType)Enum.Parse(typeof(VideoScaleType), value.Id, true);
-                RaisePropertyChanged(() => CurrentVideoScale);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _videoScale, value);
+                TriggerSettingsChanged();
             }
         }
 
         public bool EnableHardwareAcceleration
         {
-            get => _settingsService.EnableHardwareAcceleration;
+            get => _enableHardwareAcceleration;
             set
             {
-                _settingsService.EnableHardwareAcceleration = value;
-                RaisePropertyChanged(() => EnableHardwareAcceleration);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _enableHardwareAcceleration, value);
+                TriggerSettingsChanged();
             }
         }
 
@@ -184,79 +194,69 @@ namespace CastIt.ViewModels
         }
 
         #region Subtitles
-        public MvxObservableCollection<Item> SubtitleFgColors
-            => GetSubtitleFgColors();
-        public MvxObservableCollection<Item> SubtitleBgColors
-            => GetSubtitleBgColors();
-        public MvxObservableCollection<Item> SubtitleFontStyles
-            => GetSubtitleFontStyles();
-        public MvxObservableCollection<Item> SubtitleFontFamilies
-            => GetSubtitleFontFamilies();
-        public MvxObservableCollection<Item> SubtitleFontScales
-            => GetFontScales();
+        public MvxObservableCollection<Item> SubtitleFgColors { get; }
+        public MvxObservableCollection<Item> SubtitleBgColors { get; }
+        public MvxObservableCollection<Item> SubtitleFontStyles { get; }
+        public MvxObservableCollection<Item> SubtitleFontFamilies { get; }
+        public MvxObservableCollection<Item> SubtitleFontScales { get; }
 
         public Item CurrentSubtitleFgColor
         {
-            get => SubtitleFgColors.First(l => l.Id == _settingsService.CurrentSubtitleFgColor.ToString());
+            get => _currentSubtitleFgColor;
             set
             {
                 if (value == null)
                     return;
-                _settingsService.CurrentSubtitleFgColor = (SubtitleFgColorType)Enum.Parse(typeof(SubtitleFgColorType), value.Id, true);
-                RaisePropertyChanged(() => CurrentSubtitleFgColor);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _currentSubtitleFgColor, value);
+                TriggerSettingsChanged();
             }
         }
 
         public Item CurrentSubtitleBgColor
         {
-            get => SubtitleBgColors.First(l => l.Id == _settingsService.CurrentSubtitleBgColor.ToString());
+            get => _currentSubtitleBgColor;
             set
             {
                 if (value == null)
                     return;
-                _settingsService.CurrentSubtitleBgColor = (SubtitleBgColorType)Enum.Parse(typeof(SubtitleBgColorType), value.Id, true);
-                RaisePropertyChanged(() => CurrentSubtitleBgColor);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _currentSubtitleBgColor, value);
+                TriggerSettingsChanged();
             }
         }
 
         public Item CurrentSubtitleFontScale
         {
-            get => SubtitleFontScales.First(l => l.Id == _settingsService.CurrentSubtitleFontScale.ToString());
+            get => _currentSubtitleFontScale;
             set
             {
                 if (value == null)
                     return;
-                _settingsService.CurrentSubtitleFontScale = (SubtitleFontScaleType)Enum.Parse(typeof(SubtitleFontScaleType), value.Id, true);
-                RaisePropertyChanged(() => CurrentSubtitleFontScale);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _currentSubtitleFontScale, value);
+                TriggerSettingsChanged();
             }
         }
 
         public Item CurrentSubtitleFontStyle
         {
-            get => SubtitleFontStyles.First(l => l.Id == _settingsService.CurrentSubtitleFontStyle.ToString());
+            get => _currentSubtitleFontStyle;
             set
             {
                 if (value == null)
                     return;
-                _settingsService.CurrentSubtitleFontStyle = (TextTrackFontStyleType)Enum.Parse(typeof(TextTrackFontStyleType), value.Id, true);
-                RaisePropertyChanged(() => CurrentSubtitleFontStyle);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _currentSubtitleFontStyle, value);
+                TriggerSettingsChanged();
             }
         }
 
         public Item CurrentSubtitleFontFamily
         {
-            get => SubtitleFontFamilies.First(l => l.Id == _settingsService.CurrentSubtitleFontFamily.ToString());
+            get => _currentSubtitleFontFamily;
             set
             {
                 if (value == null)
                     return;
-                _settingsService.CurrentSubtitleFontFamily = (TextTrackFontGenericFamilyType)Enum.Parse(typeof(TextTrackFontGenericFamilyType), value.Id, true);
-                RaisePropertyChanged(() => CurrentSubtitleFontFamily);
-                _appWebServer.OnAppSettingsChanged?.Invoke();
+                this.RaiseAndSetIfChanged(ref _currentSubtitleFontFamily, value);
+                TriggerSettingsChanged();
             }
         }
 
@@ -264,22 +264,22 @@ namespace CastIt.ViewModels
             => $"{GetText("SubtitleDelay")} ({GetText("XSeconds", $"{(SubtitleDelay == 0 ? 0 : SubtitleDelay)}")})";
         public double SubtitleDelay
         {
-            get => _settingsService.SubtitleDelayInSeconds;
+            get => _subtitleDelayInSeconds;
             set
             {
-                _settingsService.SubtitleDelayInSeconds = Math.Round(value, 1);
-                RaisePropertyChanged(() => SubtitleDelay);
+                this.RaiseAndSetIfChanged(ref _subtitleDelayInSeconds, Math.Round(value, 1));
+                TriggerSettingsChanged();
                 RaisePropertyChanged(() => SubtitleDelayText);
             }
         }
 
         public bool LoadFirstSubtitleFoundAutomatically
         {
-            get => _settingsService.LoadFirstSubtitleFoundAutomatically;
+            get => _loadFirstSubtitleFoundAutomatically;
             set
             {
-                _settingsService.LoadFirstSubtitleFoundAutomatically = value;
-                RaisePropertyChanged(() => LoadFirstSubtitleFoundAutomatically);
+                this.RaiseAndSetIfChanged(ref _loadFirstSubtitleFoundAutomatically, value);
+                TriggerSettingsChanged();
             }
         }
         #endregion
@@ -299,14 +299,23 @@ namespace CastIt.ViewModels
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<SettingsViewModel> logger,
-            IAppSettingsService settingsService,
+            IDesktopAppSettingsService settingsService,
             IMvxNavigationService navigationService,
-            IAppWebServer appWebServer)
+            ICastItHubClientService castItHub)
             : base(textProvider, messenger, logger)
         {
             _settingsService = settingsService;
             _navigationService = navigationService;
-            _appWebServer = appWebServer;
+            _castItHub = castItHub;
+
+            VideoScales = GetVideoScales();
+            SubtitleBgColors = GetSubtitleBgColors();
+            SubtitleFgColors = GetSubtitleFgColors();
+            SubtitleFontScales = GetFontScales();
+            SubtitleFontStyles = GetSubtitleFontStyles();
+            SubtitleFontFamilies = GetSubtitleFontFamilies();
+
+            _castItHub.OnPlayerSettingsChanged += OnSettingsChange;
         }
 
         public override void SetCommands()
@@ -326,11 +335,20 @@ namespace CastIt.ViewModels
         public override void RegisterMessages()
         {
             base.RegisterMessages();
-
-            SubscriptionTokens.AddRange(new[]
+            SubscriptionTokens.AddRange(new []
             {
-                Messenger.Subscribe<SettingsExternallyUpdatedMessage>(SettingsExternallyUpdated)
+                Messenger.Subscribe<FfmpegPathChangedMessage>(msg =>
+                {
+                    _fFmpegExePath = Path.Combine(msg.FolderPath, "ffmpeg.exe");
+                    _ffprobeExePath = Path.Combine(msg.FolderPath, "ffprobe.exe");
+                    TriggerSettingsChanged();
+                })
             });
+        }
+
+        public void CleanUp()
+        {
+            _castItHub.OnPlayerSettingsChanged -= OnSettingsChange;
         }
 
         private MvxObservableCollection<Item> GetThemes()
@@ -453,14 +471,64 @@ namespace CastIt.ViewModels
             return new MvxObservableCollection<Item>(scales);
         }
 
-        private void SettingsExternallyUpdated(SettingsExternallyUpdatedMessage msg)
+        private async void TriggerSettingsChanged()
         {
-            StartFilesFromTheStart = msg.StartFilesFromTheStart;
-            PlayNextFileAutomatically = msg.PlayNextFileAutomatically;
-            ForceVideoTranscode = msg.ForceVideoTranscode;
-            ForceAudioTranscode = msg.ForceAudioTranscode;
-            CurrentVideoScale = VideoScales.FirstOrDefault(v => v.Id == msg.VideoScale.ToString());
-            EnableHardwareAcceleration = msg.EnableHardwareAcceleration;
+            if (!_updatingSettings)
+            {
+                return;
+            }
+            var settings = BuildServerAppSettings();
+            await _castItHub.UpdateSettings(settings);
+        }
+
+        private ServerAppSettings BuildServerAppSettings()
+        {
+            return new ServerAppSettings
+            {
+                FFmpegExePath = _fFmpegExePath,
+                FFprobeExePath = _ffprobeExePath,
+                StartFilesFromTheStart = StartFilesFromTheStart,
+                PlayNextFileAutomatically = PlayNextFileAutomatically,
+                ForceAudioTranscode = ForceAudioTranscode,
+                ForceVideoTranscode = ForceVideoTranscode,
+                EnableHardwareAcceleration = EnableHardwareAcceleration,
+                VideoScale = (VideoScaleType)Enum.Parse(typeof(VideoScaleType), CurrentVideoScale.Id, true),
+                CurrentSubtitleBgColor = (SubtitleBgColorType)Enum.Parse(typeof(SubtitleBgColorType), CurrentSubtitleBgColor.Id, true),
+                CurrentSubtitleFgColor = (SubtitleFgColorType)Enum.Parse(typeof(SubtitleFgColorType), CurrentSubtitleFgColor.Id, true),
+                CurrentSubtitleFontScale = (SubtitleFontScaleType)Enum.Parse(typeof(SubtitleFontScaleType), CurrentSubtitleFontScale.Id, true),
+                CurrentSubtitleFontStyle = (TextTrackFontStyleType)Enum.Parse(typeof(TextTrackFontStyleType), CurrentSubtitleFontStyle.Id, true),
+                CurrentSubtitleFontFamily = (TextTrackFontGenericFamilyType)Enum.Parse(typeof(TextTrackFontGenericFamilyType), CurrentSubtitleFontFamily.Id, true),
+                SubtitleDelayInSeconds = SubtitleDelay,
+                LoadFirstSubtitleFoundAutomatically = LoadFirstSubtitleFoundAutomatically
+            };
+        }
+
+        private void OnSettingsChange(ServerAppSettings settings)
+        {
+            _updatingSettings = false;
+            StartFilesFromTheStart = settings.StartFilesFromTheStart;
+            PlayNextFileAutomatically = settings.PlayNextFileAutomatically;
+            ForceVideoTranscode = settings.ForceVideoTranscode;
+            ForceAudioTranscode = settings.ForceAudioTranscode;
+            CurrentVideoScale = VideoScales.First(v => v.Id == settings.VideoScale.ToString());
+            EnableHardwareAcceleration = settings.EnableHardwareAcceleration;
+            CurrentSubtitleFgColor = SubtitleFgColors.First(v => v.Id == settings.CurrentSubtitleFgColor.ToString());
+            CurrentSubtitleBgColor = SubtitleBgColors.First(v => v.Id == settings.CurrentSubtitleBgColor.ToString());
+            CurrentSubtitleFontScale = SubtitleFontScales.First(v => v.Id == settings.CurrentSubtitleFontScale.ToString());
+            CurrentSubtitleFontStyle = SubtitleFontStyles.First(v => v.Id == settings.CurrentSubtitleFontStyle.ToString());
+            CurrentSubtitleFontFamily = SubtitleFontFamilies.First(v => v.Id == settings.CurrentSubtitleFontFamily.ToString());
+            SubtitleDelay = settings.SubtitleDelayInSeconds;
+            LoadFirstSubtitleFoundAutomatically = settings.LoadFirstSubtitleFoundAutomatically;
+
+            _fFmpegExePath = settings.FFmpegExePath;
+            _ffprobeExePath = settings.FFprobeExePath;
+            _updatingSettings = true;
+
+            //These lines must happen AFTER the _updatingSettings
+            if (string.IsNullOrWhiteSpace(_fFmpegExePath) || string.IsNullOrWhiteSpace(_ffprobeExePath))
+            {
+                Messenger.Publish(new ShowDownloadFFmpegDialogMessage(this));
+            }
         }
     }
 }

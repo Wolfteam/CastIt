@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
   <String Id="ProductName">CastIt</String>
-  <String Id="ProductName_x86">CastItCli (32 bits)</String>
-  <String Id="ProductName_x64">CastItCli (64 bits)</String>
+  <String Id="ProductName_x86">CastIt.Cli (32 bits)</String>
+  <String Id="ProductName_x64">CastIt.Cli (64 bits)</String>
   <String Id="Company">MiraiSoft</String>
   <String Id="Description">The CastIt CLI</String>
   <String Id="Comments">Made with love</String>

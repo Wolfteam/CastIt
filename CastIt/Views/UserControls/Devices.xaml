@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vmis="clr-namespace:CastIt.ViewModels.Items"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
@@ -115,7 +116,8 @@
             d:Content="Don't see your device?"
             BorderBrush="{DynamicResource PrimaryHueDarkBrush}"
             Command="{Binding RefreshDevicesCommand}"
-            Foreground="{DynamicResource FontColorBrush}">
+            Foreground="{DynamicResource FontColorBrush}"
+            Visibility="{Binding ViewModel.ServerIsRunning, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}">
             <Button.Style>
                 <Style BasedOn="{StaticResource MaterialDesignOutlinedButton}" TargetType="{x:Type Button}">
                     <Setter Property="Content" Value="{Binding [RefreshDevicesMsg]}" />

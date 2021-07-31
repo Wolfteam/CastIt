@@ -8,16 +8,19 @@ namespace CastIt.Application.Common.Utils
         public static string GetBaseAppFolder(string appName = "CastIt")
         {
             var folder = CreateDirectory(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 appName);
             return folder;
         }
 
-        public static string GetLogsPath(string logsFolder = "Logs")
+        private static string GetLogsPath(string logsFolder)
         {
             string basePath = GetBaseAppFolder();
             return CreateDirectory(basePath, logsFolder);
         }
+
+        public static string GetDesktopLogsPath()
+            => GetLogsPath("DesktopLogs");
 
         public static string GetServerLogsPath()
             => GetLogsPath("ServerLogs");

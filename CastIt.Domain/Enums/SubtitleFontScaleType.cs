@@ -4,11 +4,11 @@
     {
         Fifty = 50,
         SeventyFive = 75,
-        Ninety = 95,
+        Ninety = 90,
         Hundred = 100,
         HundredAndTwentyFive = 125,
         HundredAndFifty = 150,
-        HundedAndSeventyFive = 175,
+        HundredAndSeventyFive = 175,
         TwoHundred = 200
     }
 }

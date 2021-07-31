@@ -6,6 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:serverConstants="clr-namespace:CastIt.Application.Server;assembly=CastIt.Application"
+    xmlns:utils="clr-namespace:CastIt.Common.Utils"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     d:DataContext="{d:DesignInstance Type=vms:MainViewModel}"
     d:DesignHeight="450"
@@ -51,8 +53,8 @@
 
         <Popup
             Name="SliderPopup"
-            Width="350"
-            Height="230"
+            Width="{x:Static serverConstants:AppWebServerConstants.ThumbnailImageWidth}"
+            Height="{x:Static serverConstants:AppWebServerConstants.ThumbnailImageHeight}"
             AllowsTransparency="True"
             HorizontalOffset="0"
             IsOpen="False"
@@ -62,7 +64,7 @@
             <Grid>
                 <Rectangle RadiusX="30" RadiusY="30">
                     <Rectangle.Fill>
-                        <ImageBrush ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}}" />
+                        <ImageBrush x:Name="ImageThumbnail" ImageSource="{Binding PlacementTarget.DataContext.PreviewThumbnailImg, IsAsync=False, ElementName=SliderPopup, Converter={StaticResource StringToImgConverter}, ConverterParameter=true}" />
                     </Rectangle.Fill>
                 </Rectangle>
                 <TextBlock

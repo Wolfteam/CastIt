@@ -1,48 +1,29 @@
+import 'package:castit/domain/services/castit_hub_client_service.dart';
+import 'package:castit/domain/services/device_info_service.dart';
+import 'package:castit/domain/services/locale_service.dart';
+import 'package:castit/domain/services/logging_service.dart';
+import 'package:castit/domain/services/settings_service.dart';
+import 'package:castit/generated/l10n.dart';
+import 'package:castit/injection.dart';
+import 'package:castit/presentation/shared/extensions/app_theme_type_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'bloc/intro/intro_bloc.dart';
-import 'bloc/main/main_bloc.dart';
-import 'bloc/play/play_bloc.dart';
-import 'bloc/played_file_options/played_file_options_bloc.dart';
-import 'bloc/playlist/playlist_bloc.dart';
-import 'bloc/playlist_rename/playlist_rename_bloc.dart';
-import 'bloc/playlists/playlists_bloc.dart';
-import 'bloc/server_ws/server_ws_bloc.dart';
-import 'bloc/settings/settings_bloc.dart';
-import 'generated/i18n.dart';
-import 'injection.dart';
-import 'services/logging_service.dart';
-import 'services/settings_service.dart';
-import 'telemetry.dart';
-import 'ui/pages/intro_page.dart';
-import 'ui/pages/main_page.dart';
+import 'application/bloc.dart';
+import 'presentation/intro/intro_page.dart';
+import 'presentation/main/main_page.dart';
 
-Future main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  initInjection();
-  await initTelemetry();
+  await initInjection();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final GeneratedLocalizationsDelegate i18n = I18n.delegate;
-
-  @override
-  void initState() {
-    super.initState();
-    I18n.onLocaleChanged = _onLocaleChange;
-  }
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -51,50 +32,61 @@ class _MyAppState extends State<MyApp> {
           create: (ctx) {
             final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
-            return MainBloc(logger, settings)..add(MainEvent.init());
+            final deviceInfo = getIt<DeviceInfoService>();
+            final localeService = getIt<LocaleService>();
+            return MainBloc(logger, settings, deviceInfo, localeService)..add(MainEvent.init());
           },
         ),
         BlocProvider(
           create: (ctx) {
             final logger = getIt<LoggingService>();
             final settings = getIt<SettingsService>();
-            return ServerWsBloc(logger, settings);
+            final castItHub = getIt<CastItHubClientService>();
+            return ServerWsBloc(logger, settings, castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return PlayListBloc(serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayListBloc(castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return PlayListsBloc(serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayListsBloc(castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return PlayBloc(serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayBloc(castItHub);
           },
         ),
         BlocProvider(
           create: (ctx) {
             final settings = getIt<SettingsService>();
-            final serverWsBloc = ctx.read<ServerWsBloc>();
-            return SettingsBloc(settings, serverWsBloc);
+            final castItHub = getIt<CastItHubClientService>();
+            return SettingsBloc(settings, ctx.read<MainBloc>(), castItHub);
           },
         ),
         BlocProvider(create: (ctx) {
-          final serverWsBloc = ctx.read<ServerWsBloc>();
-          return PlayedFileOptionsBloc(serverWsBloc);
+          final castItHub = getIt<CastItHubClientService>();
+          return PlayedFileOptionsBloc(castItHub);
         }),
         BlocProvider(create: (ctx) => PlayListRenameBloc()),
         BlocProvider(create: (ctx) {
           final settings = getIt<SettingsService>();
           final settingsBloc = ctx.read<SettingsBloc>();
           return IntroBloc(settings, settingsBloc);
+        }),
+        BlocProvider(create: (ctx) {
+          final castItHub = getIt<CastItHubClientService>();
+          return PlayedPlayListItemBloc(castItHub);
+        }),
+        BlocProvider(create: (ctx) {
+          final castItHub = getIt<CastItHubClientService>();
+          return PlayedFileItemBloc(castItHub);
         }),
       ],
       child: BlocBuilder<MainBloc, MainState>(
@@ -105,37 +97,26 @@ class _MyAppState extends State<MyApp> {
 
   Widget _buildApp(MainState state) {
     final delegates = <LocalizationsDelegate>[
-      // A class which loads the translations from JSON files
-      i18n,
-      // Built-in localization of basic text for Material widgets
+      S.delegate,
       GlobalMaterialLocalizations.delegate,
-      // Built-in localization for text direction LTR/RTL
       GlobalWidgetsLocalizations.delegate,
-      // Built-in localization of basic text for Cupertino widgets
       GlobalCupertinoLocalizations.delegate,
     ];
     return state.map<Widget>(
-      loading: (_) {
-        return const CircularProgressIndicator();
-      },
+      loading: (_) => const CircularProgressIndicator(),
       loaded: (s) {
+        final locale = Locale(s.language.code, s.language.countryCode);
+        final themeData = s.accentColor.getThemeData(s.theme);
         return MaterialApp(
           title: s.appTitle,
-          theme: s.theme,
+          theme: themeData,
           home: s.firstInstall ? IntroPage() : MainPage(),
+          //Without this, the lang won't be reloaded
+          locale: locale,
           localizationsDelegates: delegates,
-          supportedLocales: i18n.supportedLocales,
-          localeResolutionCallback: i18n.resolution(
-            fallback: i18n.supportedLocales.first,
-          ),
+          supportedLocales: S.delegate.supportedLocales,
         );
       },
     );
-  }
-
-  void _onLocaleChange(Locale locale) {
-    setState(() {
-      I18n.locale = locale;
-    });
   }
 }

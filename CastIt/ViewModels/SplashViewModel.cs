@@ -1,17 +1,11 @@
-﻿using CastIt.Application.Common.Utils;
-using CastIt.Application.Interfaces;
-using CastIt.Common;
+﻿using CastIt.Application.Interfaces;
 using CastIt.Common.Utils;
-using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
-using CastIt.ViewModels.Items;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -21,8 +15,7 @@ namespace CastIt.ViewModels
     {
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
-        private readonly IAppSettingsService _settingsService;
-        private readonly IAppDataService _playListsService;
+        private readonly IDesktopAppSettingsService _settingsService;
         private readonly Timer _timer;
         private readonly IFileService _fileService;
 
@@ -45,14 +38,12 @@ namespace CastIt.ViewModels
             ILogger<SplashViewModel> logger,
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
-            IAppSettingsService settingsService,
-            IAppDataService playListsService,
+            IDesktopAppSettingsService settingsService,
             IFileService fileService) : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
             _telemetryService = telemetryService;
             _settingsService = settingsService;
-            _playListsService = playListsService;
             _fileService = fileService;
 
             _timer = new Timer(800)
@@ -62,10 +53,11 @@ namespace CastIt.ViewModels
             _timer.Elapsed += TimerElapsed;
         }
 
-        public override Task Initialize()
+        public override async Task Initialize()
         {
             _telemetryService.Init();
-            _settingsService.Init(AppFileUtils.GetBaseAppFolder(), AppConstants.AccentColorVividRed, AppConstants.MinWindowWidth, AppConstants.MinWindowHeight);
+            await _settingsService.Init();
+
             TextProvider.SetLanguage(_settingsService.Language);
 
             LoadingText = $"{GetText("Loading")}...";
@@ -84,7 +76,7 @@ namespace CastIt.ViewModels
                 Logger.LogError(e, $"{nameof(Initialize)}: Error occurred while trying to delete previews");
                 _telemetryService.TrackError(e);
             }
-            return base.Initialize();
+            await base.Initialize();
         }
 
         public override void ViewAppeared()
@@ -103,18 +95,8 @@ namespace CastIt.ViewModels
             _timer.Stop();
             _timer.Elapsed -= TimerElapsed;
             _timer.Dispose();
-
-            Logger.LogInformation($"{nameof(Initialize)}: Getting all playlists...");
-            var playLists = await _playListsService.GetAllPlayLists();
-            foreach (var playlist in playLists)
-            {
-                var files = await _playListsService.GetAllFiles(playlist.Id);
-                playlist.Items.AddRange(files.OrderBy(f => f.Position));
-                playlist.SetPositionIfChanged();
-            }
-
             Logger.LogInformation($"{nameof(Initialize)}: Navigating to main view model...");
-            await _navigationService.Navigate<MainViewModel, List<PlayListItemViewModel>>(playLists).ConfigureAwait(false);
+            await _navigationService.Navigate<MainViewModel>().ConfigureAwait(false);
             _beforeNavigatingToMainViewModel.Raise();
         }
     }

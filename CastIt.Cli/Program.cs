@@ -1,6 +1,8 @@
 ﻿using CastIt.Application;
 using CastIt.Cli.Commands;
+using CastIt.Cli.Interfaces.Api;
 using CastIt.Cli.Models;
+using CastIt.Cli.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,8 +43,11 @@ namespace CastIt.Cli
                         services.AddLogging(c =>
                         {
                             c.ClearProviders();
-                            c.AddProvider(new SerilogLoggerProvider(Log.Logger));
+                            c.AddProvider(new SerilogLoggerProvider(Log.Logger)).AddDebug();
                         });
+
+                        services.AddSingleton<ICastItApiService, CastItApiService>();
+
                     }).ConfigureAppConfiguration(b =>
                     {
                         b.SetBasePath(basePath);
@@ -56,6 +61,7 @@ namespace CastIt.Cli
                 Console.WriteLine($"Something went wrong!. Current basePath = {basePath}");
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.InnerException?.Message);
+                Console.WriteLine(ex.StackTrace);
                 return 1;
             }
         }

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+  <Fragment>
+    <ComponentGroup Id="ServerComponentsGroup" Directory="ServerInstallFolder">
+      <!--StartMenu Shortcut to the desktop app-->
+      <Component Id="ServerStartMenuShortcutComponent" Guid="{A5AC1F22-CF4A-47F2-B382-47E6AA19701B}">
+        <Shortcut
+          Id="ServerStartMenuShortcut"
+          Name="!(loc.FullProductName)"
+          Target="[ServerInstallFolder]/TrayIcon/CastIt.Server.Windows.TrayIcon.exe"
+          Directory="InstallMenuFolder"
+          WorkingDirectory="ServerInstallFolder"
+          Icon="icon.ico"/>
+
+        <!--Since we are using a shortcut, we need to define an associated key-->
+        <RegistryValue Id="RegStartMenuShortcutKey" Root="HKCU" Key="SOFTWARE\!(loc.FullProductName)" Name="Shorcut" Value="1" Type="integer" KeyPath="yes"/>
+
+        <!--We need to always remove the start menu shortcut-->
+        <RemoveFolder Id="RemoveStartMenu" Directory="InstallMenuFolder" On="uninstall"/>
+      </Component>
+
+      <!--Server specific-->
+      <Component Id="ServerService" Guid="{3C496109-8603-4AF6-921D-5DE146760E7F}">
+        <File Id="CastItServerExe"
+              Name="CastIt.Server.exe"
+              Source="Publish/CastIt.Server.exe"
+              KeyPath="yes"
+              Vital="yes" >
+          <fire:FirewallException Id="FirewallExceptionCastItServerTCP"
+                                  Name="CastIt.Server"
+                                  Protocol="tcp"
+                                  Scope="any"
+                                  IgnoreFailure="no"
+                                  Profile="private"
+                                  Description="Exception required so that the chromecast can access the server"/>
+        </File>
+        <ServiceInstall Id="CastItServerService"
+                        Name="CastIt.Server"
+                        DisplayName="CastIt.Server"
+                        Description="The CastIt Server"
+                        Account="LocalSystem"
+                        Start="auto"
+                        Type="ownProcess"
+                        Vital="yes"
+                        ErrorControl="normal"
+                        Interactive="no" />
+
+        <ServiceControl Id="StartService"
+                        Name="CastIt.Server"
+                        Wait="yes"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

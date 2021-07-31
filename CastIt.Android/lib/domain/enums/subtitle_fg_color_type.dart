@@ -1,0 +1,4 @@
+enum SubtitleFgColorType {
+  white,
+  yellow,
+}
