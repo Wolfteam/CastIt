@@ -35,7 +35,7 @@
     <PackageReference Include="Dragablz.NetCore" Version="0.3.3" />
     <PackageReference Include="FluentMigrator" Version="3.2.16" />
     <PackageReference Include="FluentMigrator.Runner" Version="3.2.16" />
-    <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.5.100" />
+    <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.5.200" />
     <PackageReference Include="MaterialDesignThemes" Version="4.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.7" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
