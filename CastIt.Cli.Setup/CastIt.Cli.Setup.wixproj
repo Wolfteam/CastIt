@@ -66,18 +66,10 @@
     </Exec>
     <Exec Command="rd /s /q ..\CastIt.Cli\bin\">
     </Exec>
-    <Exec Command="rd /s /q ..\CastIt.Server\bin\">
-    </Exec>
     <!--Then, we publish our apps-->
-    <!--First the cli-->
     <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Cli/CastIt.Cli.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Publish">
     </Exec>
     <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Cli/CastIt.Cli.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -o Publish">
-    </Exec>
-    <!--Then the server-->
-    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Publish\Server">
-    </Exec>
-    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -o Publish\Server">
     </Exec>
 	<!--Here we get the assembly versions-->
     <GetAssemblyIdentity AssemblyFiles="..\CastIt.Cli\bin\$(Configuration)\net5.0\win-$(Platform)\CastIt.dll">
