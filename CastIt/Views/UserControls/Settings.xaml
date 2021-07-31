@@ -8,10 +8,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:CastIt.Models"
     xmlns:uc="clr-namespace:CastIt.Views.UserControls"
+    xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     Width="720"
     Height="500"
+    d:DataContext="{d:DesignInstance Type=vms:SettingsViewModel}"
     d:DesignHeight="420"
     d:DesignWidth="500"
     x:TypeArguments="vms:SettingsViewModel"
@@ -120,6 +122,7 @@
                         HorizontalAlignment="Stretch"
                         materialDesign:HintAssist.Hint="{Binding [VideoScale]}"
                         DisplayMemberPath="Text"
+                        IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
                         ItemsSource="{Binding VideoScales}"
                         SelectedItem="{Binding CurrentVideoScale}"
                         SelectedValuePath="Id"
@@ -144,7 +147,8 @@
                     Grid.Row="0"
                     Grid.RowSpan="7"
                     Grid.Column="3"
-                    VerticalAlignment="Stretch">
+                    VerticalAlignment="Stretch"
+                    IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -329,30 +333,35 @@
                     Grid.Row="3"
                     Grid.Column="1"
                     IsChecked="{Binding ForceVideoTranscode}"
+                    IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
                     Text="{Binding [ForceVideoTranscode]}"
                     ToolTipText="{Binding [UseIfPlaybackIssues]}" />
                 <uc:SettingToggleItem
                     Grid.Row="4"
                     Grid.Column="0"
                     IsChecked="{Binding StartFilesFromTheStart}"
+                    IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
                     Text="{Binding [PlayFilesFromTheStart]}"
                     ToolTipText="{Binding [PlayFilesFromTheStartMsg]}" />
                 <uc:SettingToggleItem
                     Grid.Row="4"
                     Grid.Column="1"
                     IsChecked="{Binding ForceAudioTranscode}"
+                    IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
                     Text="{Binding [ForceAudioTranscode]}"
                     ToolTipText="{Binding [UseIfPlaybackIssues]}" />
                 <uc:SettingToggleItem
                     Grid.Row="5"
                     Grid.Column="0"
                     IsChecked="{Binding PlayNextFileAutomatically}"
+                    IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
                     Text="{Binding [PlayNextFileAutomatically]}"
                     ToolTipText="{Binding [PlayNextFileAutomaticallyMsg]}" />
                 <uc:SettingToggleItem
                     Grid.Row="5"
                     Grid.Column="1"
                     IsChecked="{Binding EnableHardwareAcceleration}"
+                    IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
                     Text="{Binding [EnableHardwareAcceleration]}"
                     ToolTipText="{Binding [EnableHardwareAccelerationMsg]}" />
                 <uc:SettingToggleItem

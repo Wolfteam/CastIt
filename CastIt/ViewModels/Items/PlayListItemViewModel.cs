@@ -1,40 +1,35 @@
-﻿using CastIt.Application.Common;
+﻿using AutoMapper;
 using CastIt.Application.Common.Utils;
 using CastIt.Application.Interfaces;
-using CastIt.Common;
-using CastIt.Common.Comparers;
-using CastIt.Domain.Entities;
+using CastIt.Application.Server;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Interfaces;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
-using CastIt.Server.Interfaces;
 using CastIt.ViewModels.Dialogs;
 using Microsoft.Extensions.Logging;
+using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Items
 {
+    //TODO: MOVE THE MAPPER DEPENDENCY TO INFRA PROJECT
     public class PlayListItemViewModel : BaseViewModel
     {
         #region Members
-        private readonly IAppDataService _playListsService;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly ITelemetryService _telemetryService;
-        private readonly IAppWebServer _appWebServer;
         private readonly IMvxNavigationService _navigationService;
-        private readonly IAppSettingsService _appSettings;
-        private readonly IFileWatcherService _fileWatcherService;
+        private readonly IDesktopAppSettingsService _appSettings;
         private readonly IFileService _fileService;
+        private readonly ICastItHubClientService _castItHub;
+        private readonly IMapper _mapper;
 
         private string _name;
         private bool _showEditPopUp;
@@ -42,8 +37,11 @@ namespace CastIt.ViewModels.Items
         private bool _loop;
         private bool _shuffle;
         private bool _isBusy;
+        private int _numberOfFiles;
+        private string _imageUrl;
+        private string _playedTime;
+        private string _totalDuration;
         private FileItemViewModel _selectedItem;
-        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         private readonly MvxInteraction _openFileDialog = new MvxInteraction();
         private readonly MvxInteraction _openFolderDialog = new MvxInteraction();
@@ -77,8 +75,10 @@ namespace CastIt.ViewModels.Items
             get => _loop;
             set
             {
+                bool triggerChange = _loop != value;
                 SetProperty(ref _loop, value);
-                _appWebServer.OnPlayListChanged?.Invoke(Id);
+                if (triggerChange && !Loading)
+                    UpdatePlayListOptions();
             }
         }
 
@@ -87,8 +87,10 @@ namespace CastIt.ViewModels.Items
             get => _shuffle;
             set
             {
+                bool triggerChange = _shuffle != value;
                 SetProperty(ref _shuffle, value);
-                _appWebServer.OnPlayListChanged?.Invoke(Id);
+                if (triggerChange && !Loading)
+                    UpdatePlayListOptions();
             }
         }
 
@@ -96,6 +98,19 @@ namespace CastIt.ViewModels.Items
         {
             get => _isBusy;
             set => SetProperty(ref _isBusy, value);
+        }
+
+        //TODO: DO NOT USE ITEMS.COUNT
+        public int NumberOfFiles
+        {
+            get => _numberOfFiles;
+            set => this.RaiseAndSetIfChanged(ref _numberOfFiles, value);
+        }
+
+        public string ImageUrl
+        {
+            get => _imageUrl;
+            set => this.RaiseAndSetIfChanged(ref _imageUrl, value);
         }
 
         public FileItemViewModel SelectedItem
@@ -118,23 +133,17 @@ namespace CastIt.ViewModels.Items
 
         public string PlayedTime
         {
-            get
-            {
-                var playedSeconds = Items.Sum(i => i.PlayedSeconds);
-                var formatted = FileFormatConstants.FormatDuration(playedSeconds);
-                return $"{formatted}";
-            }
+            get => _playedTime;
+            set => this.RaiseAndSetIfChanged(ref _playedTime, value);
         }
 
         public string TotalDuration
         {
-            get
-            {
-                var totalSeconds = Items.Where(i => i.TotalSeconds >= 0).Sum(i => i.TotalSeconds);
-                var formatted = FileFormatConstants.FormatDuration(totalSeconds);
-                return $"{PlayedTime} / {formatted}";
-            }
+            get => _totalDuration;
+            set => this.RaiseAndSetIfChanged(ref _totalDuration, value);
         }
+
+        public bool Loading { get; private set; }
         #endregion
 
         #region Commands
@@ -151,7 +160,7 @@ namespace CastIt.ViewModels.Items
         public IMvxCommand SelectAllCommand { get; private set; }
         public IMvxAsyncCommand<string> RenameCommand { get; private set; }
         public IMvxCommand ScrollToSelectedFileCommand { get; set; }
-        public IMvxCommand<SortModeType> SortFilesCommand { get; private set; }
+        public IMvxAsyncCommand<SortModeType> SortFilesCommand { get; private set; }
         #endregion
 
         #region Interactors
@@ -172,27 +181,64 @@ namespace CastIt.ViewModels.Items
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<PlayListItemViewModel> logger,
-            IAppDataService playListsService,
             IYoutubeUrlDecoder youtubeUrlDecoder,
             ITelemetryService telemetryService,
-            IAppWebServer appWebServer,
             IMvxNavigationService navigationService,
-            IAppSettingsService appSettings,
-            IFileWatcherService fileWatcherService,
-            IFileService fileService)
+            IDesktopAppSettingsService appSettings,
+            IFileService fileService,
+            ICastItHubClientService castItHub,
+            IMapper mapper)
             : base(textProvider, messenger, logger)
         {
-            _playListsService = playListsService;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
-            _appWebServer = appWebServer;
             _navigationService = navigationService;
             _appSettings = appSettings;
-            _fileWatcherService = fileWatcherService;
             _fileService = fileService;
+            _castItHub = castItHub;
+            _mapper = mapper;
         }
 
         #region Methods
+        public static PlayListItemViewModel From(GetAllPlayListResponseDto playList, IMapper mapper)
+        {
+            var vm = Mvx.IoCProvider.Resolve<PlayListItemViewModel>();
+            vm.Loading = true;
+            mapper.Map(playList, vm);
+            vm.Loading = false;
+            return vm;
+        }
+
+        public async void LoadFileItems()
+        {
+            try
+            {
+                IsBusy = true;
+                Loading = true;
+                var playList = await _castItHub.GetPlayList(Id).ConfigureAwait(false);
+                var mapped = playList.Files.ConvertAll(f => FileItemViewModel.From(f, _mapper));
+                ClosePlayList();
+                Items.ReplaceWith(mapped);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, $"{nameof(LoadFileItems)}: Unknown error occurred");
+            }
+            finally
+            {
+                IsBusy = false;
+                Loading = false;
+            }
+        }
+
+        public void ClosePlayList()
+        {
+            SelectedItem = null;
+            SelectedItems.Clear();
+            Items.Clear();
+            Loading = false;
+        }
+
         public override void SetCommands()
         {
             base.SetCommands();
@@ -218,11 +264,11 @@ namespace CastIt.ViewModels.Items
 
             SelectAllCommand = new MvxCommand(SelectAll);
 
-            RenameCommand = new MvxAsyncCommand<string>(SavePlayList);
+            RenameCommand = new MvxAsyncCommand<string>(RenamePlayList);
 
             ScrollToSelectedFileCommand = new MvxCommand(ScrollToSelectedFile);
 
-            SortFilesCommand = new MvxCommand<SortModeType>(SortFiles);
+            SortFilesCommand = new MvxAsyncCommand<SortModeType>(SortFiles);
         }
 
         public override void RegisterMessages()
@@ -230,114 +276,53 @@ namespace CastIt.ViewModels.Items
             base.RegisterMessages();
             SubscriptionTokens.AddRange(new[]
             {
-                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(async _ =>
-                {
-                    await RaisePropertyChanged(() => ShowTotalDuration);
-                    await UpdatePlayedTime();
-                })
+                Messenger.Subscribe<ShowPlayListTotalDurationMessage>(async _ => await RaisePropertyChanged(() => ShowTotalDuration))
             });
         }
 
-        public async Task SetFilesInfo(CancellationToken token)
+        public async void MoveFile(int currentIndex, int newIndex, bool isInTheTop)
         {
-            IsBusy = true;
-            foreach (var item in Items)
+            bool move = currentIndex >= 0 && newIndex >= 0 && currentIndex != newIndex;
+            if (!move)
+                return;
+            if (newIndex > currentIndex && isInTheTop)
             {
-                if (token.IsCancellationRequested)
-                    break;
-                await item.SetFileInfo(token, false);
+                newIndex--;
+            }
+            else if (newIndex < currentIndex && !isInTheTop)
+            {
+                newIndex++;
             }
 
-            await UpdatePlayedTime();
-            IsBusy = false;
-        }
+            //if (moveToTheTop)
+            //{
+            //    itemIndex--;
+            //    if (itemIndex < 0)
+            //    {
+            //        itemIndex = 0;
+            //    }
+            //}
 
-        public async Task SetFileInfo(long fileId, CancellationToken token)
-        {
-            IsBusy = true;
-            var file = Items.FirstOrDefault(f => f.Id == fileId);
-            if (file != null)
-                await file.SetFileInfo(token);
-            await UpdatePlayedTime();
-            IsBusy = false;
-        }
-
-        public void CleanUp()
-        {
-            _cancellationToken.Cancel();
-
-            foreach (var file in Items)
-                file.CleanUp();
-        }
-
-        public void SetPositionIfChanged()
-        {
-            for (int i = 0; i < Items.Count; i++)
-            {
-                var item = Items[i];
-                int newValue = i + 1;
-                if (item.Position != newValue)
-                {
-                    item.Position = newValue;
-                    item.PositionChanged = true;
-                }
-            }
-        }
-
-        public async Task RemoveFile(long id)
-        {
-            var file = Items.FirstOrDefault(f => f.Id == id);
+            var file = Items.ElementAtOrDefault(currentIndex);
             if (file == null)
             {
-                Logger.LogWarning($"{nameof(RemoveFile)}: FileId = {id} not found");
                 return;
             }
 
-            await _playListsService.DeleteFile(id);
-            Items.Remove(file);
-            await AfterRemovingFiles();
+            Logger.LogInformation($"{nameof(MoveFile)}: Moving file located at index = {currentIndex} to = {newIndex}...");
+            await _castItHub.UpdateFilePosition(Id, file.Id, newIndex);
         }
 
-        public Task UpdatePlayedTime()
+        private async Task OnFolderAdded(string[] folders)
         {
-            var dirs = Items.Where(f => f.IsLocalFile)
-                .Select(f => Path.GetDirectoryName(f.Path))
-                .Distinct()
-                .ToList();
-            _fileWatcherService.UpdateWatchers(dirs, false);
-            return !_appSettings.ShowPlayListTotalDuration ? Task.CompletedTask : RaisePropertyChanged(() => TotalDuration);
-        }
-
-        public async Task RemoveFilesThatStartsWith(string path)
-        {
-            var toDelete = Items.Where(f => f.Path.StartsWith(path)).ToList();
-            if (!toDelete.Any())
-                return;
-            await _playListsService.DeleteFiles(toDelete.Select(f => f.Id).ToList());
-            Items.RemoveItems(toDelete);
-            await AfterRemovingFiles();
-        }
-
-        private async Task AfterRemovingFiles()
-        {
-            SelectedItems.Clear();
-            SetPositionIfChanged();
-            _appWebServer.OnFileDeleted?.Invoke(Id);
-            await UpdatePlayedTime();
-        }
-
-        private Task OnFolderAdded(string[] folders)
-        {
-            var files = new List<string>();
-            foreach (var folder in folders)
+            if (folders == null || folders.Length == 0)
             {
-                Logger.LogInformation($"{nameof(OnFolderAdded)}: Getting all the media files from folder = {folder}");
-                var filesInDir = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
-                    .Where(s => FileFormatConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
-                    .ToList();
-                files.AddRange(filesInDir);
+                Messenger.Publish(new SnackbarMessage(this, GetText("NoFilesToBeAdded")));
+                return;
             }
-            return OnFilesAdded(files.ToArray());
+
+            //TODO:Show a dialog to include or exclude subfolders
+            await _castItHub.AddFolders(Id, true, folders);
         }
 
         private async Task OnFilesAdded(string[] paths)
@@ -348,51 +333,13 @@ namespace CastIt.ViewModels.Items
                 return;
             }
 
-            if (paths.Any(p => string.IsNullOrEmpty(p) || p.Length > AppConstants.MaxCharsPerString))
+            if (paths.Any(p => string.IsNullOrEmpty(p) || p.Length > AppWebServerConstants.MaxCharsPerString))
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("InvalidFiles")));
                 return;
             }
 
-            try
-            {
-                IsBusy = true;
-                int startIndex = Items.Count + 1;
-                var files = paths.Where(path =>
-                {
-                    var ext = Path.GetExtension(path);
-                    return FileFormatConstants.AllowedFormats.Contains(ext.ToLower()) && Items.All(f => f.Path != path);
-                }).OrderBy(p => p, new WindowsExplorerComparer())
-                .Select((path, index) => new FileItem
-                {
-                    Position = startIndex + index,
-                    PlayListId = Id,
-                    Path = path,
-                    CreatedAt = DateTime.Now
-                }).ToList();
-
-                var vms = await _playListsService.AddFiles(files);
-
-                foreach (var vm in vms)
-                {
-                    //vm.Position = Items.Count + 1;
-                    await vm.SetFileInfo(_cancellationToken.Token);
-                    Items.Add(vm);
-                }
-
-                _appWebServer.OnFileAdded?.Invoke(Id);
-            }
-            catch (Exception e)
-            {
-                Messenger.Publish(new SnackbarMessage(this, GetText("SomethingWentWrong")));
-                _telemetryService.TrackError(e);
-                Logger.LogError(e, $"{nameof(OnFilesAdded)}: Couldn't parse the following paths = {string.Join(",", paths)}");
-            }
-            finally
-            {
-                IsBusy = false;
-                await UpdatePlayedTime();
-            }
+            await _castItHub.AddFiles(Id, paths);
         }
 
         private async Task OnUrlAdded(string url)
@@ -413,13 +360,11 @@ namespace CastIt.ViewModels.Items
 
             try
             {
-                IsBusy = true;
-
                 Logger.LogInformation($"{nameof(OnUrlAdded)}: Trying to parse url = {url}");
                 if (!_youtubeUrlDecoder.IsPlayList(url))
                 {
                     Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is not a playlist, parsing it...");
-                    await AddYoutubeUrl(url);
+                    await _castItHub.AddUrlFile(Id, url, true);
                     return;
                 }
 
@@ -433,7 +378,7 @@ namespace CastIt.ViewModels.Items
                         //Only video
                         case true:
                             Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
-                            await AddYoutubeUrl(url);
+                            await _castItHub.AddUrlFile(Id, url, true);
                             return;
                         //Cancel
                         case null:
@@ -442,25 +387,13 @@ namespace CastIt.ViewModels.Items
                     }
                 }
                 Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist...");
-                var links = await _youtubeUrlDecoder.ParseYouTubePlayList(url, _cancellationToken.Token);
-                foreach (var link in links)
-                {
-                    if (_cancellationToken.IsCancellationRequested)
-                        break;
-                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist url = {link}");
-                    await AddYoutubeUrl(link);
-                }
+                await _castItHub.AddUrlFile(Id, url, false);
             }
             catch (Exception e)
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
                 _telemetryService.TrackError(e);
                 Logger.LogError(e, $"{nameof(OnUrlAdded)}: Couldn't parse url = {url}");
-            }
-            finally
-            {
-                IsBusy = false;
-                await UpdatePlayedTime();
             }
         }
 
@@ -470,64 +403,33 @@ namespace CastIt.ViewModels.Items
                 return;
 
             var ids = SelectedItems.Select(f => f.Id).ToList();
-            await _playListsService.DeleteFiles(ids);
-            var itemsToDelete = Items.Where(f => ids.Contains(f.Id)).ToList();
-            Items.RemoveItems(itemsToDelete);
+            await _castItHub.RemoveFiles(Id, ids);
             SelectedItems.Clear();
-            SetPositionIfChanged();
-
-            _appWebServer.OnFileDeleted?.Invoke(Id);
-            await UpdatePlayedTime();
         }
 
         private async Task RemoveAllMissing()
         {
-            var items = Items.Where(f => !f.Exists).ToList();
-            if (items.Count == 0)
+            var fileIds = Items.Where(f => !f.Exists).Select(f => f.Id).ToList();
+            if (fileIds.Count == 0)
                 return;
 
-            await _playListsService.DeleteFiles(items.Select(f => f.Id).ToList());
-            Items.RemoveItems(items);
-            SetPositionIfChanged();
-
-            _appWebServer.OnFileDeleted?.Invoke(Id);
-            await UpdatePlayedTime();
+            await _castItHub.RemoveFiles(Id, fileIds);
         }
 
-        public void SelectAll()
+        private void SelectAll()
         {
             _selectAll.Raise();
         }
 
-        public async Task SavePlayList(string newName)
+        private async Task RenamePlayList(string newName)
         {
             if (string.IsNullOrWhiteSpace(newName))
             {
                 Messenger.Publish(new SnackbarMessage(this, GetText("InvalidPlayListName")));
                 return;
             }
-            newName = newName.Trim();
-            if (newName.Length > AppConstants.MaxCharsPerString)
-            {
-                newName = newName.Substring(0, AppConstants.MaxCharsPerString);
-            }
-            bool added = Id <= 0;
-            if (!added)
-            {
-                await _playListsService.UpdatePlayList(Id, newName, Position);
-            }
-            else
-            {
-                var playList = await _playListsService.AddNewPlayList(newName, Position);
-                Id = playList.Id;
-            }
-            Name = newName;
             ShowEditPopUp = false;
-
-            if (added)
-                _appWebServer.OnPlayListAdded?.Invoke(Id);
-            else
-                _appWebServer.OnPlayListChanged?.Invoke(Id);
+            await _castItHub.UpdatePlayList(Id, newName);
         }
 
         private void ScrollToSelectedFile()
@@ -540,75 +442,16 @@ namespace CastIt.ViewModels.Items
             _scrollToSelectedItem.Raise(SelectedItem);
         }
 
-        private async Task AddYoutubeUrl(string url)
+        private async Task SortFiles(SortModeType sortBy)
         {
-            var media = await _youtubeUrlDecoder.Parse(url, null, false);
-            if (media == null)
-            {
-                Logger.LogInformation($"{nameof(AddYoutubeUrl)}: Couldn't parse url = {url}");
-                Messenger.Publish(new SnackbarMessage(this, GetText("UrlCouldntBeParsed")));
-                return;
-            }
-            if (!string.IsNullOrEmpty(media.Title) && media.Title.Length > AppConstants.MaxCharsPerString)
-            {
-                media.Title = media.Title.Substring(0, AppConstants.MaxCharsPerString);
-            }
-            var vm = await _playListsService.AddFile(Id, url, Items.Count + 1, media.Title);
-            await vm.SetFileInfo(_cancellationToken.Token);
-            Items.Add(vm);
-            _appWebServer.OnFileAdded?.Invoke(Id);
-        }
-
-        private void SortFiles(SortModeType sortBy)
-        {
-            if ((sortBy == SortModeType.DurationAsc || sortBy == SortModeType.DurationDesc) &&
-                Items.Any(f => string.IsNullOrEmpty(f.Duration)))
-            {
-                Messenger.Publish(new SnackbarMessage(this, GetText("FileIsNotReadyYet")));
-                return;
-            }
-            var sortedItems = sortBy switch
-            {
-                SortModeType.AlphabeticalPathAsc => Items.OrderBy(f => f.Path, new WindowsExplorerComparer()).ToList(),
-                SortModeType.AlphabeticalPathDesc => Items.OrderByDescending(f => f.Path, new WindowsExplorerComparer()).ToList(),
-                SortModeType.DurationAsc => Items.OrderBy(f => f.TotalSeconds).ToList(),
-                SortModeType.DurationDesc => Items.OrderByDescending(f => f.TotalSeconds).ToList(),
-                SortModeType.AlphabeticalNameAsc => Items.OrderBy(f => f.Filename, new WindowsExplorerComparer()).ToList(),
-                SortModeType.AlphabeticalNameDesc => Items.OrderByDescending(f => f.Filename, new WindowsExplorerComparer()).ToList(),
-                _ => throw new ArgumentOutOfRangeException(nameof(sortBy), sortBy, "Invalid sort mode"),
-            };
-
             SelectedItems.Clear();
             SelectedItem = null;
-
-            foreach (var item in sortedItems)
-            {
-                int currentIndex = Items.IndexOf(item);
-                int newIndex = sortedItems.IndexOf(item);
-                Items.Move(currentIndex, newIndex);
-            }
-            SetPositionIfChanged();
+            await _castItHub.SortFiles(Id, sortBy);
         }
 
-        public void ExchangeLastFilePosition(long toFileId)
+        private async void UpdatePlayListOptions()
         {
-            var newFile = Items.LastOrDefault();
-            if (newFile == null)
-                return;
-            ExchangeFilePosition(newFile.Id, toFileId);
-        }
-
-        public void ExchangeFilePosition(long fromFileId, long toFileId)
-        {
-            var fromFile = Items.FirstOrDefault(f => f.Id == fromFileId);
-            var toFile = Items.FirstOrDefault(f => f.Id == toFileId);
-            if (fromFile == null || toFile == null)
-            {
-                return;
-            }
-
-            Items.Move(Items.IndexOf(fromFile), Items.IndexOf(toFile));
-            SetPositionIfChanged();
+            await _castItHub.SetPlayListOptions(Id, Loop, Shuffle);
         }
         #endregion
     }

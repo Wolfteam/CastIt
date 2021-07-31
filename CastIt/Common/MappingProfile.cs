@@ -21,6 +21,14 @@ namespace CastIt.Common
             CreateMap<PlayList, GetAllPlayListResponseDto>();
             CreateMap<PlayList, PlayListItemResponseDto>();
             CreateMap<FileItemOptionsViewModel, FileItemOptionsResponseDto>();
+
+            CreateMap<GetAllPlayListResponseDto, PlayListItemViewModel>()
+                .ConstructUsingServiceLocator();
+
+            CreateMap<FileItemResponseDto, FileItemViewModel>()
+                .ConstructUsingServiceLocator();
+
+            CreateMap<FileItemOptionsResponseDto, FileItemOptionsViewModel>();
         }
     }
 }

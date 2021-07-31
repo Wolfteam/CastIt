@@ -47,7 +47,7 @@
             Grid.Column="1"
             VerticalAlignment="Top"
             Foreground="{DynamicResource FontColorBrush}"
-            Text="{Binding IpAdress}"
+            Text="{Binding IpAddress}"
             TextTrimming="CharacterEllipsis"
             TextWrapping="Wrap" />
         <Button
@@ -59,7 +59,7 @@
             CommandParameter="{Binding}"
             Style="{StaticResource MainButtonStyle}"
             ToolTip="{Binding [Connect]}"
-            Visibility="{Binding IsSelected, Converter={StaticResource InverseBoolToVisConverter}}">
+            Visibility="{Binding IsConnected, Converter={StaticResource InverseBoolToVisConverter}}">
             <materialDesign:PackIcon Kind="CastConnected" />
         </Button>
         <Button
@@ -71,7 +71,7 @@
             CommandParameter="{Binding}"
             Style="{StaticResource MainButtonStyle}"
             ToolTip="{Binding [Disconnect]}"
-            Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+            Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:PackIcon Kind="CastOff" />
         </Button>
     </Grid>

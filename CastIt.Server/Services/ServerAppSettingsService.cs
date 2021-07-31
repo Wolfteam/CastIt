@@ -1,20 +1,19 @@
-﻿using CastIt.Application.Interfaces;
+﻿using CastIt.Application.Common.Utils;
+using CastIt.Application.Interfaces;
 using CastIt.Application.Settings;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Enums;
 using CastIt.Infrastructure.Models;
 using CastIt.Server.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Services
 {
-    //TODO: SHOULD I SPLIT THE SETTINGS CLASS?
     internal class ServerAppSettingsService : BaseAppSettingsService<ServerAppSettings>, IServerAppSettingsService
     {
         protected override string BasePath
-            => Directory.GetCurrentDirectory();
+            => AppFileUtils.GetBaseAppFolder();
 
         public override string AppSettingsFilename
             => "ServerAppSettings.json";
@@ -139,8 +138,8 @@ namespace CastIt.Server.Services
                 CurrentSubtitleFontStyle = TextTrackFontStyleType.Bold,
                 CurrentSubtitleFontScale = SubtitleFontScaleType.HundredAndFifty,
                 LoadFirstSubtitleFoundAutomatically = true,
-                ForceAudioTranscode = true,
-                ForceVideoTranscode = true,
+                ForceAudioTranscode = false,
+                ForceVideoTranscode = false,
                 StartFilesFromTheStart = true,
                 SubtitleDelayInSeconds = 0,
                 CurrentSubtitleBgColor = SubtitleBgColorType.Transparent,

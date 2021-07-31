@@ -30,7 +30,7 @@ namespace CastIt.Views.UserControls
         {
             InitializeComponent();
 
-            ViewModel = Mvx.IoCProvider.IoCConstruct<SettingsViewModel>();
+            ViewModel = Mvx.IoCProvider.Resolve<SettingsViewModel>();
 
             var set = this.CreateBindingSet<Settings, SettingsViewModel>();
             set.Bind(this).For(v => v.ChangeAccentColorRequest).To(vm => vm.ChangeSelectedAccentColor).OneWay();

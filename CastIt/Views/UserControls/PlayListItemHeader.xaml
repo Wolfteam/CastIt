@@ -51,7 +51,7 @@
             Margin="0,0,10,0"
             VerticalAlignment="Center"
             Background="{DynamicResource PrimaryHueDarkBrush}"
-            Content="{Binding Items.Count}"
+            Content="{Binding NumberOfFiles}"
             FontSize="10"
             Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" />
         <TextBlock

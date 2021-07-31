@@ -212,30 +212,8 @@ namespace CastIt.Views.UserControls
             // (this will be automatically reflected to lstView.ItemsSource)
             e.Effects = DragDropEffects.Move;
             int newIndex = Vm.Items.IndexOf(item);
-            System.Diagnostics.Debug.WriteLine($"Moving index = {_selectedItemIndex} to = {newIndex}");
-            if (_selectedItemIndex >= 0 &&
-                newIndex >= 0 &&
-                _selectedItemIndex != newIndex)
-            {
-                if (newIndex > _selectedItemIndex && isInTheTop)
-                {
-                    newIndex--;
-                }
-                else if (newIndex < _selectedItemIndex && !isInTheTop)
-                {
-                    newIndex++;
-                }
-                //if (moveToTheTop)
-                //{
-                //    itemIndex--;
-                //    if (itemIndex < 0)
-                //    {
-                //        itemIndex = 0;
-                //    }
-                //}
-                Vm.Items.Move(_selectedItemIndex, newIndex);
-                Vm.SetPositionIfChanged();
-            }
+
+            Vm.MoveFile(_selectedItemIndex, newIndex, isInTheTop);
             _selectedItemIndex = -1;
         }
 

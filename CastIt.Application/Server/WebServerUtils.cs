@@ -92,7 +92,7 @@ namespace CastIt.Application.Server
         public static string GetServerPhysicalPath()
         {
             var dir = Directory.GetCurrentDirectory();
-            var path = Path.Combine(dir, "Server", ServerProcessName);
+            var path = Path.Combine(dir, "Server", $"{ServerProcessName}.exe");
 #if DEBUG
             path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
 #endif

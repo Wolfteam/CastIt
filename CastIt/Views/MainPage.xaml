@@ -86,7 +86,57 @@
             x:Name="ContentFrame"
             Grid.Row="3"
             Grid.Column="0"
-            Grid.ColumnSpan="2" />
+            Grid.ColumnSpan="2"
+            Visibility="{Binding ServerIsRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ContentControl.Style>
+                <Style TargetType="{x:Type ContentControl}">
+                    <Setter Property="Visibility" Value="Hidden" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ServerIsRunning}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
+
+        <Grid
+            x:Name="ServerNotRunningGrid"
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="2">
+            <Grid.Style>
+                <Style TargetType="{x:Type Grid}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding ServerIsRunning}" Value="False" />
+                                <Condition Binding="{Binding IsBusy}" Value="False" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel VerticalAlignment="Center" Orientation="Vertical">
+                <TextBlock
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource FontColorBrush}"
+                    Text="{Binding [ServerIsNotRunning]}"
+                    TextAlignment="Center" />
+                <Button
+                    HorizontalAlignment="Center"
+                    Command="{Binding ShowChangeServerUrlDialogCommand}"
+                    Content="{Binding [Connect]}"
+                    Foreground="{StaticResource FontColorOnDarkBackgroundBrush}"
+                    Style="{StaticResource MaterialDesignRaisedDarkButton}" />
+            </StackPanel>
+        </Grid>
 
         <materialDesign:Snackbar
             Grid.Row="4"
