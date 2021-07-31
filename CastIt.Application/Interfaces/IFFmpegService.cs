@@ -9,6 +9,12 @@ namespace CastIt.Application.Interfaces
 {
     public interface IFFmpegService
     {
+        CancellationTokenSource TokenSource { get; }
+
+        Task Init(string ffmpegExePath, string ffprobeExePath);
+
+        void RefreshFfmpegPath(string ffmpegExePath, string ffprobeExePath);
+
         string GetThumbnail(string mrl);
 
         Task GenerateThumbnails(string mrl, bool hwAccelIsEnabled);
@@ -19,13 +25,7 @@ namespace CastIt.Application.Interfaces
 
         Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options);
 
-        Task TranscodeVideo(Stream outputStream, TranscodeVideoFile options, CancellationToken token);
-
         Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options);
-
-        Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token);
-
-        string GetOutputTranscodeMimeType(string filepath);
 
         Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token);
 

@@ -20,14 +20,7 @@ namespace CastIt.Infrastructure.Models
             = new List<ServerFileItem>();
 
         public string PlayedTime
-        {
-            get
-            {
-                var playedSeconds = Files.Sum(i => i.PlayedSeconds);
-                var formatted = FileFormatConstants.FormatDuration(playedSeconds);
-                return $"{formatted}";
-            }
-        }
+            => FileFormatConstants.FormatDuration(Files.Sum(i => i.PlayedSeconds));
 
         public string TotalDuration
         {

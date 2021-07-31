@@ -12,17 +12,17 @@ namespace CastIt.Server.Services
         private const string NoImage = "NoImg.png";
 
         private readonly IFileService _fileService;
-        private readonly IBaseWebServer _baseWebServer;
+        private readonly IServerService _serverService;
         private readonly string _imagesBasePath;
         private readonly string _noImgFoundPath;
 
         public ImageProviderService(
             IFileService fileService,
-            IBaseWebServer baseWebServer,
+            IServerService serverService,
             IWebHostEnvironment environment)
         {
             _fileService = fileService;
-            _baseWebServer = baseWebServer;
+            _serverService = serverService;
             _imagesBasePath = $"{environment.WebRootPath}/Images";
             _noImgFoundPath = $"{_imagesBasePath}/{NoImage}";
         }
@@ -77,7 +77,7 @@ namespace CastIt.Server.Services
 
             return _fileService.IsUrlFile(path) && !isLocal
                 ? path
-                : _baseWebServer.GetChromeCastPreviewUrl(path);
+                : _serverService.GetChromeCastPreviewUrl(path);
         }
     }
 }

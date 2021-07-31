@@ -139,7 +139,6 @@ namespace CastIt.Views.UserControls
             if (sender != e.Source)
                 return;
 
-            //TODO: DOUBLE CLICK IN A FILE CAN TRIGGER THE DROP EVENT...
             //MouseDoubleClick event on the card item triggers the drop event, this is a workaround for that
             if (!_loaded)
                 return;

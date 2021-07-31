@@ -1,6 +1,6 @@
 ﻿namespace CastIt.GoogleCast.Enums
 {
-    public enum PlayerState
+    internal enum PlayerState
     {
         Idle,
         Buffering,

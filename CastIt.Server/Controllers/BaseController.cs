@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 
 namespace CastIt.Server.Controllers
 {
-    //TODO: SWAGGER DOC XD ?
     [ApiController]
     [Route("[controller]")]
     public abstract class BaseController<T> : ControllerBase

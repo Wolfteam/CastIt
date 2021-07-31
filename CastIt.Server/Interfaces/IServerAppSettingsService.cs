@@ -1,6 +1,6 @@
 ﻿using CastIt.Application.Interfaces;
 using CastIt.Domain.Enums;
-using CastIt.GoogleCast.Enums;
+using CastIt.GoogleCast.Shared.Enums;
 using CastIt.Infrastructure.Models;
 
 namespace CastIt.Server.Interfaces
@@ -21,5 +21,7 @@ namespace CastIt.Server.Interfaces
         TextTrackFontGenericFamilyType CurrentSubtitleFontFamily { get; set; }
         double SubtitleDelayInSeconds { get; set; }
         bool LoadFirstSubtitleFoundAutomatically { get; set; }
+        string FFmpegExePath { get; set; }
+        string FFprobeExePath { get; set; }
     }
 }

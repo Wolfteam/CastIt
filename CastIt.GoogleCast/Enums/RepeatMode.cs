@@ -1,6 +1,6 @@
 ﻿namespace CastIt.GoogleCast.Enums
 {
-    public enum RepeatMode
+    internal enum RepeatMode
     {
         RepeatOff,
         RepeatAll,

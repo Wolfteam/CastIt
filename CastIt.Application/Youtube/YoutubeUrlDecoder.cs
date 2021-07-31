@@ -1,5 +1,6 @@
 ﻿using CastIt.Application.Common.Extensions;
 using CastIt.Application.Interfaces;
+using CastIt.Domain.Exceptions;
 using CastIt.Domain.Models.Youtube;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
@@ -75,7 +76,10 @@ namespace CastIt.Application.Youtube
             using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"Couldn't retrieve youtube video. StatusCode = {response.StatusCode}");
+            {
+                _logger.LogWarning($"Couldn't retrieve youtube video. StatusCode = {response.StatusCode}");
+                throw new UrlCouldNotBeParsedException(url);
+            }
 
             var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             body = body.Replace("\\/", "/");
@@ -95,7 +99,7 @@ namespace CastIt.Application.Youtube
                 if (!qualities.Any())
                 {
                     _logger.LogWarning($"{nameof(Parse)}: Couldn't retrieve any qualities for video = {url} in body = {body}");
-                    throw new InvalidOperationException($"Couldn't retrieve any qualities for video = {url}");
+                    throw new UrlCouldNotBeParsedException(url);
                 }
                 media.Qualities.AddRange(qualities.Select(q => q.Key));
                 int closest = qualities
@@ -116,7 +120,7 @@ namespace CastIt.Application.Youtube
             if (string.IsNullOrEmpty(media.Url))
             {
                 _logger.LogInformation($"{nameof(Parse)}: Url couldn't be parsed");
-                throw new Exception($"Url couldn't be parsed for url = {url}");
+                throw new UrlCouldNotBeParsedException(url);
             }
 
             _logger.LogInformation($"{nameof(Parse)}: Url was completely parsed. Media = {JsonConvert.SerializeObject(media)}");

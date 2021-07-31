@@ -20,49 +20,30 @@ namespace CastIt.Server
     {
         public static void Main(string[] args)
         {
-            //TODO: READ FROM THE SETTINGS
             if (args == null || args.Length == 0)
                 args = new List<string>().ToArray();
 
-            string ffmpegPath = null;
-            string ffprobePath = null;
             int startingPort = -1;
 
             var argsList = args.ToList();
             int portIndex = argsList.IndexOf(AppWebServerConstants.PortArgument);
-            int ffmpegBasePathIndex = argsList.IndexOf(AppWebServerConstants.FFmpegPathArgument);
-            int ffprobeBasePathIndex = argsList.IndexOf(AppWebServerConstants.FFprobePathArgument);
 
             var possiblePort = argsList.ElementAtOrDefault(portIndex + 1);
-            var ffmpegBasePath = argsList.ElementAtOrDefault(ffmpegBasePathIndex + 1);
-            var ffprobeBasePath = argsList.ElementAtOrDefault(ffprobeBasePathIndex + 1);
-
             if (portIndex >= 0 && int.TryParse(possiblePort, out int port))
             {
                 startingPort = port;
             }
 
-            if (ffmpegBasePathIndex >= 0 && !string.IsNullOrWhiteSpace(ffmpegBasePath) && File.Exists(ffmpegBasePath))
-            {
-                ffmpegPath = ffmpegBasePath;
-            }
-
-            if (ffprobeBasePathIndex >= 0 && !string.IsNullOrWhiteSpace(ffprobeBasePath) && File.Exists(ffprobeBasePath))
-            {
-                ffprobePath = ffprobeBasePath;
-            }
-
             var logs = new List<FileToLog>();
             logs.AddServerLogs().AddApplicationLogs();
 
-            //TODO: LOG THEM ALL
             logs.SetupLogging(AppFileUtils.GetServerLogsPath());
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-            CreateHostBuilder(args, ffmpegPath, ffprobePath, startingPort).Build().Run();
+            CreateHostBuilder(args, startingPort).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args, string ffmpegPath, string ffprobePath, int port) =>
+        public static IHostBuilder CreateHostBuilder(string[] args, int port) =>
             Host.CreateDefaultBuilder(args)
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
@@ -72,7 +53,7 @@ namespace CastIt.Server
                         webBuilder.UseKestrel(options => options.ListenAnyIP(port));
                     }
 
-                    webBuilder.UseStartup(factory => new Startup(factory.Configuration, ffmpegPath, ffprobePath));
+                    webBuilder.UseStartup(factory => new Startup(factory.Configuration));
                 })
                 //This has to happen AFTER ConfigureWebHostDefaults in order to get the server ip address
                 //https://stackoverflow.com/questions/58457143/net-core-3-0-ihostedservice-access-web-server-url-scheme-host-port-etc

@@ -7,15 +7,16 @@
     <Win32Resource />
     <Platforms>x64;x86</Platforms>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <NoWarn>$(NoWarn);NU1605</NoWarn>
-    <FileVersion>1.0.4.0</FileVersion>
-    <Version>1.0.4</Version>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.0</Version>
     <PackageProjectUrl>https://github.com/Wolfteam/CastIt</PackageProjectUrl>
     <Description>A casting app and remote controller made for my personal use.</Description>
     <RepositoryUrl>https://github.com/Wolfteam/CastIt</RepositoryUrl>
     <Authors>Efrain Bastidas</Authors>
     <Company>MiraiSoft</Company>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>

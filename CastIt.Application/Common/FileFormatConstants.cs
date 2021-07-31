@@ -58,5 +58,14 @@ namespace CastIt.Application.Common
             var time = TimeSpan.FromSeconds(seconds);
             return time.ToString(time.Hours > 0 ? FullElapsedTimeFormat : ShortElapsedTimeFormat);
         }
+
+        public static string FormatDuration(double playedSeconds, double totalSeconds, bool isUrlFile)
+        {
+            var elapsed = FormatDuration(playedSeconds);
+            var total = FormatDuration(totalSeconds);
+            if (isUrlFile && totalSeconds <= 0)
+                return $"{elapsed}";
+            return $"{elapsed} / {total}";
+        }
     }
 }

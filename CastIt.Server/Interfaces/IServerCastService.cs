@@ -1,9 +1,7 @@
-﻿using CastIt.Application.Common;
-using CastIt.Domain.Dtos.Responses;
+﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Infrastructure.Models;
-using CastIt.Server.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -15,16 +13,10 @@ namespace CastIt.Server.Interfaces
         ServerPlayList CurrentPlayList { get; }
         ServerFileItem CurrentPlayedFile { get; }
 
-        OnFilesAddedHandler OnFilesAdded { get; set; }
-        OnFileLoadingOrLoadedHandler OnFileLoading { get; set; }
-        OnFileLoadingOrLoadedHandler OnFileLoaded { get; set; }
-        OnStoppedPlayback OnStoppedPlayback { get; set; }
+        Task PlayFile(long playListId, long id, bool force, bool fileOptionsChanged);
 
-        public Task PlayFile(long playListId, long id, bool force, bool fileOptionsChanged);
+        Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
 
-        public Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
-
-        //NPI SI ESTOS SE QUEDARAN ACA
         Task PlayFile(ServerFileItem file, bool force = false);
         Task PlayFile(ServerFileItem file, bool force, bool fileOptionsChanged);
         FileItemResponseDto GetCurrentPlayedFile();
@@ -44,7 +36,6 @@ namespace CastIt.Server.Interfaces
         Task SetFileInfoForPendingFiles();
 
         Task UpdateFileItem(ServerFileItem file, bool force = true);
-        FileLoadedResponseDto GetCurrentFileLoaded();
         void SetPlayListOptions(long id, bool loop, bool shuffle);
         void DisableLoopForAllFiles(long exceptFileId = -1);
         PlayListItemResponseDto GetPlayList(long playListId);

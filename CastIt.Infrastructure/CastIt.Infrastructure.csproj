@@ -5,13 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CastIt.Application\CastIt.Application.csproj" />
-    <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
+    <Compile Remove="Interfaces\**" />
+    <Compile Remove="Services\**" />
+    <EmbeddedResource Remove="Interfaces\**" />
+    <EmbeddedResource Remove="Services\**" />
+    <None Remove="Interfaces\**" />
+    <None Remove="Services\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="Services\" />
+    <ProjectReference Include="..\CastIt.Application\CastIt.Application.csproj" />
+    <ProjectReference Include="..\CastIt.GoogleCast.Shared\CastIt.GoogleCast.Shared.csproj" />
   </ItemGroup>
 
 </Project>
