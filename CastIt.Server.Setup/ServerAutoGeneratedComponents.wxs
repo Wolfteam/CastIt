@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="ServerInstallFolder">
+            <Component Id="cmp5526851F2695E548F6ABC248BA46E033" Guid="{77DE90BE-F0AB-49DB-B85F-8FFF98AEFE1E}">
+                <File Id="fil1A943FF0A6351867F7A96E35858FB383" KeyPath="yes" Source="$(var.ServerBasePath)\appsettings.Development.json" />
+            </Component>
+            <Component Id="cmpD26247E055C8B02B41E868797D0BE000" Guid="{3DB4CBFA-84EB-48AD-9BB4-D8E5030D75AD}">
+                <File Id="fil2EB6F75FA67A12804B3368D153D64890" KeyPath="yes" Source="$(var.ServerBasePath)\appsettings.json" />
+            </Component>
+            <Component Id="cmpDFBB96C1B004F573231DB9A1626649AF" Guid="{AC18D5B1-36CE-4CA4-B7F2-6CB70D097FA1}">
+                <File Id="filA246B21A7BECA397A70853046AC23627" KeyPath="yes" Source="$(var.ServerBasePath)\aspnetcorev2_inprocess.dll" />
+            </Component>
+            <Component Id="cmp5B23A65ACD38C3759241E0D201E443C5" Guid="{ACBADDAD-119F-4F08-B7E9-0FB2FF1F53B8}">
+                <File Id="fil13BF49D20BC26A17807ACF0C5A487460" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.Application.pdb" />
+            </Component>
+            <Component Id="cmp311EDEB8EF5FF3451A698425B48C3250" Guid="{16812453-47CD-428C-9D48-D135FC073CB6}">
+                <File Id="filE01F5D0A9A7ADED8F89519013A36FBC7" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.Domain.pdb" />
+            </Component>
+            <Component Id="cmp33FDFC41BE80D6FFD9FE0DA5FE230F23" Guid="{2F3DD62B-5393-4A8A-B13D-7F5E0F4C4319}">
+                <File Id="filD5B57EF18D3FD1A1A30078803699D337" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.GoogleCast.pdb" />
+            </Component>
+            <Component Id="cmp03F5AD6731B69B47445194E72078098F" Guid="{1D91D580-F29C-4B8E-B019-F5B20A7656F8}">
+                <File Id="fil03B96C48473DB8F6E720BF4835647459" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.GoogleCast.Shared.pdb" />
+            </Component>
+            <Component Id="cmp5B64D80C9B240D854B798617B47C5129" Guid="{F61255E1-A507-4A04-9B9C-294080316E97}">
+                <File Id="fil58A93A5A7E0CB7AA7BBBA388CE1A0793" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.Infrastructure.pdb" />
+            </Component>
+            <Component Id="cmp105E5EC8F99773F03489704C1C30607B" Guid="{D7F87650-5C15-451C-A7DF-1E778DC596B7}">
+                <File Id="fil4D3B43593F187A159ED5BE9CAF2D8675" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.Server.pdb" />
+            </Component>
+            <Component Id="cmp093C86579976B64EAE7A3968E72934DD" Guid="{22F99BA4-F755-4224-81AE-E1E19C397A04}">
+                <File Id="fil2BFB19A71921550711724F5863929F76" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.Shared.pdb" />
+            </Component>
+            <Component Id="cmpD17C28360BB62C90F2EC7346FF3AB6DA" Guid="{AF45F067-05BD-49B0-957C-D9F3A95B8AF9}">
+                <File Id="fil90AFDCE3A02AD3DB9046F7C819088246" KeyPath="yes" Source="$(var.ServerBasePath)\CastIt.xml" />
+            </Component>
+            <Component Id="cmp763604606CDAE1EEFA9436094431AA92" Guid="{EFDE306F-A59D-4B34-B4D3-6DA7DFEC8524}">
+                <File Id="fil26A20A0EB7D9E030515F2DCE03BF9ED9" KeyPath="yes" Source="$(var.ServerBasePath)\clrcompression.dll" />
+            </Component>
+            <Component Id="cmpA76F6E08D90F8549005AE362CCC1ACEF" Guid="{F588AF0D-1DF9-4C9C-B9BF-0A24757E5EF0}">
+                <File Id="fil7988DA0BF72E950E5F1DE294EE7081B3" KeyPath="yes" Source="$(var.ServerBasePath)\clrjit.dll" />
+            </Component>
+            <Component Id="cmpFF872F960A56FB6BDD26781C3FD2BDD1" Guid="{B1D8EA55-7306-49EC-B1EB-42260032C799}">
+                <File Id="filAD2D833F4E06FC596701815F8AA2A817" KeyPath="yes" Source="$(var.ServerBasePath)\coreclr.dll" />
+            </Component>
+            <Component Id="cmp173215F618A89DCFA884E70F764676B2" Guid="{F331B2DE-43E9-43C0-9015-12221F8F2717}">
+                <File Id="fil6D5D49F3C9FA3F3334D7D6297740FF8C" KeyPath="yes" Source="$(var.ServerBasePath)\e_sqlite3.dll" />
+            </Component>
+            <Component Id="cmpE34A2AC1F3C9AF9029102E9594D0F215" Guid="{3B425535-399A-471E-AAD1-A4FF443B43B8}">
+                <File Id="filDCB46B02547E8ED8C292D289A89C979B" KeyPath="yes" Source="$(var.ServerBasePath)\Microsoft.Data.SqlClient.SNI.dll" />
+            </Component>
+            <Component Id="cmp304C6557E15AE8601F02FBB2806165A5" Guid="{DCFD1AD4-B1B4-4E33-B628-51EE930DDBB6}">
+                <File Id="filDCD9A19E1E829465B0843E105D4E05AD" KeyPath="yes" Source="$(var.ServerBasePath)\mscordaccore.dll" />
+            </Component>
+            <Component Id="cmp424563C658BED8DDDDB6253295BA092C" Guid="{A576E846-3073-4E27-B46C-41B9CC59EB0B}">
+                <File Id="fil1400ADB1F2810DA6178940B5F1E2F40D" KeyPath="yes" Source="$(var.ServerBasePath)\SQLite.Interop.dll" />
+            </Component>
+            <Component Id="cmp4C5201669151D2D2B01185D78672D4FD" Guid="{2475546F-6ACC-4930-8425-3E9C48ACF087}">
+                <File Id="filE26E05C8E4AC8EAAC638AD80A6E60998" KeyPath="yes" Source="$(var.ServerBasePath)\System.Reactive.xml" />
+            </Component>
+            <Component Id="cmp7CAE7824B98F15208B136E957C7ABCB7" Guid="{75E2BA81-0F7C-4976-8385-3031D313F48A}">
+                <File Id="filC02B318366D72AC8BF2E8AD2312EE223" KeyPath="yes" Source="$(var.ServerBasePath)\web.config" />
+            </Component>
+            <Directory Id="dirE3866F8C0DF2ED542B3D69102391F080" Name="TrayIcon">
+                <Component Id="cmp3CDF7C9BECDE6B32C26B87F0003EE6B7" Guid="{E93979C4-97FD-444F-A495-ED16865AF269}">
+                    <File Id="fil5EF743E00854AC5C7C2BDB7A1D702E0B" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\CastIt.Application.pdb" />
+                </Component>
+                <Component Id="cmpE682183FACD5E4B6B79D2E5919118EB5" Guid="{E06FAABC-F425-4A71-B7A6-3F46EA17775A}">
+                    <File Id="fil286BE724988F8896888FB2C3E03FFE45" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\CastIt.Domain.pdb" />
+                </Component>
+                <Component Id="cmpF30C20ED4F8B2408CD235E61AC931984" Guid="{9D86C5BC-E043-42DC-A3F3-A6BEAF0EF45E}">
+                    <File Id="fil99C3E0FC2AF0DF520C7E404417BEDD21" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\CastIt.Server.Windows.TrayIcon.exe" />
+                </Component>
+                <Component Id="cmp97B34903F2CD2EACF7904BE4A118B4AC" Guid="{E8C12EAC-E981-43B3-A195-B2156D8F6BE9}">
+                    <File Id="filB1DF87C781674CDC40835A73D3A9B317" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\CastIt.Server.Windows.TrayIcon.pdb" />
+                </Component>
+                <Component Id="cmpDA13E13AEB5DC53C0F9ADA19865EF159" Guid="{27C5DC64-532C-4A72-AD22-5653E6D12220}">
+                    <File Id="filC4167DD885539F687E0076BA7D3959A0" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\clrcompression.dll" />
+                </Component>
+                <Component Id="cmp06192982258A6BCBBF4C968E9A946A5D" Guid="{33BB854E-877B-47CE-89C1-98927950EA10}">
+                    <File Id="fil82CB51D835249BDD8317E56030E26E94" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\clrjit.dll" />
+                </Component>
+                <Component Id="cmp213AEA8CA9C82E16599F0DAD9295DF3E" Guid="{283C0BFB-E217-4467-B883-6D65A57C563D}">
+                    <File Id="fil55A050FCE0F0C9440E33000292E88107" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\coreclr.dll" />
+                </Component>
+                <Component Id="cmp4B8A3B81C8F9FCEB929A4AE1B44989B1" Guid="{72781030-D929-45A9-8D31-422C72FD45B3}">
+                    <File Id="fil63CE250E0FFECB637B30682F98FF9326" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\D3DCompiler_47_cor3.dll" />
+                </Component>
+                <Component Id="cmp5CEDC0785222E19FE794FDF87BB347F8" Guid="{2ECE65F3-4A48-4D4E-903D-56E3E0A0D408}">
+                    <File Id="fil5C002C76EA868AF8ACC384AA90582BF7" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\e_sqlite3.dll" />
+                </Component>
+                <Component Id="cmpCA6E2BA1C7B08F93DDE75EC8E9F75504" Guid="{1870F342-DFCC-46B1-91CF-E50943783253}">
+                    <File Id="fil4770272E4DE6771BBF97FBC43C8E79BC" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\mscordaccore.dll" />
+                </Component>
+                <Component Id="cmp6D72893F433BB42B5EF5D2E47AD1D8B4" Guid="{72B3027D-CDE1-45DF-B01E-A33E9F814497}">
+                    <File Id="filC9E3E5793E2B3923E75E8C5A050D162A" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\PenImc_cor3.dll" />
+                </Component>
+                <Component Id="cmpBE465122F321CF0378FE462C4264D885" Guid="{5DDA2581-3E03-4265-9774-E6963F5929A4}">
+                    <File Id="filB6282C82ABE26D23F70EC090B530C5AE" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\PresentationNative_cor3.dll" />
+                </Component>
+                <Component Id="cmp8199BC2052DEB2AC70959292D2DBE257" Guid="{B0A1E4F7-23B1-4A37-88E0-7F0815FAF7EF}">
+                    <File Id="fil7E5DA90BF128663F296CB3385E226388" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\vcruntime140_cor3.dll" />
+                </Component>
+                <Component Id="cmp823A36E3C00B0E40E301C6D3428C1BD9" Guid="{F4FB5506-5E69-4CE8-B10F-6EDD682AC7FD}">
+                    <File Id="fil4CA059E0FF0514CEB4A67929FB070EA3" KeyPath="yes" Source="$(var.ServerBasePath)\TrayIcon\wpfgfx_cor3.dll" />
+                </Component>
+            </Directory>
+            <Directory Id="dir04F97EE04AE3A2707DD5BA1234DEBB1A" Name="wwwroot">
+                <Directory Id="dir368AD09F0A8758407A095549EF90F4E1" Name="Images">
+                    <Component Id="cmpD4FCDCD3B828B8F6A5A997A48CB04885" Guid="{F6178BE2-D505-4359-926E-B07FFD5F9794}">
+                        <File Id="fil35ECFC2CFE3691BB7572E1E417CA4B90" KeyPath="yes" Source="$(var.ServerBasePath)\wwwroot\Images\NoImg.png" />
+                    </Component>
+                </Directory>
+            </Directory>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="ServerAutoGeneratedComponentsGroup">
+            <ComponentRef Id="cmp5526851F2695E548F6ABC248BA46E033" />
+            <ComponentRef Id="cmpD26247E055C8B02B41E868797D0BE000" />
+            <ComponentRef Id="cmpDFBB96C1B004F573231DB9A1626649AF" />
+            <ComponentRef Id="cmp5B23A65ACD38C3759241E0D201E443C5" />
+            <ComponentRef Id="cmp311EDEB8EF5FF3451A698425B48C3250" />
+            <ComponentRef Id="cmp33FDFC41BE80D6FFD9FE0DA5FE230F23" />
+            <ComponentRef Id="cmp03F5AD6731B69B47445194E72078098F" />
+            <ComponentRef Id="cmp5B64D80C9B240D854B798617B47C5129" />
+            <ComponentRef Id="cmp105E5EC8F99773F03489704C1C30607B" />
+            <ComponentRef Id="cmp093C86579976B64EAE7A3968E72934DD" />
+            <ComponentRef Id="cmpD17C28360BB62C90F2EC7346FF3AB6DA" />
+            <ComponentRef Id="cmp763604606CDAE1EEFA9436094431AA92" />
+            <ComponentRef Id="cmpA76F6E08D90F8549005AE362CCC1ACEF" />
+            <ComponentRef Id="cmpFF872F960A56FB6BDD26781C3FD2BDD1" />
+            <ComponentRef Id="cmp173215F618A89DCFA884E70F764676B2" />
+            <ComponentRef Id="cmpE34A2AC1F3C9AF9029102E9594D0F215" />
+            <ComponentRef Id="cmp304C6557E15AE8601F02FBB2806165A5" />
+            <ComponentRef Id="cmp424563C658BED8DDDDB6253295BA092C" />
+            <ComponentRef Id="cmp4C5201669151D2D2B01185D78672D4FD" />
+            <ComponentRef Id="cmp7CAE7824B98F15208B136E957C7ABCB7" />
+            <ComponentRef Id="cmp3CDF7C9BECDE6B32C26B87F0003EE6B7" />
+            <ComponentRef Id="cmpE682183FACD5E4B6B79D2E5919118EB5" />
+            <ComponentRef Id="cmpF30C20ED4F8B2408CD235E61AC931984" />
+            <ComponentRef Id="cmp97B34903F2CD2EACF7904BE4A118B4AC" />
+            <ComponentRef Id="cmpDA13E13AEB5DC53C0F9ADA19865EF159" />
+            <ComponentRef Id="cmp06192982258A6BCBBF4C968E9A946A5D" />
+            <ComponentRef Id="cmp213AEA8CA9C82E16599F0DAD9295DF3E" />
+            <ComponentRef Id="cmp4B8A3B81C8F9FCEB929A4AE1B44989B1" />
+            <ComponentRef Id="cmp5CEDC0785222E19FE794FDF87BB347F8" />
+            <ComponentRef Id="cmpCA6E2BA1C7B08F93DDE75EC8E9F75504" />
+            <ComponentRef Id="cmp6D72893F433BB42B5EF5D2E47AD1D8B4" />
+            <ComponentRef Id="cmpBE465122F321CF0378FE462C4264D885" />
+            <ComponentRef Id="cmp8199BC2052DEB2AC70959292D2DBE257" />
+            <ComponentRef Id="cmp823A36E3C00B0E40E301C6D3428C1BD9" />
+            <ComponentRef Id="cmpD4FCDCD3B828B8F6A5A997A48CB04885" />
+        </ComponentGroup>
+    </Fragment>
+</Wix>

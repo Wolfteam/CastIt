@@ -6,6 +6,7 @@
 CastIt.Setup/Installers/**
 CastIt.Cli.Setup/Installers/**
 CastIt.Cli.Setup/Source/**
+CastIt.Server.Setup/Installers/**
 Secrets.cs
 *.g.dart
 *.freezed.dart
