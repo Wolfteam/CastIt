@@ -1,6 +1,6 @@
 ﻿namespace CastIt.Domain.Dtos.Requests
 {
-    public class GoToRequestDto : BaseSocketRequestDto
+    public class GoToRequestDto
     {
         public bool Previous { get; set; }
         public bool Next { get; set; }

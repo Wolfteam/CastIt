@@ -65,6 +65,8 @@ namespace CastIt.GoogleCast
         public static bool CanLogTrace { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool IsPaused { get; private set; }
+        public bool IsPlayingOrPaused
+            => IsPlaying || IsPaused;
         public string CurrentContentId { get; private set; }
         public double CurrentMediaDuration { get; private set; }
         public double ElapsedSeconds { get; private set; }
@@ -79,6 +81,9 @@ namespace CastIt.GoogleCast
         }
         public double CurrentVolumeLevel { get; private set; }
         public bool IsMuted { get; private set; }
+
+        public PlayerStatus State
+            => new PlayerStatus(this);
 
         private SemaphoreSlim ListenMediaChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
         private SemaphoreSlim ListenReceiverChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
@@ -163,6 +168,7 @@ namespace CastIt.GoogleCast
         }
         #endregion
 
+        #region General Methods
         public void ListenForDevices()
         {
             var subscription = DeviceLocator
@@ -206,9 +212,10 @@ namespace CastIt.GoogleCast
                 return;
             }
 
+            _logger.LogInfo($"{nameof(Dispose)} Disposing player...");
             if (disposing)
             {
-                _logger.LogInfo($"{nameof(Dispose)} Disposing subscriptions, events, and disconecting...");
+                _logger.LogInfo($"{nameof(Dispose)} Disposing subscriptions, events, and disconnecting...");
                 foreach (var subscription in _subscriptions)
                 {
                     subscription.Dispose();
@@ -225,12 +232,14 @@ namespace CastIt.GoogleCast
                 DisconnectAsync().GetAwaiter().GetResult();
             }
             _disposed = true;
+            _logger.LogInfo($"{nameof(Dispose)} Player's dispose completed");
         }
 
         public Task<List<IReceiver>> GetDevicesAsync(TimeSpan scanTime)
         {
             return DeviceLocator.FindReceiversAsync(scanTime);
         }
+        #endregion
 
         #region Receiver Channel
         public Task<ReceiverStatus> SetVolumeAsync(float level)
@@ -245,14 +254,27 @@ namespace CastIt.GoogleCast
 
         public async Task DisconnectAsync()
         {
+            _logger.LogInfo($"{nameof(Dispose)} Disconnecting from current device...");
             if (_sender.IsConnected)
                 await _receiverChannel.StopAsync(_sender);
-            (_receiverChannel as IStatusChannel).Status = null;
-            (_mediaChannel as IStatusChannel).Status = null;
+
+            if (_receiverChannel is IStatusChannel receiverChannel)
+            {
+                receiverChannel.Status = null;
+            }
+
+            if (_mediaChannel is IStatusChannel mediaChannel)
+            {
+                mediaChannel.Status = null;
+            }
+
             CancelAndSetListenerToken(false);
             _sender.Disconnect(true, false);
-            CurrentContentId = null;
+
+            CleanLoadedFile();
             OnDisconnect(this, EventArgs.Empty);
+
+            _logger.LogInfo($"{nameof(Dispose)} Disconnect completed");
         }
         #endregion
 
@@ -264,7 +286,7 @@ namespace CastIt.GoogleCast
             params int[] activeTrackIds)
         {
             _logger.LogInfo($"{nameof(LoadAsync)}: Trying to load media = {media.ContentId}");
-            CurrentContentId = null;
+            CleanLoadedFile();
             CancelAndSetListenerToken();
 
             FileLoading?.Invoke(this, EventArgs.Empty);
@@ -289,6 +311,8 @@ namespace CastIt.GoogleCast
             TriggerTimeEvents();
             IsPlaying = true;
             IsPaused = false;
+
+            //TODO: IMPROVE THESE 2, MAYBE A HOSTED SERVICE ?
             ListenForMediaChanges(_listenerToken.Token);
             ListenForReceiverChanges(_listenerToken.Token);
 
@@ -435,13 +459,17 @@ namespace CastIt.GoogleCast
 
                             //Only call the end reached if we were playing something, the player was not paused and we are connected
                             if (contentIsBeingPlayed && !IsPaused && _sender.IsConnected)
+                            {
+                                _logger.LogInformation($"{nameof(ListenForMediaChanges)}: End reached is going to be triggered");
+                                CleanLoadedFile();
                                 EndReached?.Invoke(this, EventArgs.Empty);
+                            }
                             IsPaused = false;
                             break;
                         }
 
                         ElapsedSeconds = mediaStatus.CurrentTime + _seekedSeconds;
-                        if (mediaStatus.PlayerState == PlayerState.Paused)
+                        if (mediaStatus.PlayerState == Enums.PlayerState.Paused)
                         {
                             IsPaused = true;
                             IsPlaying = false;
@@ -458,7 +486,7 @@ namespace CastIt.GoogleCast
                                 $"{nameof(ListenForMediaChanges)}: End reached because the " +
                                 $"ElapsedSeconds = {ElapsedSeconds} is greater / equal to " +
                                 $"CurrentMediaDuration = {CurrentMediaDuration}. CurrentContentId = {CurrentContentId}");
-                            IsPlaying = false;
+                            CleanLoadedFile();
                             CancelAndSetListenerToken(false);
                             EndReached?.Invoke(this, EventArgs.Empty);
                             break;
@@ -538,6 +566,15 @@ namespace CastIt.GoogleCast
             Disconnected?.Invoke(this, e);
             IsPlaying = false;
             _receiverChannel.IsConnected = false;
+        }
+
+        private void CleanLoadedFile()
+        {
+            CurrentContentId = null;
+            CurrentMediaDuration = 0;
+            ElapsedSeconds = 0;
+            IsPlaying = false;
+            IsPaused = false;
         }
         #endregion
     }

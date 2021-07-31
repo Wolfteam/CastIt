@@ -1,6 +1,6 @@
 ﻿namespace CastIt.Domain.Dtos.Requests
 {
-    public class DeleteFileRequestDto : BaseSocketRequestDto
+    public class DeleteFileRequestDto
     {
         public long Id { get; set; }
         public long PlayListId { get; set; }

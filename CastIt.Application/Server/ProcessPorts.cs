@@ -55,17 +55,17 @@ namespace CastIt.Application.Server
                         try
                         {
                             var processName = tokens[1] == "UDP"
-                                ? GetProcessName(Convert.ToInt16(tokens[4]))
-                                : GetProcessName(Convert.ToInt16(tokens[5]));
+                                ? GetProcessName(Convert.ToInt32(tokens[4]))
+                                : GetProcessName(Convert.ToInt32(tokens[5]));
 
                             var processId = tokens[1] == "UDP"
-                                ? Convert.ToInt16(tokens[4])
-                                : Convert.ToInt16(tokens[5]);
+                                ? Convert.ToInt32(tokens[4])
+                                : Convert.ToInt32(tokens[5]);
 
                             var protocol = ipAddress.Contains("1.1.1.1") ? $"{tokens[1]}v6" : $"{tokens[1]}v4";
                             processPorts.Add(new ProcessPort(processName, processId, protocol, Convert.ToInt32(ipAddress.Split(':')[1])));
                         }
-                        catch
+                        catch (Exception)
                         {
                             Console.WriteLine("Could not convert the following NetStat row to a Process to Port mapping.");
                             Console.WriteLine(netStatRow);

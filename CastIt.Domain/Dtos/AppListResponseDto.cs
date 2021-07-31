@@ -9,10 +9,9 @@ namespace CastIt.Domain.Dtos
             Result = new List<T>();
         }
 
-        public AppListResponseDto(bool succeed, List<T> result)
+        public AppListResponseDto(bool succeed, List<T> result) 
+            : base(result, succeed)
         {
-            Succeed = succeed;
-            Result = result;
         }
     }
 }
