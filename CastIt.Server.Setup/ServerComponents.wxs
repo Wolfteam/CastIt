@@ -31,7 +31,7 @@
                                   Protocol="tcp"
                                   Scope="any"
                                   IgnoreFailure="no"
-                                  Profile="private"
+                                  Profile="public"
                                   Description="Exception required so that the chromecast can access the server"/>
         </File>
         <ServiceInstall Id="CastItServerService"
