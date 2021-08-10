@@ -32,7 +32,7 @@ namespace CastIt.Server.Windows.TrayIcon
         {
             if (!WebServerUtils.IsElevated())
             {
-                MessageBox.Show("This application must be run as Administrator.");
+                MessageBox.Show("To start / stop the server, this application must be ran as Administrator.");
                 return true;
             }
             return false;
@@ -77,8 +77,9 @@ namespace CastIt.Server.Windows.TrayIcon
         private void ContextMenuOnPopup(object sender, EventArgs e)
         {
             _serviceController.Refresh();
-            _menuItemStart.Enabled = _serviceController.Status == ServiceControllerStatus.Stopped;
-            _menuItemStop.Enabled = _serviceController.Status == ServiceControllerStatus.Running;
+            bool isElevated = WebServerUtils.IsElevated();
+            _menuItemStart.Enabled = isElevated && _serviceController.Status == ServiceControllerStatus.Stopped;
+            _menuItemStop.Enabled = isElevated && _serviceController.Status == ServiceControllerStatus.Running;
         }
 
         private void Start(object sender, EventArgs e)
