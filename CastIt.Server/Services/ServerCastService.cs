@@ -428,12 +428,18 @@ namespace CastIt.Server.Services
         //TODO: MAYBE USE A LOCK TO AVOID PROBLEMS  WHILE UPDATING PLAYLISTS
         public ServerPlayerStatusResponseDto GetPlayerStatus()
         {
-            var mapped = CurrentPlayList != null ? _mapper.Map<GetAllPlayListResponseDto>(CurrentPlayList) : null;
+            var currentPlayedFile = GetCurrentPlayedFile();
+            var currentPlayList = CurrentPlayList != null ? _mapper.Map<GetAllPlayListResponseDto>(CurrentPlayList) : null;
+            if (currentPlayList != null && !string.IsNullOrWhiteSpace(currentPlayedFile?.ThumbnailUrl))
+            {
+                currentPlayList.ImageUrl = currentPlayedFile.ThumbnailUrl;
+            }
+
             return new ServerPlayerStatusResponseDto
             {
                 Player = _mapper.Map<PlayerStatusResponseDto>(Player.State),
-                PlayList = mapped,
-                PlayedFile = GetCurrentPlayedFile(),
+                PlayList = currentPlayList,
+                PlayedFile = currentPlayedFile,
                 ThumbnailRanges = _thumbnailRanges
             };
         }

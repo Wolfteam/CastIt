@@ -274,7 +274,7 @@ namespace CastIt.Server.Services
 
         public void RefreshPlayListImage(ServerPlayList playList)
         {
-            var imageUrl = _imageProviderService.GetPlayListImageUrl(playList, CurrentPlayedFile);
+            string imageUrl = _imageProviderService.GetPlayListImageUrl(playList, CurrentPlayedFile);
             bool changed = playList.ImageUrl != imageUrl;
             playList.ImageUrl = imageUrl;
             if (changed)

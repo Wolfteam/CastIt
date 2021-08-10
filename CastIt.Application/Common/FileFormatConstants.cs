@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CastIt.Application.Server;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -59,12 +60,18 @@ namespace CastIt.Application.Common
             return time.ToString(time.Hours > 0 ? FullElapsedTimeFormat : ShortElapsedTimeFormat);
         }
 
-        public static string FormatDuration(double playedSeconds, double totalSeconds, bool isUrlFile)
+        public static string FormatDuration(double playedSeconds, double totalSeconds, bool isUrlFile, bool exists)
         {
-            var elapsed = FormatDuration(playedSeconds);
-            var total = FormatDuration(totalSeconds);
+            string elapsed = FormatDuration(playedSeconds);
+            string total = FormatDuration(totalSeconds);
             if (isUrlFile && totalSeconds <= 0)
                 return $"{elapsed}";
+
+            if (!exists)
+            {
+                return $"{elapsed} / {AppWebServerConstants.MissingFileText}";
+            }
+
             return $"{elapsed} / {total}";
         }
     }

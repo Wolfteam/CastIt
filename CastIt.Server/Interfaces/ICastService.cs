@@ -99,6 +99,6 @@ namespace CastIt.Server.Interfaces
 
         void SendServerMsg(AppMessageType type);
 
-        Task RefreshCastDevices(TimeSpan ts);
+        Task RefreshCastDevices(TimeSpan? ts);
     }
 }

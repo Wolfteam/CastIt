@@ -84,7 +84,7 @@ namespace CastIt.Infrastructure.Models
             => $"{PlayedTime} / {Duration}";
 
         public string FullTotalDuration
-            => FileFormatConstants.FormatDuration(PlayedSeconds, TotalSeconds, IsUrlFile);
+            => FileFormatConstants.FormatDuration(PlayedSeconds, TotalSeconds, IsUrlFile, Exists);
 
         public FFProbeFileInfo FileInfo { get; private set; }
 

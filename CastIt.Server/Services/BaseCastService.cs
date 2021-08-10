@@ -642,13 +642,13 @@ namespace CastIt.Server.Services
             return SetCastRenderer(renderer);
         }
 
-        public async Task RefreshCastDevices(TimeSpan ts)
+        public async Task RefreshCastDevices(TimeSpan? ts = null)
         {
-            if (ts.TotalSeconds > 30 || ts.TotalSeconds <= 0)
+            if (!ts.HasValue || ts.Value.TotalSeconds > 30 || ts.Value.TotalSeconds <= 0)
             {
-                ts = TimeSpan.FromSeconds(30);
+                ts = TimeSpan.FromSeconds(10);
             }
-            var devices = await Player.GetDevicesAsync(ts);
+            var devices = await Player.GetDevicesAsync(ts.Value);
             var connectedTo = AvailableDevices.Find(t => t.IsConnected);
             AvailableDevices.Clear();
             AvailableDevices.AddRange(devices.OrderBy(a => a.FriendlyName));

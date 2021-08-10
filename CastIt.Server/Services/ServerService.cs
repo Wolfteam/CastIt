@@ -140,7 +140,7 @@ namespace CastIt.Server.Services
         {
             if (string.IsNullOrEmpty(filepath))
                 return null;
-            var baseUrl = GetPlayerBaseUrl();
+            string baseUrl = GetPlayerBaseUrl();
             string filename = Path.GetFileName(filepath);
             return $"{baseUrl}/{AppWebServerConstants.ChromeCastImagesPath}/{Uri.EscapeDataString(filename)}";
         }
