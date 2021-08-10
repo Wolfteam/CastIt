@@ -543,11 +543,7 @@ namespace CastIt.Services
                 if (WebServerUtils.IsServerAlive())
                     return true;
 
-                _logger.LogInformation($"{nameof(StartServerIfNotStarted)}: Server has not been started... Starting it with retries left = {retries}...");
-                bool started = WebServerUtils.StartServer();
-                if (started)
-                    return true;
-                _logger.LogWarning($"{nameof(StartServerIfNotStarted)}: Server could not be started");
+                _logger.LogInformation($"{nameof(StartServerIfNotStarted)}: Server has not been started... Retries left = {retries}...");
                 await Task.Delay(1000);
                 retries--;
             }
