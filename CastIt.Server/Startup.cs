@@ -40,7 +40,7 @@ namespace CastIt.Server
 
             //Cors is required for the subtitles to work
             services.AddCors();
-
+                
             //Should be more than enough for the hosted service to complete
             services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(15));
 
@@ -66,6 +66,9 @@ namespace CastIt.Server
             services.AddGoogleCast();
             services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
             services.AddSwagger("CastIt", "CastIt.xml");
+
+            // In production, the React files will be served from this directory
+            services.AddSpaStaticFiles(configuration => configuration.RootPath = "ClientApp/build");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -74,7 +77,8 @@ namespace CastIt.Server
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseStaticFiles();
+            app.UseSpaStaticFiles();
             app.UseRouting();
 
             //Cors is required for the subtitles to work
@@ -92,7 +96,19 @@ namespace CastIt.Server
                 endpoints.MapControllers();
                 endpoints.MapHub<CastItHub>("/CastItHub");
             });
+
             app.UseSwagger("CastIt");
+
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";
+
+                if (env.IsDevelopment())
+                {
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
+                    //spa.UseReactDevelopmentServer(npmScript: "start");
+                }
+            });
         }
     }
 }
