@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import { onFileEndReached, onFileLoaded, onFileLoading } from "../../services/castithub.service";
-import { IFileItemResponseDto } from "../../models";
-import { createStyles, LinearProgress, makeStyles } from "@material-ui/core";
+import { useEffect, useState } from 'react';
+import { onFileEndReached, onFileLoaded, onFileLoading, onStoppedPlayback } from '../../services/castithub.service';
+import { IFileItemResponseDto } from '../../models';
+import { createStyles, LinearProgress, makeStyles } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
         loading: {
-            position: "sticky",
+            position: 'sticky',
             top: 0,
         },
     })
@@ -26,6 +26,8 @@ function PlayListLoadingIndicator(props: Props) {
                 return;
             }
 
+            console.log('isbusy', isBusy);
+
             setIsBusy(isBusy);
         };
 
@@ -35,13 +37,15 @@ function PlayListLoadingIndicator(props: Props) {
 
         const onFileEndReachedSubscription = onFileEndReached.subscribe((file) => handleFileChanged(file, false));
 
+        const onStoppedPlaybackSubscription = onStoppedPlayback.subscribe(() => setIsBusy(false));
+
         return () => {
             onFileLoadingSubscription.unsubscribe();
             onFileLoadedSubscription.unsubscribe();
             onFileEndReachedSubscription.unsubscribe();
+            onStoppedPlaybackSubscription.unsubscribe();
         };
     }, []);
-
     const loading = !isBusy ? null : <LinearProgress variant="indeterminate" className={classes.loading} />;
     return loading;
 }

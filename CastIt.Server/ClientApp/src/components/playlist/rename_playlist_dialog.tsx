@@ -14,13 +14,13 @@ interface State {
     isNameDirty: boolean;
 }
 
-const initialState: State = {
-    name: '',
-    isNameValid: true,
-    isNameDirty: false,
-};
-
 function RenamePlayListDialog(props: Props) {
+    const initialState: State = {
+        name: props.name,
+        isNameValid: true,
+        isNameDirty: false,
+    };
+
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
@@ -40,20 +40,24 @@ function RenamePlayListDialog(props: Props) {
         setState(newState);
     };
 
+    
+    const handleClose = (saveChanges: boolean): void => {
+        const name = saveChanges ? state.name : null;
+        props.onClose(name);
+        setState(initialState);
+    };
+
     const showError = !state.isNameValid && state.isNameDirty;
 
     return (
-        <Dialog open={props.isOpen} onClose={() => props.onClose(null)} aria-labelledby="form-dialog-title">
-            <DialogTitle id="form-dialog-title">{translations.rename}</DialogTitle>
+        <Dialog open={props.isOpen} onClose={() => handleClose(false)}>
+            <DialogTitle>{translations.rename}</DialogTitle>
             <DialogContent>
-                {/* <DialogContentText>
-                    {props.name}
-                </DialogContentText> */}
                 <TextField
                     required
                     autoFocus
                     margin="dense"
-                    label="Name"
+                    label={translations.playList}
                     type="text"
                     fullWidth
                     onChange={handleNameChange}
@@ -68,10 +72,10 @@ function RenamePlayListDialog(props: Props) {
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => props.onClose(null)} color="primary">
+                <Button onClick={() => handleClose(false)} color="primary">
                     {translations.cancel}
                 </Button>
-                <Button variant="contained" onClick={() => props.onClose(state.name)} color="primary">
+                <Button variant="contained" onClick={() => handleClose(true)} color="primary" disabled={!state.isNameValid}>
                     {translations.ok}
                 </Button>
             </DialogActions>

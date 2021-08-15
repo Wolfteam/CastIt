@@ -7,14 +7,17 @@ import {
     onPlayListsLoaded,
     onPlayListDeleted,
     onPlayListChanged,
+    onPlayListsChanged,
     onFileLoading,
     onFileLoaded,
     onFileEndReached,
     onPlayerStatusChanged,
+    updatePlayListPosition,
 } from '../services/castithub.service';
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
 import { Grid } from '@material-ui/core';
+import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 
 interface State {
     isBusy: boolean;
@@ -39,7 +42,7 @@ function PlayLists() {
             if (!playList) {
                 return;
             }
-            
+
             const index = state.playLists.indexOf(playList);
             const copy = [...state.playLists];
             copy.splice(index, 1);
@@ -51,6 +54,10 @@ function PlayLists() {
             const copy = [...state.playLists];
             copy.splice(playList.position, 0, playList);
             setState((s) => ({ ...s, playLists: copy }));
+        });
+
+        const onPlayListsChangedSubscription = onPlayListsChanged.subscribe(playLists => {
+            setState((s) => ({ ...s, playLists: playLists }));
         });
 
         const onPlayListChangedSubscription = onPlayListChanged.subscribe((playList) => {
@@ -79,6 +86,7 @@ function PlayLists() {
         return () => {
             onPlayListAddedSubscription.unsubscribe();
             onPlayerStatusChangedSubscription.unsubscribe();
+            onPlayListsChangedSubscription.unsubscribe();
             onPlayListChangedSubscription.unsubscribe();
             onPlayListDeletedSubscription.unsubscribe();
         };
@@ -111,25 +119,67 @@ function PlayLists() {
         };
     }, []);
 
-    const items = state.playLists.map((pl) => (
+    const items = state.playLists.map((pl, index) => (
         <Grid key={pl.id} item xs={6} sm={6} md={4} lg={3} xl={2}>
-            <PlayListCardItem {...pl} />
+            <PlayListCardItem {...pl} index={index} />
         </Grid>
     ));
 
     const addNew = (
         <Grid key="AddNewItem" item xs={6} sm={6} md={4} lg={3} xl={2} style={{ alignSelf: 'center' }}>
-            <PlayListCardItem id={0} position={-1} name="" imageUrl="" numberOfFiles={-1} totalDuration="" toAddNewItem />
+            <PlayListCardItem
+                id={0}
+                position={-1}
+                name=""
+                imageUrl=""
+                numberOfFiles={-1}
+                totalDuration=""
+                toAddNewItem
+                index={items.length + 1}
+            />
         </Grid>
     );
+
+    const handleDragEnd = async (result: DropResult): Promise<void> => {
+        if (!result.destination) {
+            return;
+        }
+
+        if (result.destination!.droppableId === result.source.droppableId && result.destination.index === result.source.index) {
+            return;
+        }
+
+        const playLists = { ...state.playLists };
+        const source = playLists[result.source.index];
+        const destination = playLists[result.destination!.index];
+
+        if (!source || !destination) {
+            return;
+        }
+
+        await updatePlayListPosition(source.id, destination.position);
+    };
 
     items.push(addNew);
 
     return (
         <PageContent useContainer>
-            <Grid container spacing={3} style={{ marginTop: 20, marginBottom: 20 }}>
-                {items}
-            </Grid>
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="playlists-droppable" direction="horizontal">
+                    {(provided) => (
+                        <Grid
+                            container
+                            spacing={3}
+                            style={{ marginTop: 20, marginBottom: 20 }}
+                            {...provided.droppableProps}
+                            innerRef={provided.innerRef}
+                        >
+                            {items}
+                            {provided.placeholder}
+                        </Grid>
+                    )}
+                </Droppable>
+            </DragDropContext>
         </PageContent>
     );
 }
