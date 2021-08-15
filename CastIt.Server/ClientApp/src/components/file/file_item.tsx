@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import {
     Typography,
     Slider,
@@ -16,9 +16,19 @@ import {
     Grid,
 } from '@material-ui/core';
 import { IFileItemResponseDto } from '../../models';
-import { onFileChanged, onFileEndReached, onPlayerStatusChanged, play, loopFile } from '../../services/castithub.service';
-import { Add, ClearAll, Delete, Folder, InsertLink, Loop, PlayArrow, Refresh, Repeat, RepeatOne } from '@material-ui/icons';
+import {
+    onFileChanged,
+    onFileEndReached,
+    onPlayerStatusChanged,
+    play,
+    loopFile,
+    deleteFile,
+    removeAllMissingFiles,
+    addFolderOrFileOrUrl,
+} from '../../services/castithub.service';
+import { Add, ClearAll, Delete, Loop, PlayArrow, Refresh, Repeat, RepeatOne } from '@material-ui/icons';
 import translations from '../../services/translations';
+import AddFilesDialog from '../dialogs/add_files_dialog';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -53,7 +63,7 @@ interface Props {
 interface State {
     playListId: number;
     id: number;
-    name: string;
+    filename: string;
     subTitle: string;
     path: string;
     playedPercentage: number;
@@ -71,7 +81,7 @@ interface ContextMenuState {
 const initialState: State = {
     playListId: 0,
     id: 0,
-    name: '',
+    filename: '',
     subTitle: '',
     path: '',
     playedPercentage: 0,
@@ -90,12 +100,13 @@ function FileItem(props: Props) {
     const classes = useStyles();
     const [state, setState] = useState<State>(initialState);
     const [contextMenu, setContextMenu] = useState(initialContextMenuState);
+    const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
 
     useEffect(() => {
         setState({
             playListId: props.file.playListId,
             id: props.file.id,
-            name: props.file.name,
+            filename: props.file.filename,
             subTitle: props.file.subTitle,
             path: props.file.path,
             playedPercentage: props.file.playedPercentage,
@@ -169,14 +180,6 @@ function FileItem(props: Props) {
         };
     }, [props.file.id, state.isBeingPlayed]);
 
-    const handleClick = async (): Promise<void> => {
-        if (state.isBeingPlayed) {
-            return;
-        }
-
-        await play(props.file.playListId, state.id, false, false);
-    };
-
     const handleOpenContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
         event.preventDefault();
         setContextMenu({
@@ -185,7 +188,12 @@ function FileItem(props: Props) {
         });
     };
 
-    const handleCloseContextMenu = () => {
+    const handlePlay = async (force: boolean = false): Promise<void> => {
+        handleCloseContextMenu();
+        await play(props.file.playListId, state.id, force, false);
+    };
+
+    const handleCloseContextMenu = (): void => {
         setContextMenu(initialContextMenuState);
     };
 
@@ -194,9 +202,27 @@ function FileItem(props: Props) {
         await loopFile(state.playListId, state.id, !state.loop);
     };
 
+    const handleAddFiles = async (path: string | null, includeSubFolder: boolean, onlyVideo: boolean): Promise<void> => {
+        handleCloseContextMenu();
+        setShowAddFilesDialog(false);
+        if (path) {
+            await addFolderOrFileOrUrl(state.playListId, path, includeSubFolder, onlyVideo);
+        }
+    };
+
+    const handleDelete = async (): Promise<void> => {
+        handleCloseContextMenu();
+        await deleteFile(props.file.playListId, props.file.id);
+    };
+
+    const handleRemoveAllMissing = async (): Promise<void> => {
+        handleCloseContextMenu();
+        await removeAllMissingFiles(props.file.playListId);
+    };
+
     const title = (
-        <Tooltip title={state.name}>
-            <Typography className={classes.text}>{state.name}</Typography>
+        <Tooltip title={state.filename}>
+            <Typography className={classes.text}>{state.filename}</Typography>
         </Tooltip>
     );
 
@@ -226,7 +252,7 @@ function FileItem(props: Props) {
 
     return (
         <div data-played-file={state.isBeingPlayed} onContextMenu={handleOpenContextMenu} style={{ cursor: 'context-menu' }}>
-            <ListItem button onClick={handleClick} className={state.isBeingPlayed ? classes.beingPlayed : ''}>
+            <ListItem button onClick={() => handlePlay()} className={state.isBeingPlayed ? classes.beingPlayed : ''}>
                 <ListItemAvatar>
                     <Avatar className={classes.position}>{state.position}</Avatar>
                 </ListItemAvatar>
@@ -249,38 +275,31 @@ function FileItem(props: Props) {
                         : undefined
                 }
             >
-                <MenuItem onClick={handleCloseContextMenu}>
+                <MenuItem onClick={() => handlePlay()}>
                     <PlayArrow fontSize="small" />
                     <ListItemText className={classes.menuItemText} primary={translations.play} />
                 </MenuItem>
-                <MenuItem onClick={handleCloseContextMenu}>
+                <MenuItem onClick={() => handlePlay(true)}>
                     <Refresh fontSize="small" />
                     <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
                 </MenuItem>
                 {toggleLoopMenuItem}
-                <MenuItem onClick={handleCloseContextMenu}>
-                    <Folder fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.addFolder} />
-                </MenuItem>
-                <MenuItem onClick={handleCloseContextMenu}>
+                <MenuItem onClick={() => setShowAddFilesDialog(true)}>
                     <Add fontSize="small" />
                     <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
                 </MenuItem>
-                <MenuItem onClick={handleCloseContextMenu}>
-                    <InsertLink fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.addUrl} />
-                </MenuItem>
                 {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
-                <MenuItem onClick={handleCloseContextMenu}>
+                <MenuItem onClick={handleDelete}>
                     <Delete fontSize="small" />
                     <ListItemText className={classes.menuItemText} primary={translations.remove} />
                 </MenuItem>
-                <MenuItem onClick={handleCloseContextMenu}>
+                <MenuItem onClick={handleRemoveAllMissing}>
                     <ClearAll fontSize="small" />
                     <ListItemText className={classes.menuItemText} primary={translations.removeAllMissing} />
                 </MenuItem>
             </Menu>
             <Divider variant="middle" />
+            <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
         </div>
     );
 }

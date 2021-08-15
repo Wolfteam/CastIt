@@ -5,8 +5,8 @@ import PlayerVolume from './player_volume';
 import PlayerSettings from './player_settings';
 import PlayerDevices from './player_devices';
 import PlayerCurrentFile from './player_current_file';
-import { ArrowDownward, ExpandLess, ExpandMore } from '@material-ui/icons';
-import { Fragment, useState } from 'react';
+import { ExpandLess, ExpandMore } from '@material-ui/icons';
+import { useState } from 'react';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
