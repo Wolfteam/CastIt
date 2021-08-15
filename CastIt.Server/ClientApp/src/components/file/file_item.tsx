@@ -26,9 +26,10 @@ import {
     removeAllMissingFiles,
     addFolderOrFileOrUrl,
 } from '../../services/castithub.service';
-import { Add, ClearAll, Delete, Loop, PlayArrow, Refresh, Repeat, RepeatOne } from '@material-ui/icons';
+import { Add, ClearAll, Delete, Loop, PlayArrow, Refresh } from '@material-ui/icons';
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
+import { Draggable } from 'react-beautiful-dnd';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -57,6 +58,7 @@ const useStyles = makeStyles((theme) =>
 );
 
 interface Props {
+    index: number;
     file: IFileItemResponseDto;
 }
 
@@ -251,56 +253,67 @@ function FileItem(props: Props) {
     ) : null;
 
     return (
-        <div data-played-file={state.isBeingPlayed} onContextMenu={handleOpenContextMenu} style={{ cursor: 'context-menu' }}>
-            <ListItem button onClick={() => handlePlay()} className={state.isBeingPlayed ? classes.beingPlayed : ''}>
-                <ListItemAvatar>
-                    <Avatar className={classes.position}>{state.position}</Avatar>
-                </ListItemAvatar>
-                <ListItemText primary={title} secondary={subtitle} />
-                <ListItemSecondaryAction className={classes.duration}>
-                    <Grid container justifyContent="center" alignItems="center">
-                        {state.loop ? <Loop fontSize="small" /> : null}
-                        <Typography>{state.fullTotalDuration}</Typography>
-                    </Grid>
-                </ListItemSecondaryAction>
-            </ListItem>
-            <Menu
-                keepMounted
-                open={contextMenu.mouseY !== null}
-                onClose={handleCloseContextMenu}
-                anchorReference="anchorPosition"
-                anchorPosition={
-                    contextMenu.mouseY !== null && contextMenu.mouseX !== null
-                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                        : undefined
-                }
-            >
-                <MenuItem onClick={() => handlePlay()}>
-                    <PlayArrow fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.play} />
-                </MenuItem>
-                <MenuItem onClick={() => handlePlay(true)}>
-                    <Refresh fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
-                </MenuItem>
-                {toggleLoopMenuItem}
-                <MenuItem onClick={() => setShowAddFilesDialog(true)}>
-                    <Add fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
-                </MenuItem>
-                {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
-                <MenuItem onClick={handleDelete}>
-                    <Delete fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.remove} />
-                </MenuItem>
-                <MenuItem onClick={handleRemoveAllMissing}>
-                    <ClearAll fontSize="small" />
-                    <ListItemText className={classes.menuItemText} primary={translations.removeAllMissing} />
-                </MenuItem>
-            </Menu>
-            <Divider variant="middle" />
-            <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
-        </div>
+        <Draggable draggableId={`${props.file.id}_${props.file.filename}`} index={props.index}>
+            {(provided) => (
+                <div
+                    data-played-file={state.isBeingPlayed}
+                    onContextMenu={handleOpenContextMenu}
+                    style={{ cursor: 'context-menu' }}
+                    {...provided.dragHandleProps}
+                    {...provided.draggableProps}
+                    ref={provided.innerRef}
+                >
+                    <ListItem button onDoubleClick={() => handlePlay()} className={state.isBeingPlayed ? classes.beingPlayed : ''}>
+                        <ListItemAvatar>
+                            <Avatar className={classes.position}>{state.position}</Avatar>
+                        </ListItemAvatar>
+                        <ListItemText primary={title} secondary={subtitle} />
+                        <ListItemSecondaryAction className={classes.duration}>
+                            <Grid container justifyContent="center" alignItems="center">
+                                {state.loop ? <Loop fontSize="small" /> : null}
+                                <Typography>{state.fullTotalDuration}</Typography>
+                            </Grid>
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                    <Menu
+                        keepMounted
+                        open={contextMenu.mouseY !== null}
+                        onClose={handleCloseContextMenu}
+                        anchorReference="anchorPosition"
+                        anchorPosition={
+                            contextMenu.mouseY !== null && contextMenu.mouseX !== null
+                                ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                                : undefined
+                        }
+                    >
+                        <MenuItem onClick={() => handlePlay()}>
+                            <PlayArrow fontSize="small" />
+                            <ListItemText className={classes.menuItemText} primary={translations.play} />
+                        </MenuItem>
+                        <MenuItem onClick={() => handlePlay(true)}>
+                            <Refresh fontSize="small" />
+                            <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
+                        </MenuItem>
+                        {toggleLoopMenuItem}
+                        <MenuItem onClick={() => setShowAddFilesDialog(true)}>
+                            <Add fontSize="small" />
+                            <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
+                        </MenuItem>
+                        {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
+                        <MenuItem onClick={handleDelete}>
+                            <Delete fontSize="small" />
+                            <ListItemText className={classes.menuItemText} primary={translations.remove} />
+                        </MenuItem>
+                        <MenuItem onClick={handleRemoveAllMissing}>
+                            <ClearAll fontSize="small" />
+                            <ListItemText className={classes.menuItemText} primary={translations.removeAllMissing} />
+                        </MenuItem>
+                    </Menu>
+                    <Divider variant="middle" />
+                    <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
+                </div>
+            )}
+        </Draggable>
     );
 }
 

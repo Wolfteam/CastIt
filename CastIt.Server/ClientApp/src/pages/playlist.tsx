@@ -10,14 +10,15 @@ import {
     onFileAdded,
     onFilesChanged,
     onFileDeleted,
+    updateFilePosition
 } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
-import PlayListLoadingIndicator from '../components/playlist/playlist_loading_indicator';
 import { CircularProgress, Container, createStyles, Grid, List, makeStyles, Typography } from '@material-ui/core';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import { Info } from '@material-ui/icons';
 import translations from '../services/translations';
 import PageContent from './page_content';
+import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -120,10 +121,9 @@ function PlayList() {
             if (!state.playList) {
                 return;
             }
+            const thisPlayList = files.filter((f) => f.playListId === state.playList!.id).length > 0;
 
-            const filteredFiles = files.filter((f) => f.playListId == state.playList!.id);
-
-            if (filteredFiles.length === 0) {
+            if (!thisPlayList) {
                 return;
             }
 
@@ -150,7 +150,7 @@ function PlayList() {
                 return;
             }
 
-            const deletedIndex = state.playList!.files.findIndex((f) => f.id == file.fileId);
+            const deletedIndex = state.playList!.files.findIndex((f) => f.id === file.fileId);
             if (deletedIndex < 0) {
                 return;
             }
@@ -167,13 +167,11 @@ function PlayList() {
             onPlayListsChangedSubscription.unsubscribe();
             onPlayListChangedSubscription.unsubscribe();
 
-            // onFileLoadingSubscription.unsubscribe();
             onFilesChangedSubscription.unsubscribe();
             onFileAddedSubscription.unsubscribe();
             onFileDeletedSubscription.unsubscribe();
         };
     }, [state.playList]);
-
 
     if (+params.id <= 0) {
         enqueueSnackbar(translations.invalidPlayList, { variant: 'warning' });
@@ -198,13 +196,39 @@ function PlayList() {
         );
     }
 
-    const files = state.filteredFiles.map((file) => <FileItem key={file.id} file={file} />) ?? [];
+    const onDragEnd = async (result: DropResult): Promise<void> => {
+        if (!result.destination) {
+            return;
+        }
+
+        if (result.destination!.droppableId === result.source.droppableId && result.destination.index === result.source.index) {
+            return;
+        }
+
+        const source = state.playList!.files[result.source.index];
+        if (!source) {
+            return;
+        }
+
+        await updateFilePosition(state.playList!.id, source.id, result.destination!.index);
+    };
+
+    const files = state.filteredFiles.map((file, index) => <FileItem key={file.id} file={file} index={index} />) ?? [];
     const content =
         files.length > 0 ? (
             <Container style={{ flex: 'auto' }}>
                 <Grid container justifyContent="center" alignItems="center">
                     <Grid item xs={12}>
-                        <List>{files}</List>
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="playlist-droppable" direction="vertical">
+                                {(provided) => (
+                                    <List {...provided.droppableProps} innerRef={provided.innerRef}>
+                                        {files}
+                                        {provided.placeholder}
+                                    </List>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
                     </Grid>
                 </Grid>
             </Container>

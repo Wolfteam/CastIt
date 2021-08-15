@@ -26,8 +26,6 @@ function PlayListLoadingIndicator(props: Props) {
                 return;
             }
 
-            console.log('isbusy', isBusy);
-
             setIsBusy(isBusy);
         };
 

@@ -151,13 +151,11 @@ function PlayLists() {
 
         const playLists = { ...state.playLists };
         const source = playLists[result.source.index];
-        const destination = playLists[result.destination!.index];
-
-        if (!source || !destination) {
+        if (!source) {
             return;
         }
 
-        await updatePlayListPosition(source.id, destination.position);
+        await updatePlayListPosition(source.id, result.destination!.index);
     };
 
     items.push(addNew);
