@@ -1,6 +1,6 @@
-import { Grid, makeStyles, Tooltip, Typography } from '@material-ui/core';
+import { Grid, LinearProgress, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import { useEffect, useState } from 'react';
-import { onPlayerStatusChanged, onFileEndReached } from '../../services/castithub.service';
+import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
 
 const useStyles = makeStyles({
     image: {
@@ -18,6 +18,7 @@ interface State {
     title: string;
     subtitle: string;
     imageUrl?: string;
+    loading?: boolean;
 }
 
 const initialState: State = {
@@ -37,17 +38,29 @@ function PlayerCurrentFile() {
             }
 
             setState({
-                title: status.playedFile.name,
+                title: status.playedFile.filename,
                 subtitle: status.playedFile.subTitle,
                 imageUrl: status.playedFile.thumbnailUrl,
             });
         });
 
+        const onFileLoadingSubscription = onFileLoading.subscribe((_) => {
+            setState((s) => ({ ...s, loading: true }));
+        });
 
-        const onFileEndReachedSubscription = onFileEndReached.subscribe(_ => setState(initialState));
+        const onFileLoadedSubscription = onFileLoaded.subscribe((_) => {
+            setState((s) => ({ ...s, loading: false }));
+        });
+
+        const onFileEndReachedSubscription = onFileEndReached.subscribe((_) => setState(initialState));
+
+        const onStoppedPlaybackSubscription = onStoppedPlayback.subscribe(() => setState(initialState));
         return () => {
             playerStatusChangedSubscription.unsubscribe();
+            onFileLoadingSubscription.unsubscribe();
+            onFileLoadedSubscription.unsubscribe();
             onFileEndReachedSubscription.unsubscribe();
+            onStoppedPlaybackSubscription.unsubscribe();
         };
     }, []);
 
@@ -67,6 +80,7 @@ function PlayerCurrentFile() {
                         {state.subtitle}
                     </Typography>
                 </Tooltip>
+                {state.loading ? <LinearProgress /> : null}
             </Grid>
         </Grid>
     );

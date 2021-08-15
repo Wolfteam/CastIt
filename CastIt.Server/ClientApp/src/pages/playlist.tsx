@@ -6,9 +6,9 @@ import {
     getPlayList,
     onPlayListsChanged,
     onPlayListChanged,
+    onPlayListBusy,
     onFileAdded,
-    onFileLoaded,
-    onFileLoading,
+    onFilesChanged,
     onFileDeleted,
 } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
@@ -70,24 +70,20 @@ function PlayList() {
     }, [loadPlayList]);
 
     useEffect(() => {
-        const onFileLoadingSubscription = onFileLoading.subscribe((file) => {
+        const isThisPlayList = (id: number): boolean => {
             if (!state.playList) {
-                return;
+                return false;
             }
 
-            if (file.playListId !== state.playList.id) {
-                return;
+            if (id !== state.playList.id) {
+                return false;
             }
 
-            setState((s) => ({ ...s, isBusy: true }));
-        });
+            return true;
+        };
 
         const updatePlayList = (playList: IGetAllPlayListResponseDto): void => {
-            if (!state.playList) {
-                return;
-            }
-
-            if (playList.id !== state.playList.id) {
+            if (!isThisPlayList(playList.id)) {
                 return;
             }
 
@@ -104,84 +100,84 @@ function PlayList() {
             setState((s) => ({ ...s, playList: updatedPlayList }));
         };
 
+        const onPlayListBusySubscription = onPlayListBusy.subscribe((busy) => {
+            if (!isThisPlayList(busy.playListId)) {
+                return;
+            }
+
+            setState((s) => ({ ...s, isBusy: busy.isBusy }));
+        });
+
         const onPlayListsChangedSubscription = onPlayListsChanged.subscribe((playLists) => {
             for (let index = 0; index < playLists.length; index++) {
                 updatePlayList(playLists[index]);
             }
         });
+
         const onPlayListChangedSubscription = onPlayListChanged.subscribe(updatePlayList);
 
-        const onFileAddedSubscription = onFileAdded.subscribe((file) => {
+        const onFilesChangedSubscription = onFilesChanged.subscribe((files) => {
             if (!state.playList) {
                 return;
             }
 
-            if (file.playListId !== state.playList.id) {
+            const filteredFiles = files.filter((f) => f.playListId == state.playList!.id);
+
+            if (filteredFiles.length === 0) {
                 return;
             }
 
-            const updatedFiles = [...state.playList.files];
+            const updatedPlayList = { ...state.playList! };
+            updatedPlayList.files = files;
+            setState((s) => ({ ...s, playList: updatedPlayList, filteredFiles: files }));
+        });
+
+        const onFileAddedSubscription = onFileAdded.subscribe((file) => {
+            if (!isThisPlayList(file.playListId)) {
+                return;
+            }
+
+            const updatedFiles = [...state.playList!.files];
             updatedFiles.splice(file.position, 0, file);
 
             const updatedPlayList = { ...state.playList! };
             updatedPlayList.files = updatedFiles;
-            setState((s) => ({ ...s, playList: updatedPlayList }));
+            setState((s) => ({ ...s, playList: updatedPlayList, filteredFiles: updatedPlayList.files }));
         });
 
         const onFileDeletedSubscription = onFileDeleted.subscribe((file) => {
-            if (!state.playList) {
+            if (!isThisPlayList(file.playListId)) {
                 return;
             }
 
-            if (file.playListId !== state.playList.id) {
-                return;
-            }
-
-            const deletedIndex = state.playList.files.findIndex((f) => f.id == file.fileId);
+            const deletedIndex = state.playList!.files.findIndex((f) => f.id == file.fileId);
             if (deletedIndex < 0) {
                 return;
             }
-            const updatedFiles = [...state.playList.files];
+            const updatedFiles = [...state.playList!.files];
             updatedFiles.splice(deletedIndex, 1);
 
             const updatedPlayList = { ...state.playList! };
             updatedPlayList.files = updatedFiles;
-            setState((s) => ({ ...s, playList: updatedPlayList }));
+            setState((s) => ({ ...s, playList: updatedPlayList, filteredFiles: updatedPlayList.files }));
         });
 
         return () => {
-            onFileLoadingSubscription.unsubscribe();
+            onPlayListBusySubscription.unsubscribe();
             onPlayListsChangedSubscription.unsubscribe();
             onPlayListChangedSubscription.unsubscribe();
 
+            // onFileLoadingSubscription.unsubscribe();
+            onFilesChangedSubscription.unsubscribe();
             onFileAddedSubscription.unsubscribe();
             onFileDeletedSubscription.unsubscribe();
         };
     }, [state.playList]);
 
-    useEffect(() => {
-        const onFileLoadedSubscription = onFileLoaded.subscribe((file) => {
-            if (!state.playList) {
-                return;
-            }
-
-            if (!state.isBusy || file.playListId !== state.playList.id) {
-                return;
-            }
-
-            setState((s) => ({ ...s, isBusy: false }));
-        });
-        return () => {
-            onFileLoadedSubscription.unsubscribe();
-        };
-    }, [state.playList, state.isBusy]);
 
     if (+params.id <= 0) {
         enqueueSnackbar(translations.invalidPlayList, { variant: 'warning' });
     }
-
-    const files = state.filteredFiles.map((file) => <FileItem key={file.id} file={file} />) ?? [];
-    const loading = state.playList ? <PlayListLoadingIndicator playListId={state.playList!.id} /> : null;
 
     const handleSearch = (value: string | null) => {
         if (!value || value === '') {
@@ -202,6 +198,7 @@ function PlayList() {
         );
     }
 
+    const files = state.filteredFiles.map((file) => <FileItem key={file.id} file={file} />) ?? [];
     const content =
         files.length > 0 ? (
             <Container style={{ flex: 'auto' }}>
@@ -225,7 +222,6 @@ function PlayList() {
     return (
         <PageContent>
             <Fragment>
-                {loading}
                 <PlayListAppBar
                     id={state.playList!.id}
                     loop={state.playList!.loop}

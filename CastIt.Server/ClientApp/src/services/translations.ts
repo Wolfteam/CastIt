@@ -83,6 +83,8 @@ interface ITranslations {
     fieldIsNotValid: string;
     devices: string;
     general: string;
+    includeSubFolders: string;
+    onlyVideo: string;
     errorCodes: IAppMessageTranslations;
 }
 
@@ -148,6 +150,8 @@ const enTrans: ITranslations = {
     fieldIsNotValid: 'Field is not valid',
     devices: 'Devices',
     general: 'General',
+    includeSubFolders: 'Include subfolders',
+    onlyVideo: 'Only video',
     errorCodes: {
         unknownErrorOccurred: 'Unknown error occurred',
         invalidRequest: 'Invalid request',
@@ -231,6 +235,8 @@ const esTrans: ITranslations = {
     fieldIsNotValid: 'El campo no es válido',
     devices: 'Dispositivos',
     general: 'General',
+    includeSubFolders: 'Incluir subcarpetas',
+    onlyVideo: 'Solo video',
     errorCodes: {
         unknownErrorOccurred: 'Un error inesperado ha ocurrido',
         invalidRequest: 'Petición no válida',

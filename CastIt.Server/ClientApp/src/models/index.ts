@@ -16,3 +16,4 @@ export type { IServerPlayerStatusResponseDto } from './responses/server_player_s
 export type { IReceiver } from './receiver.model';
 export type { IPlayListBusy } from './playlist_busy.model';
 export type { IFileDeleted } from './file_deleted.model';
+export type { IAddFolderOrFileOrUrlToPlayListRequestDto } from './requests/add_folder_or_file_or_url_to_playlist_request.model';

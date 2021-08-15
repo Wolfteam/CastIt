@@ -23,6 +23,7 @@ import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
+import PlayListLoadingIndicator from './playlist_loading_indicator';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -119,14 +120,14 @@ function PlayListAppBar(props: Props) {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
             if (!status.playedFile || status.playedFile.playListId != props.id) {
                 if (state.canGoToPlayedFile) {
-                    setState(s => ({ ...s, canGoToPlayedFile: false }));
+                    setState((s) => ({ ...s, canGoToPlayedFile: false }));
                 }
                 return;
             }
 
-            setState(s => ({ ...s, canGoToPlayedFile: true }));
+            setState((s) => ({ ...s, canGoToPlayedFile: true }));
         });
-        
+
         return () => {
             onPlayerStatusChangedSubscription.unsubscribe();
         };
@@ -230,6 +231,7 @@ function PlayListAppBar(props: Props) {
                         )}
                     </PopupState>
                 </Toolbar>
+                <PlayListLoadingIndicator playListId={props.id} />
             </AppBar>
             <Toolbar />
         </Fragment>

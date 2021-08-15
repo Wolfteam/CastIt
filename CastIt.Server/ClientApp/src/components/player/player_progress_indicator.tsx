@@ -1,11 +1,13 @@
 import { Grid, Slider, Typography } from '@material-ui/core';
+import formatDuration from 'format-duration';
 import { useEffect, useState } from 'react';
-import { onPlayerStatusChanged, gotoPosition } from '../../services/castithub.service';
+import { onPlayerStatusChanged, gotoSeconds } from '../../services/castithub.service';
 
 interface State {
     playedTime: string;
     duration: string;
-    playedPercentage: number;
+    mediaDuration: number;
+    elapsedSeconds: number;
     isPlayingOrPaused: boolean;
     isValueChanging: boolean;
 }
@@ -13,9 +15,10 @@ interface State {
 const initialState: State = {
     playedTime: '',
     duration: '',
-    playedPercentage: 0,
     isPlayingOrPaused: false,
     isValueChanging: false,
+    elapsedSeconds: 0,
+    mediaDuration: 1,
 };
 
 function PlayerProgressIndicator() {
@@ -26,13 +29,13 @@ function PlayerProgressIndicator() {
             if (state.isValueChanging) {
                 return;
             }
-
             if (status.playedFile) {
                 setState({
                     duration: status.playedFile.duration,
                     playedTime: status.playedFile.playedTime,
-                    playedPercentage: status.player.playedPercentage,
                     isPlayingOrPaused: status.player.isPlayingOrPaused,
+                    mediaDuration: status.player.currentMediaDuration,
+                    elapsedSeconds: status.player.elapsedSeconds,
                     isValueChanging: false,
                 });
                 return;
@@ -45,19 +48,18 @@ function PlayerProgressIndicator() {
         };
     }, [state.isValueChanging]);
 
-    const handleValueChanged = async (val: number, committed: boolean = false): Promise<void> => {
+    const handleValueChanged = async (seconds: number, committed: boolean = false): Promise<void> => {
         if (committed) {
-            await gotoPosition(val);
+            await gotoSeconds(seconds);
         }
 
         setState((s) => ({
             ...s,
-            playedPercentage: val,
+            elapsedSeconds: seconds,
             isValueChanging: !committed,
         }));
     };
 
-    //TODO: FORMAT WHILE DRAGGING
     return (
         <Grid container spacing={2} style={{ paddingRight: 10, paddingLeft: 10 }}>
             <Grid item>
@@ -65,13 +67,14 @@ function PlayerProgressIndicator() {
             </Grid>
             <Grid item xs>
                 <Slider
-                    min={1}
-                    max={100}
+                    min={0}
+                    max={state.mediaDuration}
                     step={1}
                     valueLabelDisplay="auto"
                     disabled={!state.isPlayingOrPaused}
-                    value={state.playedPercentage}
-                    valueLabelFormat={(_) => state.playedTime}
+                    value={state.elapsedSeconds}
+                    valueLabelFormat={(val) => formatDuration(val * 1000, { leading: true })}
+                    getAriaValueText={(val) => formatDuration(val * 1000, { leading: true })}
                     onChange={(e, val) => handleValueChanged(val as number)}
                     onChangeCommitted={(e, val) => handleValueChanged(val as number, true)}
                 />
