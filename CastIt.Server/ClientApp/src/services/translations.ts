@@ -85,6 +85,7 @@ interface ITranslations {
     general: string;
     includeSubFolders: string;
     onlyVideo: string;
+    load: string;
     errorCodes: IAppMessageTranslations;
 }
 
@@ -152,6 +153,7 @@ const enTrans: ITranslations = {
     general: 'General',
     includeSubFolders: 'Include subfolders',
     onlyVideo: 'Only video',
+    load: 'Load',
     errorCodes: {
         unknownErrorOccurred: 'Unknown error occurred',
         invalidRequest: 'Invalid request',
@@ -237,6 +239,7 @@ const esTrans: ITranslations = {
     general: 'General',
     includeSubFolders: 'Incluir subcarpetas',
     onlyVideo: 'Solo video',
+    load: 'Cargar',
     errorCodes: {
         unknownErrorOccurred: 'Un error inesperado ha ocurrido',
         invalidRequest: 'Petición no válida',

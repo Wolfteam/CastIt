@@ -79,9 +79,6 @@ const useStyles = makeStyles((theme: Theme) =>
                 },
             },
         },
-        menuItemText: {
-            marginLeft: 10,
-        },
     })
 );
 
@@ -163,13 +160,6 @@ function PlayListAppBar(props: Props) {
         setSearch(newVal);
     };
 
-    const subtitles = [
-        <MenuItem key="LoadSubs">
-            <Search />
-            <ListItemText className={classes.menuItemText} primary="Load" />
-        </MenuItem>,
-    ];
-
     return (
         <Fragment>
             <AppBar position="fixed" color="default">
@@ -204,32 +194,6 @@ function PlayListAppBar(props: Props) {
                     <IconButton color="inherit" onClick={handleGoToTheTop}>
                         <ArrowUpward />
                     </IconButton>
-                    <PopupState variant="popover" popupId="demo-popup-menu">
-                        {(popupState) => (
-                            <Fragment>
-                                <IconButton color="inherit" {...bindTrigger(popupState)}>
-                                    <MenuIcon />
-                                </IconButton>
-                                <Menu {...bindMenu(popupState)}>
-                                    <MenuItem disabled>
-                                        <Subtitles />
-                                        <ListItemText className={classes.menuItemText} primary="Subtitles" />
-                                    </MenuItem>
-                                    {subtitles}
-                                    <Divider />
-                                    <MenuItem disabled>
-                                        <Audiotrack />
-                                        <ListItemText className={classes.menuItemText} primary="Audios" />
-                                    </MenuItem>
-                                    <Divider />
-                                    <MenuItem disabled>
-                                        <HighQuality />
-                                        <ListItemText className={classes.menuItemText} primary="Qualities" />
-                                    </MenuItem>
-                                </Menu>
-                            </Fragment>
-                        )}
-                    </PopupState>
                 </Toolbar>
                 <PlayListLoadingIndicator playListId={props.id} />
             </AppBar>

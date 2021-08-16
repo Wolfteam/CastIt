@@ -10,7 +10,7 @@ import {
     onFileAdded,
     onFilesChanged,
     onFileDeleted,
-    updateFilePosition
+    updateFilePosition,
 } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
 import { CircularProgress, Container, createStyles, Grid, List, makeStyles, Typography } from '@material-ui/core';

@@ -5,6 +5,7 @@ import PlayerVolume from './player_volume';
 import PlayerSettings from './player_settings';
 import PlayerDevices from './player_devices';
 import PlayerCurrentFile from './player_current_file';
+import PlayerFileOptions from './player_file_options';
 import { ExpandLess, ExpandMore } from '@material-ui/icons';
 import { useState } from 'react';
 
@@ -81,6 +82,7 @@ function Player() {
                     <PlayerVolume />
                     <PlayerSettings />
                     <PlayerDevices />
+                    <PlayerFileOptions />
                     {toggleExpandButton}
                 </Grid>
             </Grid>

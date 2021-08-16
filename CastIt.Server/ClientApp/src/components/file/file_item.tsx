@@ -14,6 +14,7 @@ import {
     Menu,
     MenuItem,
     Grid,
+    useTheme,
 } from '@material-ui/core';
 import { IFileItemResponseDto } from '../../models';
 import {
@@ -100,6 +101,7 @@ const initialContextMenuState: ContextMenuState = {
 
 function FileItem(props: Props) {
     const classes = useStyles();
+    const theme = useTheme();
     const [state, setState] = useState<State>(initialState);
     const [contextMenu, setContextMenu] = useState(initialContextMenuState);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
@@ -254,7 +256,7 @@ function FileItem(props: Props) {
 
     return (
         <Draggable draggableId={`${props.file.id}_${props.file.filename}`} index={props.index}>
-            {(provided) => (
+            {(provided, snapshot) => (
                 <div
                     data-played-file={state.isBeingPlayed}
                     onContextMenu={handleOpenContextMenu}
@@ -263,7 +265,14 @@ function FileItem(props: Props) {
                     {...provided.draggableProps}
                     ref={provided.innerRef}
                 >
-                    <ListItem button onDoubleClick={() => handlePlay()} className={state.isBeingPlayed ? classes.beingPlayed : ''}>
+                    <ListItem
+                        button
+                        onDoubleClick={() => handlePlay()}
+                        className={state.isBeingPlayed ? classes.beingPlayed : ''}
+                        style={{
+                            backgroundColor: snapshot.isDragging ? theme.palette.primary.dark : '',
+                        }}
+                    >
                         <ListItemAvatar>
                             <Avatar className={classes.position}>{state.position}</Avatar>
                         </ListItemAvatar>
