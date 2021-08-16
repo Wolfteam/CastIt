@@ -1,19 +1,16 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Typography,
-    Slider,
     Divider,
     ListItem,
     ListItemText,
     Avatar,
     ListItemAvatar,
-    ListItemSecondaryAction,
     makeStyles,
     Tooltip,
     createStyles,
     Menu,
     MenuItem,
-    Grid,
     useTheme,
 } from '@material-ui/core';
 import { IFileItemResponseDto } from '../../models';
@@ -31,6 +28,8 @@ import { Add, ClearAll, Delete, Loop, PlayArrow, Refresh } from '@material-ui/ic
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
+import FileItemSubtitle from './file_item_subtitle';
+import FileItemDuration from './file_item_duration';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -38,22 +37,11 @@ const useStyles = makeStyles((theme) =>
             color: theme.palette.getContrastText(theme.palette.primary.main),
             backgroundColor: theme.palette.primary.main,
         },
-        text: {
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-        },
-        duration: {
-            top: '40%',
-        },
         beingPlayed: {
             backgroundColor: theme.palette.primary.light,
         },
         menuItemText: {
             marginLeft: 10,
-        },
-        slider: {
-            color: `${theme.palette.primary.main} !important`,
         },
     })
 );
@@ -71,6 +59,8 @@ interface State {
     path: string;
     playedPercentage: number;
     position: number;
+    playedTime: string;
+    duration: string;
     fullTotalDuration: string;
     isBeingPlayed: boolean;
     loop: boolean;
@@ -89,6 +79,8 @@ const initialState: State = {
     path: '',
     playedPercentage: 0,
     position: 1,
+    playedTime: '',
+    duration: '',
     fullTotalDuration: '',
     isBeingPlayed: false,
     loop: false,
@@ -118,6 +110,8 @@ function FileItem(props: Props) {
             fullTotalDuration: props.file.fullTotalDuration,
             isBeingPlayed: props.file.isBeingPlayed,
             loop: props.file.loop,
+            playedTime: props.file.playedTime,
+            duration: props.file.duration,
         });
     }, [props.file]);
 
@@ -166,6 +160,8 @@ function FileItem(props: Props) {
                 fullTotalDuration: status.playedFile!.fullTotalDuration,
                 isBeingPlayed: status.playedFile!.isBeingPlayed,
                 loop: status.playedFile!.loop,
+                playedTime: status.playedFile!.playedTime,
+                duration: status.playedFile!.duration,
             }));
         });
 
@@ -226,25 +222,8 @@ function FileItem(props: Props) {
 
     const title = (
         <Tooltip title={state.filename}>
-            <Typography className={classes.text}>{state.filename}</Typography>
+            <Typography className={'text-overflow-elipsis'}>{state.filename}</Typography>
         </Tooltip>
-    );
-
-    const subtitle = (
-        <Fragment>
-            <Tooltip title={state.subTitle}>
-                <Typography variant="subtitle1" className={classes.text}>
-                    {state.subTitle}
-                </Typography>
-            </Tooltip>
-            <Tooltip title={state.path}>
-                <Typography variant="subtitle2" className={classes.text}>
-                    {state.path}
-                </Typography>
-            </Tooltip>
-
-            <Slider value={state.playedPercentage} disabled className={classes.slider} />
-        </Fragment>
     );
 
     const toggleLoopMenuItem = state.isBeingPlayed ? (
@@ -276,13 +255,20 @@ function FileItem(props: Props) {
                         <ListItemAvatar>
                             <Avatar className={classes.position}>{state.position}</Avatar>
                         </ListItemAvatar>
-                        <ListItemText primary={title} secondary={subtitle} />
-                        <ListItemSecondaryAction className={classes.duration}>
-                            <Grid container justifyContent="center" alignItems="center">
-                                {state.loop ? <Loop fontSize="small" /> : null}
-                                <Typography>{state.fullTotalDuration}</Typography>
-                            </Grid>
-                        </ListItemSecondaryAction>
+                        <ListItemText
+                            primary={title}
+                            secondaryTypographyProps={{ component: 'span' }}
+                            secondary={
+                                <FileItemSubtitle
+                                    path={state.path}
+                                    playedPercentage={state.playedPercentage}
+                                    subTitle={state.subTitle}
+                                    duration={state.duration}
+                                    playedTime={state.playedTime}
+                                />
+                            }
+                        />
+                        <FileItemDuration fullTotalDuration={state.fullTotalDuration} loop={state.loop} />
                     </ListItem>
                     <Menu
                         keepMounted

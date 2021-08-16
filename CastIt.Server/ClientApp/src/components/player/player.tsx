@@ -62,7 +62,7 @@ function Player() {
                 <Grid item xs={10} md={11}>
                     {playerControls}
                 </Grid>
-                <Grid item xs={1}>
+                <Grid item xs={1} style={{ textAlign: 'center' }}>
                     {toggleExpandButton}
                 </Grid>
             </Grid>

@@ -28,7 +28,6 @@ const useStyles = makeStyles({
     root: {
         minWidth: 175,
         maxWidth: 375,
-        '&:hover': { transform: 'scale3d(1.05, 1.05, 1)' },
     },
     title: {
         fontSize: 14,
@@ -42,6 +41,9 @@ const useStyles = makeStyles({
     },
     actionButtons: {
         justifyContent: 'flex-end',
+        '& button': {
+            padding: 5,
+        },
     },
     cardContent: {
         paddingBottom: 0,
@@ -161,7 +163,7 @@ function PlayListCardItem(props: Props): JSX.Element {
                     <CardActionArea onClick={handleClick}>
                         <CardMedia className={classes.image} image={props.imageUrl} title={props.name} />
                         <CardContent className={classes.cardContent}>
-                            <Fab className={classes.fab} color="primary">
+                            <Fab className={classes.fab} color="primary" component="div">
                                 {props.numberOfFiles}
                             </Fab>
                             <Typography className={classes.title} color="textSecondary" gutterBottom>

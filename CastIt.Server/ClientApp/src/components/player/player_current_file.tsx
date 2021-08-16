@@ -26,6 +26,8 @@ const initialState: State = {
     subtitle: '',
 };
 
+const defaultImg = `${process.env.PUBLIC_URL}/no_img.png`;
+
 function PlayerCurrentFile() {
     const classes = useStyles();
     const [state, setState] = useState(initialState);
@@ -64,10 +66,12 @@ function PlayerCurrentFile() {
         };
     }, []);
 
+    const image = state.imageUrl ?? defaultImg;
+
     return (
         <Grid container wrap="nowrap" alignItems="center">
             <Grid item style={{ display: 'flex' }}>
-                <img className={classes.image} src={state.imageUrl} alt="Current file" />
+                <img className={classes.image} src={image} alt="Current file" />
             </Grid>
             <Grid item className={classes.text} style={{ paddingLeft: '10px' }}>
                 <Tooltip title={state.title}>
