@@ -1,18 +1,20 @@
-import { Grid, IconButton, Popover, Slider } from "@material-ui/core";
-import { useEffect, useState } from "react";
-import { Fragment } from "react";
-import { VolumeDown, VolumeUp } from "@material-ui/icons";
-import { usePopupState, bindTrigger, bindPopover } from "material-ui-popup-state/hooks";
-import { onPlayerStatusChanged, setVolume } from "../../services/castithub.service";
+import { Grid, IconButton, Popover, Slider } from '@material-ui/core';
+import { useEffect, useState } from 'react';
+import { Fragment } from 'react';
+import { VolumeOff, VolumeUp } from '@material-ui/icons';
+import { usePopupState, bindTrigger, bindPopover } from 'material-ui-popup-state/hooks';
+import { onPlayerStatusChanged, setVolume } from '../../services/castithub.service';
 
 interface State {
     volume: number;
+    isMuted: boolean;
     isConnected: boolean;
     isVolumeChanging: boolean;
 }
 
 const initialState: State = {
     volume: 100,
+    isMuted: false,
     isConnected: false,
     isVolumeChanging: false,
 };
@@ -21,8 +23,8 @@ function PlayerVolume() {
     const [state, setState] = useState(initialState);
 
     const popupState = usePopupState({
-        variant: "popover",
-        popupId: "volumePopup",
+        variant: 'popover',
+        popupId: 'volumePopup',
     });
 
     useEffect(() => {
@@ -34,6 +36,7 @@ function PlayerVolume() {
             if (status.playedFile) {
                 setState({
                     volume: status.player.volumeLevel,
+                    isMuted: status.player.isMuted,
                     isConnected: status.player.isPlayingOrPaused,
                     isVolumeChanging: false,
                 });
@@ -51,12 +54,11 @@ function PlayerVolume() {
         };
     }, [state.isVolumeChanging]);
 
-    const handleVolumeChange = async (val: number, commited: boolean = false): Promise<void> => {
-        //TODO: MUTED
+    const handleVolumeChange = async (volume: number, isMuted: boolean, commited: boolean = false): Promise<void> => {
+        setState((s) => ({ ...s, isVolumeChanging: !commited, volume: volume, isMuted: isMuted }));
         if (commited) {
-            await setVolume(val, false);
+            await setVolume(volume, isMuted);
         }
-        setState((s) => ({ ...s, isVolumeChanging: !commited, volume: val }));
     };
 
     return (
@@ -68,17 +70,17 @@ function PlayerVolume() {
                 {...bindPopover(popupState)}
                 PaperProps={{
                     style: {
-                        width: 300,
-                        overflowY: "hidden",
+                        width: 320,
+                        overflowY: 'hidden',
                     },
                 }}
                 anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "center",
+                    vertical: 'bottom',
+                    horizontal: 'center',
                 }}
                 transformOrigin={{
-                    vertical: "top",
-                    horizontal: "center",
+                    vertical: 'top',
+                    horizontal: 'center',
                 }}
             >
                 <Grid
@@ -90,8 +92,10 @@ function PlayerVolume() {
                         paddingRight: 10,
                     }}
                 >
-                    <Grid item xs={1}>
-                        <VolumeDown />
+                    <Grid item xs={2}>
+                        <IconButton onClick={() => handleVolumeChange(state.volume, !state.isMuted, true)}>
+                            {state.isMuted ? <VolumeOff fontSize="medium" /> : <VolumeUp fontSize="medium" />}
+                        </IconButton>
                     </Grid>
                     <Grid item xs={10} style={{ paddingRight: 10 }}>
                         <Slider
@@ -101,12 +105,12 @@ function PlayerVolume() {
                             marks
                             disabled={!state.isConnected}
                             value={state.volume}
-                            onChange={(e, val) => handleVolumeChange(val as number)}
-                            onChangeCommitted={(e, val) => handleVolumeChange(val as number, true)}
+                            onChange={(e, val) => handleVolumeChange(val as number, state.isMuted)}
+                            onChangeCommitted={(e, val) => handleVolumeChange(val as number, state.isMuted, true)}
+                            style={{
+                                marginTop: 6,
+                            }}
                         />
-                    </Grid>
-                    <Grid item xs={1}>
-                        <VolumeUp />
                     </Grid>
                 </Grid>
             </Popover>

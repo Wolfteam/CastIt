@@ -1,5 +1,5 @@
 import { makeStyles, createStyles, IconButton, Divider, ListItemText, Menu, MenuItem } from '@material-ui/core';
-import { Audiotrack, HighQuality, Search, Subtitles, List, CheckTwoTone } from '@material-ui/icons';
+import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@material-ui/icons';
 import MenuIcon from '@material-ui/icons/Menu';
 import { Fragment, useEffect, useState } from 'react';
 import PopupState, { bindTrigger, bindMenu, InjectedProps } from 'material-ui-popup-state';

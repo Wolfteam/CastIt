@@ -3,7 +3,6 @@ import {
     createStyles,
     Dialog,
     DialogContent,
-    DialogTitle,
     Divider,
     FormControl,
     FormControlLabel,
@@ -32,7 +31,7 @@ import {
 import { IServerAppSettings } from '../../models';
 import { onPlayerSettingsChanged, updateSettings } from '../../services/castithub.service';
 import translations from '../../services/translations';
-import { TranslationContext, getLanguageString, getLanguageEnum } from '../../context/translations.context';
+import { getLanguageString, getLanguageEnum, TranslationContext } from '../../context/translations.context';
 import { String } from 'typescript-string-operations';
 import AppDialogTitle from '../dialogs/app_dialog_title';
 

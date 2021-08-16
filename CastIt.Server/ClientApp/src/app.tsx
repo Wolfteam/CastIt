@@ -23,7 +23,7 @@ const theme = createTheme({
 function App() {
     const loading = (
         <Container>
-            <Grid container justify="center" alignItems="center" direction="column" style={{ minHeight: '100vh' }}>
+            <Grid container justifyContent="center" alignItems="center" direction="column" style={{ minHeight: '100vh' }}>
                 <Grid item xs={12}>
                     <CircularProgress />
                 </Grid>

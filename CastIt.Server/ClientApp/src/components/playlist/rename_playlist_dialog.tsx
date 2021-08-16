@@ -28,7 +28,7 @@ function RenamePlayListDialog(props: Props) {
             ...s,
             name: props.name,
         }));
-    }, []);
+    }, [props.name]);
 
     const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newVal = event.target.value;

@@ -1,5 +1,4 @@
-import { Container } from '@material-ui/core';
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IGetAllPlayListResponseDto } from '../models';
 import {
     initializeHubConnection,
@@ -17,7 +16,7 @@ import {
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
 import { Grid } from '@material-ui/core';
-import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 
 interface State {
     isBusy: boolean;
@@ -56,7 +55,7 @@ function PlayLists() {
             setState((s) => ({ ...s, playLists: copy }));
         });
 
-        const onPlayListsChangedSubscription = onPlayListsChanged.subscribe(playLists => {
+        const onPlayListsChangedSubscription = onPlayListsChanged.subscribe((playLists) => {
             setState((s) => ({ ...s, playLists: playLists }));
         });
 

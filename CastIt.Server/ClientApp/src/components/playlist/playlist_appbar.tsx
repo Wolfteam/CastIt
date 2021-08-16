@@ -1,25 +1,9 @@
-import {
-    alpha,
-    AppBar,
-    createStyles,
-    Divider,
-    IconButton,
-    InputBase,
-    ListItemText,
-    makeStyles,
-    Menu,
-    MenuItem,
-    Theme,
-    Toolbar,
-    Typography,
-} from '@material-ui/core';
+import { alpha, AppBar, createStyles, IconButton, InputBase, makeStyles, Theme, Toolbar, Typography } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
-import { ArrowBack, ArrowUpward, Redo, Audiotrack, HighQuality, Subtitles, Search } from '@material-ui/icons';
-import MenuIcon from '@material-ui/icons/Menu';
+import { ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
 import { playListsPath } from '../../routes';
 import { useHistory } from 'react-router-dom';
 import { Fragment, useEffect, useState } from 'react';
-import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
@@ -111,11 +95,11 @@ function PlayListAppBar(props: Props) {
         }, 500);
 
         return () => clearTimeout(timeout);
-    }, [props.onSearch, props.searchText, search]);
+    }, [props, search]);
 
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
-            if (!status.playedFile || status.playedFile.playListId != props.id) {
+            if (!status.playedFile || status.playedFile.playListId !== props.id) {
                 if (state.canGoToPlayedFile) {
                     setState((s) => ({ ...s, canGoToPlayedFile: false }));
                 }

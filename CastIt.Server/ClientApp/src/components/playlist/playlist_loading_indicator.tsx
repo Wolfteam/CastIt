@@ -43,7 +43,7 @@ function PlayListLoadingIndicator(props: Props) {
             onFileEndReachedSubscription.unsubscribe();
             onStoppedPlaybackSubscription.unsubscribe();
         };
-    }, []);
+    }, [props.playListId]);
     const loading = !isBusy ? null : <LinearProgress variant="indeterminate" className={classes.loading} />;
     return loading;
 }

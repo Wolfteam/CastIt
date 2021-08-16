@@ -1,5 +1,5 @@
 import LocalizedStrings, { LocalizedStringsMethods } from 'react-localization';
-import { AppLanguage, AppMessage } from '../enums';
+import { AppMessage } from '../enums';
 
 interface IAppMessageTranslations {
     unknownErrorOccurred: string;

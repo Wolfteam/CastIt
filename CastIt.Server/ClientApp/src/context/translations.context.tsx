@@ -2,7 +2,7 @@ import { useState, createContext, Dispatch, SetStateAction } from 'react';
 import { AppLanguage } from '../enums';
 import translations from '../services/translations';
 
-interface TranslationContext {
+interface ITranslationContext {
     currentLanguage: string;
 }
 
@@ -32,7 +32,7 @@ export const getLanguageEnum = (lang: string): AppLanguage => {
     }
 };
 
-export const TranslationContext = createContext<[TranslationContext | null, Dispatch<SetStateAction<TranslationContext>> | null]>([
+export const TranslationContext = createContext<[ITranslationContext | null, Dispatch<SetStateAction<ITranslationContext>> | null]>([
     null,
     null,
 ]);
@@ -43,7 +43,7 @@ export const TranslationContextProvider = (children: any) => {
         lang = supportedLangs[1];
     }
 
-    const [trans, setTrans] = useState<TranslationContext>({
+    const [trans, setTrans] = useState<ITranslationContext>({
         currentLanguage: lang,
     });
 
