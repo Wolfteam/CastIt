@@ -1,16 +1,14 @@
 import { useSnackbar } from 'notistack';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import {
-    getPlayList,
     onPlayListsChanged,
     onPlayListChanged,
     onPlayListBusy,
     onFileAdded,
     onFilesChanged,
     onFileDeleted,
-    updateFilePosition,
 } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
 import { CircularProgress, Container, createStyles, Grid, List, makeStyles, Typography } from '@material-ui/core';
@@ -19,6 +17,7 @@ import { Info } from '@material-ui/icons';
 import translations from '../services/translations';
 import PageContent from './page_content';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
+import { CastItHubContext } from '../context/castit_hub.context';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -51,20 +50,21 @@ const initialState: State = {
 
 function PlayList() {
     const [state, setState] = useState(initialState);
+    const [castItHub] = useContext(CastItHubContext);
     const { enqueueSnackbar } = useSnackbar();
     const params = useParams<Params>();
 
     const classes = useStyles();
 
     const loadPlayList = useCallback(async () => {
-        const playList = await getPlayList(+params.id);
+        const playList = await castItHub.connection.getPlayList(+params.id);
         setState((s) => ({
             ...s,
             isBusy: false,
             playList: playList,
             filteredFiles: playList.files,
         }));
-    }, [params.id]);
+    }, [params.id, castItHub.connection]);
 
     useEffect(() => {
         loadPlayList();
@@ -210,7 +210,7 @@ function PlayList() {
             return;
         }
 
-        await updateFilePosition(state.playList!.id, source.id, result.destination!.index);
+        await castItHub.connection.updateFilePosition(state.playList!.id, source.id, result.destination!.index);
     };
 
     const files = state.filteredFiles.map((file, index) => <FileItem key={file.id} file={file} index={index} />) ?? [];

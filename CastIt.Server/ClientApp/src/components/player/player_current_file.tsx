@@ -1,6 +1,7 @@
 import { Grid, LinearProgress, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import { useEffect, useState } from 'react';
 import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
+import { defaultImg } from '../../utils/app_constants';
 
 const useStyles = makeStyles({
     image: {
@@ -26,14 +27,16 @@ const initialState: State = {
     subtitle: '',
 };
 
-const defaultImg = `${process.env.PUBLIC_URL}/no_img.png`;
-
 function PlayerCurrentFile() {
     const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
         const playerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
+            if (!status) {
+                return;
+            }
+
             if (!status.playedFile) {
                 setState(initialState);
                 return;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
     Typography,
     Divider,
@@ -14,22 +14,14 @@ import {
     useTheme,
 } from '@material-ui/core';
 import { IFileItemResponseDto } from '../../models';
-import {
-    onFileChanged,
-    onFileEndReached,
-    onPlayerStatusChanged,
-    play,
-    loopFile,
-    deleteFile,
-    removeAllMissingFiles,
-    addFolderOrFileOrUrl,
-} from '../../services/castithub.service';
+import { onFileChanged, onFileEndReached, onPlayerStatusChanged } from '../../services/castithub.service';
 import { Add, ClearAll, Delete, Loop, PlayArrow, Refresh } from '@material-ui/icons';
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
 import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
+import { CastItHubContext } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -97,6 +89,7 @@ function FileItem(props: Props) {
     const [state, setState] = useState<State>(initialState);
     const [contextMenu, setContextMenu] = useState(initialContextMenuState);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
+    const [castItHub] = useContext(CastItHubContext);
 
     useEffect(() => {
         setState({
@@ -140,6 +133,9 @@ function FileItem(props: Props) {
         });
 
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
+            if (!status) {
+                return;
+            }
             if (status.playedFile?.id !== props.file.id) {
                 if (state.isBeingPlayed) {
                     setState((s) => ({
@@ -190,7 +186,7 @@ function FileItem(props: Props) {
 
     const handlePlay = async (force: boolean = false): Promise<void> => {
         handleCloseContextMenu();
-        await play(props.file.playListId, state.id, force, false);
+        await castItHub.connection.play(props.file.playListId, state.id, force, false);
     };
 
     const handleCloseContextMenu = (): void => {
@@ -199,25 +195,25 @@ function FileItem(props: Props) {
 
     const handleToggleLoop = async (): Promise<void> => {
         handleCloseContextMenu();
-        await loopFile(state.playListId, state.id, !state.loop);
+        await castItHub.connection.loopFile(state.playListId, state.id, !state.loop);
     };
 
     const handleAddFiles = async (path: string | null, includeSubFolder: boolean, onlyVideo: boolean): Promise<void> => {
         handleCloseContextMenu();
         setShowAddFilesDialog(false);
         if (path) {
-            await addFolderOrFileOrUrl(state.playListId, path, includeSubFolder, onlyVideo);
+            await castItHub.connection.addFolderOrFileOrUrl(state.playListId, path, includeSubFolder, onlyVideo);
         }
     };
 
     const handleDelete = async (): Promise<void> => {
         handleCloseContextMenu();
-        await deleteFile(props.file.playListId, props.file.id);
+        await castItHub.connection.deleteFile(props.file.playListId, props.file.id);
     };
 
     const handleRemoveAllMissing = async (): Promise<void> => {
         handleCloseContextMenu();
-        await removeAllMissingFiles(props.file.playListId);
+        await castItHub.connection.removeAllMissingFiles(props.file.playListId);
     };
 
     const title = (

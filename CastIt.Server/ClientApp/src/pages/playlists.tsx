@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { IGetAllPlayListResponseDto } from '../models';
 import {
-    initializeHubConnection,
     onPlayListAdded,
     onPlayListsLoaded,
     onPlayListDeleted,
@@ -10,13 +9,12 @@ import {
     onFileLoading,
     onFileLoaded,
     onFileEndReached,
-    onPlayerStatusChanged,
-    updatePlayListPosition,
 } from '../services/castithub.service';
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
 import { Grid } from '@material-ui/core';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
+import { CastItHubContext } from '../context/castit_hub.context';
 
 interface State {
     isBusy: boolean;
@@ -30,25 +28,9 @@ const initialState: State = {
 
 function PlayLists() {
     const [state, setState] = useState(initialState);
+    const [castItHub] = useContext(CastItHubContext);
 
     useEffect(() => {
-        const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
-            if (!status.playList) {
-                return;
-            }
-
-            const playList = state.playLists.find((pl) => pl.id === status.playList!.id);
-            if (!playList) {
-                return;
-            }
-
-            const index = state.playLists.indexOf(playList);
-            const copy = [...state.playLists];
-            copy.splice(index, 1);
-            copy.splice(index, 0, status.playList!);
-            setState((s) => ({ ...s, playLists: copy }));
-        });
-
         const onPlayListAddedSubscription = onPlayListAdded.subscribe((playList) => {
             const copy = [...state.playLists];
             copy.splice(playList.position, 0, playList);
@@ -84,7 +66,6 @@ function PlayLists() {
 
         return () => {
             onPlayListAddedSubscription.unsubscribe();
-            onPlayerStatusChangedSubscription.unsubscribe();
             onPlayListsChangedSubscription.unsubscribe();
             onPlayListChangedSubscription.unsubscribe();
             onPlayListDeletedSubscription.unsubscribe();
@@ -108,7 +89,7 @@ function PlayLists() {
             setState((s) => ({ ...s, isBusy: false }));
         });
 
-        initializeHubConnection();
+        // initializeHubConnection();
 
         return () => {
             onPlayListsLoadedSubscription.unsubscribe();
@@ -120,19 +101,24 @@ function PlayLists() {
 
     const items = state.playLists.map((pl, index) => (
         <Grid key={pl.id} item xs={6} sm={6} md={4} lg={3} xl={2}>
-            <PlayListCardItem {...pl} index={index} />
+            <PlayListCardItem index={index} playList={pl} />
         </Grid>
     ));
 
     const addNew = (
         <Grid key="AddNewItem" item xs={6} sm={6} md={4} lg={3} xl={2} style={{ alignSelf: 'center' }}>
             <PlayListCardItem
-                id={0}
-                position={-1}
-                name=""
-                imageUrl=""
-                numberOfFiles={-1}
-                totalDuration=""
+                playList={{
+                    id: 0,
+                    position: -1,
+                    name: '',
+                    imageUrl: '',
+                    numberOfFiles: -1,
+                    totalDuration: '',
+                    loop: false,
+                    shuffle: false,
+                    playedTime: '',
+                }}
                 toAddNewItem
                 index={items.length + 1}
             />
@@ -154,7 +140,7 @@ function PlayLists() {
             return;
         }
 
-        await updatePlayListPosition(source.id, result.destination!.index);
+        await castItHub.connection.updatePlayListPosition(source.id, result.destination!.index);
     };
 
     items.push(addNew);

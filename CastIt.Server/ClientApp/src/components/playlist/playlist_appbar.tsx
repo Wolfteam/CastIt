@@ -99,6 +99,9 @@ function PlayListAppBar(props: Props) {
 
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
+            if (!status) {
+                return;
+            }
             if (!status.playedFile || status.playedFile.playListId !== props.id) {
                 if (state.canGoToPlayedFile) {
                     setState((s) => ({ ...s, canGoToPlayedFile: false }));

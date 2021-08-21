@@ -13,16 +13,19 @@ import {
     Card,
     Grid,
 } from '@material-ui/core';
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Add, Delete, MoreVert, Edit } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
 import { playListPath } from '../../routes';
 import RenamePlayListDialog from './rename_playlist_dialog';
-import { addFolderOrFileOrUrl, addNewPlayList, deletePlayList, updatePlayList } from '../../services/castithub.service';
+import { onPlayerStatusChanged } from '../../services/castithub.service';
 import translations from '../../services/translations';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
+import { IGetAllPlayListResponseDto } from '../../models';
+import { CastItHubContext } from '../../context/castit_hub.context';
+import { defaultImg } from '../../utils/app_constants';
 
 const useStyles = makeStyles({
     root: {
@@ -61,6 +64,11 @@ const useStyles = makeStyles({
 
 interface Props {
     index: number;
+    toAddNewItem?: boolean;
+    playList: IGetAllPlayListResponseDto;
+}
+
+interface State {
     id: number;
     name: string;
     totalDuration: string;
@@ -69,16 +77,55 @@ interface Props {
     numberOfFiles: number;
     position: number;
     imageUrl: string;
-    toAddNewItem?: boolean;
+    loaded: boolean;
 }
+
+const initialState: State = {
+    id: 0,
+    name: '',
+    totalDuration: '',
+    numberOfFiles: 0,
+    position: 0,
+    imageUrl: '',
+    loaded: false,
+};
 
 function PlayListCardItem(props: Props): JSX.Element {
     const classes = useStyles();
     const history = useHistory();
     const [anchorEl, setAnchorEl] = useState<HTMLElement>();
+
+    const [state, setState] = useState(initialState);
     const [raised, setRaised] = useState(false);
     const [showRenameDialog, setShowRenameDialog] = useState(false);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
+
+    const [castItHub] = useContext(CastItHubContext);
+
+    useEffect(() => {
+        setState({ ...props.playList, loaded: true });
+    }, [props.playList]);
+
+    useEffect(() => {
+        const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
+            if (!status) {
+                return;
+            }
+
+            if (!status.playList) {
+                return;
+            }
+
+            if (props.playList.id !== status.playList.id) {
+                return;
+            }
+
+            setState((s) => ({ ...s, ...status.playList! }));
+        });
+        return () => {
+            onPlayerStatusChangedSubscription.unsubscribe();
+        };
+    }, [props.playList]);
 
     const handleShowMoreClick = (event: React.MouseEvent<HTMLElement>): void => {
         setAnchorEl(event.currentTarget);
@@ -89,7 +136,7 @@ function PlayListCardItem(props: Props): JSX.Element {
     };
 
     const handleClick = (): void => {
-        const route = playListPath.replace(':id', `${props.id}`);
+        const route = playListPath.replace(':id', `${state.id}`);
         history.push(route);
     };
 
@@ -98,26 +145,26 @@ function PlayListCardItem(props: Props): JSX.Element {
     };
 
     const handleDelete = async (): Promise<void> => {
-        await deletePlayList(props.id);
+        await castItHub.connection.deletePlayList(state.id);
         handleClose();
     };
 
     const handleAddNew = async (): Promise<void> => {
-        await addNewPlayList();
+        await castItHub.connection.addNewPlayList();
     };
 
     const handleRename = async (newName: string | null): Promise<void> => {
         handleClose();
         setShowRenameDialog(false);
         if (newName) {
-            await updatePlayList(props.id, newName);
+            await castItHub.connection.updatePlayList(state.id, newName);
         }
     };
 
     const handleAddFiles = async (path: string | null, includeSubFolder: boolean, onlyVideo: boolean): Promise<void> => {
         setShowAddFilesDialog(false);
         if (path) {
-            await addFolderOrFileOrUrl(props.id, path, includeSubFolder, onlyVideo);
+            await castItHub.connection.addFolderOrFileOrUrl(state.id, path, includeSubFolder, onlyVideo);
         }
     };
 
@@ -125,6 +172,7 @@ function PlayListCardItem(props: Props): JSX.Element {
     const moreId = anchorEl ? 'open-more-popover' : undefined;
 
     const elevation = raised ? 24 : 2;
+
     if (props.toAddNewItem) {
         return (
             <Card
@@ -147,8 +195,14 @@ function PlayListCardItem(props: Props): JSX.Element {
         );
     }
 
+    if (!state.loaded) {
+        return <Card elevation={elevation} raised={raised} className={classes.root} />;
+    }
+
+    const image = state.imageUrl ?? defaultImg;
+
     return (
-        <Draggable index={props.index} draggableId={`${props.id}_${props.name}`}>
+        <Draggable index={props.index} draggableId={`${props.playList.id}_${props.playList.name}`}>
             {(provided) => (
                 <Card
                     elevation={elevation}
@@ -161,22 +215,22 @@ function PlayListCardItem(props: Props): JSX.Element {
                     {...provided.draggableProps}
                 >
                     <CardActionArea onClick={handleClick}>
-                        <CardMedia className={classes.image} image={props.imageUrl} title={props.name} />
+                        <CardMedia className={classes.image} image={image} title={state.name} />
                         <CardContent className={classes.cardContent}>
                             <Fab className={classes.fab} color="primary" component="div">
-                                {props.numberOfFiles}
+                                {state.numberOfFiles}
                             </Fab>
                             <Typography className={classes.title} color="textSecondary" gutterBottom>
                                 {translations.playList}
                             </Typography>
-                            <Tooltip title={props.name}>
+                            <Tooltip title={state.name}>
                                 <Typography variant="h5" component="h2" className={classes.name}>
-                                    {props.name}
+                                    {state.name}
                                 </Typography>
                             </Tooltip>
-                            <Tooltip title={props.totalDuration}>
+                            <Tooltip title={state.totalDuration}>
                                 <Typography color="textSecondary" className={classes.name}>
-                                    {props.totalDuration}
+                                    {state.totalDuration}
                                 </Typography>
                             </Tooltip>
                         </CardContent>
@@ -185,8 +239,8 @@ function PlayListCardItem(props: Props): JSX.Element {
                         <IconButton onClick={() => setShowAddFilesDialog(true)}>
                             <Add />
                         </IconButton>
-                        <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} renderLoop />
-                        <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} />
+                        <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} renderLoop />
+                        <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} />
                         <IconButton onClick={handleShowMoreClick}>
                             <MoreVert />
                         </IconButton>
@@ -217,7 +271,7 @@ function PlayListCardItem(props: Props): JSX.Element {
                             </Button>
                         </Popover>
                         <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
-                        <RenamePlayListDialog isOpen={showRenameDialog} name={props.name} onClose={handleRename} />
+                        <RenamePlayListDialog isOpen={showRenameDialog} name={state.name} onClose={handleRename} />
                     </CardActions>
                 </Card>
             )}

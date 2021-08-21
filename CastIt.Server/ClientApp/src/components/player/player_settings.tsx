@@ -18,7 +18,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import { Settings } from '@material-ui/icons';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import { Fragment, useContext, useEffect, useState } from 'react';
 import {
     VideoScale,
     SubtitleBgColor,
@@ -29,11 +29,12 @@ import {
     AppLanguage,
 } from '../../enums';
 import { IServerAppSettings } from '../../models';
-import { onPlayerSettingsChanged, updateSettings } from '../../services/castithub.service';
+import { onPlayerSettingsChanged } from '../../services/castithub.service';
 import translations from '../../services/translations';
 import { getLanguageString, getLanguageEnum, TranslationContext } from '../../context/translations.context';
 import { String } from 'typescript-string-operations';
 import AppDialogTitle from '../dialogs/app_dialog_title';
+import { CastItHubContext } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -60,11 +61,14 @@ function PlayerSettings() {
     const classes = useStyles();
     const [open, setOpen] = useState(false);
     const [state, setState] = useState<State>({});
-
     const [translationContext, translationState] = useContext(TranslationContext);
+    const [castItHub] = useContext(CastItHubContext);
 
     useEffect(() => {
         const onPlayerSettingsChangedSubscription = onPlayerSettingsChanged.subscribe((settings) => {
+            if (!settings) {
+                return;
+            }
             setState({ settings: settings });
         });
         return () => {
@@ -193,8 +197,7 @@ function PlayerSettings() {
                 break;
         }
 
-        console.log(updatedSettings);
-        await updateSettings(updatedSettings);
+        await castItHub.connection.updateSettings(updatedSettings);
     };
 
     return (

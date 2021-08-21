@@ -1,7 +1,8 @@
 import { Grid, Slider, Typography } from '@material-ui/core';
 import formatDuration from 'format-duration';
-import { useEffect, useState } from 'react';
-import { onPlayerStatusChanged, gotoSeconds } from '../../services/castithub.service';
+import { useContext, useEffect, useState } from 'react';
+import { CastItHubContext } from '../../context/castit_hub.context';
+import { onPlayerStatusChanged } from '../../services/castithub.service';
 
 interface State {
     playedTime: string;
@@ -23,10 +24,15 @@ const initialState: State = {
 
 function PlayerProgressIndicator() {
     const [state, setState] = useState(initialState);
+    const [castItHub] = useContext(CastItHubContext);
 
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
             if (state.isValueChanging) {
+                return;
+            }
+
+            if (!status) {
                 return;
             }
             if (status.playedFile) {
@@ -50,7 +56,7 @@ function PlayerProgressIndicator() {
 
     const handleValueChanged = async (seconds: number, committed: boolean = false): Promise<void> => {
         if (committed) {
-            await gotoSeconds(seconds);
+            await castItHub.connection.gotoSeconds(seconds);
         }
 
         setState((s) => ({

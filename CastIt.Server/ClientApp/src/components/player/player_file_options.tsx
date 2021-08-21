@@ -1,11 +1,12 @@
 import { makeStyles, createStyles, IconButton, Divider, ListItemText, Menu, MenuItem } from '@material-ui/core';
 import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@material-ui/icons';
 import MenuIcon from '@material-ui/icons/Menu';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useContext, useEffect, useState } from 'react';
 import PopupState, { bindTrigger, bindMenu, InjectedProps } from 'material-ui-popup-state';
-import { onPlayerStatusChanged, setFileOptions } from '../../services/castithub.service';
+import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { IFileItemOptionsResponseDto } from '../../models';
 import translations from '../../services/translations';
+import { CastItHubContext } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -41,9 +42,14 @@ const initialState: State = {
 function PlayerFileOptions() {
     const classes = useStyles();
     const [state, setState] = useState(initialState);
-
+    const [castItHub] = useContext(CastItHubContext);
+    
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
+            if (!status) {
+                return;
+            }
+
             if (!status.playedFile) {
                 setState(initialState);
                 return;
@@ -75,7 +81,7 @@ function PlayerFileOptions() {
         if (!selected) {
             return;
         }
-        await setFileOptions(id, selected.isAudio, selected.isSubTitle, selected.isQuality);
+        await castItHub.connection.setFileOptions(id, selected.isAudio, selected.isSubTitle, selected.isQuality);
     };
 
     const buildSubMenuItem = (

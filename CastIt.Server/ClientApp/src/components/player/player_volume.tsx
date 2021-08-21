@@ -1,9 +1,10 @@
 import { Grid, IconButton, Popover, Slider } from '@material-ui/core';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Fragment } from 'react';
 import { VolumeOff, VolumeUp } from '@material-ui/icons';
 import { usePopupState, bindTrigger, bindPopover } from 'material-ui-popup-state/hooks';
-import { onPlayerStatusChanged, setVolume } from '../../services/castithub.service';
+import { onPlayerStatusChanged } from '../../services/castithub.service';
+import { CastItHubContext } from '../../context/castit_hub.context';
 
 interface State {
     volume: number;
@@ -21,6 +22,7 @@ const initialState: State = {
 
 function PlayerVolume() {
     const [state, setState] = useState(initialState);
+    const [castItHub] = useContext(CastItHubContext);
 
     const popupState = usePopupState({
         variant: 'popover',
@@ -30,6 +32,10 @@ function PlayerVolume() {
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
             if (state.isVolumeChanging) {
+                return;
+            }
+
+            if (!status) {
                 return;
             }
 
@@ -57,7 +63,7 @@ function PlayerVolume() {
     const handleVolumeChange = async (volume: number, isMuted: boolean, commited: boolean = false): Promise<void> => {
         setState((s) => ({ ...s, isVolumeChanging: !commited, volume: volume, isMuted: isMuted }));
         if (commited) {
-            await setVolume(volume, isMuted);
+            await castItHub.connection.setVolume(volume, isMuted);
         }
     };
 

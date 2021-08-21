@@ -1,13 +1,8 @@
-import { Grid, IconButton } from "@material-ui/core";
-import { useEffect, useState } from "react";
-import { SkipPrevious, SkipNext, FastForward, FastRewind, PlayArrow, Stop, Pause } from "@material-ui/icons";
-import {
-    onPlayerStatusChanged,
-    togglePlayBack,
-    skipSeconds,
-    goTo,
-    stopPlayBack,
-} from "../../services/castithub.service";
+import { Grid, IconButton } from '@material-ui/core';
+import { useContext, useEffect, useState } from 'react';
+import { SkipPrevious, SkipNext, FastForward, FastRewind, PlayArrow, Stop, Pause } from '@material-ui/icons';
+import { onPlayerStatusChanged } from '../../services/castithub.service';
+import { CastItHubContext } from '../../context/castit_hub.context';
 
 interface State {
     isPlayingOrPaused: boolean;
@@ -23,9 +18,13 @@ const initialState: State = {
 
 function PlayerControls() {
     const [state, setState] = useState(initialState);
+    const [castItHub] = useContext(CastItHubContext);
 
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
+            if (!status) {
+                return;
+            }
             setState({
                 isPaused: status.player.isPaused,
                 isPlaying: status.player.isPlaying,
@@ -38,19 +37,19 @@ function PlayerControls() {
     }, []);
 
     const handleSkipOrPrevious = async (next: boolean, previous: boolean): Promise<void> => {
-        await goTo(next, previous);
+        await castItHub.connection.goTo(next, previous);
     };
 
     const handleGoToSeconds = async (negative: boolean): Promise<void> => {
-        await skipSeconds(negative ? -30 : 30);
+        await castItHub.connection.skipSeconds(negative ? -30 : 30);
     };
 
     const handleStopPlayback = async (): Promise<void> => {
-        await stopPlayBack();
+        await castItHub.connection.stopPlayBack();
     };
 
     const handleTogglePlayBack = async (): Promise<void> => {
-        await togglePlayBack();
+        await castItHub.connection.togglePlayBack();
     };
 
     return (
