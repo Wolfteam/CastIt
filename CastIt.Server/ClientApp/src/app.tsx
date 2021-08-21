@@ -7,6 +7,7 @@ import { AppRoutes, PlayerRoutes } from './routes';
 import { Suspense } from 'react';
 import ServerMessage from './components/server_message';
 import { TranslationContextProvider } from './context/translations.context';
+import { CastItHubContextProvider } from './context/castit_hub.context';
 
 const theme = createTheme({
     palette: {
@@ -42,12 +43,14 @@ function App() {
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
                     <TranslationContextProvider>
-                        <ServerMessage>
-                            <Suspense fallback={loading}>
-                                <AppRoutes />
-                                <PlayerRoutes />
-                            </Suspense>
-                        </ServerMessage>
+                        <CastItHubContextProvider>
+                            <ServerMessage>
+                                <Suspense fallback={loading}>
+                                    <AppRoutes />
+                                    <PlayerRoutes />
+                                </Suspense>
+                            </ServerMessage>
+                        </CastItHubContextProvider>
                     </TranslationContextProvider>
                 </ThemeProvider>
             </BrowserRouter>
