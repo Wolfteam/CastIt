@@ -23,6 +23,12 @@ namespace CastIt.Server.Windows.TrayIcon
         public TrayIcon()
         {
             _serviceController = Array.Find(ServiceController.GetServices(), s => s.ServiceName == WebServerUtils.ServerProcessName);
+            if (_serviceController == null)
+            {
+                MessageBox.Show("CastIt.Server is not installed");
+                Exit(null, EventArgs.Empty);
+                return;
+            }
 
             CreateTrayIcon();
             CheckShowServiceNotElevatedWarning();
@@ -79,7 +85,7 @@ namespace CastIt.Server.Windows.TrayIcon
             _serviceController.Refresh();
             bool isElevated = WebServerUtils.IsElevated();
             _menuItemStart.Enabled = isElevated && _serviceController.Status == ServiceControllerStatus.Stopped;
-            _menuItemStop.Enabled = isElevated && _serviceController.Status == ServiceControllerStatus.Running;
+            _menuItemStop.Enabled = _menuItemOpenUrl.Enabled = isElevated && _serviceController.Status == ServiceControllerStatus.Running;
         }
 
         private void Start(object sender, EventArgs e)

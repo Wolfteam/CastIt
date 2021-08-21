@@ -209,6 +209,10 @@ namespace CastIt.Server.Services
             try
             {
                 bool differentFile = CurrentPlayedFile?.Id != file.Id;
+                if (differentFile)
+                {
+                    CleanupBeforePlaying();
+                }
                 CurrentPlayList = playList;
                 CurrentPlayedFile?.BeingPlayed(false);
                 CurrentPlayedFile = file;
@@ -285,7 +289,7 @@ namespace CastIt.Server.Services
             {
                 if (!(e is BaseAppException))
                 {
-                    Logger.LogError(e, "An unknown error occurred");
+                    Logger.LogError(e, $"{nameof(PlayFile)}: An unknown error occurred");
                 }
                 await StopPlayback();
                 throw;
@@ -512,6 +516,7 @@ namespace CastIt.Server.Services
                 CurrentPlayList = null;
                 CurrentPlayedFile = null;
                 _previewThumbnails.Clear();
+                _thumbnailRanges.Clear();
             }
         }
 

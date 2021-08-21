@@ -40,6 +40,8 @@ namespace CastIt.Server.Services
                 : 1;
             var playList = await _appDataService.AddNewPlayList($"New PlayList {PlayLists.Count}", position);
             var serverPlayList = _mapper.Map<ServerPlayList>(playList);
+            serverPlayList.ImageUrl = _imageProviderService.GetPlayListImageUrl(serverPlayList, CurrentPlayedFile);
+
             PlayLists.Add(serverPlayList);
 
             SendPlayListAdded(_mapper.Map<GetAllPlayListResponseDto>(serverPlayList));
