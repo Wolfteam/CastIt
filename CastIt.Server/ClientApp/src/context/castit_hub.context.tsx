@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { CastItHubService } from '../services/castithub.service';
+import { CastItHubService, onClientDisconnected } from '../services/castithub.service';
 import Loading from '../components/loading';
 import { useSnackbar } from 'notistack';
 import translations from '../services/translations';
@@ -43,6 +43,15 @@ export const CastItHubContextProvider = (children: any): JSX.Element => {
             .then(() => onConnected())
             .catch((error) => onConnectionFailed(error));
     }, [hub.connection, onConnected, onConnectionFailed]);
+
+    useEffect(() => {
+        const onClientDisconnectedSubscription = onClientDisconnected.subscribe(() =>
+            setState((s) => ({ ...s, isConnected: false, isError: true }))
+        );
+        return () => {
+            onClientDisconnectedSubscription.unsubscribe();
+        };
+    }, []);
 
     useEffect(() => {
         handleConnect();
