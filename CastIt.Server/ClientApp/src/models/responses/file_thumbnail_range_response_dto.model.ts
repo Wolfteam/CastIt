@@ -1,6 +1,6 @@
 export interface IFileThumbnailRangeResponseDto {
     previewThumbnailUrl: string;
-    thumbnailRange: Range<number>[];
+    thumbnailRange: Range<number>;
     thumbnailPositions: IFileThumbnailPositionResponseDto[];
 }
 

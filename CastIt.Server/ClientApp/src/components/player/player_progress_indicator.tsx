@@ -1,8 +1,8 @@
 import { Grid, Slider, Typography } from '@material-ui/core';
-import formatDuration from 'format-duration';
 import { useEffect, useState } from 'react';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
+import PlayerProgressIndicatorValue from './player_progress_indicator_value';
 
 interface State {
     playedTime: string;
@@ -35,6 +35,7 @@ function PlayerProgressIndicator() {
             if (!status) {
                 return;
             }
+
             if (status.playedFile) {
                 setState({
                     duration: status.playedFile.duration,
@@ -79,10 +80,9 @@ function PlayerProgressIndicator() {
                     valueLabelDisplay="auto"
                     disabled={!state.isPlayingOrPaused}
                     value={state.elapsedSeconds}
-                    valueLabelFormat={(val) => formatDuration(val * 1000, { leading: true })}
-                    getAriaValueText={(val) => formatDuration(val * 1000, { leading: true })}
                     onChange={(e, val) => handleValueChanged(val as number)}
                     onChangeCommitted={(e, val) => handleValueChanged(val as number, true)}
+                    ValueLabelComponent={PlayerProgressIndicatorValue}
                 />
             </Grid>
             <Grid item>

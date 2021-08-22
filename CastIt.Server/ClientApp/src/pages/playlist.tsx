@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import { onPlayListsChanged, onPlayListChanged, onFileAdded, onFilesChanged, onFileDeleted } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
-import { CircularProgress, Container, createStyles, Grid, List, makeStyles, Typography } from '@material-ui/core';
+import { CircularProgress, Container, createStyles, Grid, List, makeStyles } from '@material-ui/core';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import translations from '../services/translations';
 import PageContent from './page_content';
@@ -12,7 +12,7 @@ import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 import { useCastItHub } from '../context/castit_hub.context';
 import NothingFound from '../components/nothing_found';
 
-const useStyles = makeStyles((theme) =>
+const useStyles = makeStyles(() =>
     createStyles({
         nothingFound: {
             textAlign: 'center',
