@@ -1,4 +1,4 @@
-import { CircularProgress, Container, createTheme, Grid, ThemeProvider } from '@material-ui/core';
+import { createTheme, ThemeProvider } from '@material-ui/core';
 import { green, purple } from '@material-ui/core/colors';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { BrowserRouter } from 'react-router-dom';
@@ -8,6 +8,8 @@ import { Suspense } from 'react';
 import ServerMessage from './components/server_message';
 import { TranslationContextProvider } from './context/translations.context';
 import { CastItHubContextProvider } from './context/castit_hub.context';
+import Loading from './components/loading';
+import translations from './services/translations';
 
 const theme = createTheme({
     palette: {
@@ -22,15 +24,6 @@ const theme = createTheme({
 });
 
 function App() {
-    const loading = (
-        <Container>
-            <Grid container justifyContent="center" alignItems="center" direction="column" style={{ minHeight: '100vh' }}>
-                <Grid item xs={12}>
-                    <CircularProgress />
-                </Grid>
-            </Grid>
-        </Container>
-    );
     return (
         <SnackbarProvider
             autoHideDuration={3000}
@@ -45,7 +38,7 @@ function App() {
                     <TranslationContextProvider>
                         <CastItHubContextProvider>
                             <ServerMessage>
-                                <Suspense fallback={loading}>
+                                <Suspense fallback={<Loading message={translations.loading + '...'} />}>
                                     <AppRoutes />
                                     <PlayerRoutes />
                                 </Suspense>

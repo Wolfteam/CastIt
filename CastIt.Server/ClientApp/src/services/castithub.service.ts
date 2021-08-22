@@ -51,8 +51,9 @@ export class CastItHubService {
 
     async connect(): Promise<void> {
         await this.disconnect();
-
-        this.connection = new HubConnectionBuilder().withUrl(process.env.REACT_APP_BASE_HUB_URL!).build();
+        const baseUrl: string = `${document.location.origin}/castithub`;
+        console.log(`Using hub url = ${baseUrl}`);
+        this.connection = new HubConnectionBuilder().withUrl(baseUrl).build();
 
         this.connection.onclose(this.onConnectionClosed);
 

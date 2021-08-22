@@ -13,7 +13,7 @@ import {
     Card,
     Grid,
 } from '@material-ui/core';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Add, Delete, MoreVert, Edit } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
 import { playListPath } from '../../routes';
@@ -24,7 +24,7 @@ import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
 import { IGetAllPlayListResponseDto } from '../../models';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 import { defaultImg } from '../../utils/app_constants';
 
 const useStyles = makeStyles({
@@ -100,7 +100,7 @@ function PlayListCardItem(props: Props): JSX.Element {
     const [showRenameDialog, setShowRenameDialog] = useState(false);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
 
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         setState({ ...props.playList, loaded: true });
@@ -244,32 +244,34 @@ function PlayListCardItem(props: Props): JSX.Element {
                         <IconButton onClick={handleShowMoreClick}>
                             <MoreVert />
                         </IconButton>
-                        <Popover
-                            id={moreId}
-                            open={showMorePopup}
-                            anchorEl={anchorEl}
-                            onClose={handleClose}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'center',
-                            }}
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'center',
-                            }}
-                        >
-                            <Button
-                                className={classes.moreButtons}
-                                size="small"
-                                startIcon={<Edit />}
-                                onClick={() => setShowRenameDialog(true)}
+                        {!showMorePopup ? null : (
+                            <Popover
+                                id={moreId}
+                                open={showMorePopup}
+                                anchorEl={anchorEl}
+                                onClose={handleClose}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'center',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'center',
+                                }}
                             >
-                                {translations.rename}
-                            </Button>
-                            <Button className={classes.moreButtons} size="small" startIcon={<Delete />} onClick={handleDelete}>
-                                {translations.delete}
-                            </Button>
-                        </Popover>
+                                <Button
+                                    className={classes.moreButtons}
+                                    size="small"
+                                    startIcon={<Edit />}
+                                    onClick={() => setShowRenameDialog(true)}
+                                >
+                                    {translations.rename}
+                                </Button>
+                                <Button className={classes.moreButtons} size="small" startIcon={<Delete />} onClick={handleDelete}>
+                                    {translations.delete}
+                                </Button>
+                            </Popover>
+                        )}
                         <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
                         <RenamePlayListDialog isOpen={showRenameDialog} name={state.name} onClose={handleRename} />
                     </CardActions>

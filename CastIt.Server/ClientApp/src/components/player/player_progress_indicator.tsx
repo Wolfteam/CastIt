@@ -1,7 +1,7 @@
 import { Grid, Slider, Typography } from '@material-ui/core';
 import formatDuration from 'format-duration';
-import { useContext, useEffect, useState } from 'react';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useEffect, useState } from 'react';
+import { useCastItHub } from '../../context/castit_hub.context';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 
 interface State {
@@ -24,7 +24,7 @@ const initialState: State = {
 
 function PlayerProgressIndicator() {
     const [state, setState] = useState(initialState);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
@@ -67,7 +67,7 @@ function PlayerProgressIndicator() {
     };
 
     return (
-        <Grid container spacing={2} style={{ paddingRight: 10, paddingLeft: 10 }}>
+        <Grid container spacing={2} style={{ paddingRight: 10, paddingLeft: 10 }} alignItems="center" justifyContent="center">
             <Grid item>
                 <Typography color="textSecondary">{state.playedTime}</Typography>
             </Grid>

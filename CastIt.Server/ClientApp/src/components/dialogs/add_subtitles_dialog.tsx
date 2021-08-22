@@ -1,40 +1,25 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    Grid,
-    DialogActions,
-    Button,
-    TextField,
-    FormGroup,
-    Switch,
-    FormControlLabel,
-} from '@material-ui/core';
 import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogTitle, Grid, DialogActions, Button, TextField, FormGroup } from '@material-ui/core';
 import translations from '../../services/translations';
 
 interface Props {
     isOpen: boolean;
-    onClose(path: string | null, includeSubFolder: boolean, onlyVideo: boolean): void;
+    onClose(path: string | null): void;
 }
 
 interface State {
     path: string;
     isPathValid: boolean;
     isPathDirty: boolean;
-    includeSubFolder: boolean;
-    onlyVideo: boolean;
 }
 
 const initialState: State = {
     path: '',
     isPathValid: false,
     isPathDirty: false,
-    includeSubFolder: true,
-    onlyVideo: true,
 };
 
-function AddFilesDialog(props: Props) {
+function AddSubtitlesDialog(props: Props) {
     const [state, setState] = useState(initialState);
 
     const handlePathChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -49,7 +34,7 @@ function AddFilesDialog(props: Props) {
 
     const handleClose = (saveChanges: boolean): void => {
         const path = saveChanges ? state.path : null;
-        props.onClose(path, state.includeSubFolder, state.onlyVideo);
+        props.onClose(path);
         setState(initialState);
     };
 
@@ -57,13 +42,12 @@ function AddFilesDialog(props: Props) {
     if (!props.isOpen) {
         return null;
     }
-
     return (
-        <Dialog open={props.isOpen} onClose={() => handleClose(false)}>
-            <DialogTitle id="form-dialog-title">{translations.addFiles}</DialogTitle>
+        <Dialog open={props.isOpen} onClose={() => handleClose(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>{translations.subtitles}</DialogTitle>
             <DialogContent>
-                <Grid container alignItems="flex-start" justifyContent="space-between">
-                    <FormGroup row>
+                <Grid container alignItems="stretch" justifyContent="center" >
+                    <FormGroup row style={{ width: '100%' }}>
                         <TextField
                             required
                             autoFocus
@@ -75,26 +59,6 @@ function AddFilesDialog(props: Props) {
                             value={state.path}
                             error={showError}
                             helperText={showError ? translations.fieldIsNotValid : ''}
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={state.includeSubFolder}
-                                    onChange={(_, checked) => setState((s) => ({ ...s, includeSubFolder: checked }))}
-                                    color="primary"
-                                />
-                            }
-                            label={translations.includeSubFolders}
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={state.onlyVideo}
-                                    onChange={(_, checked) => setState((s) => ({ ...s, onlyVideo: checked }))}
-                                    color="primary"
-                                />
-                            }
-                            label={translations.onlyVideo}
                         />
                     </FormGroup>
                 </Grid>
@@ -111,4 +75,4 @@ function AddFilesDialog(props: Props) {
     );
 }
 
-export default AddFilesDialog;
+export default AddSubtitlesDialog;

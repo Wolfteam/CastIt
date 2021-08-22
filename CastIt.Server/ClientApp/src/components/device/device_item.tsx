@@ -1,7 +1,6 @@
 import { Grid, IconButton, Typography } from '@material-ui/core';
 import { Tv, CastConnected, Cast } from '@material-ui/icons';
-import { useContext } from 'react';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 interface Props {
     id: string;
@@ -11,7 +10,7 @@ interface Props {
 }
 
 function DeviceItem(props: Props) {
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
     const connectedIcon = props.isConnected ? <CastConnected /> : <Cast />;
 
     const handleToggleConnect = async (): Promise<void> => {

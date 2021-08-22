@@ -34,7 +34,7 @@ import translations from '../../services/translations';
 import { getLanguageString, getLanguageEnum, TranslationContext } from '../../context/translations.context';
 import { String } from 'typescript-string-operations';
 import AppDialogTitle from '../dialogs/app_dialog_title';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -62,7 +62,7 @@ function PlayerSettings() {
     const [open, setOpen] = useState(false);
     const [state, setState] = useState<State>({});
     const [translationContext, translationState] = useContext(TranslationContext);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         const onPlayerSettingsChangedSubscription = onPlayerSettingsChanged.subscribe((settings) => {

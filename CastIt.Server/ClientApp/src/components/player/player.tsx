@@ -45,22 +45,11 @@ function Player() {
         </IconButton>
     );
 
-    const playerControls = (
-        <Grid container direction="column">
-            <Grid item>
-                <PlayerControls />
-            </Grid>
-            <Grid item>
-                <PlayerProgressIndicator />
-            </Grid>
-        </Grid>
-    );
-
     if (!state.isExpanded) {
         return (
             <Grid container className={classes.root} justifyContent="center" alignItems="center">
                 <Grid item xs={10} md={11}>
-                    {playerControls}
+                    <PlayerProgressIndicator />
                 </Grid>
                 <Grid item xs={1} style={{ textAlign: 'center' }}>
                     {toggleExpandButton}
@@ -75,7 +64,14 @@ function Player() {
                 <PlayerCurrentFile />
             </Grid>
             <Grid item xs={12} md={6}>
-                {playerControls}
+                <Grid container direction="column">
+                    <Grid item>
+                        <PlayerControls />
+                    </Grid>
+                    <Grid item>
+                        <PlayerProgressIndicator />
+                    </Grid>
+                </Grid>
             </Grid>
             <Grid item xs={12} md={3}>
                 <Grid container alignItems="center" justifyContent="center">

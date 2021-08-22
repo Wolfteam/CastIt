@@ -3,7 +3,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import { ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
 import { playListsPath } from '../../routes';
 import { useHistory } from 'react-router-dom';
-import { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
@@ -189,4 +189,4 @@ function PlayListAppBar(props: Props) {
     );
 }
 
-export default PlayListAppBar;
+export default React.memo(PlayListAppBar);

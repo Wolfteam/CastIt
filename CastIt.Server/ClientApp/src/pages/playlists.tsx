@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IGetAllPlayListResponseDto } from '../models';
 import {
     onPlayListAdded,
@@ -14,7 +14,7 @@ import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
 import { Grid } from '@material-ui/core';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
-import { CastItHubContext } from '../context/castit_hub.context';
+import { useCastItHub } from '../context/castit_hub.context';
 
 interface State {
     isBusy: boolean;
@@ -28,7 +28,7 @@ const initialState: State = {
 
 function PlayLists() {
     const [state, setState] = useState(initialState);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         const onPlayListAddedSubscription = onPlayListAdded.subscribe((playList) => {

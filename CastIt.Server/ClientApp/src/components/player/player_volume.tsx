@@ -1,10 +1,10 @@
 import { Grid, IconButton, Popover, Slider } from '@material-ui/core';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Fragment } from 'react';
 import { VolumeOff, VolumeUp } from '@material-ui/icons';
 import { usePopupState, bindTrigger, bindPopover } from 'material-ui-popup-state/hooks';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 interface State {
     volume: number;
@@ -22,7 +22,7 @@ const initialState: State = {
 
 function PlayerVolume() {
     const [state, setState] = useState(initialState);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     const popupState = usePopupState({
         variant: 'popover',

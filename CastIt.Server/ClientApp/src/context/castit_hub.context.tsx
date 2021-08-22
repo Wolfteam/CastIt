@@ -1,5 +1,10 @@
-import { createContext, Dispatch, SetStateAction, useContext, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { CastItHubService } from '../services/castithub.service';
+import Loading from '../components/loading';
+import { useSnackbar } from 'notistack';
+import translations from '../services/translations';
+import { Button } from '@material-ui/core';
+import NothingFound from '../components/nothing_found';
 
 interface ICastItHubContext {
     connection: CastItHubService;
@@ -13,22 +18,51 @@ const initialValue: ICastItHubContext = {
     isError: false,
 };
 
-export const CastItHubContext = createContext<[ICastItHubContext, Dispatch<SetStateAction<ICastItHubContext>>]>([initialValue, (s) => s]);
+export const CastItHubContext = createContext<ICastItHubContext>(initialValue);
 
 export const CastItHubContextProvider = (children: any): JSX.Element => {
-    const [hub, setHub] = useContext(CastItHubContext);
+    const hub = useContext(CastItHubContext);
+    const [state, setState] = useState(initialValue);
+    const { enqueueSnackbar } = useSnackbar();
 
-    useEffect(() => {
+    const onConnected = useCallback(() => setState((s) => ({ ...s, isConnected: true, isError: false })), []);
+
+    const onConnectionFailed = useCallback(
+        (error: any) => {
+            console.log(error);
+            setState((s) => ({ ...s, isConnected: false, isError: true }));
+            enqueueSnackbar(translations.connectionFailedMsg, { variant: 'error' });
+        },
+        [enqueueSnackbar]
+    );
+
+    const handleConnect = useCallback(() => {
+        setState((s) => ({ ...s, isError: false }));
         hub.connection
             .connect()
-            .then(() => {
-                setHub((s) => ({ ...s, isConnected: true, isError: false }));
-            })
-            .catch((error) => {
-                console.log(error);
-                setHub((s) => ({ ...s, isConnected: false, isError: true }));
-            });
-    }, [hub, setHub]);
+            .then(() => onConnected())
+            .catch((error) => onConnectionFailed(error));
+    }, [hub.connection, onConnected, onConnectionFailed]);
 
-    return <CastItHubContext.Provider value={[hub, setHub]}>{children.children}</CastItHubContext.Provider>;
+    useEffect(() => {
+        handleConnect();
+    }, [handleConnect]);
+
+    if (state.isError) {
+        return (
+            <NothingFound text={translations.connectionFailedMsg}>
+                <Button color="primary" variant="contained" onClick={handleConnect}>
+                    {translations.retry}
+                </Button>
+            </NothingFound>
+        );
+    }
+
+    if (!state.isConnected) {
+        return <Loading message={translations.connecting + '...'} />;
+    }
+
+    return <CastItHubContext.Provider value={state}>{children.children}</CastItHubContext.Provider>;
 };
+
+export const useCastItHub = () => useContext(CastItHubContext);

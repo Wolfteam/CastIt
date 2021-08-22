@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Typography,
     Divider,
@@ -21,7 +21,7 @@ import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
 import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -89,7 +89,7 @@ function FileItem(props: Props) {
     const [state, setState] = useState<State>(initialState);
     const [contextMenu, setContextMenu] = useState(initialContextMenuState);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         setState({
@@ -266,40 +266,42 @@ function FileItem(props: Props) {
                         />
                         <FileItemDuration fullTotalDuration={state.fullTotalDuration} loop={state.loop} />
                     </ListItem>
-                    <Menu
-                        keepMounted
-                        open={contextMenu.mouseY !== null}
-                        onClose={handleCloseContextMenu}
-                        anchorReference="anchorPosition"
-                        anchorPosition={
-                            contextMenu.mouseY !== null && contextMenu.mouseX !== null
-                                ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                                : undefined
-                        }
-                    >
-                        <MenuItem onClick={() => handlePlay()}>
-                            <PlayArrow fontSize="small" />
-                            <ListItemText className={classes.menuItemText} primary={translations.play} />
-                        </MenuItem>
-                        <MenuItem onClick={() => handlePlay(true)}>
-                            <Refresh fontSize="small" />
-                            <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
-                        </MenuItem>
-                        {toggleLoopMenuItem}
-                        <MenuItem onClick={() => setShowAddFilesDialog(true)}>
-                            <Add fontSize="small" />
-                            <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
-                        </MenuItem>
-                        {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
-                        <MenuItem onClick={handleDelete}>
-                            <Delete fontSize="small" />
-                            <ListItemText className={classes.menuItemText} primary={translations.remove} />
-                        </MenuItem>
-                        <MenuItem onClick={handleRemoveAllMissing}>
-                            <ClearAll fontSize="small" />
-                            <ListItemText className={classes.menuItemText} primary={translations.removeAllMissing} />
-                        </MenuItem>
-                    </Menu>
+                    {contextMenu.mouseY === null ? null : (
+                        <Menu
+                            keepMounted
+                            open={contextMenu.mouseY !== null}
+                            onClose={handleCloseContextMenu}
+                            anchorReference="anchorPosition"
+                            anchorPosition={
+                                contextMenu.mouseY !== null && contextMenu.mouseX !== null
+                                    ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                                    : undefined
+                            }
+                        >
+                            <MenuItem onClick={() => handlePlay()}>
+                                <PlayArrow fontSize="small" />
+                                <ListItemText className={classes.menuItemText} primary={translations.play} />
+                            </MenuItem>
+                            <MenuItem onClick={() => handlePlay(true)}>
+                                <Refresh fontSize="small" />
+                                <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
+                            </MenuItem>
+                            {toggleLoopMenuItem}
+                            <MenuItem onClick={() => setShowAddFilesDialog(true)}>
+                                <Add fontSize="small" />
+                                <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
+                            </MenuItem>
+                            {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
+                            <MenuItem onClick={handleDelete}>
+                                <Delete fontSize="small" />
+                                <ListItemText className={classes.menuItemText} primary={translations.remove} />
+                            </MenuItem>
+                            <MenuItem onClick={handleRemoveAllMissing}>
+                                <ClearAll fontSize="small" />
+                                <ListItemText className={classes.menuItemText} primary={translations.removeAllMissing} />
+                            </MenuItem>
+                        </Menu>
+                    )}
                     <Divider variant="middle" />
                     <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
                 </div>

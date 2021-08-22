@@ -86,6 +86,11 @@ interface ITranslations {
     includeSubFolders: string;
     onlyVideo: string;
     load: string;
+    path: string;
+    loading: string;
+    connecting: string;
+    connectionFailedMsg: string;
+    retry: string;
     errorCodes: IAppMessageTranslations;
 }
 
@@ -154,6 +159,11 @@ const enTrans: ITranslations = {
     includeSubFolders: 'Include subfolders',
     onlyVideo: 'Only video',
     load: 'Load',
+    path: 'Path',
+    loading: 'Loading',
+    connecting: 'Connecting',
+    connectionFailedMsg: 'Connection failed. The server may not be running',
+    retry: 'Retry',
     errorCodes: {
         unknownErrorOccurred: 'Unknown error occurred',
         invalidRequest: 'Invalid request',
@@ -240,6 +250,11 @@ const esTrans: ITranslations = {
     includeSubFolders: 'Incluir subcarpetas',
     onlyVideo: 'Solo video',
     load: 'Cargar',
+    path: 'Ruta',
+    loading: 'Cargando',
+    connecting: 'Conectando',
+    connectionFailedMsg: 'La conexión falló. El servidor podria no estar ejecutandose',
+    retry: 'Reintentar',
     errorCodes: {
         unknownErrorOccurred: 'Un error inesperado ha ocurrido',
         invalidRequest: 'Petición no válida',

@@ -49,8 +49,12 @@ function RenamePlayListDialog(props: Props) {
 
     const showError = !state.isNameValid && state.isNameDirty;
 
+    if (!props.isOpen) {
+        return null;
+    }
+
     return (
-        <Dialog open={props.isOpen} onClose={() => handleClose(false)}>
+        <Dialog open={props.isOpen} onClose={() => handleClose(false)} maxWidth="sm" fullWidth>
             <DialogTitle>{translations.rename}</DialogTitle>
             <DialogContent>
                 <TextField

@@ -1,12 +1,13 @@
 import { makeStyles, createStyles, IconButton, Divider, ListItemText, Menu, MenuItem } from '@material-ui/core';
 import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@material-ui/icons';
 import MenuIcon from '@material-ui/icons/Menu';
-import { Fragment, useContext, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import PopupState, { bindTrigger, bindMenu, InjectedProps } from 'material-ui-popup-state';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { IFileItemOptionsResponseDto } from '../../models';
 import translations from '../../services/translations';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
+import AddSubtitlesDialog from '../dialogs/add_subtitles_dialog';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -39,11 +40,14 @@ const initialState: State = {
     qualities: [],
 };
 
+const loadSubsKey = -999;
+
 function PlayerFileOptions() {
     const classes = useStyles();
     const [state, setState] = useState(initialState);
-    const [castItHub] = useContext(CastItHubContext);
-    
+    const castItHub = useCastItHub();
+    const [showAddSubtitles, setshowAddSubtitles] = useState(false);
+
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
             if (!status) {
@@ -76,12 +80,26 @@ function PlayerFileOptions() {
 
     const handleOptionChange = async (id: number, popupState: InjectedProps): Promise<void> => {
         popupState.close();
+
+        if (id === loadSubsKey) {
+            setshowAddSubtitles(true);
+            return;
+        }
+
         const options = [...state.audios, ...state.subtitles, ...state.qualities];
         const selected = options.find((op) => op.id === id);
         if (!selected) {
             return;
         }
         await castItHub.connection.setFileOptions(id, selected.isAudio, selected.isSubTitle, selected.isQuality);
+    };
+
+    const handleSubtitlesSet = async (path: string | null): Promise<void> => {
+        if (path) {
+            await castItHub.connection.setFileSubtitlesFromPath(path);
+        }
+
+        setshowAddSubtitles(false);
     };
 
     const buildSubMenuItem = (
@@ -115,9 +133,8 @@ function PlayerFileOptions() {
         return items;
     };
 
-    // TODO: LOADSUBS
     const subtitles = (popupState: InjectedProps): JSX.Element[] =>
-        [buildSubMenuItem('LoadSubs', translations.load, false, true, popupState, <Search />)].concat(
+        [buildSubMenuItem(`${loadSubsKey}`, translations.load, false, true, popupState, <Search />)].concat(
             state.subtitles.map((sub) => buildSubMenuItemFromOption(sub, popupState))
         );
 
@@ -137,6 +154,7 @@ function PlayerFileOptions() {
                     <IconButton color="inherit" {...bindTrigger(popupState)}>
                         <MenuIcon fontSize="large" />
                     </IconButton>
+                    <AddSubtitlesDialog isOpen={showAddSubtitles} onClose={handleSubtitlesSet} />
                     <Menu {...bindMenu(popupState)}>
                         <MenuItem disabled>
                             <Subtitles />

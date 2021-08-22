@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { onFileEndReached, onFileLoaded, onFileLoading, onStoppedPlayback } from '../../services/castithub.service';
+import React, { useEffect, useState } from 'react';
+import { onFileEndReached, onFileLoaded, onFileLoading, onPlayListBusy, onStoppedPlayback } from '../../services/castithub.service';
 import { IFileItemResponseDto } from '../../models';
 import { createStyles, LinearProgress, makeStyles } from '@material-ui/core';
 
@@ -29,6 +29,8 @@ function PlayListLoadingIndicator(props: Props) {
             setIsBusy(isBusy);
         };
 
+        const onPlayListBusySubscription = onPlayListBusy.subscribe((busy) => setIsBusy(busy.isBusy));
+
         const onFileLoadingSubscription = onFileLoading.subscribe((file) => handleFileChanged(file, true));
 
         const onFileLoadedSubscription = onFileLoaded.subscribe((file) => handleFileChanged(file, false));
@@ -38,6 +40,7 @@ function PlayListLoadingIndicator(props: Props) {
         const onStoppedPlaybackSubscription = onStoppedPlayback.subscribe(() => setIsBusy(false));
 
         return () => {
+            onPlayListBusySubscription.unsubscribe();
             onFileLoadingSubscription.unsubscribe();
             onFileLoadedSubscription.unsubscribe();
             onFileEndReachedSubscription.unsubscribe();
@@ -48,4 +51,4 @@ function PlayListLoadingIndicator(props: Props) {
     return loading;
 }
 
-export default PlayListLoadingIndicator;
+export default React.memo(PlayListLoadingIndicator);

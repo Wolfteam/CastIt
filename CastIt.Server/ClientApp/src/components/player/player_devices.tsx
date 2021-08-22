@@ -1,4 +1,4 @@
-import { Fragment, useContext, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Button, createStyles, Dialog, DialogActions, DialogContent, IconButton, LinearProgress, makeStyles } from '@material-ui/core';
 import { Tv } from '@material-ui/icons';
 import DeviceItem from '../device/device_item';
@@ -6,7 +6,7 @@ import { onCastDevicesChanged, onCastDeviceSet } from '../../services/castithub.
 import translations from '../../services/translations';
 import { IReceiver } from '../../models';
 import AppDialogTitle from '../dialogs/app_dialog_title';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -26,7 +26,7 @@ function PlayerDevices() {
     const [devices, setDevices] = useState<IReceiver[]>([]);
     const [open, setOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         const onCastDeviceSetSubscription = onCastDeviceSet.subscribe((device) => {

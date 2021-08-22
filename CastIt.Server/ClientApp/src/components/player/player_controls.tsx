@@ -1,8 +1,8 @@
 import { Grid, IconButton } from '@material-ui/core';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SkipPrevious, SkipNext, FastForward, FastRewind, PlayArrow, Stop, Pause } from '@material-ui/icons';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 interface State {
     isPlayingOrPaused: boolean;
@@ -18,7 +18,7 @@ const initialState: State = {
 
 function PlayerControls() {
     const [state, setState] = useState(initialState);
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         const onPlayerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {

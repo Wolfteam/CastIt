@@ -1,7 +1,6 @@
 import { IconButton, Tooltip } from '@material-ui/core';
 import { Loop, Shuffle } from '@material-ui/icons';
-import { useContext } from 'react';
-import { CastItHubContext } from '../../context/castit_hub.context';
+import { useCastItHub } from '../../context/castit_hub.context';
 import translations from '../../services/translations';
 
 interface Props {
@@ -12,7 +11,7 @@ interface Props {
 }
 
 function PlayListLoopShuffleButton(props: Props) {
-    const [castItHub] = useContext(CastItHubContext);
+    const castItHub = useCastItHub();
 
     const handleOptionChanged = async (loop?: boolean, shuffle?: boolean): Promise<void> => {
         await castItHub.connection.setPlayListOptions(props.id, loop!, shuffle!);
