@@ -33,11 +33,7 @@ function PlayerCurrentFile() {
 
     useEffect(() => {
         const playerStatusChangedSubscription = onPlayerStatusChanged.subscribe((status) => {
-            if (!status) {
-                return;
-            }
-
-            if (!status.playedFile) {
+            if (!status || !status.playedFile) {
                 setState(initialState);
                 return;
             }
