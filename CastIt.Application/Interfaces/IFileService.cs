@@ -22,7 +22,7 @@ namespace CastIt.Application.Interfaces
 
         void DeleteAppLogsAndPreviews();
 
-        void DeleteServerLogsAndPreviews();
+        void DeleteServerLogsAndPreviews(int maxDaysForPreviews = 3, int maxDaysForLogs = 3);
 
         string GetTemporalPreviewImagePath(long id);
 

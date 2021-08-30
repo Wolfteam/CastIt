@@ -8,16 +8,18 @@ namespace CastIt.Domain.Models
     public class Range<T> where T : IComparable<T>
     {
         /// <summary>Minimum value of the range.</summary>
-        public T Minimum { get; set; }
+        public T Minimum { get; }
 
         /// <summary>Maximum value of the range.</summary>
-        public T Maximum { get; set; }
+        public T Maximum { get; }
 
+        public int Index { get; }
 
-        public Range(T minimum, T maximum)
+        public Range(T minimum, T maximum, int index)
         {
             Minimum = minimum;
             Maximum = maximum;
+            Index = index;
         }
 
         /// <summary>Presents the Range in readable format.</summary>
