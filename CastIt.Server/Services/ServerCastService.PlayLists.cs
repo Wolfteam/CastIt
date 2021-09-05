@@ -40,6 +40,8 @@ namespace CastIt.Server.Services
                 : 1;
             var playList = await _appDataService.AddNewPlayList($"New PlayList {PlayLists.Count}", position);
             var serverPlayList = _mapper.Map<ServerPlayList>(playList);
+            serverPlayList.ImageUrl = _imageProviderService.GetPlayListImageUrl(serverPlayList, CurrentPlayedFile);
+
             PlayLists.Add(serverPlayList);
 
             SendPlayListAdded(_mapper.Map<GetAllPlayListResponseDto>(serverPlayList));
@@ -236,6 +238,31 @@ namespace CastIt.Server.Services
             }
         }
 
+        public Task AddFolderOrFileOrUrl(long playListId, string path, bool includeSubFolders, bool onlyVideo)
+        {
+            Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: Trying to add path = {path} to playListId = {playListId}...");
+            if (Directory.Exists(path))
+            {
+                Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a directory....");
+                return AddFolder(playListId, includeSubFolders, new[] { path });
+            }
+
+            if (File.Exists(path))
+            {
+                Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a file....");
+                return AddFiles(playListId, new[] {path});
+            }
+
+            if (Uri.TryCreate(path, UriKind.Absolute, out _))
+            {
+                Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a url....");
+                return AddUrl(playListId, path, onlyVideo);
+            }
+
+            Logger.LogWarning($"The provided path = {path} is not valid");
+            throw new InvalidRequestException("The provided path is not valid");
+        }
+
         private async Task AddYoutubeUrl(long playListId, string url)
         {
             var media = await YoutubeUrlDecoder.Parse(url, null, false);
@@ -274,7 +301,7 @@ namespace CastIt.Server.Services
 
         public void RefreshPlayListImage(ServerPlayList playList)
         {
-            var imageUrl = _imageProviderService.GetPlayListImageUrl(playList, CurrentPlayedFile);
+            string imageUrl = _imageProviderService.GetPlayListImageUrl(playList, CurrentPlayedFile);
             bool changed = playList.ImageUrl != imageUrl;
             playList.ImageUrl = imageUrl;
             if (changed)

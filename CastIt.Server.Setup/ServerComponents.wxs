@@ -26,12 +26,12 @@
               Source="Publish/CastIt.Server.exe"
               KeyPath="yes"
               Vital="yes" >
-          <fire:FirewallException Id="FirewallExceptionCastItServerTCP"
+          <fire:FirewallException Id="FirewallExceptionCastItServerTCP_All"
                                   Name="CastIt.Server"
                                   Protocol="tcp"
                                   Scope="any"
                                   IgnoreFailure="no"
-                                  Profile="private"
+                                  Profile="all"
                                   Description="Exception required so that the chromecast can access the server"/>
         </File>
         <ServiceInstall Id="CastItServerService"

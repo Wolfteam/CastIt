@@ -33,7 +33,7 @@ namespace CastIt.Server.Common.Extensions
             var response = new EmptyResponseDto
             {
                 Message = AppMessageType.UnknownErrorOccurred.GetErrorMsg(),
-                MessageId = AppMessageType.UnknownErrorOccurred.GetErrorMsg(),
+                MessageId = AppMessageType.UnknownErrorOccurred.GetErrorCode(),
             };
             exception.HandleCastException(castService, telemetryService);
             if (exception is BaseAppException baseAppException)

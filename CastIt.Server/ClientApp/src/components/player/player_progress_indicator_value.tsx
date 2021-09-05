@@ -1,0 +1,32 @@
+import { Tooltip, withStyles } from '@material-ui/core';
+import { thumbnailImgHeight, thumbnailImgWidth } from '../../utils/app_constants';
+import PlayerProgressIndicatorThumbnail from './player_progress_indicator_thumbnail';
+
+interface Props {
+    children: React.ReactElement;
+    open: boolean;
+    value: number;
+}
+
+const CustomTooltip = withStyles({
+    tooltip: {
+        backgroundColor: 'transparent',
+        width: thumbnailImgWidth,
+        height: thumbnailImgHeight,
+        padding: 0,
+        margin: 0,
+    },
+})(Tooltip);
+
+function PlayerProgressIndicatorValue(props: Props) {
+    const { children, open, value } = props;
+    const second = Math.round(value);
+
+    return (
+        <CustomTooltip open={open} enterTouchDelay={0} placement="top" arrow title={<PlayerProgressIndicatorThumbnail second={second} />}>
+            {children}
+        </CustomTooltip>
+    );
+}
+
+export default PlayerProgressIndicatorValue;

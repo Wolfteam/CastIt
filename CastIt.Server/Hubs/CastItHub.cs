@@ -69,6 +69,18 @@ namespace CastIt.Server.Hubs
             }
         }
 
+        public async Task GoToPosition(double position)
+        {
+            try
+            {
+                await _castService.GoToPosition(position);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
+        }
+
         public async Task SkipSeconds(double seconds)
         {
             try
@@ -314,6 +326,18 @@ namespace CastIt.Server.Hubs
             }
         }
 
+        public async Task AddFolderOrFileOrUrl(long playListId, AddFolderOrFileOrUrlToPlayListRequestDto dto)
+        {
+            try
+            {
+                await _castService.AddFolderOrFileOrUrl(playListId, dto.Path, dto.IncludeSubFolders, dto.OnlyVideo);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
+        }
+
         public async Task SetFileSubtitlesFromPath(string filePath)
         {
             try
@@ -338,7 +362,7 @@ namespace CastIt.Server.Hubs
             }
         }
 
-        public async Task RefreshCastDevices(TimeSpan ts)
+        public async Task RefreshCastDevices(TimeSpan? ts = null)
         {
             try
             {

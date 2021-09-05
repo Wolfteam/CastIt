@@ -99,14 +99,13 @@ namespace CastIt.Application.FilePaths
 
         public void DeleteAppLogsAndPreviews()
         {
-            DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
             DeleteFilesInDirectory(AppFileUtils.GetDesktopLogsPath(), DateTime.Now.AddDays(-3));
         }
 
-        public void DeleteServerLogsAndPreviews()
+        public void DeleteServerLogsAndPreviews(int maxDaysForPreviews = 3, int maxDaysForLogs = 3)
         {
-            DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-1));
-            DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-3));
+            DeleteFilesInDirectory(GetPreviewsPath(), DateTime.Now.AddDays(-maxDaysForPreviews));
+            DeleteFilesInDirectory(AppFileUtils.GetServerLogsPath(), DateTime.Now.AddDays(-maxDaysForLogs));
         }
 
         public string GetTemporalPreviewImagePath(long id)

@@ -13,11 +13,6 @@ namespace CastIt.Cli.Interfaces.Api
 {
     public interface ICastItApi
     {
-        #region Server
-        [Post("/Server/Stop")]
-        Task<EmptyResponseDto> StopServer();
-        #endregion
-
         #region Player
 
         [Get("/Player/Devices")]

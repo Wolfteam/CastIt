@@ -72,7 +72,7 @@ namespace CastIt.Server.Services
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                return GetNoImagePath();
+                return _serverService.GetChromeCastPreviewUrl(GetNoImagePath());
             }
 
             return _fileService.IsUrlFile(path) && !isLocal

@@ -35,7 +35,7 @@ namespace CastIt.Server.Services
         private bool _onSkipOrPrevious;
 
         public CancellationTokenSource FileCancellationTokenSource { get; } = new CancellationTokenSource();
-        private readonly SemaphoreSlim _thumbnailSemaphoreSlim = new SemaphoreSlim(3, 3);
+        private readonly SemaphoreSlim _thumbnailSemaphoreSlim = new SemaphoreSlim(1, 1);
         #endregion
 
         #region Properties
@@ -209,6 +209,10 @@ namespace CastIt.Server.Services
             try
             {
                 bool differentFile = CurrentPlayedFile?.Id != file.Id;
+                if (differentFile)
+                {
+                    CleanupBeforePlaying();
+                }
                 CurrentPlayList = playList;
                 CurrentPlayedFile?.BeingPlayed(false);
                 CurrentPlayedFile = file;
@@ -279,13 +283,15 @@ namespace CastIt.Server.Services
                         fileInfo);
                 }
 
+                RefreshPlayListImage(CurrentPlayList);
+
                 Logger.LogInformation($"{nameof(PlayFile)}: File is being played...");
             }
             catch (Exception e)
             {
                 if (!(e is BaseAppException))
                 {
-                    Logger.LogError(e, "An unknown error occurred");
+                    Logger.LogError(e, $"{nameof(PlayFile)}: An unknown error occurred");
                 }
                 await StopPlayback();
                 throw;
@@ -428,12 +434,18 @@ namespace CastIt.Server.Services
         //TODO: MAYBE USE A LOCK TO AVOID PROBLEMS  WHILE UPDATING PLAYLISTS
         public ServerPlayerStatusResponseDto GetPlayerStatus()
         {
-            var mapped = CurrentPlayList != null ? _mapper.Map<GetAllPlayListResponseDto>(CurrentPlayList) : null;
+            var currentPlayedFile = GetCurrentPlayedFile();
+            var currentPlayList = CurrentPlayList != null ? _mapper.Map<GetAllPlayListResponseDto>(CurrentPlayList) : null;
+            if (currentPlayList != null && !string.IsNullOrWhiteSpace(currentPlayedFile?.ThumbnailUrl))
+            {
+                currentPlayList.ImageUrl = currentPlayedFile.ThumbnailUrl;
+            }
+
             return new ServerPlayerStatusResponseDto
             {
                 Player = _mapper.Map<PlayerStatusResponseDto>(Player.State),
-                PlayList = mapped,
-                PlayedFile = GetCurrentPlayedFile(),
+                PlayList = currentPlayList,
+                PlayedFile = currentPlayedFile,
                 ThumbnailRanges = _thumbnailRanges
             };
         }
@@ -506,6 +518,7 @@ namespace CastIt.Server.Services
                 CurrentPlayList = null;
                 CurrentPlayedFile = null;
                 _previewThumbnails.Clear();
+                _thumbnailRanges.Clear();
             }
         }
 
@@ -570,15 +583,15 @@ namespace CastIt.Server.Services
             {
                 await _thumbnailSemaphoreSlim.WaitAsync(FileCancellationTokenSource.Token);
 
-                var belongsToRange = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.ContainsValue(tentativeSecond));
+                var (range, imgBytes) = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.ContainsValue(tentativeSecond));
 
-                if (belongsToRange.Value != null)
+                if (imgBytes != null)
                 {
-                    return belongsToRange.Value;
+                    return imgBytes;
                 }
 
                 string path = CurrentPlayedFile?.Path;
-                if (string.IsNullOrWhiteSpace(path) || tentativeSecond > CurrentPlayedFile?.TotalSeconds || tentativeSecond < 0)
+                if (string.IsNullOrWhiteSpace(path) || tentativeSecond > CurrentPlayedFile?.TotalSeconds || tentativeSecond < 0 || range == null)
                 {
                     var pathTo = _imageProviderService.GetNoImagePath();
                     return await File.ReadAllBytesAsync(pathTo);
@@ -606,13 +619,26 @@ namespace CastIt.Server.Services
                 }
                 else
                 {
-                    //TODO: maybe spawn 2 extra process to generate thumbnails below and above of what gets generated here
                     var fps = CurrentPlayedFile.FileInfo?.Videos.FirstOrDefault()?.AverageFrameRate ?? 24;
-                    bytes = await FFmpegService.GetThumbnailTile(CurrentPlayedFile.Path, belongsToRange.Key.Minimum, fps);
+                    bytes = await FFmpegService.GetThumbnailTile(CurrentPlayedFile.Path, range.Minimum, fps);
+
+                    //previous range
+                    if (_previewThumbnails.Any(kvp => kvp.Key.Index == range.Index - 1 && kvp.Value == null))
+                    {
+                        var (previousRange, _) = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.Index == range.Index - 1);
+                        _previewThumbnails[previousRange] = await FFmpegService.GetThumbnailTile(CurrentPlayedFile.Path, previousRange.Minimum, fps);
+                    }
+
+                    //next range
+                    if (_previewThumbnails.Any(kvp => kvp.Key.Index == range.Index + 1 && kvp.Value == null))
+                    {
+                        var (nextRange, _) = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.Index == range.Index + 1);
+                        _previewThumbnails[nextRange] = await FFmpegService.GetThumbnailTile(CurrentPlayedFile.Path, nextRange.Minimum, fps);
+                    }
                 }
 
                 //The bytes are null, that's I set them here
-                _previewThumbnails[belongsToRange.Key] = bytes;
+                _previewThumbnails[range] = bytes;
                 return bytes;
             }
             catch (Exception e)
@@ -654,7 +680,7 @@ namespace CastIt.Server.Services
                 for (int d = 0; d < rangesToGenerate; d++)
                 {
                     var fix = d == rangesToGenerate - 1 ? 0 : -1;
-                    var range = new Range<long>(min, max + fix);
+                    var range = new Range<long>(min, max + fix, d);
                     _previewThumbnails.Add(range, null);
                     min += AppWebServerConstants.ThumbnailsPerImage;
                     max += AppWebServerConstants.ThumbnailsPerImage;
@@ -663,7 +689,7 @@ namespace CastIt.Server.Services
             else
             {
                 long max = CurrentPlayedFile.TotalSeconds > 0 ? (long)CurrentPlayedFile.TotalSeconds : long.MaxValue;
-                var range = new Range<long>(0, max);
+                var range = new Range<long>(0, max, 0);
                 _previewThumbnails.Add(range, null);
             }
 

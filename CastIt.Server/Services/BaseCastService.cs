@@ -107,6 +107,7 @@ namespace CastIt.Server.Services
             FFProbeFileInfo fileInfo,
             double seconds = 0)
         {
+            CleanupBeforePlaying();
             var type = FileService.GetFileType(mrl);
             Logger.LogInformation($"{nameof(StartPlay)}: Doing some checks before playing...");
             DoChecksBeforePlaying(mrl, type, fileInfo);
@@ -134,6 +135,16 @@ namespace CastIt.Server.Services
             }
 
             Logger.LogInformation($"{nameof(StartPlay)}: Url was successfully loaded");
+        }
+
+        protected virtual void CleanupBeforePlaying()
+        {
+            CurrentVideoStreamIndex = 0;
+            CurrentAudioStreamIndex = 0;
+            CurrentSubtitleStreamIndex = SubTitleDefaultTrackId;
+            CurrentVideoQuality = 0;
+            CurrentThumbnailUrl = null;
+            CurrentFileInfo = null;
         }
 
         private void DoChecksBeforePlaying(string mrl, AppFileType type, FFProbeFileInfo fileInfo)
@@ -554,7 +565,7 @@ namespace CastIt.Server.Services
             }
 
             return AddSeconds(
-                _currentFilePath, 
+                _currentFilePath,
                 CurrentVideoStreamIndex, CurrentAudioStreamIndex, CurrentSubtitleStreamIndex,
                 CurrentVideoQuality, seconds, CurrentFileInfo);
         }
@@ -642,13 +653,13 @@ namespace CastIt.Server.Services
             return SetCastRenderer(renderer);
         }
 
-        public async Task RefreshCastDevices(TimeSpan ts)
+        public async Task RefreshCastDevices(TimeSpan? ts = null)
         {
-            if (ts.TotalSeconds > 30 || ts.TotalSeconds <= 0)
+            if (!ts.HasValue || ts.Value.TotalSeconds > 30 || ts.Value.TotalSeconds <= 0)
             {
-                ts = TimeSpan.FromSeconds(30);
+                ts = TimeSpan.FromSeconds(10);
             }
-            var devices = await Player.GetDevicesAsync(ts);
+            var devices = await Player.GetDevicesAsync(ts.Value);
             var connectedTo = AvailableDevices.Find(t => t.IsConnected);
             AvailableDevices.Clear();
             AvailableDevices.AddRange(devices.OrderBy(a => a.FriendlyName));

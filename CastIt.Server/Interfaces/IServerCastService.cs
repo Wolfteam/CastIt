@@ -32,6 +32,7 @@ namespace CastIt.Server.Interfaces
         Task AddFiles(long playListId, string[] paths);
         Task AddFile(long playListId, FileItem file);
         Task AddUrl(long playListId, string url, bool onlyVideo);
+        Task AddFolderOrFileOrUrl(long playListId, string path, bool includeSubFolders, bool onlyVideo);
         ServerPlayerStatusResponseDto GetPlayerStatus();
         Task SetFileInfoForPendingFiles();
 

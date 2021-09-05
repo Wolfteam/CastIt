@@ -72,7 +72,7 @@ namespace CastIt.Application.Server
             return process?.PortNumber;
         }
 
-        public static bool StartServer(string escapedArgs, string exePath)
+        private static bool StartServer(string escapedArgs, string exePath)
         {
             var process = new Process
             {
@@ -97,13 +97,13 @@ namespace CastIt.Application.Server
             }
         }
 
-        public static bool StartServer()
+        private static bool StartServer()
         {
             string path = GetServerPhysicalPath();
             return StartServer(path);
         }
 
-        public static bool StartServer(string exePath)
+        private static bool StartServer(string exePath)
         {
             string args = $"{AppWebServerConstants.PortArgument} {GetOpenPort()}";
             return StartServer(args, exePath);
