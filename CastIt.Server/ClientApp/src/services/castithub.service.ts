@@ -31,7 +31,7 @@ export const onCastDeviceDisconnected = new Subject<void>();
 export const onServerMessage = new Subject<AppMessage>();
 export const onStoppedPlayback = new Subject<void>();
 
-export const onPlayListsLoaded = new BehaviorSubject<IGetAllPlayListResponseDto[]>([]);
+export const onPlayListsLoaded = new Subject<IGetAllPlayListResponseDto[]>();
 export const onPlayListAdded = new Subject<IGetAllPlayListResponseDto>();
 export const onPlayListChanged = new Subject<IGetAllPlayListResponseDto>();
 export const onPlayListsChanged = new Subject<IGetAllPlayListResponseDto[]>();
@@ -140,6 +140,10 @@ export class CastItHubService {
     addNewPlayList = async (): Promise<IPlayListItemResponseDto> => {
         const playList = await this.send<IPlayListItemResponseDto>('AddNewPlayList');
         return playList!;
+    };
+
+    getAllPlayLists = async (): Promise<IGetAllPlayListResponseDto[]> => {
+        return await this.send<IGetAllPlayListResponseDto[]>('GetAllPlayLists') ?? [];
     };
 
     getPlayList = async (id: number): Promise<IPlayListItemResponseDto> => {

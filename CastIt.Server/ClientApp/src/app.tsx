@@ -10,6 +10,7 @@ import { TranslationContextProvider } from './context/translations.context';
 import { CastItHubContextProvider } from './context/castit_hub.context';
 import Loading from './components/loading';
 import translations from './services/translations';
+import Player from './components/player/player';
 
 const theme = createTheme({
     palette: {
@@ -40,7 +41,7 @@ function App() {
                             <ServerMessage>
                                 <Suspense fallback={<Loading message={translations.loading + '...'} />}>
                                     <AppRoutes />
-                                    <PlayerRoutes />
+                                    <Player />
                                 </Suspense>
                             </ServerMessage>
                         </CastItHubContextProvider>

@@ -4,13 +4,15 @@ import { useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import { onPlayListsChanged, onPlayListChanged, onFileAdded, onFilesChanged, onFileDeleted } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
-import { CircularProgress, Container, createStyles, Grid, List, makeStyles } from '@material-ui/core';
+import { Button, CircularProgress, Container, createStyles, Grid, List, makeStyles } from '@material-ui/core';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import translations from '../services/translations';
 import PageContent from './page_content';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 import { useCastItHub } from '../context/castit_hub.context';
 import NothingFound from '../components/nothing_found';
+import { Add } from '@material-ui/icons';
+import AddFilesDialog from '../components/dialogs/add_files_dialog';
 
 const useStyles = makeStyles(() =>
     createStyles({
@@ -44,6 +46,8 @@ function PlayList() {
     const castItHub = useCastItHub();
     const { enqueueSnackbar } = useSnackbar();
     const params = useParams<Params>();
+
+    const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
 
     const classes = useStyles();
 
@@ -162,7 +166,14 @@ function PlayList() {
         if (!value || value === '') {
             setState((s) => ({ ...s, filteredFiles: s.playList?.files ?? [], searchText: value ?? '' }));
         } else {
-            const filteredFiles = state.playList?.files.filter((f) => f.name.toLowerCase().includes(value.toLowerCase()!)) ?? [];
+            const filteredFiles = state.playList?.files?.filter((f) => {
+                const includes = value.toLowerCase();
+                if (f.name) {
+                    return f.name.toLowerCase().includes(includes);
+                }
+
+                return f.filename.toLowerCase().includes(includes);
+            }) ?? [];
             setState((s) => ({ ...s, filteredFiles: filteredFiles, searchText: value }));
         }
     };
@@ -194,6 +205,13 @@ function PlayList() {
         await castItHub.connection.updateFilePosition(state.playList!.id, source.id, result.destination!.index);
     };
 
+    const handleAddFiles = async (path: string | null, includeSubFolder: boolean, onlyVideo: boolean): Promise<void> => {
+        setShowAddFilesDialog(false);
+        if (path) {
+            await castItHub.connection.addFolderOrFileOrUrl(state.playList!.id, path, includeSubFolder, onlyVideo);
+        }
+    };
+
     const files = state.filteredFiles.map((file, index) => <FileItem key={file.id} file={file} index={index} />) ?? [];
     const content =
         files.length > 0 ? (
@@ -214,7 +232,16 @@ function PlayList() {
                 </Grid>
             </Container>
         ) : (
-            <NothingFound />
+            <NothingFound>
+                <Grid container justifyContent="center" alignItems="center">
+                    <Grid item>
+                        <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => setShowAddFilesDialog(true)}>
+                            {translations.addFolder + '/' + translations.addFiles}
+                        </Button>
+                        <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
+                    </Grid>
+                </Grid>
+            </NothingFound>
         );
 
     return (

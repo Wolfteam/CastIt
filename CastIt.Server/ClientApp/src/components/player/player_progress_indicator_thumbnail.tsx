@@ -1,6 +1,7 @@
 import { createStyles, makeStyles, Typography } from '@material-ui/core';
 import formatDuration from 'format-duration';
 import React, { useEffect, useState } from 'react';
+import { AppFile } from '../../enums';
 import { IFileThumbnailRangeResponseDto } from '../../models';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { thumbnailImgHeight, thumbnailImgWidth } from '../../utils/app_constants';
@@ -39,12 +40,14 @@ interface State {
     x: number;
     y: number;
     url: string;
+    useTransform: boolean;
 }
 
 const initialState: State = {
     x: 0,
     y: 0,
     url: '',
+    useTransform: true,
 };
 
 const getPositionToUse = (second: number, thumbnailRanges: IFileThumbnailRangeResponseDto[]): State | null => {
@@ -71,6 +74,7 @@ const getPositionToUse = (second: number, thumbnailRanges: IFileThumbnailRangeRe
         x: x,
         y: y,
         url: thumbRange!.previewThumbnailUrl,
+        useTransform: true,
     };
 };
 
@@ -83,19 +87,23 @@ function PlayerProgressIndicatorThumbnail(props: Props) {
             if (!status) {
                 return;
             }
-            const second = props.second;
-            const newState = getPositionToUse(second, status.thumbnailRanges);
-            if (!newState) {
-                return;
+            if (status.playedFile!.type !== AppFile.localVideo) {
+                setState({ ...initialState, url: status.thumbnailRanges[0].previewThumbnailUrl, useTransform: false });
+            } else {
+                const second = props.second;
+                const newState = getPositionToUse(second, status.thumbnailRanges);
+                if (!newState) {
+                    return;
+                }
+                setState(newState);
             }
-            setState(newState);
         });
         return () => {
             onPlayerStatusChangedSubscription.unsubscribe();
         };
     }, [props.second]);
 
-    const transform = `matrix(1, 0, 0, 1, ${state.x}, ${state.y}) scale(5, 5) `;
+    const transform = state.useTransform ? `matrix(1, 0, 0, 1, ${state.x}, ${state.y}) scale(5, 5) ` : '';
     const elapsed = formatDuration(props.second * 1000, { leading: true });
     return (
         <div className={classes.root}>

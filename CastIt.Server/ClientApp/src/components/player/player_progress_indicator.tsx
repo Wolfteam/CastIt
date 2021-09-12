@@ -56,6 +56,11 @@ function PlayerProgressIndicator() {
     }, [state.isValueChanging]);
 
     const handleValueChanged = async (seconds: number, committed: boolean = false): Promise<void> => {
+        //this can happen on live streams
+        if (seconds < 0) {
+            return;
+        }
+        
         if (committed) {
             await castItHub.connection.gotoSeconds(seconds);
         }

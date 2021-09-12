@@ -12,9 +12,9 @@ const Player = React.lazy(() => import('./components/player/player'));
 export const AppRoutes: React.FC = () => {
     return (
         <Switch>
-            <Route exact path={playListPath} component={PlayList} />
-            <Route exact path={playListsPath} component={PlayLists} />
-            <Route path="*" component={NotFound} />
+            <Route exact path={playListPath} component={PlayList} key="playlists" />
+            <Route exact path={playListsPath} component={PlayLists} key="playlist" />
+            <Route path="*" component={NotFound} key="notfound" />
         </Switch>
     );
 };

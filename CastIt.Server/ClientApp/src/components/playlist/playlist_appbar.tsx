@@ -1,6 +1,6 @@
 import { alpha, AppBar, createStyles, IconButton, InputBase, makeStyles, Theme, Toolbar, Typography } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
-import { ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
+import { Add, ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
 import { playListsPath } from '../../routes';
 import { useHistory } from 'react-router-dom';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -8,6 +8,8 @@ import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import PlayListLoadingIndicator from './playlist_loading_indicator';
+import AddFilesDialog from '../dialogs/add_files_dialog';
+import { useCastItHub } from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -86,6 +88,8 @@ function PlayListAppBar(props: Props) {
     const [state, setState] = useState<State>({
         canGoToPlayedFile: false,
     });
+    const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
+    const castItHub = useCastItHub();
 
     useEffect(() => {
         const timeout = setTimeout(async () => {
@@ -127,7 +131,8 @@ function PlayListAppBar(props: Props) {
     };
 
     const handleGoBackClick = () => {
-        history.replace(playListsPath);
+        console.log(history);
+        history.push(playListsPath);
     };
 
     const handleGoToPlayedFile = () => {
@@ -145,6 +150,13 @@ function PlayListAppBar(props: Props) {
 
     const searchChanged = (newVal: string) => {
         setSearch(newVal);
+    };
+
+    const handleAddFiles = async (path: string | null, includeSubFolder: boolean, onlyVideo: boolean): Promise<void> => {
+        setShowAddFilesDialog(false);
+        if (path) {
+            await castItHub.connection.addFolderOrFileOrUrl(props.id, path, includeSubFolder, onlyVideo);
+        }
     };
 
     return (
@@ -171,6 +183,9 @@ function PlayListAppBar(props: Props) {
                             inputProps={{ 'aria-label': 'search' }}
                         />
                     </div>
+                    <IconButton onClick={() => setShowAddFilesDialog(true)}>
+                        <Add />
+                    </IconButton>
                     <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} renderLoop />
                     <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} />
                     {state.canGoToPlayedFile ? (
@@ -183,6 +198,7 @@ function PlayListAppBar(props: Props) {
                     </IconButton>
                 </Toolbar>
                 <PlayListLoadingIndicator playListId={props.id} />
+                <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
             </AppBar>
             <Toolbar />
         </Fragment>

@@ -91,6 +91,7 @@ interface ITranslations {
     connecting: string;
     connectionFailedMsg: string;
     retry: string;
+    sort: string;
     errorCodes: IAppMessageTranslations;
 }
 
@@ -164,6 +165,7 @@ const enTrans: ITranslations = {
     connecting: 'Connecting',
     connectionFailedMsg: 'Connection failed. The server may not be running',
     retry: 'Retry',
+    sort: 'Sort',
     errorCodes: {
         unknownErrorOccurred: 'Unknown error occurred',
         invalidRequest: 'Invalid request',
@@ -255,6 +257,7 @@ const esTrans: ITranslations = {
     connecting: 'Conectando',
     connectionFailedMsg: 'La conexión falló. El servidor podria no estar ejecutandose',
     retry: 'Reintentar',
+    sort: 'Ordenar',
     errorCodes: {
         unknownErrorOccurred: 'Un error inesperado ha ocurrido',
         invalidRequest: 'Petición no válida',

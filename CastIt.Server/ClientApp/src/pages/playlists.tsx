@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { IGetAllPlayListResponseDto } from '../models';
 import {
     onPlayListAdded,
@@ -13,7 +13,7 @@ import {
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
 import { Grid } from '@material-ui/core';
-import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
+import ReOrderPlayListDialog from '../components/dialogs/reorder_playlist_dialog';
 import { useCastItHub } from '../context/castit_hub.context';
 
 interface State {
@@ -28,12 +28,14 @@ const initialState: State = {
 
 function PlayLists() {
     const [state, setState] = useState(initialState);
+    const [showReorderDialog, setShowReorderDialog] = useState(false);
+
     const castItHub = useCastItHub();
 
     useEffect(() => {
         const onPlayListAddedSubscription = onPlayListAdded.subscribe((playList) => {
             const copy = [...state.playLists];
-            copy.splice(playList.position, 0, playList);
+            copy.push(playList);
             setState((s) => ({ ...s, playLists: copy }));
         });
 
@@ -73,10 +75,12 @@ function PlayLists() {
     }, [state.playLists]);
 
     useEffect(() => {
-        const onPlayListsLoadedSubscription = onPlayListsLoaded.subscribe((playLists) => {
+        castItHub.connection.getAllPlayLists().then((playLists) => {
             setState({ isBusy: false, playLists: playLists });
         });
+    }, [castItHub.connection]);
 
+    useEffect(() => {
         const onFileLoadingSubscription = onFileLoading.subscribe((_) => {
             setState((s) => ({ ...s, isBusy: true }));
         });
@@ -89,19 +93,20 @@ function PlayLists() {
             setState((s) => ({ ...s, isBusy: false }));
         });
 
-        // initializeHubConnection();
-
         return () => {
-            onPlayListsLoadedSubscription.unsubscribe();
             onFileLoadingSubscription.unsubscribe();
             onFileLoadedSubscription.unsubscribe();
             onFileEndReachedSubscription.unsubscribe();
         };
     }, []);
 
+    const handleReOrderClick = useCallback(() => {
+        setShowReorderDialog(true);
+    }, []);
+
     const items = state.playLists.map((pl, index) => (
         <Grid key={pl.id} item xs={6} sm={6} md={4} lg={3} xl={2}>
-            <PlayListCardItem index={index} playList={pl} />
+            <PlayListCardItem index={index} playList={pl} onReOrderClick={handleReOrderClick} />
         </Grid>
     ));
 
@@ -125,44 +130,14 @@ function PlayLists() {
         </Grid>
     );
 
-    const handleDragEnd = async (result: DropResult): Promise<void> => {
-        if (!result.destination) {
-            return;
-        }
-
-        if (result.destination!.droppableId === result.source.droppableId && result.destination.index === result.source.index) {
-            return;
-        }
-
-        const playLists = { ...state.playLists };
-        const source = playLists[result.source.index];
-        if (!source) {
-            return;
-        }
-
-        await castItHub.connection.updatePlayListPosition(source.id, result.destination!.index);
-    };
-
     items.push(addNew);
 
     return (
         <PageContent useContainer>
-            <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="playlists-droppable" direction="horizontal">
-                    {(provided) => (
-                        <Grid
-                            container
-                            spacing={3}
-                            style={{ marginTop: 20, marginBottom: 20 }}
-                            {...provided.droppableProps}
-                            innerRef={provided.innerRef}
-                        >
-                            {items}
-                            {provided.placeholder}
-                        </Grid>
-                    )}
-                </Droppable>
-            </DragDropContext>
+            <Grid container spacing={3} style={{ marginTop: 20, marginBottom: 20 }}>
+                {items}
+                <ReOrderPlayListDialog isOpen={showReorderDialog} onClose={() => setShowReorderDialog(false)} playLists={state.playLists} />
+            </Grid>
         </PageContent>
     );
 }

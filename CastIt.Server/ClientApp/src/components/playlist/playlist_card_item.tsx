@@ -14,15 +14,14 @@ import {
     Grid,
 } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
-import { Add, Delete, MoreVert, Edit } from '@material-ui/icons';
+import { Add, Delete, MoreVert, Edit, Sort } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
 import { playListPath } from '../../routes';
-import RenamePlayListDialog from './rename_playlist_dialog';
+import RenamePlayListDialog from '../dialogs/rename_playlist_dialog';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import translations from '../../services/translations';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import AddFilesDialog from '../dialogs/add_files_dialog';
-import { Draggable } from 'react-beautiful-dnd';
 import { IGetAllPlayListResponseDto } from '../../models';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { defaultImg } from '../../utils/app_constants';
@@ -66,6 +65,7 @@ interface Props {
     index: number;
     toAddNewItem?: boolean;
     playList: IGetAllPlayListResponseDto;
+    onReOrderClick?(): void;
 }
 
 interface State {
@@ -168,6 +168,11 @@ function PlayListCardItem(props: Props): JSX.Element {
         }
     };
 
+    const handleSort = () => {
+        handleClose();
+        props.onReOrderClick!();
+    };
+
     const showMorePopup = Boolean(anchorEl);
     const moreId = anchorEl ? 'open-more-popover' : undefined;
 
@@ -202,82 +207,67 @@ function PlayListCardItem(props: Props): JSX.Element {
     const image = state.imageUrl ?? defaultImg;
 
     return (
-        <Draggable index={props.index} draggableId={`${props.playList.id}_${props.playList.name}`}>
-            {(provided) => (
-                <Card
-                    elevation={elevation}
-                    raised={raised}
-                    className={classes.root}
-                    onMouseOver={toggleRaised}
-                    onMouseOut={toggleRaised}
-                    ref={provided.innerRef}
-                    {...provided.dragHandleProps}
-                    {...provided.draggableProps}
-                >
-                    <CardActionArea onClick={handleClick}>
-                        <CardMedia className={classes.image} image={image} title={state.name} />
-                        <CardContent className={classes.cardContent}>
-                            <Fab className={classes.fab} color="primary" component="div">
-                                {state.numberOfFiles}
-                            </Fab>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
-                                {translations.playList}
-                            </Typography>
-                            <Tooltip title={state.name}>
-                                <Typography variant="h5" component="h2" className={classes.name}>
-                                    {state.name}
-                                </Typography>
-                            </Tooltip>
-                            <Tooltip title={state.totalDuration}>
-                                <Typography color="textSecondary" className={classes.name}>
-                                    {state.totalDuration}
-                                </Typography>
-                            </Tooltip>
-                        </CardContent>
-                    </CardActionArea>
-                    <CardActions className={classes.actionButtons} disableSpacing={true}>
-                        <IconButton onClick={() => setShowAddFilesDialog(true)}>
-                            <Add />
-                        </IconButton>
-                        <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} renderLoop />
-                        <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} />
-                        <IconButton onClick={handleShowMoreClick}>
-                            <MoreVert />
-                        </IconButton>
-                        {!showMorePopup ? null : (
-                            <Popover
-                                id={moreId}
-                                open={showMorePopup}
-                                anchorEl={anchorEl}
-                                onClose={handleClose}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'center',
-                                }}
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'center',
-                                }}
-                            >
-                                <Button
-                                    className={classes.moreButtons}
-                                    size="small"
-                                    startIcon={<Edit />}
-                                    onClick={() => setShowRenameDialog(true)}
-                                >
-                                    {translations.rename}
-                                </Button>
-                                <Button className={classes.moreButtons} size="small" startIcon={<Delete />} onClick={handleDelete}>
-                                    {translations.delete}
-                                </Button>
-                            </Popover>
-                        )}
-                        <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
-                        <RenamePlayListDialog isOpen={showRenameDialog} name={state.name} onClose={handleRename} />
-                    </CardActions>
-                </Card>
-            )}
-        </Draggable>
+        <Card elevation={elevation} raised={raised} className={classes.root} onMouseOver={toggleRaised} onMouseOut={toggleRaised}>
+            <CardActionArea onClick={handleClick}>
+                <CardMedia className={classes.image} image={image} title={state.name} />
+                <CardContent className={classes.cardContent}>
+                    <Fab className={classes.fab} color="primary" component="div">
+                        {state.numberOfFiles}
+                    </Fab>
+                    <Typography className={classes.title} color="textSecondary" gutterBottom>
+                        {translations.playList}
+                    </Typography>
+                    <Tooltip title={state.name}>
+                        <Typography variant="h5" component="h2" className={classes.name}>
+                            {state.name}
+                        </Typography>
+                    </Tooltip>
+                    <Tooltip title={state.totalDuration}>
+                        <Typography color="textSecondary" className={classes.name}>
+                            {state.totalDuration}
+                        </Typography>
+                    </Tooltip>
+                </CardContent>
+            </CardActionArea>
+            <CardActions className={classes.actionButtons} disableSpacing={true}>
+                <IconButton onClick={() => setShowAddFilesDialog(true)}>
+                    <Add />
+                </IconButton>
+                <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} renderLoop />
+                <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} />
+                <IconButton onClick={handleShowMoreClick}>
+                    <MoreVert />
+                </IconButton>
+                {!showMorePopup ? null : (
+                    <Popover
+                        id={moreId}
+                        open={showMorePopup}
+                        anchorEl={anchorEl}
+                        onClose={handleClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'center',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                    >
+                        <Button className={classes.moreButtons} size="small" startIcon={<Edit />} onClick={() => setShowRenameDialog(true)}>
+                            {translations.rename}
+                        </Button>
+                        <Button className={classes.moreButtons} size="small" startIcon={<Sort />} onClick={handleSort}>
+                            {translations.sort}
+                        </Button>
+                        <Button className={classes.moreButtons} size="small" startIcon={<Delete />} onClick={handleDelete}>
+                            {translations.delete}
+                        </Button>
+                    </Popover>
+                )}
+                <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
+                <RenamePlayListDialog isOpen={showRenameDialog} name={state.name} onClose={handleRename} />
+            </CardActions>
+        </Card>
     );
 }
 

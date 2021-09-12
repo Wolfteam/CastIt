@@ -44,33 +44,35 @@ function AddSubtitlesDialog(props: Props) {
     }
     return (
         <Dialog open={props.isOpen} onClose={() => handleClose(false)} maxWidth="sm" fullWidth>
-            <DialogTitle>{translations.subtitles}</DialogTitle>
-            <DialogContent>
-                <Grid container alignItems="stretch" justifyContent="center" >
-                    <FormGroup row style={{ width: '100%' }}>
-                        <TextField
-                            required
-                            autoFocus
-                            margin="dense"
-                            label={translations.path}
-                            type="text"
-                            fullWidth
-                            onChange={handlePathChange}
-                            value={state.path}
-                            error={showError}
-                            helperText={showError ? translations.fieldIsNotValid : ''}
-                        />
-                    </FormGroup>
-                </Grid>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => handleClose(false)} color="primary">
-                    {translations.cancel}
-                </Button>
-                <Button variant="contained" onClick={() => handleClose(true)} color="primary" disabled={!state.isPathValid}>
-                    {translations.ok}
-                </Button>
-            </DialogActions>
+            <form onSubmit={() => handleClose(true)}>
+                <DialogTitle>{translations.subtitles}</DialogTitle>
+                <DialogContent>
+                    <Grid container alignItems="stretch" justifyContent="center">
+                        <FormGroup row style={{ width: '100%' }}>
+                            <TextField
+                                required
+                                autoFocus
+                                margin="dense"
+                                label={translations.path}
+                                type="text"
+                                fullWidth
+                                onChange={handlePathChange}
+                                value={state.path}
+                                error={showError}
+                                helperText={showError ? translations.fieldIsNotValid : ''}
+                            />
+                        </FormGroup>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => handleClose(false)} color="primary">
+                        {translations.cancel}
+                    </Button>
+                    <Button type="submit" variant="contained" color="primary" disabled={!state.isPathValid}>
+                        {translations.ok}
+                    </Button>
+                </DialogActions>
+            </form>
         </Dialog>
     );
 }
