@@ -698,13 +698,12 @@ namespace CastIt.Server.Services
                 ThumbnailRange = t.Key
             }));
 
-            //there's no point in generating the thumbnail matrix for other file types, since the image will be the same
-            if (!CurrentPlayedFile.Type.IsLocalVideo())
-                return;
             foreach (var thumbnailRange in _thumbnailRanges)
             {
-                //the +1 is required to make sure we are not in the range limits
                 thumbnailRange.PreviewThumbnailUrl = ServerService.GetThumbnailPreviewUrl(thumbnailRange.ThumbnailRange.Minimum);
+                //there's no point in generating the thumbnail matrix for other file types, since the image will be the same
+                if (!CurrentPlayedFile.Type.IsLocalVideo())
+                    continue;
                 thumbnailRange.SetMatrixOfSeconds(AppWebServerConstants.ThumbnailsPerImageRow);
             }
         }

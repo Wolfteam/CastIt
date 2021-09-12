@@ -200,6 +200,12 @@ namespace CastIt.Server.Hubs
             return _castService.AddNewPlayList();
         }
 
+        public async Task<List<GetAllPlayListResponseDto>> GetAllPlayLists()
+        {
+            var playLists = await _castService.GetAllPlayLists();
+            return playLists;
+        }
+
         public Task<PlayListItemResponseDto> GetPlayList(long id)
         {
             var playList = _castService.GetPlayList(id);

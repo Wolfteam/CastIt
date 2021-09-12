@@ -421,7 +421,7 @@ namespace CastIt.Server.Services
             await StopRunningProcess();
         }
 
-        public Task GoToPosition(
+        public async Task GoToPosition(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -433,15 +433,16 @@ namespace CastIt.Server.Services
         {
             if (position >= 0 && position <= 100)
             {
+                FileLoading();
                 double seconds = position * totalSeconds / 100;
                 if (FileService.IsLocalFile(filePath))
-                    return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
+                    await StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
-                return Player.SeekAsync(seconds);
+                await Player.SeekAsync(seconds);
+                FileLoaded(this, EventArgs.Empty);
             }
 
             Logger.LogWarning($"{nameof(GoToPosition)} Cant go to position = {position}");
-            return Task.CompletedTask;
         }
 
         public Task GoToPosition(double position)
@@ -464,7 +465,7 @@ namespace CastIt.Server.Services
                 position, totalSeconds, CurrentFileInfo);
         }
 
-        public Task GoToSeconds(
+        public async Task GoToSeconds(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -477,13 +478,13 @@ namespace CastIt.Server.Services
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 Logger.LogWarning($"{nameof(GoToSeconds)}: Can't go to seconds = {seconds} because the current played file is null");
-                return Task.CompletedTask;
+                return;
             }
 
             if (!Player.IsPlayingOrPaused)
             {
                 Logger.LogWarning($"{nameof(GoToSeconds)}: Can't go to seconds = {seconds} because nothing is being played");
-                return Task.CompletedTask;
+                return;
             }
 
             if (seconds >= Player.CurrentMediaDuration)
@@ -491,7 +492,7 @@ namespace CastIt.Server.Services
                 Logger.LogWarning(
                     $"{nameof(GoToSeconds)}: Cant go to = {seconds} because is bigger or equal than " +
                     $"the media duration = {Player.CurrentMediaDuration}");
-                return Task.CompletedTask;
+                return;
             }
             if (seconds < 0)
             {
@@ -501,9 +502,10 @@ namespace CastIt.Server.Services
 
             FileLoading();
             if (FileService.IsLocalFile(filePath))
-                return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
+                await StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, seconds);
 
-            return Player.SeekAsync(seconds);
+            await Player.SeekAsync(seconds);
+            FileLoaded(this, EventArgs.Empty);
         }
 
         public Task GoToSeconds(double seconds)
@@ -514,7 +516,7 @@ namespace CastIt.Server.Services
                 CurrentVideoQuality, seconds, CurrentFileInfo);
         }
 
-        public Task AddSeconds(
+        public async Task AddSeconds(
             string filePath,
             int videoStreamIndex,
             int audioStreamIndex,
@@ -526,7 +528,7 @@ namespace CastIt.Server.Services
             if (_currentFilePath == null)
             {
                 Logger.LogWarning($"{nameof(AddSeconds)}: Can't go skip seconds = {seconds} because the current played file is null");
-                return Task.CompletedTask;
+                return;
             }
 
             if (seconds >= Player.CurrentMediaDuration || Player.CurrentMediaDuration + seconds < 0)
@@ -534,7 +536,7 @@ namespace CastIt.Server.Services
                 Logger.LogWarning(
                     $"{nameof(AddSeconds)}: Cant add seconds = {seconds} because is bigger or equal than " +
                     $"the media duration = {Player.CurrentMediaDuration} or the diff is less than 0");
-                return Task.CompletedTask;
+                return;
             }
 
             var newValue = Player.ElapsedSeconds + seconds;
@@ -552,8 +554,9 @@ namespace CastIt.Server.Services
             }
             FileLoading();
             if (!FileService.IsLocalFile(filePath))
-                return Player.SeekAsync(newValue);
-            return StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
+                await Player.SeekAsync(newValue);
+            await StartPlay(filePath, videoStreamIndex, audioStreamIndex, subtitleStreamIndex, quality, fileInfo, newValue);
+            FileLoaded(this, EventArgs.Empty);
         }
 
         public Task AddSeconds(double seconds)
