@@ -40,7 +40,7 @@ namespace CastIt.Server
 
             //Cors is required for the subtitles to work
             services.AddCors();
-                
+
             //Should be more than enough for the hosted service to complete
             services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(15));
 

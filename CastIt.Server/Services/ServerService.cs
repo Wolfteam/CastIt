@@ -85,7 +85,9 @@ namespace CastIt.Server.Services
             //WebServerUtils.GetWebServerIpAddress()
             //Keep in mind that to test this thing on IIS you need to add to the configuration file (.vs\CastIt\config)
             //<binding protocol="http" bindingInformation="*:62003:your.local.ipaddress" />
-            var ipAddress = serverAddressesFeature.Addresses.FirstOrDefault(s =>
+
+            _logger.LogInformation($"The following addresses = {string.Join(",", serverAddressesFeature.Addresses)} will be checked");
+            string ipAddress = serverAddressesFeature.Addresses.FirstOrDefault(s =>
                 !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
                 !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
                 !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();

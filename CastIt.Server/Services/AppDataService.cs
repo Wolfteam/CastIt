@@ -157,14 +157,14 @@ namespace CastIt.Server.Services
             if (playLists.Count == 0)
                 return;
 
-            var tasks = playLists.Select(playList => _db.Update<PlayList>(playList.Id)
-                .Set(p => p.Position, playList.Position)
-                .Set(p => p.Shuffle, playList.Shuffle)
-                .Set(p => p.Loop, playList.Loop)
-                .ExecuteAffrowsAsync()
-            );
-
-            await Task.WhenAll(tasks);
+            foreach (var playList in playLists)
+            {
+                await _db.Update<PlayList>(playList.Id)
+                    .Set(p => p.Position, playList.Position)
+                    .Set(p => p.Shuffle, playList.Shuffle)
+                    .Set(p => p.Loop, playList.Loop)
+                    .ExecuteAffrowsAsync();
+            }
         }
 
         public async Task SaveFileChanges(List<ServerFileItem> files)
@@ -172,13 +172,13 @@ namespace CastIt.Server.Services
             if (files.Count == 0)
                 return;
 
-            var tasks = files.Select(file => _db.Update<FileItem>(file.Id)
-                .Set(f => f.PlayedPercentage, file.PlayedPercentage)
-                .Set(f => f.Position, file.Position)
-                .ExecuteAffrowsAsync()
-            );
-
-            await Task.WhenAll(tasks);
+            foreach (var file in files)
+            {
+                await _db.Update<FileItem>(file.Id)
+                    .Set(f => f.PlayedPercentage, file.PlayedPercentage)
+                    .Set(f => f.Position, file.Position)
+                    .ExecuteAffrowsAsync();
+            }
         }
 
         private void ApplyMigrations()

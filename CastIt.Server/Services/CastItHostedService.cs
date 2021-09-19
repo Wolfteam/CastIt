@@ -94,24 +94,36 @@ namespace CastIt.Server.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"{nameof(StartAsync)}: Deleting server logs and previews...");
-            _fileService.DeleteServerLogsAndPreviews();
-            _serverService.Init();
+            try
+            {
+                _logger.LogInformation($"{nameof(StartAsync)}: Deleting server logs and previews...");
+                _fileService.DeleteServerLogsAndPreviews();
 
-            _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
-            await _castService.Init();
+                _logger.LogInformation($"{nameof(StartAsync)}: Initializing server...");
+                _serverService.Init();
 
-            _logger.LogInformation($"{nameof(StartAsync)}: Initializing app settings...");
-            await _appSettings.Init();
+                _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
+                await _castService.Init();
 
-            _logger.LogInformation($"{nameof(StartAsync)}: Initializing ffmpeg...");
-            await _fFmpegService.Init(_appSettings.FFmpegExePath, _appSettings.FFprobeExePath);
+                _logger.LogInformation($"{nameof(StartAsync)}: Initializing app settings...");
+                await _appSettings.Init();
 
-            _logger.LogInformation($"{nameof(StartAsync)}: Initializing file watchers...");
-            InitializeOrUpdateFileWatcher(false);
+                _logger.LogInformation($"{nameof(StartAsync)}: Initializing ffmpeg...");
+                await _fFmpegService.Init(_appSettings.FFmpegExePath, _appSettings.FFprobeExePath);
 
-            _logger.LogInformation($"{nameof(StartAsync)}: Initialization completed");
-            await base.StartAsync(cancellationToken);
+                _logger.LogInformation($"{nameof(StartAsync)}: Initializing file watchers...");
+                InitializeOrUpdateFileWatcher(false);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(StartAsync)}: Unknown error while starting the service");
+                throw;
+            }
+            finally
+            {
+                _logger.LogInformation($"{nameof(StartAsync)}: Initialization completed");
+                await base.StartAsync(cancellationToken);
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -128,24 +140,33 @@ namespace CastIt.Server.Services
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            //TODO: THIS MSG IS NOT GETTING DELIVERED
-            _logger.LogInformation($"{nameof(StopAsync)}: Hosted service is going down!");
-            await _castItHub.Clients.All.ServerMessage(AppMessageType.ServerIsClosing);
+            try
+            {
+                //TODO: THIS MSG IS NOT GETTING DELIVERED
+                _logger.LogInformation($"{nameof(StopAsync)}: Hosted service is going down!");
+                await _castItHub.Clients.All.ServerMessage(AppMessageType.ServerIsClosing);
 
-            _logger.LogInformation($"{nameof(StopAsync)}: Cancelling any pending duration job...");
-            _setDurationTokenSource.Cancel();
+                _logger.LogInformation($"{nameof(StopAsync)}: Cancelling any pending duration job...");
+                _setDurationTokenSource.Cancel();
 
-            _logger.LogInformation($"{nameof(StopAsync)}: Stop listening to folders...");
-            _fileWatcherService.StopListening();
+                _logger.LogInformation($"{nameof(StopAsync)}: Stop listening to folders...");
+                _fileWatcherService.StopListening();
 
-            _logger.LogInformation($"{nameof(StopAsync)}: Cleaning the cast service...");
-            await _castService.StopAsync();
+                _logger.LogInformation($"{nameof(StopAsync)}: Cleaning the cast service...");
+                await _castService.StopAsync();
 
-            _logger.LogInformation($"{nameof(StopAsync)}: Saving current settings...");
-            await _appSettings.SaveCurrentSettings();
-
-            _logger.LogInformation($"{nameof(StopAsync)}: Stop completed");
-            await base.StopAsync(cancellationToken);
+                _logger.LogInformation($"{nameof(StopAsync)}: Saving current settings...");
+                await _appSettings.SaveCurrentSettings();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(StopAsync)}: Unknown error while stopping the service");
+            }
+            finally
+            {
+                _logger.LogInformation($"{nameof(StopAsync)}: Stop completed");
+                await base.StopAsync(cancellationToken);
+            }
         }
 
         private void InitializeOrUpdateFileWatcher(bool update)

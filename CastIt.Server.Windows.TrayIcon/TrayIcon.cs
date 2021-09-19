@@ -1,5 +1,6 @@
 ﻿using CastIt.Application.Common.Utils;
 using CastIt.Application.Server;
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -22,16 +23,25 @@ namespace CastIt.Server.Windows.TrayIcon
 
         public TrayIcon()
         {
-            _serviceController = Array.Find(ServiceController.GetServices(), s => s.ServiceName == WebServerUtils.ServerProcessName);
-            if (_serviceController == null)
+            try
             {
-                MessageBox.Show("CastIt.Server is not installed");
-                Exit(null, EventArgs.Empty);
-                return;
+                _serviceController = Array.Find(ServiceController.GetServices(), s => s.ServiceName == WebServerUtils.ServerProcessName);
+                if (_serviceController == null)
+                {
+                    MessageBox.Show("CastIt.Server is not installed");
+                    Exit(null, EventArgs.Empty);
+                    return;
+                }
+                CreateTrayIcon();
+                CheckShowServiceNotElevatedWarning();
             }
-
-            CreateTrayIcon();
-            CheckShowServiceNotElevatedWarning();
+            catch (Exception e)
+            {
+                string ex = JsonConvert.SerializeObject(e);
+                string logPath = AppFileUtils.GetServerLogsPath();
+                string filePath = Path.Combine(logPath, $"tray_icon_crash_{DateTime.Now}.txt");
+                File.WriteAllText(filePath, ex);
+            }
         }
 
         private bool CheckShowServiceNotElevatedWarning()
