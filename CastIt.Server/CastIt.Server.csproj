@@ -18,7 +18,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
-    <PackageReference Include="FluentMigrator" Version="3.2.16" />
+    <PackageReference Include="FluentMigrator" Version="3.3.0" />
     <PackageReference Include="FluentMigrator.Runner" Version="3.3.0" />
     <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.6.100" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.10" />
