@@ -22,7 +22,7 @@
     <PackageReference Include="FluentMigrator.Runner" Version="3.3.0" />
     <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.6.100" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
