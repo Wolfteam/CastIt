@@ -100,7 +100,7 @@ namespace CastIt.Server.Services
                 _fileService.DeleteServerLogsAndPreviews();
 
                 _logger.LogInformation($"{nameof(StartAsync)}: Initializing server...");
-                _serverService.Init();
+                await _serverService.Init();
 
                 _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
                 await _castService.Init();

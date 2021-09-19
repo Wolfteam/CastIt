@@ -23,6 +23,7 @@ namespace CastIt.Server.Services
             _db = new FreeSql.FreeSqlBuilder()
                .UseConnectionString(FreeSql.DataType.Sqlite, _connectionString)
                .UseAutoSyncStructure(false)
+               .UseExitAutoDisposePool(false)
                .Build();
 
             _db.CodeFirst.ConfigEntity<PlayList>(pl => pl.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
@@ -157,14 +158,14 @@ namespace CastIt.Server.Services
             if (playLists.Count == 0)
                 return;
 
-            foreach (var playList in playLists)
-            {
-                await _db.Update<PlayList>(playList.Id)
-                    .Set(p => p.Position, playList.Position)
-                    .Set(p => p.Shuffle, playList.Shuffle)
-                    .Set(p => p.Loop, playList.Loop)
-                    .ExecuteAffrowsAsync();
-            }
+            var tasks = playLists.Select(playList => _db.Update<PlayList>(playList.Id)
+                .Set(p => p.Position, playList.Position)
+                .Set(p => p.Shuffle, playList.Shuffle)
+                .Set(p => p.Loop, playList.Loop)
+                .ExecuteAffrowsAsync()
+            );
+
+            await Task.WhenAll(tasks);
         }
 
         public async Task SaveFileChanges(List<ServerFileItem> files)
@@ -172,13 +173,13 @@ namespace CastIt.Server.Services
             if (files.Count == 0)
                 return;
 
-            foreach (var file in files)
-            {
-                await _db.Update<FileItem>(file.Id)
-                    .Set(f => f.PlayedPercentage, file.PlayedPercentage)
-                    .Set(f => f.Position, file.Position)
-                    .ExecuteAffrowsAsync();
-            }
+            var tasks = files.Select(file => _db.Update<FileItem>(file.Id)
+                .Set(f => f.PlayedPercentage, file.PlayedPercentage)
+                .Set(f => f.Position, file.Position)
+                .ExecuteAffrowsAsync()
+            );
+
+            await Task.WhenAll(tasks);
         }
 
         private void ApplyMigrations()

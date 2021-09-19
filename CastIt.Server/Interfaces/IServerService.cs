@@ -5,6 +5,7 @@ using CastIt.Domain.Interfaces;
 using CastIt.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CastIt.Server.Interfaces
 {
@@ -38,7 +39,7 @@ namespace CastIt.Server.Interfaces
         Action<FileItemResponseDto> OnFileLoaded { get; set; }
         Action OnStoppedPlayback { get; set; }
 
-        void Init();
+        Task Init();
 
         public string GetPlayUrl(string filePath,
             int videoStreamIndex,

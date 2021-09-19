@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CastIt.Server.Services
 {
@@ -77,28 +78,38 @@ namespace CastIt.Server.Services
         }
 
         //Keep in mind that this method should be called AFTER the server has completely started
-        public void Init()
+        public async Task Init()
         {
-            var serverAddressesFeature = _server.Features.Get<IServerAddressesFeature>();
-            //On iis express the IServerAddressesFeature will return the right ip,
-            //but on other environments we will get something like http://[::]:9696 that's why we call
-            //WebServerUtils.GetWebServerIpAddress()
-            //Keep in mind that to test this thing on IIS you need to add to the configuration file (.vs\CastIt\config)
-            //<binding protocol="http" bindingInformation="*:62003:your.local.ipaddress" />
-
-            _logger.LogInformation($"The following addresses = {string.Join(",", serverAddressesFeature.Addresses)} will be checked");
-            string ipAddress = serverAddressesFeature.Addresses.FirstOrDefault(s =>
-                !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
-                !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
-                !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
-
-            if (!string.IsNullOrWhiteSpace(ipAddress) && ipAddress.EndsWith("/"))
+            int attempts = 5;
+            while (attempts > 0)
             {
-                ipAddress = ipAddress[..^1];
+                attempts--;
+                try
+                {
+                    var serverAddressesFeature = _server.Features.Get<IServerAddressesFeature>();
+                    //On iis express the IServerAddressesFeature will return the right ip,
+                    //but on other environments we will get something like http://[::]:9696 that's why we call
+                    //WebServerUtils.GetWebServerIpAddress()
+                    //Keep in mind that to test this thing on IIS you need to add to the configuration file (.vs\CastIt\config)
+                    //<binding protocol="http" bindingInformation="*:62003:your.local.ipaddress" />
+                    _logger.LogInformation($"The following addresses = {string.Join(",", serverAddressesFeature.Addresses)} will be checked...");
+                    _baseIpAddress = GetLocalIpAddress(serverAddressesFeature.Addresses);
+                    _logger.LogInformation($"The used ip address is going to be = {_baseIpAddress}");
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning($"Could obtain local ip address, remaining attempts = {attempts}");
+                    if (attempts <= 0)
+                    {
+                        _logger.LogError(e, "We were not able to get the local ip address");
+                    }
+                    //On a reboot / start, the pc may take a little bit to connect,
+                    //that's why we give some time and retry
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                }
             }
 
-            _baseIpAddress = ipAddress;
-            _logger.LogInformation($"The current ip addresses are = {string.Join(",", serverAddressesFeature.Addresses)} and the used will be = {_baseIpAddress}");
             CheckIpAddress();
         }
 
@@ -184,6 +195,21 @@ namespace CastIt.Server.Services
             {
                 throw new NullReferenceException("The base ip address cannot be null");
             }
+        }
+
+        private string GetLocalIpAddress(ICollection<string> addresses)
+        {
+            string ipAddress = addresses.FirstOrDefault(s =>
+                !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
+                !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
+                !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
+
+            if (!string.IsNullOrWhiteSpace(ipAddress) && ipAddress.EndsWith("/"))
+            {
+                ipAddress = ipAddress[..^1];
+            }
+
+            return ipAddress;
         }
     }
 }
