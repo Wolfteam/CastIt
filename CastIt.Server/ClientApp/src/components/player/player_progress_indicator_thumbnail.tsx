@@ -87,7 +87,8 @@ function PlayerProgressIndicatorThumbnail(props: Props) {
             if (!status) {
                 return;
             }
-            if (status.playedFile!.type !== AppFile.localVideo) {
+
+            if ((status.playedFile!.type & AppFile.localVideo) !== AppFile.localVideo) {
                 setState({ ...initialState, url: status.thumbnailRanges[0].previewThumbnailUrl, useTransform: false });
             } else {
                 const second = props.second;
