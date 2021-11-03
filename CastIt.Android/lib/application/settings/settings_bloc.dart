@@ -43,6 +43,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           appLanguage: settings.appLanguage,
           castItUrl: settings.castItUrl,
           isCastItUrlValid: true,
+          fFmpegExePath: '',
+          fFprobeExePath: '',
           videoScale: VideoScaleType.original,
           enableHwAccel: false,
           forceAudioTranscode: false,
@@ -64,6 +66,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       connected: (event) async {
         return currentState.copyWith(
           isConnected: true,
+          fFmpegExePath: event.settings.fFmpegExePath,
+          fFprobeExePath: event.settings.fFprobeExePath,
           videoScale: event.settings.videoScaleType,
           enableHwAccel: event.settings.enableHardwareAcceleration,
           forceAudioTranscode: event.settings.forceAudioTranscode,

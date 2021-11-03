@@ -70,24 +70,32 @@ class MyApp extends StatelessWidget {
             return SettingsBloc(settings, ctx.read<MainBloc>(), castItHub);
           },
         ),
-        BlocProvider(create: (ctx) {
-          final castItHub = getIt<CastItHubClientService>();
-          return PlayedFileOptionsBloc(castItHub);
-        }),
+        BlocProvider(
+          create: (ctx) {
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayedFileOptionsBloc(castItHub);
+          },
+        ),
         BlocProvider(create: (ctx) => PlayListRenameBloc()),
-        BlocProvider(create: (ctx) {
-          final settings = getIt<SettingsService>();
-          final settingsBloc = ctx.read<SettingsBloc>();
-          return IntroBloc(settings, settingsBloc);
-        }),
-        BlocProvider(create: (ctx) {
-          final castItHub = getIt<CastItHubClientService>();
-          return PlayedPlayListItemBloc(castItHub);
-        }),
-        BlocProvider(create: (ctx) {
-          final castItHub = getIt<CastItHubClientService>();
-          return PlayedFileItemBloc(castItHub);
-        }),
+        BlocProvider(
+          create: (ctx) {
+            final settings = getIt<SettingsService>();
+            final settingsBloc = ctx.read<SettingsBloc>();
+            return IntroBloc(settings, settingsBloc);
+          },
+        ),
+        BlocProvider(
+          create: (ctx) {
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayedPlayListItemBloc(castItHub);
+          },
+        ),
+        BlocProvider(
+          create: (ctx) {
+            final castItHub = getIt<CastItHubClientService>();
+            return PlayedFileItemBloc(castItHub);
+          },
+        ),
       ],
       child: BlocBuilder<MainBloc, MainState>(
         builder: (ctx, state) => _buildApp(state),
