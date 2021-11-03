@@ -36,17 +36,11 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
   final _refreshController = RefreshController();
   final _listViewScrollController = ScrollController();
   final _itemHeight = 75.0;
-  late AnimationController _hideFabAnimController;
+  bool isFabVisible = true;
 
   @override
   void initState() {
     super.initState();
-
-    _hideFabAnimController = AnimationController(
-      vsync: this,
-      duration: kThemeAnimationDuration,
-      value: 1, // initially visible
-    );
     _listViewScrollController.addListener(_onListViewScroll);
   }
 
@@ -94,9 +88,8 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
             name: state.name,
             loop: state.loop,
             shuffle: state.shuffle,
-            hideFabAnimController: _hideFabAnimController,
-            //TODO: THIS WIDGET IS BEING REBUILD BECAUSE OF THE FUNCTION
-            onArrowTopTap: () => _animateToIndex(1),
+            isVisible: isFabVisible,
+            onArrowTopTap: () => _animateToIndex(0),
           ),
           orElse: () => nil,
         ),
@@ -106,7 +99,6 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _hideFabAnimController.dispose();
     _listViewScrollController.dispose();
     _refreshController.dispose();
     super.dispose();
@@ -114,7 +106,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   Future<void> _animateToIndex(int i) async {
     final offset = _itemHeight * i;
-    await _listViewScrollController.animateTo(offset, duration: const Duration(seconds: 2), curve: Curves.fastOutSlowIn);
+    await _listViewScrollController.animateTo(offset, duration: const Duration(seconds: 1), curve: Curves.fastOutSlowIn);
   }
 
   void _onListViewScroll() {
@@ -122,10 +114,14 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
       case ScrollDirection.idle:
         break;
       case ScrollDirection.forward:
-        _hideFabAnimController.forward();
+        setState(() {
+          isFabVisible = true;
+        });
         break;
       case ScrollDirection.reverse:
-        _hideFabAnimController.reverse();
+        setState(() {
+          isFabVisible = false;
+        });
         break;
     }
   }
