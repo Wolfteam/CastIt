@@ -37,14 +37,14 @@ class PlayListFab extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               ButtonBar(
-                buttonPadding: const EdgeInsets.all(0),
+                buttonPadding: EdgeInsets.zero,
                 children: <Widget>[
                   IconButton(
-                    icon: Icon(Icons.loop, color: loop ? theme.accentColor : null, size: iconSize),
+                    icon: Icon(Icons.loop, color: loop ? theme.colorScheme.secondary : null, size: iconSize),
                     onPressed: () => _setPlayListOptions(!loop, shuffle, context),
                   ),
                   IconButton(
-                    icon: Icon(Icons.shuffle, color: shuffle ? theme.accentColor : null, size: iconSize),
+                    icon: Icon(Icons.shuffle, color: shuffle ? theme.colorScheme.secondary : null, size: iconSize),
                     onPressed: () => _setPlayListOptions(loop, !shuffle, context),
                   ),
                 ],
@@ -53,7 +53,7 @@ class PlayListFab extends StatelessWidget {
                 child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
               ),
               ButtonBar(
-                buttonPadding: const EdgeInsets.all(0),
+                buttonPadding: EdgeInsets.zero,
                 children: <Widget>[
                   IconButton(
                     icon: const Icon(Icons.search, size: iconSize),

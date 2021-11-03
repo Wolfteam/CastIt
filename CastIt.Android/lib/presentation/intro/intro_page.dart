@@ -104,7 +104,7 @@ class _IntroPageState extends State<IntroPage> {
                       },
                       child: Text(
                         i18n.skip.toUpperCase(),
-                        style: TextStyle(color: theme.accentColor, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600),
                       ),
                     ),
                     Row(
@@ -116,7 +116,7 @@ class _IntroPageState extends State<IntroPage> {
                       onPressed: () => _onNext(s.page, s.currentCastItUrl),
                       child: Text(
                         i18n.next.toUpperCase(),
-                        style: TextStyle(color: theme.accentColor, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -126,7 +126,7 @@ class _IntroPageState extends State<IntroPage> {
                 onTap: _onStart,
                 child: Container(
                   height: 60,
-                  color: theme.accentColor,
+                  color: theme.colorScheme.secondary,
                   alignment: Alignment.center,
                   child: Text(
                     i18n.start.toUpperCase(),
@@ -145,7 +145,7 @@ class _IntroPageState extends State<IntroPage> {
       height: isCurrentPage ? 10.0 : 6.0,
       width: isCurrentPage ? 10.0 : 6.0,
       decoration: BoxDecoration(
-        color: isCurrentPage ? theme.accentColor : Colors.grey[300],
+        color: isCurrentPage ? theme.colorScheme.secondary : Colors.grey[300],
         borderRadius: BorderRadius.circular(12),
       ),
     );

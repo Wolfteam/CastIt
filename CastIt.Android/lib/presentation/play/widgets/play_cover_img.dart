@@ -140,7 +140,7 @@ class PlayCoverImg extends StatelessWidget {
         children: <Widget>[
           IconButton(
             tooltip: i18n.shufflePlayList,
-            icon: Icon(Icons.shuffle, color: shufflePlayList ? theme.accentColor : Colors.white),
+            icon: Icon(Icons.shuffle, color: shufflePlayList ? theme.colorScheme.secondary : Colors.white),
             onPressed: !playListIsValid ? null : () => _togglePlayListShuffle(context),
           ),
           Flexible(
@@ -156,7 +156,7 @@ class PlayCoverImg extends StatelessWidget {
           ),
           IconButton(
             tooltip: i18n.loopFile,
-            icon: Icon(Icons.repeat, color: loopFile ? theme.accentColor : Colors.white),
+            icon: Icon(Icons.repeat, color: loopFile ? theme.colorScheme.secondary : Colors.white),
             onPressed: !fileIdIsValid ? null : () => _toggleFileLoop(context),
           ),
         ],

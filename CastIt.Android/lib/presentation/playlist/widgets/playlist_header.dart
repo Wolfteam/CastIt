@@ -79,7 +79,7 @@ class _PlayListHeaderState extends State<PlayListHeader> {
                     child: TextField(
                       controller: _searchBoxTextController,
                       focusNode: _searchFocusNode,
-                      cursorColor: theme.accentColor,
+                      cursorColor: theme.colorScheme.secondary,
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.go,
                       decoration: InputDecoration(

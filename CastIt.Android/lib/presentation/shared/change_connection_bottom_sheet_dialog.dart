@@ -49,12 +49,13 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
         onCancel: widget.onCancel != null ? () => widget.onCancel!() : _onCancel,
         showOkButton: widget.showOkButton,
         onOk: state.map(
-            loading: (_) => null,
-            loaded: (state) => !state.isCastItUrlValid
-                ? null
-                : widget.onOk != null
-                    ? () => widget.onOk!(_urlController.text)
-                    : _onRefreshClick),
+          loading: (_) => null,
+          loaded: (state) => !state.isCastItUrlValid
+              ? null
+              : widget.onOk != null
+                  ? () => widget.onOk!(_urlController.text)
+                  : _onRefreshClick,
+        ),
         child: state.map(
           loading: (_) => Column(
             mainAxisAlignment: MainAxisAlignment.center,

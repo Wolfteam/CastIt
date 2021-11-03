@@ -24,7 +24,7 @@ class PlayProgressBar extends StatelessWidget {
               onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
               value: state.currentSeconds!,
               max: state.duration!,
-              activeColor: theme.accentColor,
+              activeColor: theme.colorScheme.secondary,
               label: _generateLabel(state.currentSeconds!),
               divisions: state.duration!.round(),
               onChangeStart: (startValue) => context.read<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
@@ -53,6 +53,6 @@ class _DummySlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Slider(onChanged: null, value: value, max: 100, activeColor: theme.accentColor);
+    return Slider(onChanged: null, value: value, max: 100, activeColor: theme.colorScheme.secondary);
   }
 }

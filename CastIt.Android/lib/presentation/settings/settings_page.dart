@@ -297,31 +297,31 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
               child: videoScaleDropdown,
             ),
             SwitchListTile(
-              activeColor: theme.accentColor,
+              activeColor: theme.colorScheme.secondary,
               value: state.playFromTheStart,
               title: Text(i18n.playFromTheStart),
               onChanged: (newValue) => _updateServerSettings(state.copyWith.call(playFromTheStart: newValue)),
             ),
             SwitchListTile(
-              activeColor: theme.accentColor,
+              activeColor: theme.colorScheme.secondary,
               value: state.playNextFileAutomatically,
               title: Text(i18n.playNextFileAutomatically),
               onChanged: (newValue) => _updateServerSettings(state.copyWith.call(playNextFileAutomatically: newValue)),
             ),
             SwitchListTile(
-              activeColor: theme.accentColor,
+              activeColor: theme.colorScheme.secondary,
               value: state.forceVideoTranscode,
               title: Text(i18n.forceVideoTranscode),
               onChanged: (newValue) => _updateServerSettings(state.copyWith.call(forceVideoTranscode: newValue)),
             ),
             SwitchListTile(
-              activeColor: theme.accentColor,
+              activeColor: theme.colorScheme.secondary,
               value: state.forceAudioTranscode,
               title: Text(i18n.forceAudioTranscode),
               onChanged: (newValue) => _updateServerSettings(state.copyWith.call(forceAudioTranscode: newValue)),
             ),
             SwitchListTile(
-              activeColor: theme.accentColor,
+              activeColor: theme.colorScheme.secondary,
               value: state.enableHwAccel,
               title: Text(i18n.enableHwAccel),
               onChanged: (newValue) => _updateServerSettings(state.copyWith.call(enableHwAccel: newValue)),
@@ -488,6 +488,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
       loaded: (state) {
         final bloc = context.read<ServerWsBloc>();
         final settings = ServerAppSettings(
+          fFmpegExePath: state.fFmpegExePath,
+          fFprobeExePath: state.fFprobeExePath,
           enableHardwareAcceleration: state.enableHwAccel,
           forceAudioTranscode: state.forceAudioTranscode,
           forceVideoTranscode: state.forceVideoTranscode,

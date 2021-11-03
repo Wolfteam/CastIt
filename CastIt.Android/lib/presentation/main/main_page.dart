@@ -156,7 +156,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
   void _showServerMsg(BuildContext ctx, AppMessageType msg) {
     final theme = Theme.of(ctx);
-    final color = theme.accentColor.withOpacity(0.8);
+    final color = theme.colorScheme.secondary.withOpacity(0.8);
     final s = S.of(context);
 
     final snackBar = SnackBar(
@@ -165,12 +165,15 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
       content: Row(
         children: <Widget>[
           const Icon(Icons.info_outline, color: Colors.white),
-          Container(
-            margin: const EdgeInsets.only(left: 10),
-            child: Text(
-              s.translateAppMsgType(msg),
-              style: const TextStyle(color: Colors.white),
-              overflow: TextOverflow.ellipsis,
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(left: 10),
+              child: Text(
+                s.translateAppMsgType(msg),
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ],

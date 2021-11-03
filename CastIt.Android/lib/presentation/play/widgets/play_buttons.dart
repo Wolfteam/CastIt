@@ -36,7 +36,7 @@ class PlayButtons extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: theme.accentColor,
+              color: theme.colorScheme.secondary,
               borderRadius: BorderRadius.circular(50.0),
             ),
             child: BlocBuilder<PlayBloc, PlayState>(

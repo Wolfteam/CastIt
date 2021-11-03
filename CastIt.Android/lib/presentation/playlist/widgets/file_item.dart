@@ -77,7 +77,7 @@ class FileItem extends StatelessWidget {
           );
 
     return Container(
-      color: isBeingPlayed ? theme.accentColor.withOpacity(0.5) : null,
+      color: isBeingPlayed ? theme.colorScheme.secondary.withOpacity(0.5) : null,
       height: itemHeight,
       child: ListTile(
         isThreeLine: true,
@@ -110,7 +110,7 @@ class FileItem extends StatelessWidget {
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 1,
                   minThumbSeparation: 0,
-                  disabledActiveTrackColor: theme.accentColor,
+                  disabledActiveTrackColor: theme.colorScheme.secondary,
                   overlayShape: const RoundSliderThumbShape(enabledThumbRadius: 0.0, disabledThumbRadius: 0.0),
                   thumbColor: Colors.transparent,
                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0.0, disabledThumbRadius: 0.0),
