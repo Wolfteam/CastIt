@@ -112,7 +112,7 @@ packages:
       name: cached_network_image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.1.0"
+    version: "3.1.0+1"
   cached_network_image_platform_interface:
     dependency: transitive
     description:
@@ -292,7 +292,7 @@ packages:
       name: flutter_bloc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "7.3.1"
+    version: "7.3.2"
   flutter_blurhash:
     dependency: transitive
     description:
