@@ -213,17 +213,13 @@ class _IntroPageState extends State<IntroPage> {
   }
 
   Future<void> _showSkipDialog() async {
-    final skipped = await showModalBottomSheet<bool>(
+    await showModalBottomSheet<bool>(
       context: context,
       shape: Styles.modalBottomSheetShape,
       isDismissible: true,
       isScrollControlled: true,
       builder: (_) => SkipIntroBottomSheet(),
     );
-
-    if (skipped == true) {
-      context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
-    }
   }
 
   void _onUrlSet(String url) {
@@ -231,9 +227,9 @@ class _IntroPageState extends State<IntroPage> {
     context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: url));
   }
 
-  void _onNext(int currentPage, String castitUrl) {
+  void _onNext(int currentPage, String castItUrl) {
     if (currentPage == 1) {
-      _showUrlModal(castitUrl);
+      _showUrlModal(castItUrl);
     } else {
       final newPage = currentPage + 1;
       _animateToIndex(newPage);

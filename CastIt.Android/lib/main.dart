@@ -48,12 +48,6 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (ctx) {
             final castItHub = getIt<CastItHubClientService>();
-            return PlayListBloc(castItHub);
-          },
-        ),
-        BlocProvider(
-          create: (ctx) {
-            final castItHub = getIt<CastItHubClientService>();
             return PlayListsBloc(castItHub);
           },
         ),

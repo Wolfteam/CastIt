@@ -3,6 +3,7 @@ import 'package:castit/domain/models/models.dart';
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/presentation/playlist/widgets/file_item.dart';
 import 'package:castit/presentation/playlist/widgets/playlist_header.dart';
+import 'package:castit/presentation/shared/nothing_found_column.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -54,12 +55,14 @@ class PlayListContentLoaded extends StatelessWidget {
             header: const MaterialClassicHeader(),
             controller: refreshController,
             onRefresh: () => context.read<PlayListBloc>().add(PlayListEvent.load(id: playListId)),
-            child: ListView.builder(
-              controller: listViewScrollController,
-              shrinkWrap: true,
-              itemCount: files.length,
-              itemBuilder: (ctx, i) => FileItem.fromItem(key: Key('file_item_$i'), itemHeight: itemHeight, file: files[i]),
-            ),
+            child: files.isEmpty
+                ? const NothingFoundColumn()
+                : ListView.builder(
+                    controller: listViewScrollController,
+                    shrinkWrap: true,
+                    itemCount: files.length,
+                    itemBuilder: (ctx, i) => FileItem.fromItem(key: Key('file_item_$i'), itemHeight: itemHeight, file: files[i]),
+                  ),
           ),
         ),
       ],

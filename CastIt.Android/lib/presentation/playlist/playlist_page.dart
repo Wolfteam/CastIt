@@ -1,4 +1,6 @@
 import 'package:castit/application/bloc.dart';
+import 'package:castit/domain/services/castit_hub_client_service.dart';
+import 'package:castit/injection.dart';
 import 'package:castit/presentation/playlist/widgets/playlist_content_disconnected.dart';
 import 'package:castit/presentation/playlist/widgets/playlist_content_loaded.dart';
 import 'package:castit/presentation/playlist/widgets/playlist_content_loading.dart';
@@ -21,11 +23,9 @@ class PlayListPage extends StatefulWidget {
   });
 
   static Future<void> forDetails(int playListId, int? scrollToFileId, BuildContext context) async {
-    context.read<PlayListBloc>().add(PlayListEvent.load(id: playListId, scrollToFileId: scrollToFileId));
     final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId, scrollToFileId: scrollToFileId));
     await Navigator.of(context).push(route);
     await route.completed;
-    context.read<PlayListBloc>().add(const PlayListEvent.closePage());
   }
 
   @override
@@ -46,52 +46,60 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: BlocConsumer<PlayListBloc, PlayListState>(
-          listener: (ctx, state) => state.maybeMap(
-            loaded: (state) {
-              _refreshController.refreshCompleted();
-              if (state.scrollToFileId != null) {
-                final index = state.files.indexWhere((el) => el.id == state.scrollToFileId!);
-                if (index >= 0) {
-                  SchedulerBinding.instance!.addPostFrameCallback((_) => _animateToIndex(index));
+    return BlocProvider(
+      create: (context) {
+        final castItHub = getIt<CastItHubClientService>();
+        return PlayListBloc(castItHub)
+          ..add(PlayListEvent.load(id: widget.id, scrollToFileId: widget.scrollToFileId))
+          ..listenHubEvents();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: BlocConsumer<PlayListBloc, PlayListState>(
+            listener: (ctx, state) => state.maybeMap(
+              loaded: (state) {
+                _refreshController.refreshCompleted();
+                if (state.scrollToFileId != null) {
+                  final index = state.files.indexWhere((el) => el.id == state.scrollToFileId!);
+                  if (index >= 0) {
+                    SchedulerBinding.instance!.addPostFrameCallback((_) => _animateToIndex(index));
+                  }
                 }
-              }
-            },
-            disconnected: (_) => _refreshController.refreshCompleted(),
-            close: (_) => Navigator.of(ctx).pop(),
-            orElse: () {},
-          ),
-          builder: (ctx, state) => state.map(
-            loading: (_) => const PlayListContentLoading(),
-            loaded: (state) => PlayListContentLoaded(
-              playListId: state.playlistId,
-              isLoaded: state.loaded,
-              files: state.isFiltering ? state.filteredFiles : state.files,
-              searchBoxIsVisible: state.searchBoxIsVisible,
-              itemHeight: _itemHeight,
-              refreshController: _refreshController,
-              listViewScrollController: _listViewScrollController,
+              },
+              disconnected: (_) => _refreshController.refreshCompleted(),
+              close: (_) => Navigator.of(ctx).pop(),
+              orElse: () {},
             ),
-            disconnected: (_) => const PlayListContentDisconnected(),
-            close: (_) => Container(),
-            notFound: (_) => const PlayListContentNotFound(),
+            builder: (ctx, state) => state.map(
+              loading: (_) => const PlayListContentLoading(),
+              loaded: (state) => PlayListContentLoaded(
+                playListId: state.playlistId,
+                isLoaded: state.loaded,
+                files: state.isFiltering ? state.filteredFiles : state.files,
+                searchBoxIsVisible: state.searchBoxIsVisible,
+                itemHeight: _itemHeight,
+                refreshController: _refreshController,
+                listViewScrollController: _listViewScrollController,
+              ),
+              disconnected: (_) => const PlayListContentDisconnected(),
+              close: (_) => Container(),
+              notFound: (_) => const PlayListContentNotFound(),
+            ),
           ),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: BlocBuilder<PlayListBloc, PlayListState>(
-        builder: (ctx, state) => state.maybeMap(
-          loaded: (state) => PlayListFab(
-            id: state.playlistId,
-            name: state.name,
-            loop: state.loop,
-            shuffle: state.shuffle,
-            isVisible: isFabVisible,
-            onArrowTopTap: () => _animateToIndex(0),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: BlocBuilder<PlayListBloc, PlayListState>(
+          builder: (ctx, state) => state.maybeMap(
+            loaded: (state) => PlayListFab(
+              id: state.playlistId,
+              name: state.name,
+              loop: state.loop,
+              shuffle: state.shuffle,
+              isVisible: state.files.isNotEmpty && isFabVisible,
+              onArrowTopTap: () => _animateToIndex(0),
+            ),
+            orElse: () => nil,
           ),
-          orElse: () => nil,
         ),
       ),
     );
@@ -99,7 +107,9 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _listViewScrollController.dispose();
+    _listViewScrollController
+      ..removeListener(_onListViewScroll)
+      ..dispose();
     _refreshController.dispose();
     super.dispose();
   }

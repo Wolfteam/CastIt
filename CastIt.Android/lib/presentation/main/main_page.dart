@@ -42,7 +42,6 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
     //ending in the fact that we won't listen to the hub events
     context.read<SettingsBloc>().add(SettingsEvent.load());
     context.read<PlayListsBloc>().listenHubEvents();
-    context.read<PlayListBloc>().listenHubEvents();
     context.read<SettingsBloc>().listenHubEvents();
     context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
     _didChangeDependencies = true;

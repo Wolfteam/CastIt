@@ -7,6 +7,7 @@ import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tuple/tuple.dart';
 
 part 'playlist_bloc.freezed.dart';
 part 'playlist_event.dart';
@@ -14,6 +15,7 @@ part 'playlist_state.dart';
 
 class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   final CastItHubClientService _castItHub;
+  final List<StreamSubscription> _subscriptions = [];
 
   PlayListState get initialState => PlayListState.loading();
 
@@ -82,119 +84,26 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     }
   }
 
+  @override
+  Future<void> close() async {
+    await Future.wait(_subscriptions.map((e) => e.cancel()).toList());
+    return super.close();
+  }
+
   void listenHubEvents() {
-    _castItHub.playlistLoaded.stream.listen((event) {
-      //Playlist does not exist
-      if (event == null) {
-        add(const PlayListEvent.notFound());
-        return;
-      }
-
-      if (state is! _LoadedState || currentState.playlistId == event.id) {
-        add(PlayListEvent.loaded(playlist: event));
-        return;
-      }
-    });
-
-    _castItHub.connected.stream.listen((event) {
-      state.maybeMap(
-        disconnected: (state) {
-          if (state.playListId != null) {
-            add(PlayListEvent.load(id: state.playListId!));
-          }
-        },
-        orElse: () {},
-      );
-    });
-
-    _castItHub.disconnected.stream.listen((event) {
-      state.maybeMap(
-        loaded: (s) => add(PlayListEvent.disconnected(playListId: s.playlistId)),
-        orElse: () => add(const PlayListEvent.disconnected()),
-      );
-    });
-
-    _castItHub.refreshPlayList.stream.listen((event) {
-      if (state is! _LoadedState || currentState.playlistId != event.id) {
-        return;
-      }
-      if (!event.wasDeleted) {
-        add(PlayListEvent.load(id: event.id));
-      } else {
-        add(const PlayListEvent.closePage());
-      }
-    });
-
-    _castItHub.playListsChanged.stream.listen((event) {
-      state.maybeMap(
-        loaded: (s) {
-          final playList = event.firstWhereOrNull((el) => el.id == s.playlistId);
-          if (playList == null) {
-            return;
-          }
-
-          add(PlayListEvent.playListChanged(playList: playList));
-        },
-        orElse: () {},
-      );
-    });
-
-    _castItHub.playListChanged.stream.listen((event) {
-      state.maybeMap(
-        loaded: (_) {
-          final changeComesFromPlayedFile = event.item1;
-          final playList = event.item2;
-          if (!changeComesFromPlayedFile) {
-            add(PlayListEvent.playListChanged(playList: playList));
-          }
-        },
-        orElse: () {},
-      );
-    });
-
-    _castItHub.playListDeleted.stream.listen((event) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListEvent.playListDeleted(id: event)),
-        orElse: () {},
-      );
-    });
-
-    _castItHub.fileAdded.stream.listen((event) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListEvent.fileAdded(file: event)),
-        orElse: () {},
-      );
-    });
-
-    _castItHub.fileChanged.stream.listen((event) {
-      state.maybeMap(
-        loaded: (state) {
-          //The second part of the if is to make sure that we only trigger the change
-          // if we had a previously played file
-          final changeComesFromPlayedFile = event.item1;
-          final file = event.item2;
-          final currentPlayedFile = state.files.firstWhereOrNull((el) => el.isBeingPlayed);
-          if (!changeComesFromPlayedFile || currentPlayedFile?.id != file.id) {
-            add(PlayListEvent.fileChanged(file: file));
-          }
-        },
-        orElse: () {},
-      );
-    });
-
-    _castItHub.filesChanged.stream.listen((event) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListEvent.filesChanged(files: event)),
-        orElse: () {},
-      );
-    });
-
-    _castItHub.fileDeleted.stream.listen((event) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListEvent.fileDeleted(playListId: event.item1, id: event.item2)),
-        orElse: () {},
-      );
-    });
+    _subscriptions.addAll([
+      _castItHub.playlistLoaded.stream.listen(_onPlayListLoaded),
+      _castItHub.connected.stream.listen((_) => _onConnected),
+      _castItHub.disconnected.stream.listen((_) => _onDisconnected()),
+      _castItHub.refreshPlayList.stream.listen(_onRefresh),
+      _castItHub.playListsChanged.stream.listen(_onPlayListsChanged),
+      _castItHub.playListChanged.stream.listen(_onPlayListChanged),
+      _castItHub.playListDeleted.stream.listen(_onPlayListDeleted),
+      _castItHub.fileAdded.stream.listen(_onFileAdded),
+      _castItHub.fileChanged.stream.listen(_onFileChanged),
+      _castItHub.filesChanged.stream.listen(_onFilesChanged),
+      _castItHub.fileDeleted.stream.listen(_onFileDeleted),
+    ]);
   }
 
   PlayListState _handlePlayListChanged(GetAllPlayListResponseDto playList) {
@@ -330,6 +239,119 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
         return s.copyWith.call(files: files);
       },
       orElse: () => state,
+    );
+  }
+
+  void _onPlayListLoaded(PlayListItemResponseDto? event) {
+    //Playlist does not exist
+    if (event == null) {
+      add(const PlayListEvent.notFound());
+      return;
+    }
+
+    if (state is! _LoadedState || currentState.playlistId == event.id) {
+      add(PlayListEvent.loaded(playlist: event));
+      return;
+    }
+  }
+
+  void _onConnected() {
+    state.maybeMap(
+      disconnected: (state) {
+        if (state.playListId != null) {
+          add(PlayListEvent.load(id: state.playListId!));
+        }
+      },
+      orElse: () {},
+    );
+  }
+
+  void _onDisconnected() {
+    state.maybeMap(
+      loaded: (s) => add(PlayListEvent.disconnected(playListId: s.playlistId)),
+      orElse: () => add(const PlayListEvent.disconnected()),
+    );
+  }
+
+  void _onRefresh(RefreshPlayListResponseDto event) {
+    if (state is! _LoadedState || currentState.playlistId != event.id) {
+      return;
+    }
+    if (!event.wasDeleted) {
+      add(PlayListEvent.load(id: event.id));
+    } else {
+      add(const PlayListEvent.closePage());
+    }
+  }
+
+  void _onPlayListsChanged(List<GetAllPlayListResponseDto> event) {
+    state.maybeMap(
+      loaded: (s) {
+        final playList = event.firstWhereOrNull((el) => el.id == s.playlistId);
+        if (playList == null) {
+          return;
+        }
+
+        add(PlayListEvent.playListChanged(playList: playList));
+      },
+      orElse: () {},
+    );
+  }
+
+  void _onPlayListChanged(Tuple2<bool, GetAllPlayListResponseDto> event) {
+    state.maybeMap(
+      loaded: (_) {
+        final changeComesFromPlayedFile = event.item1;
+        final playList = event.item2;
+        if (!changeComesFromPlayedFile) {
+          add(PlayListEvent.playListChanged(playList: playList));
+        }
+      },
+      orElse: () {},
+    );
+  }
+
+  void _onPlayListDeleted(int event) {
+    state.maybeMap(
+      loaded: (_) => add(PlayListEvent.playListDeleted(id: event)),
+      orElse: () {},
+    );
+  }
+
+  void _onFileAdded(FileItemResponseDto event) {
+    state.maybeMap(
+      loaded: (_) => add(PlayListEvent.fileAdded(file: event)),
+      orElse: () {},
+    );
+  }
+
+  void _onFileChanged(Tuple2<bool, FileItemResponseDto> event) {
+    state.maybeMap(
+      loaded: (state) {
+        //The second part of the if is to make sure that we only trigger the change
+        // if we had a previously played file
+        final changeComesFromPlayedFile = event.item1;
+        final file = event.item2;
+        final currentPlayedFile = state.files.firstWhereOrNull((el) => el.isBeingPlayed);
+        if (!changeComesFromPlayedFile || currentPlayedFile?.id != file.id) {
+          add(PlayListEvent.fileChanged(file: file));
+        }
+      },
+      orElse: () {},
+    );
+  }
+
+  void _onFilesChanged(List<FileItemResponseDto> event) {
+    state.maybeMap(
+      loaded: (_) => add(PlayListEvent.filesChanged(files: event)),
+      orElse: () {},
+    );
+  }
+
+  void _onFileDeleted(Tuple2<int, int> event) {
+    state.maybeMap(
+      loaded: (_) => add(PlayListEvent.fileDeleted(playListId: event.item1, id: event.item2)),
+      orElse: () {},
     );
   }
 }
