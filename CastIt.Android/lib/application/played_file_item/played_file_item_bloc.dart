@@ -14,12 +14,14 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
   PlayedFileItemBloc(this._castItHub) : super(const PlayedFileItemState.notPlaying()) {
     _castItHub.fileChanged.stream.listen((event) {
       final file = event.item2;
-      add(PlayedFileItemEvent.playing(
-        id: file.id,
-        playListId: file.playListId,
-        playedPercentage: file.playedPercentage,
-        fullTotalDuration: file.fullTotalDuration,
-      ));
+      add(
+        PlayedFileItemEvent.playing(
+          id: file.id,
+          playListId: file.playListId,
+          playedPercentage: file.playedPercentage,
+          fullTotalDuration: file.fullTotalDuration,
+        ),
+      );
     });
   }
 

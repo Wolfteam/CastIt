@@ -145,7 +145,7 @@ namespace CastIt.Server.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         public async Task<IActionResult> Play(long id, long fileId)
         {
-            await CastService.PlayFile(id, fileId, true, false);
+            await CastService.PlayFile(id, fileId, true, false, false);
             return Ok(new EmptyResponseDto(true));
         }
 

@@ -1,6 +1,8 @@
+import 'package:castit/application/bloc.dart';
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/presentation/shared/confirm_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SkipIntroBottomSheet extends StatelessWidget {
   @override
@@ -15,5 +17,10 @@ class SkipIntroBottomSheet extends StatelessWidget {
     );
   }
 
-  void _onCancel(BuildContext context, {bool skipped = false}) => Navigator.of(context).pop(skipped);
+  void _onCancel(BuildContext context, {bool skipped = false}) {
+    if (skipped) {
+      context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
+    }
+    Navigator.of(context).pop();
+  }
 }

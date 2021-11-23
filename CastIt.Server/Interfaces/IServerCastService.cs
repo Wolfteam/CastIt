@@ -13,12 +13,12 @@ namespace CastIt.Server.Interfaces
         ServerPlayList CurrentPlayList { get; }
         ServerFileItem CurrentPlayedFile { get; }
 
-        Task PlayFile(long playListId, long id, bool force, bool fileOptionsChanged);
+        Task PlayFile(long playListId, long id, bool force, bool fileOptionsChanged, bool isAnAutomaticCall);
 
         Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
 
-        Task PlayFile(ServerFileItem file, bool force = false);
-        Task PlayFile(ServerFileItem file, bool force, bool fileOptionsChanged);
+        Task PlayFile(ServerFileItem file, bool force = false, bool isAnAutomaticCall = false);
+        Task PlayFile(ServerFileItem file, bool force, bool fileOptionsChanged, bool isAnAutomaticCall);
         FileItemResponseDto GetCurrentPlayedFile();
         Task UpdatePlayList(long playListId, string newName);
         void UpdatePlayListPosition(long playListId, int newIndex);

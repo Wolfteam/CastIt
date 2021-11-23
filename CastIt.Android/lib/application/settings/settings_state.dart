@@ -12,6 +12,8 @@ class SettingsState with _$SettingsState {
     required bool isConnected,
     required String castItUrl,
     required bool isCastItUrlValid,
+    required String fFmpegExePath,
+    required String fFprobeExePath,
     required VideoScaleType videoScale,
     required bool playFromTheStart,
     required bool playNextFileAutomatically,

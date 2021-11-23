@@ -35,7 +35,7 @@
   "original": "Original",
   "somethingWentWrong": "Something went wrong!",
   "pleaseTryAgainLater": "Please try again later",
-  "makeSureYouAreConnected": "Make sure you are connected to the same wifi network of the desktop app and that the desktop app is opened",
+  "makeSureYouAreConnected": "Make sure you are connected to the same wifi network where the server is installed and running",
   "url": "Url",
   "invalidUrl": "Invalid Url",
   "cancel": "Cancel",
@@ -96,5 +96,6 @@
   "connectionToDeviceIsStillInProgress": "Connection to a device is still in progress",
   "ffmpegError": "Ffmpeg error",
   "serverIsClosing": "Server is closing",
-  "ffmpegExecutableNotFound": "Ffmpeg executable is not valid or was not found"
+  "ffmpegExecutableNotFound": "Ffmpeg executable is not valid or was not found",
+  "nothingToShow": "Nothing to show"
 }

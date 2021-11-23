@@ -19,9 +19,8 @@ class ServerAppSettings {
 
   TextTrackFontGenericFamilyType get currentSubtitleFontFamilyType => TextTrackFontGenericFamilyType.values[currentSubtitleFontFamily];
 
-  final String ffmpegPath = 'TODO';
-  final String ffProbePath = 'TODO';
-  final String currentAppMigration = 'TODO';
+  final String fFmpegExePath;
+  final String fFprobeExePath;
 
   final bool startFilesFromTheStart;
   final bool playNextFileAutomatically;
@@ -39,6 +38,8 @@ class ServerAppSettings {
   final bool loadFirstSubtitleFoundAutomatically;
 
   ServerAppSettings({
+    required this.fFmpegExePath,
+    required this.fFprobeExePath,
     required this.startFilesFromTheStart,
     required this.playNextFileAutomatically,
     required this.forceVideoTranscode,

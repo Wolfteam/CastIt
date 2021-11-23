@@ -35,7 +35,7 @@
   "original": "Original",
   "somethingWentWrong": "Algo salió mal!",
   "pleaseTryAgainLater": "Porfavor intente mas tarde",
-  "makeSureYouAreConnected": "Asegurate de que estás conectado a la misma red wifi que la aplicación de escritorio y de que la misma esta abierta",
+  "makeSureYouAreConnected": "Asegurate de que estás conectado a la misma red wifi donde el servidor está instalado y ejecutándose",
   "url": "Url",
   "invalidUrl": "Url no válida",
   "cancel": "Cancelar",
@@ -96,5 +96,6 @@
   "connectionToDeviceIsStillInProgress": "La conexión a un dispositivo está en progreso",
   "ffmpegError": "Ffmpeg error",
   "serverIsClosing": "El servidor está cerrando",
-  "ffmpegExecutableNotFound": "El ejecutable de Ffmpeg no es válido o no pudo ser encontrado"
+  "ffmpegExecutableNotFound": "El ejecutable de Ffmpeg no es válido o no pudo ser encontrado",
+  "nothingToShow": "Nada para mostrar"
 }

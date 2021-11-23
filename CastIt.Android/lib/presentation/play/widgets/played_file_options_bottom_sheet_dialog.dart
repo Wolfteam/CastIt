@@ -65,8 +65,8 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
     );
   }
 
-  Future<void> _stopPlayback(BuildContext context) async {
-    await context.read<ServerWsBloc>().stopPlayBack();
+  void _stopPlayback(BuildContext context) {
+    context.read<ServerWsBloc>().stopPlayBack();
     Navigator.of(context).pop();
   }
 }

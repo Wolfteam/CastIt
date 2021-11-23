@@ -49,7 +49,7 @@ namespace CastIt.Server.Hubs
         {
             try
             {
-                await _castService.PlayFile(dto.PlayListId, dto.Id, dto.Force, dto.FileOptionsChanged);
+                await _castService.PlayFile(dto.PlayListId, dto.Id, dto.Force, dto.FileOptionsChanged, false);
             }
             catch (Exception e)
             {

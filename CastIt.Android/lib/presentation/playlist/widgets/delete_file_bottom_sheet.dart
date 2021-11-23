@@ -29,8 +29,8 @@ class DeleteFileBottomSheet extends StatelessWidget {
     );
   }
 
-  Future<void> _onOk(BuildContext context) async {
-    await context.read<ServerWsBloc>().deleteFile(id, playListId);
+  void _onOk(BuildContext context) {
+    context.read<ServerWsBloc>().deleteFile(id, playListId);
     _onCancel(context);
   }
 
