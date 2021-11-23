@@ -270,6 +270,7 @@
                             Maximum="10"
                             Minimum="-10"
                             Orientation="Horizontal"
+                            Style="{StaticResource CustomSliderStyle}"
                             TickFrequency="0.1"
                             ToolTip="{Binding [SubtitleDelay]}"
                             Value="{Binding SubtitleDelay, Mode=TwoWay}" />
