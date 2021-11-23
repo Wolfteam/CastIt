@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Win32Resource />
     <Platforms>x64;x86</Platforms>
@@ -33,18 +33,18 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="Dragablz.NetCore" Version="0.3.3" />
-    <PackageReference Include="FluentMigrator" Version="3.3.0" />
-    <PackageReference Include="FluentMigrator.Runner" Version="3.3.0" />
+    <PackageReference Include="FluentMigrator" Version="3.3.1" />
+    <PackageReference Include="FluentMigrator.Runner" Version="3.3.1" />
     <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.6.100" />
-    <PackageReference Include="MaterialDesignThemes" Version="4.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="4.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.31" />
     <PackageReference Include="MvvmCross.Platforms.Wpf" Version="7.1.2" />
     <PackageReference Include="MvvmCross.Plugin.Messenger" Version="7.1.2" />
     <PackageReference Include="MvvmCross.Plugin.ResxLocalization" Version="7.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
     <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.0.2" />
   </ItemGroup>
 
