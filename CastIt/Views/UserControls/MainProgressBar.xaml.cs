@@ -96,6 +96,7 @@ namespace CastIt.Views.UserControls
             var mousePosition = e.GetPosition(MainSlider);
             var seconds = MainViewModel.GetMainProgressBarSeconds(MainSlider.ActualWidth, mousePosition.X);
             MainViewModel.GoToSecondsCommand.Execute(seconds);
+            MainViewModel.CurrentPlayedSecondsSliderIsBeingMoved = false;
         }
 
         private void ClosePopUpIfOpened()
@@ -104,6 +105,11 @@ namespace CastIt.Views.UserControls
             {
                 SliderPopup.IsOpen = false;
             }
+        }
+
+        private void MainSlider_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MainViewModel.CurrentPlayedSecondsSliderIsBeingMoved = true;
         }
     }
 }

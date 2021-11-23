@@ -29,7 +29,10 @@ namespace CastIt.ViewModels
 
             _updatingPlayerStatus = true;
             IsPaused = status.Player.IsPaused;
-            VolumeLevel = status.Player.VolumeLevel;
+            if (!VolumeLevelSliderIsBeingMoved)
+            {
+                VolumeLevel = status.Player.VolumeLevel;
+            }
             IsMuted = status.Player.IsMuted;
             CurrentFileThumbnail = status.PlayedFile?.ThumbnailUrl;
             CurrentFileDuration = status.PlayedFile?.TotalSeconds ?? 1; //Has to be one, in order for the slider to show correctly;

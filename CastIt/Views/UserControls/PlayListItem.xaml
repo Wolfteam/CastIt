@@ -55,14 +55,11 @@
                     LargeChange="0.1"
                     Maximum="1"
                     Minimum="0"
+                    PreviewMouseDown="VolumeSlider_OnPreviewMouseDown"
+                    PreviewMouseUp="VolumeSlider_OnPreviewMouseUp"
+                    Style="{StaticResource CustomSliderStyle}"
                     TickFrequency="0.1"
-                    Value="{Binding ViewModel.VolumeLevel, Mode=TwoWay, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}">
-                    <behaviours:Interaction.Triggers>
-                        <behaviours:EventTrigger EventName="ValueChanged">
-                            <behaviours:InvokeCommandAction Command="{Binding ViewModel.SetVolumeCommand, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" />
-                        </behaviours:EventTrigger>
-                    </behaviours:Interaction.Triggers>
-                </Slider>
+                    Value="{Binding ViewModel.VolumeLevel, Mode=TwoWay, RelativeSource={RelativeSource AncestorType={x:Type uv:MainPage}, Mode=FindAncestor}}" />
                 <Button
                     Grid.Row="1"
                     Grid.Column="1"

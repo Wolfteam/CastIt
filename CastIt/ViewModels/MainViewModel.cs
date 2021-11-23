@@ -131,17 +131,26 @@ namespace CastIt.ViewModels
             set => this.RaiseAndSetIfChanged(ref _currentFileDuration, value);
         }
 
+        public bool CurrentPlayedSecondsSliderIsBeingMoved { get; set; }
+
         public double CurrentPlayedSeconds
         {
             get => _currentPlayedSeconds;
             set
             {
                 if (value == _currentPlayedSeconds)
+                {
                     return;
+                }
+
                 if (value > CurrentFileDuration)
+                {
                     SetProperty(ref _currentPlayedSeconds, CurrentFileDuration);
+                }
                 else
+                {
                     SetProperty(ref _currentPlayedSeconds, value);
+                }
             }
         }
 
@@ -201,6 +210,8 @@ namespace CastIt.ViewModels
             get => _isBusy;
             set => SetProperty(ref _isBusy, value);
         }
+
+        public bool VolumeLevelSliderIsBeingMoved { get; set; }
 
         public double VolumeLevel
         {
@@ -666,7 +677,10 @@ namespace CastIt.ViewModels
             CurrentlyPlayingFilename = filename;
             IsCurrentlyPlaying = isPlaying;
             PlayedPercentage = playedPercentage;
-            CurrentPlayedSeconds = playedSeconds;
+            if (!CurrentPlayedSecondsSliderIsBeingMoved)
+            {
+                CurrentPlayedSeconds = playedSeconds;
+            }
         }
 
         private async void ShowSnackbarMessage(AppMessageType type)

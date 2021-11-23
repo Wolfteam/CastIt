@@ -263,5 +263,16 @@ namespace CastIt.Views.UserControls
                 PlaylistLv.SelectedItems.Add(item);
             }
         }
+
+        private void VolumeSlider_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.MainViewModel.VolumeLevelSliderIsBeingMoved = true;
+        }
+
+        private void VolumeSlider_OnPreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.MainViewModel.SetVolumeCommand.Execute();
+            MainWindow.MainViewModel.VolumeLevelSliderIsBeingMoved = false;
+        }
     }
 }

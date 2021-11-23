@@ -24,6 +24,7 @@
             MouseLeave="MainSlider_MouseLeave"
             MouseMove="MainSlider_MouseMove"
             PreviewMouseUp="MainSlider_PreviewMouseUp"
+            PreviewMouseDown="MainSlider_OnPreviewMouseDown"
             Value="{Binding CurrentPlayedSeconds, Mode=OneWay}">
             <Slider.Style>
                 <Style BasedOn="{StaticResource CustomSliderStyle}" TargetType="{x:Type Slider}">
