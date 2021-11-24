@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands
 {
-    [Command(Name = "castit", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
+    [Command(Name = "castit", Description = "Remote control for the server app.", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]
     [Subcommand(typeof(PlayerCommands), typeof(PlayListCommands), typeof(ServerCommands), typeof(FilesCommand))]
     public class MainCommand : BaseCommand

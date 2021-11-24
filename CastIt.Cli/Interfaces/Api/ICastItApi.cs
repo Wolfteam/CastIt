@@ -59,6 +59,12 @@ namespace CastIt.Cli.Interfaces.Api
 
         [Get("/Player/Status")]
         Task<AppResponseDto<ServerPlayerStatusResponseDto>> GetStatus();
+
+        [Post("/Player/Play")]
+        Task<EmptyResponseDto> Play(PlayFileFromNameRequestDto dto);
+
+        [Post("/Player/SetCurrentPlayedFileOptions")]
+        Task<EmptyResponseDto> SetCurrentPlayedFileOptions([Body] SetMultiFileOptionsRequestDto dto);
         #endregion
 
         #region PlayLists
@@ -67,6 +73,9 @@ namespace CastIt.Cli.Interfaces.Api
 
         [Get("/PlayLists/{id}")]
         Task<AppResponseDto<PlayListItemResponseDto>> GetPlayList(long id);
+
+        [Get("/PlayLists/ByName/{name}")]
+        Task<AppResponseDto<PlayListItemResponseDto>> GetPlayList(string name);
 
         [Post("/PlayLists")]
         Task<AppResponseDto<PlayListItemResponseDto>> AddNewPlayList();
@@ -78,7 +87,7 @@ namespace CastIt.Cli.Interfaces.Api
         Task<EmptyResponseDto> UpdatePlayListPosition(long id, int newIndex);
 
         [Put("/PlayLists/{id}/SetOptions")]
-        Task<EmptyResponseDto> SetOptions(long id, [Body] SetPlayListOptionsRequestDto dto);
+        Task<EmptyResponseDto> SetPlayListOptions(long id, [Body] SetPlayListOptionsRequestDto dto);
 
         [Delete("/PlayLists/{id}")]
         Task<EmptyResponseDto> DeletePlayList(long id);

@@ -9,8 +9,11 @@ namespace CastIt.Cli.Commands.PlayLists
     [Command(Name = "get", Description = "Retrieves the playlist + it's files", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     public class GetCommand : BaseCommand
     {
-        [Argument(0, Description = "The playlist id", ShowInHelpText = true)]
+        [Option(CommandOptionType.SingleValue, Description = "The play list id", LongName = "playlist-id", ShortName = "playlist-id")]
         public long PlayListId { get; set; }
+
+        [Option(CommandOptionType.SingleValue, Description = "The playlist name", LongName = "name", ShortName = "name")]
+        public string Name { get; set; }
 
         public GetCommand(IConsole appConsole, ICastItApiService castItApi)
             : base(appConsole, castItApi)
@@ -21,13 +24,13 @@ namespace CastIt.Cli.Commands.PlayLists
         {
             CheckIfWebServerIsRunning();
 
-            if (PlayListId <= 0)
+            if (PlayListId <= 0 && string.IsNullOrWhiteSpace(Name))
             {
-                AppConsole.WriteLine($"PlayListId = {PlayListId} is not valid");
+                AppConsole.WriteLine($"Either PlayListId = {PlayListId} or the Name = {Name} is not valid");
                 return ErrorCode;
             }
 
-            var response = await CastItApi.GetPlayList(PlayListId);
+            var response = await CastItApi.GetPlayList(PlayListId, Name);
             CheckServerResponse(response);
 
             var table = new ConsoleTable("Id", "Name", "Information", "Position", "Playing", "Played Time");

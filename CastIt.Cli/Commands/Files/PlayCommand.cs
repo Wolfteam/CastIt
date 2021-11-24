@@ -13,42 +13,32 @@ namespace CastIt.Cli.Commands.Files
         {
         }
 
-        [Argument(0, Description = "The play list id", ShowInHelpText = true)]
+        [Option(CommandOptionType.SingleValue, Description = "The play list id", LongName = "playlist-id", ShortName = "playlist-id")]
         public long PlayListId { get; set; }
 
-        [Argument(1, Description = "The file id", ShowInHelpText = true)]
+        [Option(CommandOptionType.SingleValue, Description = "The file id", LongName = "file-id", ShortName = "file-id")]
         public long FileId { get; set; }
 
-        //[Argument(0, Description = "The file's full path or url", ShowInHelpText = true)]
-        //public string Mrl { get; set; }
+        [Option(CommandOptionType.SingleValue, Description = "The filename", LongName = "filename", ShortName = "filename")]
+        public string Filename { get; set; }
 
-        //[Option(CommandOptionType.SingleOrNoValue, Description = "The audio stream index, defaults to 0", LongName = "audio_index", ShortName = "ai")]
-        //public int AudioStreamIndex { get; set; }
-
-        //[Option(CommandOptionType.SingleOrNoValue, Description = "The video stream index, defaults to 0", LongName = "video_index", ShortName = "vi")]
-        //public int VideoStreamIndex { get; set; }
-
-        //[Option(CommandOptionType.SingleOrNoValue, Description = "The subtitles stream index, defaults to -1", LongName = "subs_index", ShortName = "si")]
-        //public int SubsStreamIndex { get; set; } = -1;
-
-        //[Option(CommandOptionType.SingleOrNoValue, Description = "The video quality, only required for youtube videos", LongName = "quality")]
-        //public int Quality { get; set; } = 360;
-
-        //[Option(CommandOptionType.SingleOrNoValue, Description = "The seconds where the file will be started", LongName = "seconds", ShortName = "sec")]
-        //public int Seconds { get; set; }
+        [Option(CommandOptionType.SingleOrNoValue, Description = "Passing this param will force the playback of the file even if its already being played", LongName = "force", ShortName = "force")]
+        public bool Force { get; set; }
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             CheckIfWebServerIsRunning();
-            if (PlayListId <= 0 || FileId <= 0)
+            if (string.IsNullOrWhiteSpace(Filename) && (PlayListId <= 0 || FileId <= 0))
             {
-                AppConsole.WriteLine($"PlaylistId = {PlayListId} or FileId = {FileId} are not valid");
+                AppConsole.WriteLine($"PlaylistId = {PlayListId}, FileId = {FileId} or Filename = {Filename} are not valid");
                 return ErrorCode;
             }
 
-            var response = await CastItApi.Play(PlayListId, FileId);
+            var response = !string.IsNullOrWhiteSpace(Filename)
+                ? await CastItApi.Play(Filename, Force)
+                : await CastItApi.Play(PlayListId, FileId);
             CheckServerResponse(response);
-            AppConsole.WriteLine($"FileId = {FileId} was successfully loaded");
+            AppConsole.WriteLine("File was successfully loaded");
             return SuccessCode;
         }
     }

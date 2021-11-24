@@ -19,6 +19,8 @@ namespace CastIt.Cli.Commands.Player
 
             var response = await CastItApi.GetStatus();
             CheckServerResponse(response);
+            //just to avoid printing a lot of stuff..
+            response.Result.ThumbnailRanges.Clear();
             PrettyPrintAsJson(response.Result);
 
             return SuccessCode;

@@ -17,7 +17,8 @@ namespace CastIt.Cli.Commands
         typeof(VolumeCommand),
         typeof(GoToCommand),
         typeof(SettingsCommand),
-        typeof(StatusCommand)
+        typeof(StatusCommand),
+        typeof(SetCurrentPlayedFileOptionsCommand)
     )]
     public class PlayerCommands : BaseCommand
     {

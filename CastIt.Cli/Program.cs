@@ -19,6 +19,7 @@ namespace CastIt.Cli
     {
         private static async Task<int> Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             //This is required, so calls to Directory.GetCurrentDirectory return the right path and calls like 'castit --start-server' works properly
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
             Directory.SetCurrentDirectory(basePath);

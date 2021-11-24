@@ -339,7 +339,6 @@ namespace CastIt.Cli.Services
             }
             return response;
         }
-
         #endregion
 
         #region PlayLists
@@ -363,12 +362,14 @@ namespace CastIt.Cli.Services
             return response;
         }
 
-        public async Task<AppResponseDto<PlayListItemResponseDto>> GetPlayList(long id)
+        public async Task<AppResponseDto<PlayListItemResponseDto>> GetPlayList(long id, string name)
         {
             var response = new AppResponseDto<PlayListItemResponseDto>();
             try
             {
-                response = await Api.GetPlayList(id);
+                response = !string.IsNullOrWhiteSpace(name)
+                    ? await Api.GetPlayList(name)
+                    : await Api.GetPlayList(id);
             }
             catch (ApiException apiEx)
             {
@@ -446,12 +447,12 @@ namespace CastIt.Cli.Services
             return response;
         }
 
-        public async Task<EmptyResponseDto> SetOptions(long id, bool loop, bool shuffle)
+        public async Task<EmptyResponseDto> SetPlayListOptions(long id, bool loop, bool shuffle)
         {
             var response = new EmptyResponseDto();
             try
             {
-                response = await Api.SetOptions(id, new SetPlayListOptionsRequestDto
+                response = await Api.SetPlayListOptions(id, new SetPlayListOptionsRequestDto
                 {
                     Loop = loop,
                     Shuffle = shuffle
@@ -459,12 +460,12 @@ namespace CastIt.Cli.Services
             }
             catch (ApiException apiEx)
             {
-                Logger.LogError(apiEx, $"{nameof(SetOptions)}: Api exception occurred");
+                Logger.LogError(apiEx, $"{nameof(SetPlayListOptions)}: Api exception occurred");
                 await HandleApiException(apiEx, response);
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, $"{nameof(SetOptions)}: Unknown error occurred");
+                Logger.LogError(ex, $"{nameof(SetPlayListOptions)}: Unknown error occurred");
                 HandleUnknownException(response);
             }
             return response;
@@ -716,6 +717,56 @@ namespace CastIt.Cli.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, $"{nameof(LoopFile)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> Play(string filename, bool force)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await Api.Play(new PlayFileFromNameRequestDto
+                {
+                    Filename = filename,
+                    Force = force
+                });
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(Play)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(Play)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> SetCurrentPlayedFileOptions(int audioStreamIndex, int subsStreamIndex, int quality)
+        {
+            var request = new SetMultiFileOptionsRequestDto
+            {
+                AudioStreamIndex = audioStreamIndex,
+                SubtitleStreamIndex = subsStreamIndex,
+                Quality = quality
+            };
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await Api.SetCurrentPlayedFileOptions(request);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(SetCurrentPlayedFileOptions)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(SetCurrentPlayedFileOptions)}: Unknown error occurred");
                 HandleUnknownException(response);
             }
             return response;

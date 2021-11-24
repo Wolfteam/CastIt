@@ -25,7 +25,7 @@ namespace CastIt.Cli.Commands.PlayLists
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             //CheckIfWebServerIsRunning();
-            var response = await CastItApi.SetOptions(PlayListId, Loop, Shuffle);
+            var response = await CastItApi.SetPlayListOptions(PlayListId, Loop, Shuffle);
             CheckServerResponse(response);
 
             AppConsole.WriteLine("Playlist was successfully updated");
