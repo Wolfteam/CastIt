@@ -265,6 +265,15 @@ namespace CastIt.Infrastructure.Models
             return this;
         }
 
+        public FileItemOptionsResponseDto GetAudioFileOption(int streamIndex)
+            => GetFileOption(streamIndex, true, false);
+
+        public FileItemOptionsResponseDto GetSubsFileOption(int streamIndex)
+            => GetFileOption(streamIndex, false, true);
+
+        public FileItemOptionsResponseDto GetQualityFileOption(int streamIndex)
+            => GetFileOption(streamIndex, false, false);
+
         public FileItemOptionsResponseDto GetFileOption(int streamIndex, bool isAudio, bool isSubTitle)
         {
             var options = isAudio
@@ -278,6 +287,10 @@ namespace CastIt.Infrastructure.Models
 
         public ServerFileItem SetSelectedFileOption(FileItemOptionsResponseDto selectedItem)
         {
+            if (selectedItem == null)
+            {
+                throw new NullReferenceException("The selected file option is null");
+            }
             var options = selectedItem.IsVideo
                 ? CurrentFileVideos
                 : selectedItem.IsAudio

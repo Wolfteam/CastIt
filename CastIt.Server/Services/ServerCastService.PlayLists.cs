@@ -33,6 +33,20 @@ namespace CastIt.Server.Services
             return mapped;
         }
 
+        public PlayListItemResponseDto GetPlayList(string name)
+        {
+            var playList = PlayLists.FirstOrDefault(pl => pl.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
+            if (playList == null)
+            {
+                Logger.LogWarning($"{nameof(GetPlayListInternal)}: A playlist with name = {name} doesn't exists");
+                ServerService.OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
+                throw new PlayListNotFoundException($"A playlist with name = {name} does not exist");
+            }
+            RefreshPlayListImage(playList);
+            var mapped = _mapper.Map<PlayListItemResponseDto>(playList);
+            return mapped;
+        }
+
         public async Task<PlayListItemResponseDto> AddNewPlayList()
         {
             var position = PlayLists.Any()
@@ -250,7 +264,7 @@ namespace CastIt.Server.Services
             if (File.Exists(path))
             {
                 Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a file....");
-                return AddFiles(playListId, new[] {path});
+                return AddFiles(playListId, new[] { path });
             }
 
             if (Uri.TryCreate(path, UriKind.Absolute, out _))

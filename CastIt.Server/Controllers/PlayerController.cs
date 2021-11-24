@@ -306,6 +306,34 @@ namespace CastIt.Server.Controllers
             return File(new MemoryStream(bytes), MediaTypeNames.Image.Jpeg);
         }
 
+        /// <summary>
+        /// Plays the first file that matches the provided filename
+        /// </summary>
+        /// <param name="dto">The request dto</param>
+        /// <returns>The result of the operation</returns>
+        [HttpPost("[action]")]
+        [ProducesResponseType(typeof(EmptyResponseDto), StatusCodes.Status200OK)]
+        [Produces(MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> Play(PlayFileFromNameRequestDto dto)
+        {
+            await CastService.PlayFile(dto.Filename, dto.Force, false);
+            return Ok(new EmptyResponseDto(true));
+        }
+
+        /// <summary>
+        /// Sets the provided file options to the current played file
+        /// </summary>
+        /// <param name="dto">The request dto</param>
+        /// <returns>The result of the operation</returns>
+        [HttpPost("[action]")]
+        [ProducesResponseType(typeof(EmptyResponseDto), StatusCodes.Status200OK)]
+        [Produces(MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> SetCurrentPlayedFileOptions(SetMultiFileOptionsRequestDto dto)
+        {
+            await CastService.SetCurrentPlayedFileOptions(dto.AudioStreamIndex, dto.SubtitleStreamIndex, dto.Quality);
+            return Ok(new EmptyResponseDto(true));
+        }
+
         #region Chromecast
         [HttpGet(AppWebServerConstants.ChromeCastPlayPath)]
         [ApiExplorerSettings(IgnoreApi = true)]

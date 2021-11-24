@@ -49,6 +49,20 @@ namespace CastIt.Server.Controllers
         }
 
         /// <summary>
+        /// Gets the first playlist that matches the provided name
+        /// </summary>
+        /// <param name="name">The playlist name</param>
+        /// <returns>Returns the playlist</returns>
+        [HttpGet("ByName/{name}")]
+        [ProducesResponseType(typeof(AppResponseDto<PlayListItemResponseDto>), StatusCodes.Status200OK)]
+        [Produces(MediaTypeNames.Application.Json)]
+        public IActionResult GetPlayList(string name)
+        {
+            var playList = CastService.GetPlayList(name);
+            return Ok(new AppResponseDto<PlayListItemResponseDto>(playList));
+        }
+
+        /// <summary>
         /// Creates a new playlist
         /// </summary>
         /// <returns>Returns the created playlist</returns>

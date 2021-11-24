@@ -110,6 +110,20 @@
             <param name="tentativeSecond">The second to retrieve the preview</param>
             <returns>The preview thumbnail</returns>
         </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.Play(CastIt.Domain.Dtos.Requests.PlayFileFromNameRequestDto)">
+            <summary>
+            Plays the first file that matches the provided filename
+            </summary>
+            <param name="dto">The request dto</param>
+            <returns>The result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.SetCurrentPlayedFileOptions(CastIt.Domain.Dtos.Requests.SetMultiFileOptionsRequestDto)">
+            <summary>
+            Sets the provided file options to the current played file
+            </summary>
+            <param name="dto">The request dto</param>
+            <returns>The result of the operation</returns>
+        </member>
         <member name="M:CastIt.Server.Controllers.PlayListsController.GetAllPlayLists">
             <summary>
             Gets a list with all the play lists
@@ -121,6 +135,13 @@
             Gets a particular playlist
             </summary>
             <param name="id">The playlist id</param>
+            <returns>Returns the playlist</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayListsController.GetPlayList(System.String)">
+            <summary>
+            Gets the first playlist that matches the provided name
+            </summary>
+            <param name="name">The playlist name</param>
             <returns>Returns the playlist</returns>
         </member>
         <member name="M:CastIt.Server.Controllers.PlayListsController.AddNewPlayList">

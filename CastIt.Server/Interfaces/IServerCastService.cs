@@ -17,6 +17,7 @@ namespace CastIt.Server.Interfaces
 
         Task GoTo(bool nextTrack, bool isAnAutomaticCall = false);
 
+        Task PlayFile(string fileName, bool force, bool isAnAutomaticCall);
         Task PlayFile(ServerFileItem file, bool force = false, bool isAnAutomaticCall = false);
         Task PlayFile(ServerFileItem file, bool force, bool fileOptionsChanged, bool isAnAutomaticCall);
         FileItemResponseDto GetCurrentPlayedFile();
@@ -40,6 +41,7 @@ namespace CastIt.Server.Interfaces
         void SetPlayListOptions(long id, bool loop, bool shuffle);
         void DisableLoopForAllFiles(long exceptFileId = -1);
         PlayListItemResponseDto GetPlayList(long playListId);
+        PlayListItemResponseDto GetPlayList(string name);
         Task<List<GetAllPlayListResponseDto>> GetAllPlayLists();
         Task<PlayListItemResponseDto> AddNewPlayList();
         Task DeletePlayList(long playListId);
@@ -51,6 +53,8 @@ namespace CastIt.Server.Interfaces
         void CleanPlayedFile(bool nullPlayedFile = true);
 
         void LoopFile(long playListId, long id, bool loop);
+
+        Task SetCurrentPlayedFileOptions(int audioStreamIndex, int subsStreamIndex, int qualityIndex);
 
         Task SetCurrentPlayedFileOptions(int streamIndex, bool isAudio, bool isSubTitle, bool isQuality);
 

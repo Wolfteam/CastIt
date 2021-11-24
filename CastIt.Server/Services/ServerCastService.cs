@@ -26,23 +26,29 @@ namespace CastIt.Server.Services
     public partial class ServerCastService : BaseCastService, IServerCastService
     {
         #region Members
+
         private readonly IAppDataService _appDataService;
         private readonly IMapper _mapper;
         private readonly IImageProviderService _imageProviderService;
 
         private readonly Dictionary<Range<long>, byte[]> _previewThumbnails = new Dictionary<Range<long>, byte[]>();
-        private readonly List<FileThumbnailRangeResponseDto> _thumbnailRanges = new List<FileThumbnailRangeResponseDto>();
+
+        private readonly List<FileThumbnailRangeResponseDto> _thumbnailRanges =
+            new List<FileThumbnailRangeResponseDto>();
 
         private bool _onSkipOrPrevious;
 
         public CancellationTokenSource FileCancellationTokenSource { get; } = new CancellationTokenSource();
         private readonly SemaphoreSlim _thumbnailSemaphoreSlim = new SemaphoreSlim(1, 1);
+
         #endregion
 
         #region Properties
+
         public List<ServerPlayList> PlayLists { get; } = new List<ServerPlayList>();
         public ServerPlayList CurrentPlayList { get; private set; }
         public ServerFileItem CurrentPlayedFile { get; private set; }
+
         #endregion
 
         public ServerCastService(
@@ -57,7 +63,8 @@ namespace CastIt.Server.Services
             IAppDataService appDataService,
             IMapper mapper,
             IImageProviderService imageProviderService)
-            : base(logger, appWebServer, ffmpegService, youtubeUrlDecoder, telemetryService, appSettings, fileService, player)
+            : base(logger, appWebServer, ffmpegService, youtubeUrlDecoder, telemetryService, appSettings, fileService,
+                player)
         {
             _appDataService = appDataService;
             _mapper = mapper;
@@ -140,6 +147,19 @@ namespace CastIt.Server.Services
         {
             var path = CurrentPlayedFile?.CurrentFileSubTitles.Find(f => f.IsSelected)?.Path;
             return Task.FromResult(path);
+        }
+
+        public Task PlayFile(string fileName, bool force, bool isAnAutomaticCall)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                Logger.LogWarning($"{nameof(PlayFile)}: The provided filename is null");
+                throw new InvalidRequestException("The filename cannot be null");
+            }
+            var file = PlayLists
+                .SelectMany(s => s.Files)
+                .FirstOrDefault(s => s.Name.Contains(fileName, StringComparison.OrdinalIgnoreCase));
+            return PlayFile(file, force, isAnAutomaticCall);
         }
 
         public Task PlayFile(ServerFileItem file, bool force = false, bool isAnAutomaticCall = false)
@@ -583,6 +603,30 @@ namespace CastIt.Server.Services
             }
         }
 
+        public Task SetCurrentPlayedFileOptions(int audioStreamIndex, int subsStreamIndex, int qualityIndex)
+        {
+            if (CurrentPlayedFile == null)
+            {
+                Logger.LogWarning(
+                    $"{nameof(SetCurrentPlayedFileOptions)}: Options cannot be changed since there isn't a file being played");
+                return Task.CompletedTask;
+            }
+
+            var audioOptions = CurrentPlayedFile.GetAudioFileOption(audioStreamIndex);
+            var subsOptions = CurrentPlayedFile.GetSubsFileOption(subsStreamIndex);
+            var qualityOptions = CurrentPlayedFile.GetQualityFileOption(qualityIndex);
+            if (audioOptions != null)
+                CurrentPlayedFile.SetSelectedFileOption(audioOptions);
+
+            if (subsOptions != null)
+                CurrentPlayedFile.SetSelectedFileOption(subsOptions);
+
+            if (qualityOptions != null)
+                CurrentPlayedFile.SetSelectedFileOption(qualityOptions);
+
+            return PlayFile(CurrentPlayedFile, false, true, false);
+        }
+
         public Task SetCurrentPlayedFileOptions(int streamIndex, bool isAudio, bool isSubTitle, bool isQuality)
         {
             if (!isAudio && !isSubTitle && !isQuality)
@@ -596,7 +640,7 @@ namespace CastIt.Server.Services
             if (CurrentPlayedFile == null)
             {
                 Logger.LogWarning(
-                    $"{nameof(SetCurrentPlayedFileOptions)}: Options cannot be change since there isn't a file being played");
+                    $"{nameof(SetCurrentPlayedFileOptions)}: Options cannot be changed since there isn't a file being played");
                 return Task.CompletedTask;
             }
 
