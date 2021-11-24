@@ -13,6 +13,7 @@
   <PropertyGroup>
     <NoWarn>1591;NU1605</NoWarn>
     <DocumentationFile>CastIt.xml</DocumentationFile>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
