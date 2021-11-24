@@ -74,20 +74,20 @@
     </Exec>
     <!--Then, we publish our apps-->
     <!--First the server-->
-    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Publish">
+    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -o Publish">
     </Exec>
-    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -o Publish">
+    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Server/CastIt.Server.csproj -c $(Configuration) -r win-$(Platform) --self-contained -p:PublishSingleFile=true -o Publish">
     </Exec>
     <!--Then the tray icon-->
-    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Server.Windows.TrayIcon/CastIt.Server.Windows.TrayIcon.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -p:PublishTrimmed=true -o Publish\TrayIcon">
+    <Exec Condition="$(Configuration) != 'Debug'" Command="dotnet publish ../CastIt.Server.Windows.TrayIcon/CastIt.Server.Windows.TrayIcon.csproj -c $(Configuration) -r win-$(Platform) --self-contained -p:PublishSingleFile=true -o Publish\TrayIcon">
     </Exec>
-    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Server.Windows.TrayIcon/CastIt.Server.Windows.TrayIcon.csproj -c $(Configuration) -r win-$(Platform) -p:PublishSingleFile=true -o Publish\TrayIcon">
+    <Exec Condition="$(Configuration) == 'Debug'" Command="dotnet publish ../CastIt.Server.Windows.TrayIcon/CastIt.Server.Windows.TrayIcon.csproj -c $(Configuration) -r win-$(Platform) --self-contained -p:PublishSingleFile=true -o Publish\TrayIcon">
     </Exec>
 	<!-- Now we move out the .exe to avoid the heat command to generate a file for it -->
 	<Exec Command="move Publish\CastIt.Server.exe CastIt.Server.exe">
 	</Exec>
     <!--Here we get the assembly versions-->
-    <GetAssemblyIdentity AssemblyFiles="..\CastIt.Server\bin\$(Configuration)\net5.0\win-$(Platform)\CastIt.Server.dll">
+    <GetAssemblyIdentity AssemblyFiles="..\CastIt.Server\bin\$(Configuration)\net6.0\win-$(Platform)\CastIt.Server.dll">
       <Output TaskParameter="Assemblies" ItemName="ServerAssembly" />
     </GetAssemblyIdentity>
     <PropertyGroup>
@@ -100,7 +100,7 @@
 	</Exec>
   </Target>
   <Target Name="AfterBuild">
-    <GetAssemblyIdentity AssemblyFiles="..\CastIt.Server\bin\$(Configuration)\net5.0\win-$(Platform)\CastIt.Server.dll">
+    <GetAssemblyIdentity AssemblyFiles="..\CastIt.Server\bin\$(Configuration)\net6.0\win-$(Platform)\CastIt.Server.dll">
       <Output TaskParameter="Assemblies" ItemName="ServerAssembly" />
     </GetAssemblyIdentity>
     <Exec Command="if not exist Installers mkdir Installers" />
