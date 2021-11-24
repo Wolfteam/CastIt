@@ -5,7 +5,7 @@ using System;
 
 namespace CastIt.Cli.Commands
 {
-    [Command(Name = "playlists", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
+    [Command(Name = "playlists", Description = "Allows you to perform operations on the play lists", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [Subcommand(
         typeof(NewCommand),
         typeof(AddCommand),

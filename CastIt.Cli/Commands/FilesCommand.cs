@@ -5,7 +5,7 @@ using System;
 
 namespace CastIt.Cli.Commands
 {
-    [Command(Name = "files", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
+    [Command(Name = "files", Description = "Allows you to update a file", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [Subcommand(
         typeof(UpdateCommand)
     )]

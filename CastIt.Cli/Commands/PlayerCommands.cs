@@ -6,7 +6,7 @@ using System;
 
 namespace CastIt.Cli.Commands
 {
-    [Command(Name = "player", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
+    [Command(Name = "player", Description = "Allows you to interact with the player", OptionsComparison = StringComparison.InvariantCultureIgnoreCase)]
     [Subcommand(
         typeof(ConnectCommand),
         typeof(DisconnectCommand),
