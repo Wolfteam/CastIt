@@ -120,7 +120,7 @@ namespace CastIt.Server.Windows.TrayIcon
                 MessageBox.Show("Server is not running", "Error");
                 return;
             }
-            Process.Start("explorer.exe", $"{ip}/swagger/index.html");
+            Process.Start("explorer.exe", ip);
         }
 
         public void ShowAppFolder(object sender, EventArgs e)
