@@ -26,7 +26,7 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public TArgs AddArg(string arg)
         {
-            var newArg = $"-{arg}";
+            string newArg = $"-{arg}";
             if (!Args.Contains(newArg))
             {
                 Args.Add(newArg);
@@ -36,15 +36,20 @@ namespace CastIt.Domain.Models.FFmpeg.Args
 
         public TArgs AddArg<T>(string key, T value)
         {
+            string arg = BuildArg(key, value);
+            return AddArg(arg);
+        }
+
+        public string BuildArg<T>(string key, T value)
+        {
             //This is to avoid something like 10,21 instead of 10.21
-            var arg = value switch
+            string arg = value switch
             {
                 double v => v.ToString(CultureInfo.InvariantCulture),
                 float v => v.ToString(CultureInfo.InvariantCulture),
                 _ => $"{value}"
             };
-
-            return AddArg($"{key} {arg}");
+            return $"{key} {arg}";
         }
     }
 }

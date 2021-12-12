@@ -1,12 +1,13 @@
 ﻿using CastIt.Domain.Enums;
+using System.Collections.Generic;
 
 namespace CastIt.Domain.Dtos.Requests
 {
     public class PlayAppFileRequestDto
     {
-        public string Mrl { get; set; }
         public int VideoStreamIndex { get; set; }
         public int AudioStreamIndex { get; set; }
+        public List<string> StreamUrls { get; set; } = new List<string>();
         public double Seconds { get; set; }
 
         public bool VideoNeedsTranscode { get; set; }
@@ -15,5 +16,7 @@ namespace CastIt.Domain.Dtos.Requests
         public VideoScaleType VideoScale { get; set; }
         public int SelectedQuality { get; set; }
         public string VideoWidthAndHeight { get; set; }
+
+        public string ContentType { get; set; }
     }
 }

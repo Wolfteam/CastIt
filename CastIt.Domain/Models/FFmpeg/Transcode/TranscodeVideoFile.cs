@@ -4,7 +4,9 @@ namespace CastIt.Domain.Models.FFmpeg.Transcode
 {
     public class TranscodeVideoFileBuilder : BaseTranscodeFileBuilder<TranscodeVideoFileBuilder, TranscodeVideoFile>
     {
-        public TranscodeVideoFileBuilder WithStreams(int videoStreamIndex, int audioStreamIndex)
+        public TranscodeVideoFileBuilder WithSelectedStreams(
+            int videoStreamIndex,
+            int audioStreamIndex)
         {
             File.VideoStreamIndex = videoStreamIndex;
             File.AudioStreamIndex = audioStreamIndex;

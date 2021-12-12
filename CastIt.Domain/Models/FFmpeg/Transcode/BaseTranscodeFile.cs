@@ -1,4 +1,7 @@
-﻿namespace CastIt.Domain.Models.FFmpeg.Transcode
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace CastIt.Domain.Models.FFmpeg.Transcode
 {
     public class BaseTranscodeFileBuilder<TBuilder, TFile>
         where TBuilder : class
@@ -6,9 +9,9 @@
     {
         protected readonly TFile File = new TFile();
 
-        public TBuilder WithFile(string path)
+        public TBuilder WithStreams(params string[] streams)
         {
-            File.FilePath = path;
+            File.StreamUrls = streams.ToList();
             return this as TBuilder;
         }
 
@@ -30,7 +33,7 @@
 
     public class BaseTranscodeFile
     {
-        public string FilePath { get; set; }
+        public List<string> StreamUrls { get; set; } = new List<string>();
         public double Seconds { get; set; }
         public bool ForceVideoTranscode { get; set; }
         public bool ForceAudioTranscode { get; set; }

@@ -10,14 +10,52 @@ namespace CastIt.Domain.Models.FFmpeg.Args
     public class FFmpegInputArgs : FFmpegArgs<FFmpegInputArgs>
     {
         private readonly string _input;
+        private readonly List<string> _inputs;
+        private readonly List<string> _argsPerInput = new List<string>();
 
         public FFmpegInputArgs(string input)
         {
             _input = input;
+            _inputs = new List<string>();
+        }
+
+        public FFmpegInputArgs(List<string> inputs)
+        {
+            _input = null;
+            _inputs = inputs;
+        }
+
+        public FFmpegInputArgs AddArgToEachInputFile<T>(string arg, T value)
+        {
+            string newArg = $"-{BuildArg(arg, value)}";
+            if (!_argsPerInput.Contains(newArg))
+            {
+                _argsPerInput.Add(newArg);
+            }
+
+            return this;
         }
 
         public override string GetArgs()
-            => @$"{base.GetArgs()} -i ""{_input}""";
+        {
+            if (_inputs.Count == 0)
+            {
+                return BuildArgs(_input);
+            }
+
+            return string.Join(" ", _inputs.Select((input, i) => BuildArgs(input, i == 0)));
+        }
+
+        private string BuildArgs(string input, bool includeBaseArgs = true)
+        {
+            string otherArgs = string.Join(" ", _argsPerInput);
+            if (includeBaseArgs)
+            {
+                string baseArgs = base.GetArgs();
+                return @$"{baseArgs} {otherArgs} -i ""{input}""";
+            }
+            return @$" {otherArgs} -i ""{input}""";
+        }
 
         public FFmpegInputArgs SetHwAccel(string type)
             => AddArg("hwaccel", type);

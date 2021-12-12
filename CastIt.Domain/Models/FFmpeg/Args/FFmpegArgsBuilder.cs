@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CastIt.Domain.Models.FFmpeg.Args
 {
@@ -10,6 +11,15 @@ namespace CastIt.Domain.Models.FFmpeg.Args
         public FFmpegInputArgs AddInputFile(string fileName)
         {
             var input = new FFmpegInputArgs(fileName);
+
+            _inputs.Add(input);
+
+            return input;
+        }
+
+        public FFmpegInputArgs AddInputFiles(params string[] files)
+        {
+            var input = new FFmpegInputArgs(files.ToList());
 
             _inputs.Add(input);
 
