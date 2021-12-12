@@ -15,7 +15,7 @@ import {
 } from '@material-ui/core';
 import { IFileItemResponseDto } from '../../models';
 import { onFileChanged, onFileEndReached, onPlayerStatusChanged } from '../../services/castithub.service';
-import { Add, ClearAll, Delete, Loop, PlayArrow, Refresh } from '@material-ui/icons';
+import { Add, ClearAll, Delete, FileCopy, Loop, PlayArrow, Refresh } from '@material-ui/icons';
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
@@ -216,6 +216,16 @@ function FileItem(props: Props) {
         await castItHub.connection.removeAllMissingFiles(props.file.playListId);
     };
 
+    const handleShowAddFilesDialog = (): void => {
+        handleCloseContextMenu();
+        setShowAddFilesDialog(true);
+    };
+
+    const handleCopy = (): void => {
+        handleCloseContextMenu();
+        navigator.clipboard.writeText(props.file.path);
+    };
+
     const title = (
         <Tooltip title={state.filename}>
             <Typography className={'text-overflow-elipsis'}>{state.filename}</Typography>
@@ -287,9 +297,13 @@ function FileItem(props: Props) {
                                 <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
                             </MenuItem>
                             {toggleLoopMenuItem}
-                            <MenuItem onClick={() => setShowAddFilesDialog(true)}>
+                            <MenuItem onClick={handleShowAddFilesDialog}>
                                 <Add fontSize="small" />
                                 <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
+                            </MenuItem>
+                            <MenuItem onClick={handleCopy}>
+                                <FileCopy fontSize="small" />
+                                <ListItemText className={classes.menuItemText} primary={translations.copyPath} />
                             </MenuItem>
                             {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
                             <MenuItem onClick={handleDelete}>
