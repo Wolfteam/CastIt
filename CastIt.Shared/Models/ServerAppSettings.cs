@@ -15,6 +15,7 @@ namespace CastIt.Shared.Models
         public bool ForceAudioTranscode { get; set; }
         public VideoScaleType VideoScale { get; set; }
         public bool EnableHardwareAcceleration { get; set; }
+        public WebVideoQualityType WebVideoQuality { get; set; }
 
         public SubtitleFgColorType CurrentSubtitleFgColor { get; set; }
         public SubtitleBgColorType CurrentSubtitleBgColor { get; set; }
@@ -38,6 +39,7 @@ namespace CastIt.Shared.Models
                 ForceAudioTranscode = ForceAudioTranscode,
                 VideoScale = VideoScale,
                 EnableHardwareAcceleration = EnableHardwareAcceleration,
+                WebVideoQuality = WebVideoQuality,
 
                 CurrentSubtitleFgColor = CurrentSubtitleFgColor,
                 CurrentSubtitleBgColor = CurrentSubtitleBgColor,
@@ -63,6 +65,7 @@ namespace CastIt.Shared.Models
             ForceAudioTranscode = other.ForceAudioTranscode;
             VideoScale = other.VideoScale;
             EnableHardwareAcceleration = other.EnableHardwareAcceleration;
+            WebVideoQuality = other.WebVideoQuality;
 
             CurrentSubtitleFgColor = other.CurrentSubtitleFgColor;
             CurrentSubtitleBgColor = other.CurrentSubtitleBgColor;

@@ -157,12 +157,6 @@ namespace CastIt.Server.Services
             _server.OnFileLoaded?.Invoke(GetCurrentPlayedFile());
         }
 
-        protected Task OnQualitiesLoaded(int selectedQuality, List<int> qualities)
-        {
-            CurrentPlayedFile?.SetQualitiesStreams(selectedQuality, qualities);
-            return Task.CompletedTask;
-        }
-
         public Task PlayFile(string fileName, bool force, bool isAnAutomaticCall)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -325,12 +319,6 @@ namespace CastIt.Server.Services
                     _logger.LogInformation($"{nameof(PlayFile)}: Setting the sub streams...");
                     var (localSubsPath, filename) = TryGetSubTitlesLocalPath(CurrentPlayedFile.Path);
                     CurrentPlayedFile.SetSubtitleStreams(localSubsPath, filename, _settings.LoadFirstSubtitleFoundAutomatically);
-                }
-
-                //TODO: FIGURE OUT HOW CAN I REMOVE THIS
-                if (request is YoutubePlayMediaRequest ytRequest)
-                {
-                    await OnQualitiesLoaded(ytRequest.SelectedQuality, ytRequest.Qualities);
                 }
 
                 if (request.NeedsTinyCode)

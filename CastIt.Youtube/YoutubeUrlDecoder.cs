@@ -142,7 +142,7 @@ namespace CastIt.Youtube
             CancellationToken cancellationToken = default)
         {
             desiredQuality ??= DefaultQuality;
-            _logger.LogInformation($"{nameof(Parse)}: Trying to parse url = {basicInfo.Url}");
+            _logger.LogInformation($"{nameof(Parse)}: Trying to parse url = {basicInfo.Url}. Desired quality = {desiredQuality}");
 
             string fmt = string.Empty;
             if (IsHtmlPage(basicInfo.Url))
