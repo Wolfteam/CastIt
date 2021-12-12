@@ -8,3 +8,4 @@ export { AppFile } from './app_file.enum';
 export { SortMode } from './sort_mode.enum';
 export { AppMessage } from './app_message.enum';
 export { AppLanguage } from './app_language.enum';
+export { WebVideoQuality } from './web_video_quality.enum';

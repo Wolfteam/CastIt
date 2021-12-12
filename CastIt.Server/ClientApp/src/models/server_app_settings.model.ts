@@ -14,6 +14,7 @@ export interface IServerAppSettings {
     forceAudioTranscode: boolean;
     videoScale: VideoScale;
     enableHardwareAcceleration: boolean;
+    webVideoQuality: number;
 
     currentSubtitleFgColor: SubtitleFgColor;
     currentSubtitleBgColor: SubtitleBgColor;

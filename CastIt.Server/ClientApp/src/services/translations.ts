@@ -93,6 +93,7 @@ interface ITranslations {
     retry: string;
     sort: string;
     copyPath: string;
+    webVideoQuality: string;
     errorCodes: IAppMessageTranslations;
 }
 
@@ -168,6 +169,7 @@ const enTrans: ITranslations = {
     retry: 'Retry',
     sort: 'Sort',
     copyPath: 'Copy path',
+    webVideoQuality: 'Web video quality',
     errorCodes: {
         unknownErrorOccurred: 'Unknown error occurred',
         invalidRequest: 'Invalid request',
@@ -261,6 +263,7 @@ const esTrans: ITranslations = {
     retry: 'Reintentar',
     sort: 'Ordenar',
     copyPath: 'Copiar ruta',
+    webVideoQuality: 'Calidad de video web',
     errorCodes: {
         unknownErrorOccurred: 'Un error inesperado ha ocurrido',
         invalidRequest: 'Petición no válida',

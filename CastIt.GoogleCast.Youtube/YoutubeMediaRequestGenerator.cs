@@ -66,8 +66,8 @@ namespace CastIt.GoogleCast.Youtube
                 throw new FileNotSupportedException(msg);
             }
             var basicInfo = await _decoder.ParseBasicInfo(file.Path, cancellationToken);
-            //TODO: THIS 1080
-            var ytMedia = await _decoder.Parse(basicInfo, 1080 /*file.CurrentFileQuality*/, cancellationToken);
+            int desiredQuality = fileOptionsChanged ? file.CurrentFileQuality : (int)settings.WebVideoQuality;
+            var ytMedia = await _decoder.Parse(basicInfo, desiredQuality, cancellationToken);
             if (ytMedia.IsHls)
             {
                 return await BuildRequestFromHls(
@@ -149,6 +149,7 @@ namespace CastIt.GoogleCast.Youtube
             };
 
             await SetSubtitlesIfAny(file, settings, request, cancellationToken);
+            file.SetQualitiesStreams(ytMedia.SelectedQuality, ytMedia.Qualities);
             return request;
         }
 
@@ -204,6 +205,7 @@ namespace CastIt.GoogleCast.Youtube
             };
             request.MediaInfo.Duration = fileInfo.Format?.Duration ?? -1;
             await SetSubtitlesIfAny(file, settings, request, cancellationToken);
+            file.SetQualitiesStreams(ytMedia.SelectedQuality, ytMedia.Qualities);
             return request;
         }
 
@@ -282,6 +284,7 @@ namespace CastIt.GoogleCast.Youtube
                 AudioStreamIndex = audioStreamIndex,
             };
             await SetSubtitlesIfAny(file, settings, request, cancellationToken);
+            file.SetQualitiesStreams(closestQuality, ytMedia.Qualities);
             return request;
         }
     }

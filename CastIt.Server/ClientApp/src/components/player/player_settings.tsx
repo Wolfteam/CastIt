@@ -27,6 +27,7 @@ import {
     TextTrackFontStyle,
     TextTrackFontGenericFamily,
     AppLanguage,
+    WebVideoQuality,
 } from '../../enums';
 import { IServerAppSettings } from '../../models';
 import { onPlayerSettingsChanged } from '../../services/castithub.service';
@@ -115,6 +116,10 @@ function PlayerSettings() {
             default:
                 return { text: translations.original, value: val };
         }
+    }).map(generateSelectOption);
+
+    const supportedWebVideoQualities = mapEnum(WebVideoQuality, (val) => {
+        return { text: `${val}p`, value: val };
     }).map(generateSelectOption);
 
     const subsBgColorOptions = mapEnum(SubtitleBgColor, (val) => ({ text: translations.default, value: val })).map(generateSelectOption);
@@ -253,6 +258,20 @@ function PlayerSettings() {
                                             }}
                                         >
                                             {videoScaleOptions}
+                                        </Select>
+                                    </FormControl>
+                                    <FormControl className={classes.formControl}>
+                                        <InputLabel htmlFor="supported-video-qualities">{translations.webVideoQuality}</InputLabel>
+                                        <Select
+                                            native
+                                            value={state.settings.webVideoQuality}
+                                            onChange={(e) => handleSettingsChange('webVideoQuality', e.target.value)}
+                                            inputProps={{
+                                                name: 'supported-video-qualities',
+                                                id: 'supported-video-qualities',
+                                            }}
+                                        >
+                                            {supportedWebVideoQualities}
                                         </Select>
                                     </FormControl>
                                 </Grid>
