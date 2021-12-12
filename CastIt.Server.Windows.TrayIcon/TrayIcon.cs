@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Common.Utils;
-using CastIt.Application.Server;
+﻿using CastIt.Domain.Utils;
+using CastIt.Shared.Server;
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;

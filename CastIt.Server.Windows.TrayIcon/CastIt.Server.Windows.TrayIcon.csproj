@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CastIt.Application\CastIt.Application.csproj" />
+    <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
   </ItemGroup>
 
 </Project>
