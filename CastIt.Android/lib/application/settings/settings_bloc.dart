@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/enums/enums.dart';
-import 'package:castit/domain/enums/subtitle_bg_color_type.dart';
-import 'package:castit/domain/enums/text_track_font_generic_family_type.dart';
 import 'package:castit/domain/extensions/string_extensions.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
@@ -46,6 +44,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           fFmpegExePath: '',
           fFprobeExePath: '',
           videoScale: VideoScaleType.original,
+          webVideoQuality: WebVideoQualityType.low,
           enableHwAccel: false,
           forceAudioTranscode: false,
           forceVideoTranscode: false,
@@ -74,6 +73,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           forceVideoTranscode: event.settings.forceVideoTranscode,
           playFromTheStart: event.settings.startFilesFromTheStart,
           playNextFileAutomatically: event.settings.playNextFileAutomatically,
+          webVideoQuality: event.settings.webVideoQualityType,
           //subs
           currentSubtitleBgColor: event.settings.currentSubtitleBgColorType,
           currentSubtitleFgColor: event.settings.currentSubtitleFgColorType,

@@ -15,6 +15,7 @@ class SettingsState with _$SettingsState {
     required String fFmpegExePath,
     required String fFprobeExePath,
     required VideoScaleType videoScale,
+    required WebVideoQualityType webVideoQuality,
     required bool playFromTheStart,
     required bool playNextFileAutomatically,
     required bool forceVideoTranscode,

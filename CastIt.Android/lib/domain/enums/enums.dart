@@ -8,3 +8,4 @@ export 'subtitle_font_scale_type.dart';
 export 'text_track_font_generic_family_type.dart';
 export 'text_track_font_style_type.dart';
 export 'video_scale_type.dart';
+export 'web_video_quality_type.dart';

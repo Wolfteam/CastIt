@@ -97,5 +97,6 @@
   "ffmpegError": "Ffmpeg error",
   "serverIsClosing": "Server is closing",
   "ffmpegExecutableNotFound": "Ffmpeg executable is not valid or was not found",
-  "nothingToShow": "Nothing to show"
+  "nothingToShow": "Nothing to show",
+  "webVideoQuality": "Web video quality"
 }

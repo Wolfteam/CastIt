@@ -1,6 +1,4 @@
 import 'package:castit/domain/enums/enums.dart';
-import 'package:castit/domain/enums/subtitle_bg_color_type.dart';
-import 'package:castit/domain/enums/text_track_font_generic_family_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'server_app_settings.g.dart';
@@ -8,6 +6,8 @@ part 'server_app_settings.g.dart';
 @JsonSerializable()
 class ServerAppSettings {
   VideoScaleType get videoScaleType => getVideoScaleType(videoScale);
+
+  WebVideoQualityType get webVideoQualityType => getWebVideoQualityType(webVideoQuality);
 
   SubtitleFgColorType get currentSubtitleFgColorType => SubtitleFgColorType.values[currentSubtitleFgColor];
 
@@ -28,6 +28,7 @@ class ServerAppSettings {
   final bool forceAudioTranscode;
   final int videoScale;
   final bool enableHardwareAcceleration;
+  final int webVideoQuality;
 
   final int currentSubtitleFgColor;
   final int currentSubtitleBgColor;
@@ -46,6 +47,7 @@ class ServerAppSettings {
     required this.forceAudioTranscode,
     required this.videoScale,
     required this.enableHardwareAcceleration,
+    required this.webVideoQuality,
     required this.currentSubtitleFgColor,
     required this.currentSubtitleBgColor,
     required this.currentSubtitleFontScale,

@@ -54,7 +54,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           _buildThemeSettings(context, i18n, state.appTheme),
           _buildAccentColorSettings(context, i18n, state.accentColor),
           _buildLanguageSettings(context, i18n, state.appLanguage),
-          if (state.isConnected) _buildOtherSettings(context, i18n, state),
+          _buildOtherSettings(context, i18n, state),
           _buildAboutSettings(context, i18n, state.appName, state.appVersion),
         ];
       },
@@ -244,26 +244,52 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
 
     return state.maybeMap(
       loaded: (state) {
-        final videoScaleDropdown = DropdownButton<VideoScaleType>(
-          isExpanded: true,
-          hint: Text(i18n.videoScale),
-          value: state.videoScale,
-          underline: Container(
-            height: 0,
-            color: Colors.transparent,
-          ),
-          onChanged: (newValue) => _updateServerSettings(state.copyWith.call(videoScale: newValue!)),
-          items: VideoScaleType.values
-              .map<DropdownMenuItem<VideoScaleType>>(
-                (type) => DropdownMenuItem<VideoScaleType>(
-                  value: type,
-                  child: Text(
-                    i18n.translateVideoScaleType(type),
+        if (!state.isConnected) {
+          final content = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: <Widget>[
+                  const Icon(Icons.queue_play_next),
+                  Container(
+                    margin: const EdgeInsets.only(left: 5),
+                    child: Text(
+                      i18n.playerSettings,
+                      style: textTheme.headline6,
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  i18n.changeAppBehaviour,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  child: Text(i18n.webServerUrl),
+                ),
+                subtitle: Container(
+                  margin: const EdgeInsets.only(left: 25),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      state.castItUrl,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
                   ),
                 ),
-              )
-              .toList(),
-        );
+                onTap: () => _showConnectionDialog(i18n.webServerUrl, state.castItUrl),
+              ),
+            ],
+          );
+
+          return _buildCard(content);
+        }
 
         final content = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -288,13 +314,100 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
               ),
             ),
             ListTile(
-              title: Text(i18n.webServerUrl),
-              subtitle: Text(state.castItUrl),
+              contentPadding: EdgeInsets.zero,
+              title: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16),
+                child: Text(i18n.webServerUrl),
+              ),
+              subtitle: Container(
+                margin: const EdgeInsets.only(left: 25),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    state.castItUrl,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ),
+              ),
               onTap: () => _showConnectionDialog(i18n.webServerUrl, state.castItUrl),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16),
-              child: videoScaleDropdown,
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16),
+                child: DropdownButton<VideoScaleType>(
+                  isExpanded: true,
+                  hint: Text(i18n.videoScale),
+                  value: state.videoScale,
+                  underline: Container(
+                    height: 0,
+                    color: Colors.transparent,
+                  ),
+                  onChanged: (newValue) => _updateServerSettings(state.copyWith.call(videoScale: newValue!)),
+                  items: VideoScaleType.values
+                      .map<DropdownMenuItem<VideoScaleType>>(
+                        (type) => DropdownMenuItem<VideoScaleType>(
+                          value: type,
+                          child: Text(
+                            i18n.translateVideoScaleType(type),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              subtitle: Container(
+                margin: const EdgeInsets.only(left: 25),
+                child: Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      i18n.videoScale,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16),
+                child: DropdownButton<WebVideoQualityType>(
+                  isExpanded: true,
+                  hint: Text(i18n.videoScale),
+                  value: state.webVideoQuality,
+                  underline: Container(
+                    height: 0,
+                    color: Colors.transparent,
+                  ),
+                  onChanged: (newValue) => _updateServerSettings(state.copyWith.call(webVideoQuality: newValue!)),
+                  items: WebVideoQualityType.values
+                      .map<DropdownMenuItem<WebVideoQualityType>>(
+                        (type) => DropdownMenuItem<WebVideoQualityType>(
+                          value: type,
+                          child: Text('${getWebVideoQualityValue(type)}p'),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              subtitle: Container(
+                margin: const EdgeInsets.only(left: 25),
+                child: Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      i18n.webVideoQuality,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ),
             ),
             SwitchListTile(
               activeColor: theme.colorScheme.secondary,
@@ -496,6 +609,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
           startFilesFromTheStart: state.playFromTheStart,
           playNextFileAutomatically: state.playNextFileAutomatically,
           videoScale: getVideoScaleValue(state.videoScale),
+          webVideoQuality: getWebVideoQualityValue(state.webVideoQuality),
           loadFirstSubtitleFoundAutomatically: state.loadFirstSubtitleFoundAutomatically,
           currentSubtitleFgColor: state.currentSubtitleFgColor.index,
           subtitleDelayInSeconds: state.subtitleDelayInSeconds,
