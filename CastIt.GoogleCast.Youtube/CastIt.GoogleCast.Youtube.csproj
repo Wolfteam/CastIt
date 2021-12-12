@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CastIt.FFmpeg\CastIt.FFmpeg.csproj" />
+    <ProjectReference Include="..\CastIt.GoogleCast.Generator\CastIt.GoogleCast.Generator.csproj" />
     <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
     <ProjectReference Include="..\CastIt.Server.Shared\CastIt.Server.Shared.csproj" />
     <ProjectReference Include="..\CastIt.Youtube\CastIt.Youtube.csproj" />
