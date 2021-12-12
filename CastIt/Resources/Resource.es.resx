@@ -588,4 +588,7 @@
   <data name="ServerIsNotRunning" xml:space="preserve">
     <value>El servidor no está activo</value>
   </data>
+  <data name="WebVideoQuality" xml:space="preserve">
+    <value>Calidad de video web</value>
+  </data>
 </root>

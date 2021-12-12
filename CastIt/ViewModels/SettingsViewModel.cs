@@ -43,6 +43,7 @@ namespace CastIt.ViewModels
         private bool _loadFirstSubtitleFoundAutomatically;
         private string _fFmpegExePath;
         private string _ffprobeExePath;
+        private Item _currentWebVideoQuality;
 
         private readonly MvxInteraction<string> _changeSelectedAccentColor = new MvxInteraction<string>();
         #endregion
@@ -193,6 +194,20 @@ namespace CastIt.ViewModels
             }
         }
 
+        public MvxObservableCollection<Item> SupportedWebVideoQualities { get; }
+
+        public Item CurrentWebVideoQuality
+        {
+            get => _currentWebVideoQuality;
+            set
+            {
+                if (value == null)
+                    return;
+                this.RaiseAndSetIfChanged(ref _currentWebVideoQuality, value);
+                TriggerSettingsChanged();
+            }
+        }
+
         #region Subtitles
         public MvxObservableCollection<Item> SubtitleFgColors { get; }
         public MvxObservableCollection<Item> SubtitleBgColors { get; }
@@ -290,7 +305,7 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand OpenAboutDialogCommand { get; private set; }
         #endregion
 
-        #region Interactos
+        #region Interactors
         public IMvxInteraction<string> ChangeSelectedAccentColor
             => _changeSelectedAccentColor;
         #endregion
@@ -314,6 +329,7 @@ namespace CastIt.ViewModels
             SubtitleFontScales = GetFontScales();
             SubtitleFontStyles = GetSubtitleFontStyles();
             SubtitleFontFamilies = GetSubtitleFontFamilies();
+            SupportedWebVideoQualities = GetSupportedWebVideoQualities();
 
             _castItHub.OnPlayerSettingsChanged += OnSettingsChange;
         }
@@ -471,6 +487,17 @@ namespace CastIt.ViewModels
             return new MvxObservableCollection<Item>(scales);
         }
 
+        private MvxObservableCollection<Item> GetSupportedWebVideoQualities()
+        {
+            var types = Enum.GetValues(typeof(WebVideoQualityType)).Cast<WebVideoQualityType>()
+                .Select(x => new Item
+                {
+                    Id = x.ToString(),
+                    Text = $"{(int)x}p",
+                });
+            return new MvxObservableCollection<Item>(types);
+        }
+
         private async void TriggerSettingsChanged()
         {
             if (!_updatingSettings)
@@ -499,7 +526,8 @@ namespace CastIt.ViewModels
                 CurrentSubtitleFontStyle = (TextTrackFontStyleType)Enum.Parse(typeof(TextTrackFontStyleType), CurrentSubtitleFontStyle.Id, true),
                 CurrentSubtitleFontFamily = (TextTrackFontGenericFamilyType)Enum.Parse(typeof(TextTrackFontGenericFamilyType), CurrentSubtitleFontFamily.Id, true),
                 SubtitleDelayInSeconds = SubtitleDelay,
-                LoadFirstSubtitleFoundAutomatically = LoadFirstSubtitleFoundAutomatically
+                LoadFirstSubtitleFoundAutomatically = LoadFirstSubtitleFoundAutomatically,
+                WebVideoQuality = (WebVideoQualityType)Enum.Parse(typeof(WebVideoQualityType), CurrentWebVideoQuality.Id, true)
             };
         }
 
@@ -519,6 +547,7 @@ namespace CastIt.ViewModels
             CurrentSubtitleFontFamily = SubtitleFontFamilies.First(v => v.Id == settings.CurrentSubtitleFontFamily.ToString());
             SubtitleDelay = settings.SubtitleDelayInSeconds;
             LoadFirstSubtitleFoundAutomatically = settings.LoadFirstSubtitleFoundAutomatically;
+            CurrentWebVideoQuality = SupportedWebVideoQualities.First(q => q.Id == settings.WebVideoQuality.ToString());
 
             _fFmpegExePath = settings.FFmpegExePath;
             _ffprobeExePath = settings.FFprobeExePath;

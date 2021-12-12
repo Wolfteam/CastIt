@@ -1447,6 +1447,15 @@ namespace CastIt.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Web video quality.
+        /// </summary>
+        public static string WebVideoQuality {
+            get {
+                return ResourceManager.GetString("WebVideoQuality", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to White.
         /// </summary>
         public static string White {

@@ -11,7 +11,7 @@
     xmlns:uv="clr-namespace:CastIt.Views"
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
-    Width="720"
+    Width="750"
     Height="500"
     d:DataContext="{d:DesignInstance Type=vms:SettingsViewModel}"
     d:DesignHeight="420"
@@ -75,6 +75,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         Margin="0,0,0,10"
@@ -128,6 +129,25 @@
                         SelectedValuePath="Id"
                         Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                         ToolTip="{Binding [UseIfPlaybackIssues]}">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Row="1"
+                        Grid.Column="3"
+                        Margin="5,0"
+                        HorizontalAlignment="Stretch"
+                        materialDesign:HintAssist.Hint="{Binding [WebVideoQuality]}"
+                        DisplayMemberPath="Text"
+                        IsEnabled="{Binding ViewModel.ServerIsRunning, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}"
+                        ItemsSource="{Binding SupportedWebVideoQualities}"
+                        SelectedItem="{Binding CurrentWebVideoQuality}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                        ToolTip="{Binding [WebVideoQuality]}">
                         <ComboBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel />
