@@ -1,7 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace CastIt.Shared.Extensions
 {
@@ -54,6 +57,24 @@ namespace CastIt.Shared.Extensions
                 jValue?.ToString(CultureInfo.InvariantCulture);
 
             return new Dictionary<string, string> { { token.Path, value } };
+        }
+
+        public static string ToBase64(this object obj)
+        {
+            string json = JsonConvert.SerializeObject(obj);
+
+            byte[] bytes = Encoding.Default.GetBytes(json);
+
+            return Convert.ToBase64String(bytes);
+        }
+
+        public static T FromBase64<T>(this string base64Text)
+        {
+            byte[] bytes = Convert.FromBase64String(base64Text);
+
+            string json = Encoding.Default.GetString(bytes);
+
+            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }
