@@ -1,12 +1,11 @@
-﻿using CastIt.Application.Common;
-using CastIt.Application.Common.Utils;
-using CastIt.Application.Server;
+﻿using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
-using CastIt.Infrastructure.Models;
+using CastIt.Domain.Utils;
 using CastIt.Server.Common.Comparers;
+using CastIt.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -211,7 +210,7 @@ namespace CastIt.Server.Services
             }
 
             bool isUrlFile = FileService.IsUrlFile(url);
-            if (!isUrlFile || !YoutubeUrlDecoder.IsYoutubeUrl(url))
+            if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
             {
                 var msg = $"Url = {url} is not supported";
                 Logger.LogInformation($"{nameof(AddUrl)}: {msg}");
@@ -222,7 +221,7 @@ namespace CastIt.Server.Services
             {
                 SendPlayListBusy(playListId, true);
                 Logger.LogInformation($"{nameof(AddUrl)}: Trying to parse url = {url}");
-                if (!YoutubeUrlDecoder.IsPlayList(url) || YoutubeUrlDecoder.IsPlayListAndVideo(url) && onlyVideo)
+                if (!_youtubeUrlDecoder.IsPlayList(url) || _youtubeUrlDecoder.IsPlayListAndVideo(url) && onlyVideo)
                 {
                     Logger.LogInformation(
                         $"{nameof(AddUrl)}: Url is either not a playlist or we just want the video, parsing it...");
@@ -231,7 +230,7 @@ namespace CastIt.Server.Services
                 }
 
                 Logger.LogInformation($"{nameof(AddUrl)}: Parsing playlist...");
-                var links = await YoutubeUrlDecoder.ParseYouTubePlayList(url, FileCancellationTokenSource.Token);
+                var links = await _youtubeUrlDecoder.ParsePlayList(url, FileCancellationTokenSource.Token);
                 foreach (var link in links)
                 {
                     if (FileCancellationTokenSource.IsCancellationRequested)
@@ -279,7 +278,7 @@ namespace CastIt.Server.Services
 
         private async Task AddYoutubeUrl(long playListId, string url)
         {
-            var media = await YoutubeUrlDecoder.Parse(url, null, false);
+            var media = await _youtubeUrlDecoder.ParseBasicInfo(url);
             if (!string.IsNullOrEmpty(media.Title) && media.Title.Length > AppWebServerConstants.MaxCharsPerString)
             {
                 media.Title = media.Title.Substring(0, AppWebServerConstants.MaxCharsPerString);

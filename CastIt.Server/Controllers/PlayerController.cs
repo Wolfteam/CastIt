@@ -1,13 +1,9 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Application.Server;
-using CastIt.Domain.Dtos;
+﻿using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
-using CastIt.Domain.Extensions;
-using CastIt.Domain.Interfaces;
-using CastIt.Domain.Models.FFmpeg.Transcode;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
 using CastIt.Server.Interfaces;
+using CastIt.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -21,27 +17,15 @@ namespace CastIt.Server.Controllers
 {
     public class PlayerController : BaseController<PlayerController>
     {
-        private readonly IFileService _fileService;
-        private readonly IFFmpegService _ffmpegService;
         private readonly IServerAppSettingsService _settingsService;
-        private readonly IImageProviderService _imageProviderService;
-        private readonly IServerService _serverService;
 
         public PlayerController(
             ILogger<PlayerController> logger,
-            IFileService fileService,
-            IFFmpegService fFmpegService,
             IServerCastService castService,
-            IServerAppSettingsService settingsService,
-            IImageProviderService imageProviderService,
-            IServerService serverService)
+            IServerAppSettingsService settingsService)
             : base(logger, castService)
         {
-            _fileService = fileService;
-            _ffmpegService = fFmpegService;
             _settingsService = settingsService;
-            _imageProviderService = imageProviderService;
-            _serverService = serverService;
         }
 
         //TODO: ADD A SETTING THAT ALLOWS YOU TO CHANGE THE MAXIMUM DAYS TO WAIT BEFORE DELETING PREVIEWS
@@ -333,101 +317,5 @@ namespace CastIt.Server.Controllers
             await CastService.SetCurrentPlayedFileOptions(dto.AudioStreamIndex, dto.SubtitleStreamIndex, dto.Quality);
             return Ok(new EmptyResponseDto(true));
         }
-
-        #region Chromecast
-        [HttpGet(AppWebServerConstants.ChromeCastPlayPath)]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task Play([FromQuery] PlayAppFileRequestDto dto)
-        {
-            try
-            {
-                var type = _fileService.GetFileType(dto.Mrl);
-                if (!type.IsLocalOrHls())
-                {
-                    Response.StatusCode = StatusCodes.Status400BadRequest;
-                    Logger.LogWarning($"{nameof(Play)}: File = {dto.Mrl} is neither a local video nor local music file.");
-                    return;
-                }
-
-                HttpContext.Response.ContentType = _serverService.GetOutputMimeType(dto.Mrl);
-                DisableCaching();
-
-                if (!type.IsLocalMusic())
-                {
-                    var options = GetVideoFileOptions(dto);
-                    Logger.LogInformation($"{nameof(Play)}: Handling request for video file with options = {{@Options}}", options);
-                    await _ffmpegService.TranscodeVideo(HttpContext.Response.Body, options).ConfigureAwait(false);
-                }
-                else
-                {
-                    var options = GetMusicFileOptions(dto);
-                    Logger.LogInformation($"{nameof(Play)}: Handling request for music file with options = {{@Options}}", options);
-                    await using var memoryStream = await _ffmpegService.TranscodeMusic(options).ConfigureAwait(false);
-                    //TODO: THIS LENGTH IS NOT WORKING PROPERLY
-                    HttpContext.Response.ContentLength = memoryStream.Length;
-                    await memoryStream.CopyToAsync(HttpContext.Response.Body, _ffmpegService.TokenSource.Token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, "Unknown error");
-                Response.StatusCode = StatusCodes.Status500InternalServerError;
-            }
-        }
-
-        [HttpGet(AppWebServerConstants.ChromeCastImagesPath + "/{filename}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public IActionResult GetImage(string filename)
-        {
-            Logger.LogTrace($"{nameof(GetImage)}: Checking if we can retrieve image for file = {filename}...");
-            var path = _imageProviderService.IsNoImage(filename)
-                ? Path.Combine(_imageProviderService.GetImagesPath(), filename)
-                : Path.Combine(_fileService.GetPreviewsPath(), filename);
-
-            Logger.LogTrace($"{nameof(GetImage)}: Retrieving image for path = {path}...");
-            if (!_fileService.IsLocalFile(path))
-            {
-                Logger.LogWarning($"{nameof(GetImage)}: Path = {path} does not exist, returning default image");
-                path = _imageProviderService.GetNoImagePath();
-            }
-            return PhysicalFile(path, MediaTypeNames.Image.Jpeg);
-        }
-
-        [HttpGet(AppWebServerConstants.ChromeCastSubTitlesPath)]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public IActionResult GetSubtitleForPlayedFile()
-        {
-            Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: Retrieving subs for currentPlayedFile = {CastService.CurrentPlayedFile?.Filename}");
-            var path = _fileService.GetSubTitleFilePath();
-            if (!_fileService.IsLocalFile(path))
-            {
-                Logger.LogWarning($"{nameof(GetSubtitleForPlayedFile)}: Path = {path} does not exist");
-                return NotFound();
-            }
-            Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: SubsPath = {path}");
-            return PhysicalFile(path, "text/vtt");
-        }
-
-        private static TranscodeVideoFile GetVideoFileOptions(PlayAppFileRequestDto dto)
-        {
-            return new TranscodeVideoFileBuilder()
-                .WithDefaults(dto.HwAccelToUse, dto.VideoScale, dto.SelectedQuality, dto.VideoWidthAndHeight)
-                .WithStreams(dto.VideoStreamIndex, dto.AudioStreamIndex)
-                .WithFile(dto.Mrl)
-                .ForceTranscode(dto.VideoNeedsTranscode, dto.AudioNeedsTranscode)
-                .GoTo(dto.Seconds)
-                .Build();
-        }
-
-        private static TranscodeMusicFile GetMusicFileOptions(PlayAppFileRequestDto dto)
-        {
-            return new TranscodeMusicFileBuilder()
-                .WithAudio(dto.AudioStreamIndex)
-                .WithFile(dto.Mrl)
-                .ForceTranscode(false, dto.AudioNeedsTranscode)
-                .GoTo(dto.Seconds)
-                .Build();
-        }
-        #endregion
     }
 }

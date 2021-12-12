@@ -1,4 +1,4 @@
-﻿using CastIt.Infrastructure.Models;
+﻿using CastIt.Shared.Models;
 
 namespace CastIt.Server.Interfaces
 {

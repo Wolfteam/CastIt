@@ -1,10 +1,11 @@
-﻿using CastIt.Application.Common.Utils;
-using CastIt.Application.Interfaces;
-using CastIt.Application.Settings;
-using CastIt.Domain.Enums;
+﻿using CastIt.Domain.Enums;
+using CastIt.Domain.Utils;
+using CastIt.FFmpeg;
 using CastIt.GoogleCast.Shared.Enums;
-using CastIt.Infrastructure.Models;
 using CastIt.Server.Interfaces;
+using CastIt.Shared.Models;
+using CastIt.Shared.Settings;
+using CastIt.Shared.Telemetry;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 

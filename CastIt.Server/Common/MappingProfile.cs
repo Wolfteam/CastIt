@@ -2,7 +2,7 @@
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.GoogleCast;
-using CastIt.Infrastructure.Models;
+using CastIt.Shared.Models;
 
 namespace CastIt.Server.Common
 {

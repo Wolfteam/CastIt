@@ -1,9 +1,9 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Domain.Dtos;
+﻿using CastIt.Domain.Dtos;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
 using CastIt.Server.Interfaces;
+using CastIt.Shared.Telemetry;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Net;

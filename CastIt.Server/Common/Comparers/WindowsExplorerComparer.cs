@@ -1,5 +1,5 @@
 ﻿using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Models;
+using CastIt.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

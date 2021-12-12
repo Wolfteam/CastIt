@@ -1,6 +1,6 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Server.Common.Extensions;
+﻿using CastIt.Server.Common.Extensions;
 using CastIt.Server.Interfaces;
+using CastIt.Shared.Telemetry;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

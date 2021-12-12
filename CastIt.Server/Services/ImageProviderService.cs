@@ -1,6 +1,6 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Infrastructure.Models;
-using CastIt.Server.Interfaces;
+﻿using CastIt.Server.Interfaces;
+using CastIt.Shared.FilePaths;
+using CastIt.Shared.Models;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Linq;

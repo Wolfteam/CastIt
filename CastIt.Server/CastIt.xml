@@ -95,7 +95,7 @@
             </summary>
             <returns>Returns the server settings</returns>
         </member>
-        <member name="M:CastIt.Server.Controllers.PlayerController.UpdateSettings(Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{CastIt.Infrastructure.Models.ServerAppSettings})">
+        <member name="M:CastIt.Server.Controllers.PlayerController.UpdateSettings(Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{CastIt.Shared.Models.ServerAppSettings})">
             <summary>
             Partially updates the server settings with the provided values in the patch
             </summary>

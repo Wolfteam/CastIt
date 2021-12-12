@@ -1,8 +1,9 @@
-﻿using CastIt.Application.Common.Utils;
-using CastIt.Domain.Entities;
-using CastIt.Infrastructure.Models;
+﻿using CastIt.Domain.Entities;
+using CastIt.Domain.Exceptions;
+using CastIt.Domain.Utils;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Migrations;
+using CastIt.Shared.Models;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -28,6 +29,7 @@ namespace CastIt.Server.Services
 
             _db.CodeFirst.ConfigEntity<PlayList>(pl => pl.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
             _db.CodeFirst.ConfigEntity<FileItem>(f => f.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
+            _db.CodeFirst.ConfigEntity<TinyUrl>(f => f.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
             ApplyMigrations();
         }
 
@@ -180,6 +182,61 @@ namespace CastIt.Server.Services
             );
 
             await Task.WhenAll(tasks);
+        }
+
+        public Task<bool> TinyCodeExists(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                throw new ArgumentNullException(nameof(code));
+
+            return _db.Select<TinyUrl>().AnyAsync(f => f.Code == code);
+        }
+
+        public async Task<string> GetBase64FromTinyCode(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                throw new ArgumentNullException(nameof(code));
+
+            var tinyUrl = await _db.Select<TinyUrl>()
+                    .Where(t => t.Code == code)
+                    .FirstAsync();
+
+            if (tinyUrl == null)
+                throw new InvalidRequestException($"The tiny url code = {code} does not exist");
+
+            return tinyUrl.Base64;
+        }
+
+        public async Task<string> GenerateTinyCode(string base64)
+        {
+            string code = string.Empty;
+            while (string.IsNullOrWhiteSpace(code))
+            {
+                code = Guid.NewGuid().ToString("N");
+                bool exists = await TinyCodeExists(code);
+                if (exists)
+                {
+                    code = string.Empty;
+                    continue;
+                }
+                break;
+            }
+            var tinyUrl = new TinyUrl
+            {
+                Code = code,
+                Base64 = base64,
+                CreatedAt = DateTime.Now
+            };
+            tinyUrl.Id = await _db.Insert(tinyUrl).ExecuteIdentityAsync();
+            return code;
+        }
+
+        public Task DeleteOldTinyCodes()
+        {
+            var validUntil = DateTime.Now.AddDays(-3);
+            return _db.Delete<TinyUrl>()
+                .Where(t => t.CreatedAt < validUntil)
+                .ExecuteAffrowsAsync();
         }
 
         private void ApplyMigrations()

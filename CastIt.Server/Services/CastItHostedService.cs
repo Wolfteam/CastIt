@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
-using CastIt.Application.Interfaces;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Interfaces;
-using CastIt.Infrastructure.Models;
+using CastIt.FFmpeg;
+using CastIt.GoogleCast.Shared.Device;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
+using CastIt.Shared.FilePaths;
+using CastIt.Shared.Models;
+using CastIt.Shared.Telemetry;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

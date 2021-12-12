@@ -32,8 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CastIt.FFmpeg\CastIt.FFmpeg.csproj" />
+    <ProjectReference Include="..\CastIt.GoogleCast.LocalFile\CastIt.GoogleCast.LocalFile.csproj" />
+    <ProjectReference Include="..\CastIt.GoogleCast.Youtube\CastIt.GoogleCast.Youtube.csproj" />
     <ProjectReference Include="..\CastIt.GoogleCast\CastIt.GoogleCast.csproj" />
-    <ProjectReference Include="..\CastIt.Infrastructure\CastIt.Infrastructure.csproj" />
+    <ProjectReference Include="..\CastIt.Server.Shared\CastIt.Server.Shared.csproj" />
     <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
   </ItemGroup>
 

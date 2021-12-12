@@ -15,8 +15,9 @@ namespace CastIt.Server.Common.Extensions
                 new List<FileToLog>
                 {
                    //Controllers
-                   new FileToLog(typeof(PlayerController), "controller_castit"),
+                   new FileToLog(typeof(PlayerController), "controller_player"),
                    new FileToLog(typeof(PlayListsController), "controller_playlists"),
+                   new FileToLog(typeof(ChromeCastController), "controller_chromecast"),
 
                    //Services
                    new FileToLog(typeof(AppDataService), "service_appdata"),

@@ -1,5 +1,5 @@
 ﻿using CastIt.Domain.Entities;
-using CastIt.Infrastructure.Models;
+using CastIt.Shared.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -31,5 +31,13 @@ namespace CastIt.Server.Interfaces
         Task SavePlayListChanges(List<ServerPlayList> playLists);
 
         Task SaveFileChanges(List<ServerFileItem> files);
+
+        Task<bool> TinyCodeExists(string code);
+
+        Task<string> GetBase64FromTinyCode(string code);
+
+        Task<string> GenerateTinyCode(string base64);
+
+        Task DeleteOldTinyCodes();
     }
 }

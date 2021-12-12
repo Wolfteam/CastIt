@@ -1,15 +1,16 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Interfaces;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
+using CastIt.Server.Shared;
+using CastIt.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Interfaces
 {
-    public interface IServerService
+    public interface IServerService : IBaseServerService
     {
         Action<IReceiver> OnCastRendererSet { get; set; }
         Action<IReceiver> OnCastableDeviceAdded { get; set; }
@@ -40,24 +41,5 @@ namespace CastIt.Server.Interfaces
         Action OnStoppedPlayback { get; set; }
 
         Task Init();
-
-        public string GetPlayUrl(string filePath,
-            int videoStreamIndex,
-            int audioStreamIndex,
-            double seconds,
-            bool videoNeedsTranscode,
-            bool audioNeedsTranscode,
-            HwAccelDeviceType hwAccelToUse,
-            VideoScaleType videoScale,
-            int selectedQuality,
-            string videoWidthAndHeight = null);
-
-        string GetChromeCastPreviewUrl(string filepath);
-
-        string GetThumbnailPreviewUrl(long tentativeSecond);
-
-        string GetSubTitleUrl();
-
-        string GetOutputMimeType(string mrl);
     }
 }

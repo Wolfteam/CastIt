@@ -22,6 +22,7 @@ namespace CastIt.Server.Common.Extensions
 
             services.AddSwaggerGen(c =>
             {
+                c.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.RelativePath}");
                 c.SwaggerDoc(version, apiInfo);
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFileName);
                 c.IncludeXmlComments(xmlPath);

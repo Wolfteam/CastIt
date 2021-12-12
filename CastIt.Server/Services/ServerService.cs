@@ -1,27 +1,24 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Application.Server;
-using CastIt.Domain.Dtos.Requests;
-using CastIt.Domain.Dtos.Responses;
+﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Interfaces;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
 using CastIt.Server.Interfaces;
-using CastIt.Shared.Extensions;
+using CastIt.Server.Shared;
+using CastIt.Shared.FilePaths;
+using CastIt.Shared.Models;
+using CastIt.Shared.Server;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Services
 {
-    public class ServerService : IServerService
+    public class ServerService : BaseServerService, IServerService
     {
         private readonly ILogger<ServerService> _logger;
         private readonly IServer _server;
@@ -113,64 +110,13 @@ namespace CastIt.Server.Services
             CheckIpAddress();
         }
 
-        protected string GetPlayerBaseUrl()
+        protected override string GetChromeCastBaseUrl()
         {
             CheckIpAddress();
-            return $"{_baseIpAddress}/player";
+            return $"{_baseIpAddress}/chromecast";
         }
 
-        public string GetPlayUrl(
-            string filePath,
-            int videoStreamIndex,
-            int audioStreamIndex,
-            double seconds,
-            bool videoNeedsTranscode,
-            bool audioNeedsTranscode,
-            HwAccelDeviceType hwAccelToUse,
-            VideoScaleType videoScale,
-            int selectedQuality,
-            string videoWidthAndHeight = null)
-        {
-            var baseUrl = GetPlayerBaseUrl();
-            var request = new PlayAppFileRequestDto
-            {
-                Mrl = filePath,
-                VideoStreamIndex = videoStreamIndex,
-                AudioStreamIndex = audioStreamIndex,
-                Seconds = seconds,
-                VideoNeedsTranscode = videoNeedsTranscode,
-                AudioNeedsTranscode = audioNeedsTranscode,
-                HwAccelToUse = hwAccelToUse,
-                VideoScale = videoScale,
-                SelectedQuality = selectedQuality,
-                VideoWidthAndHeight = videoWidthAndHeight
-            };
-
-            return SetUrlParameters($"{baseUrl}/{AppWebServerConstants.ChromeCastPlayPath}", request);
-        }
-
-        public virtual string GetChromeCastPreviewUrl(string filepath)
-        {
-            if (string.IsNullOrEmpty(filepath))
-                return null;
-            string baseUrl = GetPlayerBaseUrl();
-            string filename = Path.GetFileName(filepath);
-            return $"{baseUrl}/{AppWebServerConstants.ChromeCastImagesPath}/{Uri.EscapeDataString(filename)}";
-        }
-
-        public virtual string GetThumbnailPreviewUrl(long tentativeSecond)
-        {
-            var baseUrl = GetPlayerBaseUrl();
-            return $"{baseUrl}/{AppWebServerConstants.ThumbnailPreviewImagesPath}/{tentativeSecond}";
-        }
-
-        public virtual string GetSubTitleUrl()
-        {
-            var baseUrl = GetPlayerBaseUrl();
-            return $"{baseUrl}/{AppWebServerConstants.ChromeCastSubTitlesPath}";
-        }
-
-        public string GetOutputMimeType(string mrl)
+        public override string GetOutputMimeType(string mrl)
         {
             bool isVideoFile = _fileService.IsVideoFile(mrl);
             bool isMusicFile = _fileService.IsMusicFile(mrl);
@@ -182,11 +128,6 @@ namespace CastIt.Server.Services
             }
 
             return "video/webm";
-        }
-
-        private string SetUrlParameters(string baseUrl, object dto)
-        {
-            return QueryHelpers.AddQueryString(baseUrl, dto.ToKeyValue());
         }
 
         private void CheckIpAddress()

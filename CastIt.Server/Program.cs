@@ -1,10 +1,13 @@
-using CastIt.Application;
-using CastIt.Application.Common.Utils;
-using CastIt.Application.Server;
+using CastIt.Domain;
 using CastIt.Domain.Models.Logging;
+using CastIt.Domain.Utils;
+using CastIt.FFmpeg;
+using CastIt.GoogleCast.LocalFile;
+using CastIt.GoogleCast.Youtube;
 using CastIt.Server.Common.Extensions;
 using CastIt.Server.Services;
 using CastIt.Shared.Extensions;
+using CastIt.Youtube;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,7 +38,11 @@ namespace CastIt.Server
             }
 
             var logs = new List<FileToLog>();
-            logs.AddServerLogs().AddApplicationLogs();
+            logs.AddServerLogs()
+                .AddFFmpegLogs()
+                .AddYoutubeParserLogs()
+                .AddGoogleCastLocalFilesLogs()
+                .AddGoogleCastYoutubeLogs();
 
             logs.SetupLogging(AppFileUtils.GetServerLogsPath());
 

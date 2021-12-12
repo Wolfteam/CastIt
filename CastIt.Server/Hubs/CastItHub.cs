@@ -1,10 +1,10 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Domain.Dtos.Requests;
+﻿using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Models;
 using CastIt.Server.Common.Extensions;
 using CastIt.Server.Interfaces;
+using CastIt.Shared.Models;
+using CastIt.Shared.Telemetry;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;

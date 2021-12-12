@@ -1,7 +1,7 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Models;
+using CastIt.Shared.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

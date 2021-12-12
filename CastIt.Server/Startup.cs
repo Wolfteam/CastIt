@@ -1,11 +1,16 @@
-using CastIt.Application;
+using CastIt.FFmpeg;
 using CastIt.GoogleCast;
+using CastIt.GoogleCast.Interfaces;
+using CastIt.GoogleCast.LocalFile;
+using CastIt.GoogleCast.Youtube;
 using CastIt.Server.Common;
 using CastIt.Server.Common.Extensions;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Middleware;
 using CastIt.Server.Services;
+using CastIt.Server.Shared;
+using CastIt.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +21,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
 using System;
+using System.Linq;
+using CastIt.Server.FileWatcher;
 
 namespace CastIt.Server
 {
@@ -44,7 +51,7 @@ namespace CastIt.Server
             //Should be more than enough for the hosted service to complete
             services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(15));
 
-            services.AddApplication();
+            services.AddFileService().AddTelemetry();
             services.AddControllers()
                 .AddNewtonsoftJson(options =>
                 {
@@ -63,8 +70,36 @@ namespace CastIt.Server
             services.AddSingleton<IServerAppSettingsService, ServerAppSettingsService>();
             services.AddSingleton<IServerService, ServerService>();
             services.AddSingleton<IImageProviderService, ImageProviderService>();
-            services.AddGoogleCast();
+            services.AddSingleton<IFileWatcherService, FileWatcherService>();
+            services.AddFFmpeg()
+                .AddGoogleCast()
+                .AddGoogleCastYoutube()
+                .AddGoogleCastLocalFiles();
             services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
+
+            services.AddSingleton<IBaseServerService>(provider => provider.GetRequiredService<IServerService>());
+            services.AddSingleton<IMediaRequestGeneratorFactory>(provider =>
+            {
+                var instance = new MediaRequestGeneratorFactory();
+                var searchType = typeof(IPlayMediaRequestGenerator);
+                var types = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(s => s.GetTypes())
+                    .Where(p => searchType.IsAssignableFrom(p) && !p.IsInterface)
+                    .ToList();
+                foreach (var type in types)
+                {
+                    var service = provider.GetService(type);
+                    if (service == null)
+                    {
+                        throw new InvalidOperationException($"The service = {type.FullName} was not registered");
+                    }
+                    var impl = service as IPlayMediaRequestGenerator;
+                    instance.Add(impl);
+                }
+
+                return instance;
+            });
+
             services.AddSwagger("CastIt", "CastIt.xml");
 
             // In production, the React files will be served from this directory
