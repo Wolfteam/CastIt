@@ -116,6 +116,12 @@ namespace CastIt.Server.Services
             return $"{_baseIpAddress}/chromecast";
         }
 
+        protected override string GetPlayerBaseUrl()
+        {
+            CheckIpAddress();
+            return $"{_baseIpAddress}/player";
+        }
+
         public override string GetOutputMimeType(string mrl)
         {
             bool isVideoFile = _fileService.IsVideoFile(mrl);

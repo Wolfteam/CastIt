@@ -17,7 +17,7 @@ namespace CastIt.Server.Services
             var file = playList?.Files.Find(f => f.Id == id);
             if (file == null)
             {
-                Logger.LogWarning($"{nameof(LoopFile)}: FileId = {id} associated to playListId = {playListId} does not exist");
+                _logger.LogWarning($"{nameof(LoopFile)}: FileId = {id} associated to playListId = {playListId} does not exist");
                 return;
             }
 
@@ -46,20 +46,20 @@ namespace CastIt.Server.Services
             var playList = GetPlayListInternal(playListId, false);
             if (playList == null)
             {
-                Logger.LogWarning($"{nameof(UpdateFilePosition)}: PlaylistId = {playListId} doesn't exist");
+                _logger.LogWarning($"{nameof(UpdateFilePosition)}: PlaylistId = {playListId} doesn't exist");
                 return;
             }
 
             var file = playList.Files.Find(f => f.Id == id);
             if (file == null || playList.Files.Count - 1 < newIndex)
             {
-                Logger.LogWarning($"{nameof(UpdateFilePosition)}: FileId = {id} doesn't exist or the newIndex = {newIndex} is not valid");
+                _logger.LogWarning($"{nameof(UpdateFilePosition)}: FileId = {id} doesn't exist or the newIndex = {newIndex} is not valid");
                 return;
             }
 
             var currentIndex = playList.Files.IndexOf(file);
 
-            Logger.LogInformation($"{nameof(UpdateFilePosition)}: Moving file from index = {currentIndex} to newIndex = {newIndex}");
+            _logger.LogInformation($"{nameof(UpdateFilePosition)}: Moving file from index = {currentIndex} to newIndex = {newIndex}");
             playList.Files.RemoveAt(currentIndex);
             playList.Files.Insert(newIndex, file);
             SetFilePositionIfChanged(playListId);
@@ -131,7 +131,7 @@ namespace CastIt.Server.Services
             if ((sortBy == SortModeType.DurationAsc || sortBy == SortModeType.DurationDesc) &&
                 playList.Files.Any(f => string.IsNullOrEmpty(f.Duration)))
             {
-                ServerService.OnServerMessage?.Invoke(AppMessageType.OneOrMoreFilesAreNotReadyYet);
+                _server.OnServerMessage?.Invoke(AppMessageType.OneOrMoreFilesAreNotReadyYet);
                 return;
             }
 

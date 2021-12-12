@@ -34,11 +34,11 @@ namespace CastIt.Server.Services
 
         public PlayListItemResponseDto GetPlayList(string name)
         {
-            var playList = PlayLists.FirstOrDefault(pl => pl.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
+            var playList = PlayLists.Find(pl => pl.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
             if (playList == null)
             {
-                Logger.LogWarning($"{nameof(GetPlayListInternal)}: A playlist with name = {name} doesn't exists");
-                ServerService.OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
+                _logger.LogWarning($"{nameof(GetPlayListInternal)}: A playlist with name = {name} doesn't exists");
+                _server.OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
                 throw new PlayListNotFoundException($"A playlist with name = {name} does not exist");
             }
             RefreshPlayListImage(playList);
@@ -113,12 +113,12 @@ namespace CastIt.Server.Services
             var playList = GetPlayListInternal(playListId, false);
             if (playList == null || PlayLists.Count - 1 < newIndex)
             {
-                Logger.LogWarning($"{nameof(UpdatePlayListPosition)}: PlaylistId = {playListId} doesn't exist or the newIndex = {newIndex} is not valid");
+                _logger.LogWarning($"{nameof(UpdatePlayListPosition)}: PlaylistId = {playListId} doesn't exist or the newIndex = {newIndex} is not valid");
                 return;
             }
             var currentIndex = PlayLists.IndexOf(playList);
 
-            Logger.LogInformation($"{nameof(UpdatePlayListPosition)}: Moving playlist from index = {currentIndex} to newIndex = {newIndex}");
+            _logger.LogInformation($"{nameof(UpdatePlayListPosition)}: Moving playlist from index = {currentIndex} to newIndex = {newIndex}");
             PlayLists.RemoveAt(currentIndex);
             PlayLists.Insert(newIndex, playList);
 
@@ -135,7 +135,7 @@ namespace CastIt.Server.Services
             var files = new List<string>();
             foreach (var folder in folders)
             {
-                Logger.LogInformation($"{nameof(AddFolder)}: Getting all the media files from folder = {folder}");
+                _logger.LogInformation($"{nameof(AddFolder)}: Getting all the media files from folder = {folder}");
                 var filesInDir = Directory.EnumerateFiles(folder, "*.*", includeSubFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
                     .Where(s => FileFormatConstants.AllowedFormats.Contains(Path.GetExtension(s).ToLower()))
                     .ToList();
@@ -146,23 +146,23 @@ namespace CastIt.Server.Services
 
         public async Task AddFiles(long playListId, string[] paths)
         {
-            Logger.LogInformation($"{nameof(AddFiles)}: Trying to add new files to playListId = {playListId}...");
+            _logger.LogInformation($"{nameof(AddFiles)}: Trying to add new files to playListId = {playListId}...");
             if (paths == null || paths.Length == 0)
             {
-                Logger.LogInformation($"{nameof(AddFiles)}: No paths were provided");
+                _logger.LogInformation($"{nameof(AddFiles)}: No paths were provided");
                 throw new InvalidRequestException("No paths were provided", AppMessageType.NoFilesToBeAdded);
             }
 
             if (paths.Any(p => string.IsNullOrEmpty(p) || p.Length > 1000))
             {
-                Logger.LogInformation($"{nameof(AddFiles)}: One of the provided paths is not valid");
+                _logger.LogInformation($"{nameof(AddFiles)}: One of the provided paths is not valid");
                 throw new FileNotSupportedException("One of the provided paths is not valid", AppMessageType.FilesAreNotValid);
             }
 
             var playList = PlayLists.Find(pl => pl.Id == playListId);
             if (playList == null)
             {
-                Logger.LogWarning($"{nameof(AddFiles)}: PlayListId = {playListId} does not exist");
+                _logger.LogWarning($"{nameof(AddFiles)}: PlayListId = {playListId} does not exist");
                 throw new PlayListNotFoundException($"PlayListId = {playListId} does not exist");
             }
 
@@ -181,7 +181,7 @@ namespace CastIt.Server.Services
                 }).ToList();
 
             var createdFiles = await _appDataService.AddFiles(files);
-            ServerService.OnFilesAdded.Invoke(playListId, createdFiles.ToArray());
+            _server.OnFilesAdded.Invoke(playListId, createdFiles.ToArray());
         }
 
         public async Task AddFile(long playListId, FileItem file)
@@ -189,11 +189,11 @@ namespace CastIt.Server.Services
             var playList = PlayLists.Find(f => f.Id == playListId);
             if (playList == null)
             {
-                Logger.LogWarning($"{nameof(AddFile)}: PlayListId = {playListId} does not exist. It may have been removed");
+                _logger.LogWarning($"{nameof(AddFile)}: PlayListId = {playListId} does not exist. It may have been removed");
                 return;
             }
 
-            var serverFileItem = ServerFileItem.From(FileService, file);
+            var serverFileItem = ServerFileItem.From(_fileService, file);
             await UpdateFileItem(serverFileItem);
             playList.Files.Add(serverFileItem);
             SendFileAdded(_mapper.Map<FileItemResponseDto>(serverFileItem));
@@ -205,44 +205,44 @@ namespace CastIt.Server.Services
             if (!NetworkUtils.IsInternetAvailable())
             {
                 var msg = $"Can't add file = {url} to playListId = {playListId} cause there's no internet connection";
-                Logger.LogInformation($"{nameof(AddUrl)}: {msg}");
+                _logger.LogInformation($"{nameof(AddUrl)}: {msg}");
                 throw new InvalidRequestException(msg, AppMessageType.NoInternetConnection);
             }
 
-            bool isUrlFile = FileService.IsUrlFile(url);
+            bool isUrlFile = _fileService.IsUrlFile(url);
             if (!isUrlFile || !_youtubeUrlDecoder.IsYoutubeUrl(url))
             {
                 var msg = $"Url = {url} is not supported";
-                Logger.LogInformation($"{nameof(AddUrl)}: {msg}");
+                _logger.LogInformation($"{nameof(AddUrl)}: {msg}");
                 throw new FileNotSupportedException(msg, AppMessageType.UrlNotSupported);
             }
 
             try
             {
                 SendPlayListBusy(playListId, true);
-                Logger.LogInformation($"{nameof(AddUrl)}: Trying to parse url = {url}");
+                _logger.LogInformation($"{nameof(AddUrl)}: Trying to parse url = {url}");
                 if (!_youtubeUrlDecoder.IsPlayList(url) || _youtubeUrlDecoder.IsPlayListAndVideo(url) && onlyVideo)
                 {
-                    Logger.LogInformation(
+                    _logger.LogInformation(
                         $"{nameof(AddUrl)}: Url is either not a playlist or we just want the video, parsing it...");
                     await AddYoutubeUrl(playListId, url);
                     return;
                 }
 
-                Logger.LogInformation($"{nameof(AddUrl)}: Parsing playlist...");
+                _logger.LogInformation($"{nameof(AddUrl)}: Parsing playlist...");
                 var links = await _youtubeUrlDecoder.ParsePlayList(url, FileCancellationTokenSource.Token);
                 foreach (var link in links)
                 {
                     if (FileCancellationTokenSource.IsCancellationRequested)
                         break;
-                    Logger.LogInformation($"{nameof(AddUrl)}: Parsing playlist url = {link}");
+                    _logger.LogInformation($"{nameof(AddUrl)}: Parsing playlist url = {link}");
                     await AddYoutubeUrl(playListId, link);
                 }
             }
             catch (Exception e)
             {
-                Logger.LogError(e, $"{nameof(AddUrl)}: Couldn't parse url = {url}");
-                TelemetryService.TrackError(e);
+                _logger.LogError(e, $"{nameof(AddUrl)}: Couldn't parse url = {url}");
+                _telemetry.TrackError(e);
                 throw;
             }
             finally
@@ -253,26 +253,26 @@ namespace CastIt.Server.Services
 
         public Task AddFolderOrFileOrUrl(long playListId, string path, bool includeSubFolders, bool onlyVideo)
         {
-            Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: Trying to add path = {path} to playListId = {playListId}...");
+            _logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: Trying to add path = {path} to playListId = {playListId}...");
             if (Directory.Exists(path))
             {
-                Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a directory....");
+                _logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a directory....");
                 return AddFolder(playListId, includeSubFolders, new[] { path });
             }
 
             if (File.Exists(path))
             {
-                Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a file....");
+                _logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a file....");
                 return AddFiles(playListId, new[] { path });
             }
 
             if (Uri.TryCreate(path, UriKind.Absolute, out _))
             {
-                Logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a url....");
+                _logger.LogInformation($"{nameof(AddFolderOrFileOrUrl)}: The provided path is a url....");
                 return AddUrl(playListId, path, onlyVideo);
             }
 
-            Logger.LogWarning($"The provided path = {path} is not valid");
+            _logger.LogWarning($"The provided path = {path} is not valid");
             throw new InvalidRequestException("The provided path is not valid");
         }
 
@@ -285,7 +285,7 @@ namespace CastIt.Server.Services
             }
             var playList = GetPlayListInternal(playListId);
             var createdFile = await _appDataService.AddFile(playListId, url, playList.Files.Count + 1, media.Title);
-            var serverFileItem = ServerFileItem.From(FileService, createdFile);
+            var serverFileItem = ServerFileItem.From(_fileService, createdFile);
             await UpdateFileItem(serverFileItem);
             playList.Files.Add(serverFileItem);
             SendFileAdded(_mapper.Map<FileItemResponseDto>(serverFileItem));
@@ -359,8 +359,8 @@ namespace CastIt.Server.Services
             var playList = PlayLists.Find(pl => pl.Id == id);
             if (playList != null)
                 return playList;
-            Logger.LogWarning($"{nameof(GetPlayListInternal)}: PlaylistId = {id} doesn't exists");
-            ServerService.OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
+            _logger.LogWarning($"{nameof(GetPlayListInternal)}: PlaylistId = {id} doesn't exists");
+            _server.OnServerMessage?.Invoke(AppMessageType.PlayListNotFound);
             if (throwOnNotFound)
                 throw new PlayListNotFoundException($"PlayListId = {id} does not exist");
             return null;

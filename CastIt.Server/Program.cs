@@ -49,7 +49,7 @@ namespace CastIt.Server
 #if !DEBUG
             if (startingPort <= 0)
             {
-                startingPort = WebServerUtils.GetOpenPort();
+                startingPort = CastIt.Shared.Server.WebServerUtils.GetOpenPort();
             }
 #endif
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);

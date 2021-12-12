@@ -13,6 +13,8 @@ namespace CastIt.Server.Shared
     {
         protected abstract string GetChromeCastBaseUrl();
 
+        protected abstract string GetPlayerBaseUrl();
+
         public string GetPlayUrl(
             string filePath,
             int videoStreamIndex,
@@ -89,7 +91,7 @@ namespace CastIt.Server.Shared
 
         public virtual string GetThumbnailPreviewUrl(long tentativeSecond)
         {
-            var baseUrl = GetChromeCastBaseUrl();
+            var baseUrl = GetPlayerBaseUrl();
             return $"{baseUrl}/{AppWebServerConstants.ThumbnailPreviewImagesPath}/{tentativeSecond}";
         }
 

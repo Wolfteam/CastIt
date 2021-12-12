@@ -13,20 +13,12 @@ namespace CastIt.Server.Interfaces
 
         Task Init();
         Task StopAsync();
-        Task StopRunningProcess();
         Task AddSeconds(double seconds);
         Task GoToSeconds(double seconds);
-        Task GoToPosition(double position, double totalSeconds);
         Task GoToPosition(double position);
         Task<double> SetVolume(double level);
         Task<bool> SetIsMuted(bool isMuted);
-        Task<string> GetFirstThumbnail();
-        Task<string> GetFirstThumbnail(string filePath);
-        Task<string> GetThumbnail();
-        Task<string> GetThumbnail(string filePath);
         Task TogglePlayback();
-        void GenerateThumbnails();
-        void GenerateThumbnails(string filePath);
         Task SetCastRenderer(string id);
         Task SetCastRenderer(string host, int port);
 

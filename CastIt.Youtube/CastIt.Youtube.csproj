@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CastIt.Domain\CastIt.Domain.csproj" />
-    <ProjectReference Include="..\CastIt.Infrastructure.Server\CastIt.Server.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

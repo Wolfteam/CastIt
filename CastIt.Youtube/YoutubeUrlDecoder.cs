@@ -385,7 +385,7 @@ namespace CastIt.Youtube
             {
                 _logger.LogInformation($"{nameof(GetAndSetRealUrl)}: Body contains a cipher...");
                 //Scrambled signature: some assembly required
-                finalUrl = await GetUrlFromCipher(cipher, js).ConfigureAwait(false);
+                finalUrl = GetUrlFromCipher(cipher, js);
             }
 
             if (string.IsNullOrWhiteSpace(finalUrl))
@@ -626,7 +626,7 @@ namespace CastIt.Youtube
             return GetKeyContentValue(value.ToString());
         }
 
-        private async Task<string> GetUrlFromCipher(string cipher, string js)
+        private string GetUrlFromCipher(string cipher, string js)
         {
             cipher = ReplaceWithAmpersand(cipher);
 
