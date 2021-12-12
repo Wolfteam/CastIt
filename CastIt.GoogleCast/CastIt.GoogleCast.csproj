@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CastIt.Domain\CastIt.Domain.csproj" />
     <ProjectReference Include="..\CastIt.GoogleCast.Shared\CastIt.GoogleCast.Shared.csproj" />
+    <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
   </ItemGroup>
 
 </Project>

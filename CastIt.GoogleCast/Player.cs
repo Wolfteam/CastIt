@@ -1,6 +1,4 @@
-﻿using CastIt.Domain.Interfaces;
-using CastIt.Domain.Models.Device;
-using CastIt.GoogleCast.Channels;
+﻿using CastIt.GoogleCast.Channels;
 using CastIt.GoogleCast.Enums;
 using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Interfaces;
@@ -11,6 +9,7 @@ using CastIt.GoogleCast.Messages.Base;
 using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
+using CastIt.GoogleCast.Shared.Device;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -398,7 +397,9 @@ namespace CastIt.GoogleCast
         private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
         {
             if (!message.HasRequestId || !_sender.WaitingTasks.TryRemove(message.RequestId, out object tcs))
+            {
                 return;
+            }
             var tcsType = tcs.GetType();
             var methodToInvoke = types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types);
             var methodParameters = methodToInvoke.GetParameters();

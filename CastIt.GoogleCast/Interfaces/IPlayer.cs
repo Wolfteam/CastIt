@@ -1,7 +1,7 @@
-﻿using CastIt.Domain.Interfaces;
-using CastIt.GoogleCast.Models.Events;
+﻿using CastIt.GoogleCast.Models.Events;
 using CastIt.GoogleCast.Models.Media;
 using CastIt.GoogleCast.Models.Receiver;
+using CastIt.GoogleCast.Shared.Device;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

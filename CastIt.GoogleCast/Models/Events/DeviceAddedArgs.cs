@@ -1,4 +1,4 @@
-﻿using CastIt.Domain.Interfaces;
+﻿using CastIt.GoogleCast.Shared.Device;
 using System;
 
 namespace CastIt.GoogleCast.Models.Events

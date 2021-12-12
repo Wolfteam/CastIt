@@ -1,5 +1,4 @@
-﻿using CastIt.GoogleCast.Enums;
-using CastIt.GoogleCast.Extensions;
+﻿using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Shared.Enums;
 using Newtonsoft.Json;
 
@@ -24,13 +23,13 @@ namespace CastIt.GoogleCast.Models.Media
         public string TrackContentId { get; set; }
 
         [JsonIgnore]
-        public TextTrackType SubType { get; set; }
+        public TextTrackType? SubType { get; set; }
 
         [JsonProperty(PropertyName = "subType")]
         private string SubTypeString
         {
-            get { return SubType.GetName(); }
-            set { SubType = value.Parse<TextTrackType>(); }
+            get => SubType.GetName();
+            set => SubType = value.Parse<TextTrackType>();
         }
 
         public string Name { get; set; }

@@ -1,6 +1,6 @@
-﻿using CastIt.Domain.Interfaces;
-using CastIt.GoogleCast.Interfaces.Messages;
+﻿using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Models;
+using CastIt.GoogleCast.Shared.Device;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;

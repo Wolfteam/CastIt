@@ -1,11 +1,10 @@
-﻿using CastIt.Domain.Interfaces;
-using CastIt.Domain.Models.Device;
-using CastIt.GoogleCast.Extensions;
+﻿using CastIt.GoogleCast.Extensions;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Interfaces.Messages;
 using CastIt.GoogleCast.Messages;
 using CastIt.GoogleCast.Messages.Receiver;
 using CastIt.GoogleCast.Models;
+using CastIt.GoogleCast.Shared.Device;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ProtoBuf;
@@ -22,7 +21,11 @@ namespace CastIt.GoogleCast
 {
     internal class Sender : ISender
     {
+#if RELEASE
         private const int RECEIVE_TIMEOUT = 30000;
+#else
+        private const int RECEIVE_TIMEOUT = 120000;
+#endif
 
         private readonly ILogger _logger;
         private readonly string _senderId;
@@ -159,9 +162,13 @@ namespace CastIt.GoogleCast
                 {
                     Array.Reverse(header);
                 }
-                await NetworkStream?.WriteAsync(header, 0, header.Length);
-                await NetworkStream?.WriteAsync(message, 0, message.Length);
-                await NetworkStream?.FlushAsync();
+
+                if (NetworkStream != null)
+                {
+                    await NetworkStream.WriteAsync(header, 0, header.Length);
+                    await NetworkStream.WriteAsync(message, 0, message.Length);
+                    await NetworkStream.FlushAsync();
+                }
             }
             catch (Exception ex)
             {
