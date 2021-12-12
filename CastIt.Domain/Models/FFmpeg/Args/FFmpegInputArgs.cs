@@ -98,7 +98,7 @@ namespace CastIt.Domain.Models.FFmpeg.Args
             => AddArg("y");
 
         public FFmpegInputArgs Seek(double seconds)
-            => AddArg("ss", seconds);
+            => AddArgToEachInputFile("ss", seconds);
 
         public FFmpegInputArgs Duration(double seconds)
             => AddArg("t", seconds);

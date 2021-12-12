@@ -551,7 +551,10 @@ namespace CastIt.FFmpeg
                 CheckFfmpegExePaths();
                 _fileService.DeleteFilesInDirectory(Path.GetDirectoryName(subtitleFinalPath));
                 var builder = new FFmpegArgsBuilder();
-                builder.AddInputFile(filePath).BeQuiet().SetAutoConfirmChanges().TrySetSubTitleEncoding(FileFormatConstants.AllowedSubtitleFormats);
+                builder.AddInputFile(filePath)
+                    .BeQuiet()
+                    .SetAutoConfirmChanges()
+                    .TrySetSubTitleEncoding(FileFormatConstants.AllowedSubtitleFormats);
                 builder.AddOutputFile(subtitleFinalPath)
                     .Seek(Math.Floor(seconds))
                     .SetMap(index)
@@ -668,20 +671,13 @@ namespace CastIt.FFmpeg
                 .AddInputFiles(options.StreamUrls.ToArray())
                 .BeQuiet()
                 .SetVSync(0);
-            //TODO: HLS NOT WORKING
-            if (type.IsUrl() && !type.IsHls())
+            if (type.IsUrl())
             {
-                //TODO: HANDLE MULTIPLE SEEK
                 inputArgs.AddArgToEachInputFile("reconnect", 1)
                     .AddArgToEachInputFile("reconnect_streamed", 1)
                     .AddArgToEachInputFile("reconnect_delay_max", 5);
             }
 
-            //if (type.IsHls())
-            //{
-            //    inputArgs.AddArg("http_persistent", 0);
-            //    //inputArgs.AddArg("flush_packets", 1);
-            //}
             inputArgs
                 .AddArg("fflags", "+discardcorrupt")
                 .SetAutoConfirmChanges()
@@ -756,11 +752,6 @@ namespace CastIt.FFmpeg
             else
             {
                 outputArgs.CopyAudioCodec();
-            }
-
-            if (type.IsHls())
-            {
-                outputArgs.AddArg("flush_packets", 1);
             }
 
             outputArgs.SetMovFlagToTheStart().SetFormat("mp4");
