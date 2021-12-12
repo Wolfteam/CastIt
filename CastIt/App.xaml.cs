@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Common.Utils;
-using CastIt.Common;
+﻿using CastIt.Common;
+using CastIt.Domain.Utils;
 using MvvmCross.Platforms.Wpf.Views;
 using System;
 using System.Runtime;

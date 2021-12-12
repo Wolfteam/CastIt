@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Application.Server;
+﻿using CastIt.Domain;
+using CastIt.Shared.FilePaths;
 using CastIt.ViewModels.Items;
 using MaterialDesignThemes.Wpf;
 using System;

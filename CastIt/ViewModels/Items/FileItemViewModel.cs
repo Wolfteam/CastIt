@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using CastIt.Application.Common;
-using CastIt.Application.Server;
+using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Interfaces;

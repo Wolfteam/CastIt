@@ -1,7 +1,7 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Interfaces;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
+using CastIt.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

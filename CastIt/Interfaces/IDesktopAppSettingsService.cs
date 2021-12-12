@@ -1,6 +1,6 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Models;
+﻿using CastIt.Domain.Enums;
+using CastIt.Shared.Models;
+using CastIt.Shared.Settings;
 
 namespace CastIt.Interfaces
 {

@@ -1,4 +1,4 @@
-﻿using CastIt.Application.Common;
+﻿using CastIt.Domain;
 using CastIt.ViewModels.Items;
 using Microsoft.Win32;
 using MvvmCross.Platforms.Wpf.Views;

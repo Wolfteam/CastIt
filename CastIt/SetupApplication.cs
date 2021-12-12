@@ -1,20 +1,17 @@
 ﻿using AutoMapper;
-using CastIt.Application;
-using CastIt.Application.Common.Utils;
-using CastIt.Application.FFMpeg;
-using CastIt.Application.FilePaths;
-using CastIt.Application.Interfaces;
-using CastIt.Application.Telemetry;
-using CastIt.Application.Youtube;
 using CastIt.Common;
 using CastIt.Domain.Models.Logging;
+using CastIt.Domain.Utils;
 using CastIt.Interfaces;
 using CastIt.Resources;
 using CastIt.Services;
 using CastIt.Shared.Extensions;
+using CastIt.Shared.FilePaths;
+using CastIt.Shared.Telemetry;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
+using CastIt.Youtube;
 using Microsoft.Extensions.Logging;
 using MvvmCross;
 using MvvmCross.IoC;
@@ -50,9 +47,6 @@ namespace CastIt
             Mvx.IoCProvider.ConstructAndRegisterSingleton<ITelemetryService, TelemetryService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IDesktopAppSettingsService, DesktopAppSettingsService>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton<IYoutubeUrlDecoder, YoutubeUrlDecoder>();
-
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFFmpegService, FFmpegService>();
-            Mvx.IoCProvider.LazyConstructAndRegisterSingleton<IFileWatcherService, FileWatcherService>();
 
             var messenger = Mvx.IoCProvider.Resolve<IMvxMessenger>();
             var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger);
@@ -98,8 +92,6 @@ namespace CastIt
                 new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
                 new FileToLog(typeof(SplashViewModel), "vm_splash"),
             };
-
-            logs.AddApplicationLogs();
 
             logs.SetupLogging(basePath);
             var loggerFactory = new LoggerFactory()

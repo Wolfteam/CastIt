@@ -1,6 +1,7 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Interfaces;
+﻿using CastIt.Interfaces;
 using CastIt.Models.Messages;
+using CastIt.Shared.FilePaths;
+using CastIt.Shared.Telemetry;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;

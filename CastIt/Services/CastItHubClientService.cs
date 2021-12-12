@@ -1,11 +1,11 @@
-﻿using CastIt.Application.Server;
+﻿using CastIt.Domain;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Interfaces;
-using CastIt.Domain.Models.Device;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
 using CastIt.Interfaces;
+using CastIt.Shared.Models;
+using CastIt.Shared.Server;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using System;

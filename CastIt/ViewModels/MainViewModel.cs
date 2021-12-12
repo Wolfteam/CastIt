@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
-using CastIt.Application.Interfaces;
-using CastIt.Application.Server;
+using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Extensions;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
+using CastIt.Shared.FilePaths;
+using CastIt.Shared.Telemetry;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using Microsoft.Extensions.Logging;

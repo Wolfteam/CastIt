@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Server;
-using CastIt.Common.Utils;
+﻿using CastIt.Common.Utils;
+using CastIt.Domain;
 using System;
 using System.Globalization;
 using System.Windows.Data;

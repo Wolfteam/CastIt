@@ -2,10 +2,10 @@
 using CastIt.Common.Utils;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Shared.Enums;
-using CastIt.Infrastructure.Models;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.Shared.Models;
 using CastIt.ViewModels.Dialogs;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
@@ -335,7 +335,7 @@ namespace CastIt.ViewModels
         public override void RegisterMessages()
         {
             base.RegisterMessages();
-            SubscriptionTokens.AddRange(new []
+            SubscriptionTokens.AddRange(new[]
             {
                 Messenger.Subscribe<FfmpegPathChangedMessage>(msg =>
                 {

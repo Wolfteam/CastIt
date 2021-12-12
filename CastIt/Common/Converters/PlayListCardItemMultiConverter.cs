@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Interfaces;
-using CastIt.Common.Utils;
+﻿using CastIt.Common.Utils;
+using CastIt.Shared.FilePaths;
 using CastIt.ViewModels.Items;
 using MvvmCross;
 using System;

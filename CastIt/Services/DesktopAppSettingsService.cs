@@ -1,10 +1,10 @@
-﻿using CastIt.Application.Common.Utils;
-using CastIt.Application.Interfaces;
-using CastIt.Application.Settings;
-using CastIt.Common;
+﻿using CastIt.Common;
 using CastIt.Domain.Enums;
-using CastIt.Infrastructure.Models;
+using CastIt.Domain.Utils;
 using CastIt.Interfaces;
+using CastIt.Shared.Models;
+using CastIt.Shared.Settings;
+using CastIt.Shared.Telemetry;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;

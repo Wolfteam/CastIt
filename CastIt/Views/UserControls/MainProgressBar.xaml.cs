@@ -1,5 +1,4 @@
-﻿using CastIt.Application.Common;
-using CastIt.Application.Server;
+﻿using CastIt.Domain;
 using CastIt.Domain.Extensions;
 using CastIt.ViewModels;
 using System;

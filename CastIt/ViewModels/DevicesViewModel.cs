@@ -1,4 +1,4 @@
-﻿using CastIt.Domain.Interfaces;
+﻿using CastIt.GoogleCast.Shared.Device;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
 using CastIt.ViewModels.Items;

@@ -49,9 +49,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CastIt.Application\CastIt.Application.csproj" />
-    <ProjectReference Include="..\CastIt.Infrastructure\CastIt.Infrastructure.csproj" />
     <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
+    <ProjectReference Include="..\CastIt.Youtube\CastIt.Youtube.csproj" />
   </ItemGroup>
 
   <ItemGroup>

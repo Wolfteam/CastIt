@@ -1,4 +1,4 @@
-﻿using CastIt.Application.Common;
+﻿using CastIt.Domain;
 using CastIt.ViewModels;
 using CastIt.ViewModels.Items;
 using Microsoft.Win32;
