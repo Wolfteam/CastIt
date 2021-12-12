@@ -1,8 +1,8 @@
-﻿using CastIt.Application;
-using CastIt.Cli.Commands;
+﻿using CastIt.Cli.Commands;
 using CastIt.Cli.Interfaces.Api;
 using CastIt.Cli.Models;
 using CastIt.Cli.Services;
+using CastIt.Shared;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -40,7 +40,7 @@ namespace CastIt.Cli
 
                         services.AddSingleton(appSettings);
 
-                        services.AddApplicationForCli();
+                        services.AddTelemetry().AddCommonFileService();
                         services.AddLogging(c =>
                         {
                             c.ClearProviders();

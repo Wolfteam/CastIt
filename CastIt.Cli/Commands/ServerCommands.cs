@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Server;
-using CastIt.Cli.Interfaces.Api;
+﻿using CastIt.Cli.Interfaces.Api;
+using CastIt.Shared.Server;
 using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.ServiceProcess;

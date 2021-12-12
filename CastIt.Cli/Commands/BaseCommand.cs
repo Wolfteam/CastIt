@@ -1,7 +1,7 @@
-﻿using CastIt.Application.Server;
-using CastIt.Cli.Common.Exceptions;
+﻿using CastIt.Cli.Common.Exceptions;
 using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Dtos;
+using CastIt.Shared.Server;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using System;

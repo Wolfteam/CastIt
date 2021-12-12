@@ -1,5 +1,5 @@
-﻿using CastIt.Application.Server;
-using CastIt.Cli.Common.Exceptions;
+﻿using CastIt.Cli.Common.Exceptions;
+using CastIt.Shared.Server;
 using System;
 
 namespace CastIt.Cli.Common.Utils

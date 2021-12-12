@@ -2,8 +2,8 @@
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Models.Device;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
+using CastIt.Shared.Models;
 using Refit;
 using System.Collections.Generic;
 using System.Net.Http;

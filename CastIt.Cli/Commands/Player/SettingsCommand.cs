@@ -1,7 +1,7 @@
 ﻿using CastIt.Cli.Interfaces.Api;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Shared.Enums;
-using CastIt.Infrastructure.Models;
+using CastIt.Shared.Models;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore.JsonPatch;
 using System;

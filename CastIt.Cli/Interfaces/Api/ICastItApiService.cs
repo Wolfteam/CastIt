@@ -1,8 +1,8 @@
 ﻿using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
-using CastIt.Domain.Models.Device;
-using CastIt.Infrastructure.Models;
+using CastIt.GoogleCast.Shared.Device;
+using CastIt.Shared.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Refit;
 using System.Collections.Generic;
