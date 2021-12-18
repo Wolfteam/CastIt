@@ -5,6 +5,7 @@ using CastIt.GoogleCast.LocalFile;
 using CastIt.GoogleCast.Youtube;
 using CastIt.Server.Common;
 using CastIt.Server.Common.Extensions;
+using CastIt.Server.FileWatcher;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Middleware;
@@ -22,7 +23,6 @@ using Newtonsoft.Json.Converters;
 using Serilog;
 using System;
 using System.Linq;
-using CastIt.Server.FileWatcher;
 
 namespace CastIt.Server
 {
@@ -112,6 +112,11 @@ namespace CastIt.Server
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseHsts();
+            }
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
             app.UseRouting();

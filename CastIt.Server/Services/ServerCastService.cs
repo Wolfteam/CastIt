@@ -12,7 +12,6 @@ using CastIt.FFmpeg;
 using CastIt.GoogleCast.Interfaces;
 using CastIt.GoogleCast.Models.Play;
 using CastIt.GoogleCast.Shared.Device;
-using CastIt.GoogleCast.Youtube;
 using CastIt.Server.Common.Extensions;
 using CastIt.Server.Interfaces;
 using CastIt.Shared.Extensions;
@@ -290,14 +289,11 @@ namespace CastIt.Server.Services
                 {
                     CleanupBeforePlaying();
                 }
-                CurrentPlayList = playList;
-                CurrentPlayedFile?.BeingPlayed(false);
-                CurrentPlayedFile = file;
-                FileLoading();
                 await StopPlayback(false, false);
-                DisableLoopForAllFiles(file.Id);
-
+                CurrentPlayList = playList;
                 CurrentPlayedFile = file.BeingPlayed();
+                FileLoading();
+                DisableLoopForAllFiles(file.Id);
 
                 bool resume = file.CanStartPlayingFromCurrentPercentage &&
                               !type.IsUrl() &&
@@ -361,11 +357,10 @@ namespace CastIt.Server.Services
 
         private async Task PlayFile(PlayMediaRequest options)
         {
-            //TODO: VALIDATE THE OPTIONS OBJECT
             CleanupBeforePlaying();
             var type = _fileService.GetFileType(options.MediaInfo.ContentId);
             _logger.LogInformation($"{nameof(PlayFile)}: Doing some checks before playing...");
-            DoChecksBeforePlaying(options.MediaInfo.ContentId, type, options.FileInfo);
+            DoChecksBeforePlaying(options.MediaInfo.ContentId, type, options);
 
             _logger.LogInformation($"{nameof(PlayFile)}: Setting default renderer if needed...");
             await SetDefaultRenderIfNeeded();
@@ -393,13 +388,31 @@ namespace CastIt.Server.Services
             CurrentRequest = null;
         }
 
-        private void DoChecksBeforePlaying(string mrl, AppFileType type, FFProbeFileInfo fileInfo)
+        private void DoChecksBeforePlaying(string mrl, AppFileType type, PlayMediaRequest options)
         {
             _fFmpeg.KillTranscodeProcess();
-            if (fileInfo == null)
+            if (string.IsNullOrWhiteSpace(mrl))
+            {
+                _logger.LogWarning($"{nameof(DoChecksBeforePlaying)}: No mrl was provided");
+                throw new ArgumentNullException(nameof(options), "No mrl was provided");
+            }
+
+            if (options == null)
+            {
+                _logger.LogWarning($"{nameof(DoChecksBeforePlaying)}: No play media request was provided for mrl = {mrl}");
+                throw new ArgumentNullException(nameof(options), "The play media request cannot be null");
+            }
+
+            if (options.FileInfo == null)
             {
                 _logger.LogWarning($"{nameof(DoChecksBeforePlaying)}: No file info was provided for mrl = {mrl}");
-                throw new ArgumentNullException(nameof(fileInfo), "A file info must be provided");
+                throw new ArgumentNullException(nameof(options.FileInfo), "A file info must be provided");
+            }
+
+            if (options.MediaInfo == null)
+            {
+                _logger.LogWarning($"{nameof(DoChecksBeforePlaying)}: No media info was provided for mrl = {mrl}");
+                throw new ArgumentNullException(nameof(options.MediaInfo), "The media info cannot be null");
             }
 
             if (type.DoesNotExist())
@@ -485,7 +498,6 @@ namespace CastIt.Server.Services
         private async Task GoToPosition(PlayMediaRequest options)
         {
             FileLoading();
-            //TODO: WHY AM I CALLING THE SEEK METHOD INSTEAD OF RETURNING IN THE BELOW METHODS
             if (options.IsHandledByServer)
             {
                 await PlayFile(options);

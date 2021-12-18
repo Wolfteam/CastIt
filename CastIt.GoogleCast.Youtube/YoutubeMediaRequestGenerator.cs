@@ -71,8 +71,8 @@ namespace CastIt.GoogleCast.Youtube
             if (ytMedia.IsHls)
             {
                 return await BuildRequestFromHls(
-                    ytMedia, file, settings,
-                    seekSeconds, fileOptionsChanged, cancellationToken);
+                    ytMedia, file, settings, seekSeconds,
+                    fileOptionsChanged, desiredQuality, cancellationToken);
             }
 
             if (ytMedia.IsFromAdaptiveFormat)
@@ -185,7 +185,7 @@ namespace CastIt.GoogleCast.Youtube
                 AudioNeedsTranscode = false,
                 HwAccelToUse = hwAccelToUse,
                 VideoScale = settings.VideoScale,
-                SelectedQuality = file.CurrentFileQuality,
+                SelectedQuality = ytMedia.SelectedQuality,
                 AudioStreamIndex = -1,
                 VideoStreamIndex = -1,
                 ContentType = Server.GetOutputMimeType(ytMedia.AdaptiveFormatUrls.First())
@@ -215,6 +215,7 @@ namespace CastIt.GoogleCast.Youtube
             ServerAppSettings settings,
             double seekSeconds,
             bool fileOptionsChanged,
+            int desiredQuality,
             CancellationToken cancellationToken)
         {
             Logger.LogInformation($"{nameof(BuildRequestFromHls)}: Url is a yt hls, getting its file info...");
@@ -229,7 +230,7 @@ namespace CastIt.GoogleCast.Youtube
 
             int closestQuality = fileInfo.HlsVideos
                 .Select(v => v.Height)
-                .GetClosest(file.CurrentFileQuality);
+                .GetClosest(desiredQuality);
 
             Logger.LogInformation($"{nameof(BuildRequestFromHls)}: The quality to use for this hls will be = {closestQuality}...");
             var videoInfo = fileInfo.HlsVideos.First(v => v.Height == closestQuality);
