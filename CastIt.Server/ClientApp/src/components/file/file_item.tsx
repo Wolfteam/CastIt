@@ -22,6 +22,7 @@ import { Draggable } from 'react-beautiful-dnd';
 import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
 import { useCastItHub } from '../../context/castit_hub.context';
+import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -89,6 +90,7 @@ function FileItem(props: Props) {
     const [state, setState] = useState<State>(initialState);
     const [contextMenu, setContextMenu] = useState(initialContextMenuState);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
+    const { enqueueSnackbar } = useSnackbar();
     const castItHub = useCastItHub();
 
     useEffect(() => {
@@ -221,9 +223,21 @@ function FileItem(props: Props) {
         setShowAddFilesDialog(true);
     };
 
-    const handleCopy = (): void => {
+    //if the app runs on http you wouldn't be able to use the copy to clipboard method
+    const secure = navigator.clipboard && window.isSecureContext;
+    const handleCopy = async (): Promise<void> => {
         handleCloseContextMenu();
-        navigator.clipboard.writeText(props.file.path);
+        const text = props.file.path;
+        if (!text) {
+            return;
+        }
+
+        if (!secure) {
+            return;
+        }
+
+        await navigator.clipboard.writeText(text);
+        enqueueSnackbar(translations.copiedToClipboard, { variant: 'success' });
     };
 
     const title = (
@@ -301,10 +315,12 @@ function FileItem(props: Props) {
                                 <Add fontSize="small" />
                                 <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
                             </MenuItem>
-                            <MenuItem onClick={handleCopy}>
-                                <FileCopy fontSize="small" />
-                                <ListItemText className={classes.menuItemText} primary={translations.copyPath} />
-                            </MenuItem>
+                            {secure ? (
+                                <MenuItem onClick={handleCopy}>
+                                    <FileCopy fontSize="small" />
+                                    <ListItemText className={classes.menuItemText} primary={translations.copyPath} />
+                                </MenuItem>
+                            ) : null}
                             {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
                             <MenuItem onClick={handleDelete}>
                                 <Delete fontSize="small" />
