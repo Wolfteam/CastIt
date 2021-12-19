@@ -45,21 +45,17 @@ namespace CastIt.Server.Services
         private readonly IMapper _mapper;
         private readonly IImageProviderService _imageProviderService;
         private readonly IMediaRequestGeneratorFactory _mediaRequestGeneratorFactory;
-
-        private readonly Dictionary<Range<long>, byte[]> _previewThumbnails = new Dictionary<Range<long>, byte[]>();
+        private readonly List<ThumbnailRange> _previewThumbnails = new List<ThumbnailRange>();
 
         private readonly List<FileThumbnailRangeResponseDto> _thumbnailRanges =
             new List<FileThumbnailRangeResponseDto>();
 
-        private bool _onSkipOrPrevious;
-
         public CancellationTokenSource FileCancellationTokenSource { get; } = new CancellationTokenSource();
-        private readonly SemaphoreSlim _thumbnailSemaphoreSlim = new SemaphoreSlim(1, 1);
 
         private bool _renderWasSet;
         private string _currentContentId;
         private bool _connecting;
-
+        private bool _onSkipOrPrevious;
         #endregion
 
         #region Properties
@@ -133,6 +129,8 @@ namespace CastIt.Server.Services
             _player.IsMutedChanged += IsMutedChanged;
             _player.LoadFailed += LoadFailed;
             _player.ListenForDevices();
+
+            await _imageProviderService.Init();
 
             _logger.LogInformation($"{nameof(Init)}: Initialize completed");
         }
@@ -1034,78 +1032,110 @@ namespace CastIt.Server.Services
         {
             try
             {
-                await _thumbnailSemaphoreSlim.WaitAsync(FileCancellationTokenSource.Token);
-
-                var (range, imgBytes) = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.ContainsValue(tentativeSecond));
-
-                if (imgBytes != null)
-                {
-                    return imgBytes;
-                }
-
-                string path = CurrentPlayedFile?.Path;
-                if (string.IsNullOrWhiteSpace(path) ||
+                if (_previewThumbnails.Count == 0 ||
+                    string.IsNullOrWhiteSpace(CurrentPlayedFile?.Path) ||
                     tentativeSecond > CurrentPlayedFile?.TotalSeconds ||
-                    tentativeSecond < 0 || range == null)
+                    tentativeSecond < 0)
                 {
-                    var pathTo = _imageProviderService.GetNoImagePath();
-                    return await File.ReadAllBytesAsync(pathTo);
+                    return _imageProviderService.NoImageBytes;
                 }
 
                 if ((CurrentPlayedFile.Type.IsLocalMusic() || CurrentPlayedFile.Type.IsUrl()) &&
-                    _previewThumbnails.Any(kvp => kvp.Value != null))
+                    _previewThumbnails.Any(t => t.Image != null))
                 {
-                    return _previewThumbnails.First().Value;
+                    return _previewThumbnails.First().Image;
                 }
 
-                byte[] bytes;
+                var preview = _previewThumbnails.Find(t => t.Range.ContainsValue(tentativeSecond));
+                Range<long> range = preview.Range;
+                if (preview.Image != null)
+                {
+                    return preview.Image;
+                }
+
+                if (preview.IsBeingGenerated)
+                {
+                    return _imageProviderService.TransparentImageBytes;
+                }
+
+                preview.Generating();
                 if (CurrentPlayedFile.Type.IsLocalMusic())
                 {
                     //Images for music files don't change, that's why we return the original image here
                     var pathTo = _fFmpeg.GetThumbnail(CurrentPlayedFile.Path);
-                    bytes = await File.ReadAllBytesAsync(pathTo);
+                    var bytes = await File.ReadAllBytesAsync(pathTo);
+                    return preview.SetImage(bytes).Generated().Image;
                 }
-                else if (CurrentPlayedFile.Type.IsUrl() && !string.IsNullOrWhiteSpace(CurrentRequest.ThumbnailUrl))
+
+                if (CurrentPlayedFile.Type.IsUrl() && !string.IsNullOrWhiteSpace(CurrentRequest.ThumbnailUrl))
                 {
                     //In this case, we download and save the image if needed
-                    var pathTo =
-                        await _fileService.DownloadAndSavePreviewImage(CurrentPlayedFile.Id, CurrentRequest.ThumbnailUrl, false);
-                    bytes = await File.ReadAllBytesAsync(pathTo);
+                    var pathTo = await _fileService.DownloadAndSavePreviewImage(
+                        CurrentPlayedFile.Id,
+                        CurrentRequest.ThumbnailUrl, false);
+                    var bytes = await File.ReadAllBytesAsync(pathTo);
+                    return preview.SetImage(bytes).Generated().Image;
                 }
-                else
+
+                var fps = CurrentPlayedFile.FileInfo?.Videos.FirstOrDefault()?.AverageFrameRate ?? 24;
+                var tasks = new List<Task>
                 {
-                    var fps = CurrentPlayedFile.FileInfo?.Videos.FirstOrDefault()?.AverageFrameRate ?? 24;
-                    bytes = await _fFmpeg.GetThumbnailTile(CurrentPlayedFile.Path, range.Minimum, fps);
-
-                    //previous range
-                    if (_previewThumbnails.Any(kvp => kvp.Key.Index == range.Index - 1 && kvp.Value == null))
+                    Task.Run(async () =>
                     {
-                        var (previousRange, _) = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.Index == range.Index - 1);
-                        _previewThumbnails[previousRange] = await _fFmpeg.GetThumbnailTile(CurrentPlayedFile.Path, previousRange.Minimum, fps);
-                    }
+                        var bytes = await _fFmpeg.GetThumbnailTile(CurrentPlayedFile.Path, range.Minimum, fps);
+                        preview.SetImage(bytes);
+                    })
+                };
+                var previousRange = _previewThumbnails.Find(kvp =>
+                    kvp.Range.Index == range.Index - 1 &&
+                    !kvp.HasImage &&
+                    !kvp.IsBeingGenerated);
+                var nextRange = _previewThumbnails.Find(kvp =>
+                    kvp.Range.Index == range.Index + 1 &&
+                    !kvp.HasImage &&
+                    !kvp.IsBeingGenerated);
 
-                    //next range
-                    if (_previewThumbnails.Any(kvp => kvp.Key.Index == range.Index + 1 && kvp.Value == null))
+                //previous range
+                if (previousRange != null)
+                {
+                    previousRange.Generating();
+                    var task = Task.Run(async () =>
                     {
-                        var (nextRange, _) = _previewThumbnails.FirstOrDefault(kvp => kvp.Key.Index == range.Index + 1);
-                        _previewThumbnails[nextRange] = await _fFmpeg.GetThumbnailTile(CurrentPlayedFile.Path, nextRange.Minimum, fps);
-                    }
+                        var image = await _fFmpeg.GetThumbnailTile(
+                            CurrentPlayedFile.Path,
+                            previousRange.Range.Minimum,
+                            fps);
+                        previousRange.SetImage(image).Generated();
+                    });
+                    tasks.Add(task);
                 }
 
-                //The bytes are null, that's I set them here
-                _previewThumbnails[range] = bytes;
-                return bytes;
+                //next range
+                if (nextRange != null)
+                {
+                    nextRange.Generating();
+                    var task = Task.Run(async () =>
+                    {
+                        var image = await _fFmpeg.GetThumbnailTile(
+                            CurrentPlayedFile.Path,
+                            nextRange.Range.Minimum,
+                            fps);
+                        nextRange.SetImage(image).Generated();
+                    });
+                    tasks.Add(task);
+                }
+
+                await Task.WhenAll(tasks);
+
+                //At this point we should have the bytes
+                return preview.Generated().Image;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"{nameof(GetClosestPreviewThumbnail)}: Unknown error");
             }
-            finally
-            {
-                _thumbnailSemaphoreSlim.Release();
-            }
 
-            return null;
+            return _imageProviderService.NoImageBytes;
         }
 
         private (string, string) TryGetSubTitlesLocalPath(string mrl)
@@ -1135,8 +1165,7 @@ namespace CastIt.Server.Services
                 for (int d = 0; d < rangesToGenerate; d++)
                 {
                     var fix = d == rangesToGenerate - 1 ? 0 : -1;
-                    var range = new Range<long>(min, max + fix, d);
-                    _previewThumbnails.Add(range, null);
+                    _previewThumbnails.Add(new ThumbnailRange(min, max + fix, d));
                     min += AppWebServerConstants.ThumbnailsPerImage;
                     max += AppWebServerConstants.ThumbnailsPerImage;
                 }
@@ -1144,23 +1173,23 @@ namespace CastIt.Server.Services
             else
             {
                 long max = totalSeconds > 0 ? (long)totalSeconds : long.MaxValue;
-                var range = new Range<long>(0, max, 0);
-                _previewThumbnails.Add(range, null);
+                _previewThumbnails.Add(new ThumbnailRange(0, max, 0));
             }
 
             _thumbnailRanges.AddRange(_previewThumbnails.Select(t => new FileThumbnailRangeResponseDto
             {
-                ThumbnailRange = t.Key
+                ThumbnailRange = t.Range
             }));
 
-            foreach (var thumbnailRange in _thumbnailRanges)
+            //there's no point in generating the thumbnail matrix for other file types, since the image will be the same
+            if (!type.IsLocalVideo())
+                return;
+
+            Parallel.ForEach(_thumbnailRanges, (thumbnailRange, _, __) =>
             {
                 thumbnailRange.PreviewThumbnailUrl = _server.GetThumbnailPreviewUrl(thumbnailRange.ThumbnailRange.Minimum);
-                //there's no point in generating the thumbnail matrix for other file types, since the image will be the same
-                if (!type.IsLocalVideo())
-                    continue;
                 thumbnailRange.SetMatrixOfSeconds(AppWebServerConstants.ThumbnailsPerImageRow);
-            }
+            });
         }
 
         private Task FileOptionsChanged(FileItemOptionsResponseDto selectedItem)

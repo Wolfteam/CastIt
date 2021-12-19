@@ -264,6 +264,9 @@ namespace CastIt.FFmpeg
                     HwAccelDeviceType.None
                 };
                 CheckFfmpegExePaths();
+                _logger.LogInformation(
+                    $"{nameof(GetThumbnailTile)}: Trying to generate thumbnail for " +
+                    $"second = {tentativeSecond} and mrl = {mrl} ...");
                 foreach (var hwAccel in hwAccels)
                 {
                     var builder = new FFmpegArgsBuilder();
@@ -313,7 +316,9 @@ namespace CastIt.FFmpeg
                             throw new ArgumentOutOfRangeException($"The provided hw accel = {hwAccel} is not supported");
                     }
                     var cmd = builder.GetArgs();
-                    _logger.LogInformation($"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with hwAccel = {hwAccel} and cmd = {cmd} ...");
+                    _logger.LogInformation(
+                        $"{nameof(GetThumbnailTile)}: Trying to generate thumbnail tile with " +
+                        $"cmd = {cmd} ...");
 
                     using var process = new Process
                     {
@@ -338,11 +343,15 @@ namespace CastIt.FFmpeg
 
                     if (process.ExitCode == 0)
                     {
-                        _logger.LogInformation($"{nameof(GetThumbnailTile)}: Thumbnail tiles were generated successfully with hwaccel = {hwAccel}");
+                        _logger.LogInformation(
+                            $"{nameof(GetThumbnailTile)}: Thumbnail tiles were generated successfully " +
+                            $"with cmd = {cmd}");
                         return memStream.ToArray();
                     }
 
-                    _logger.LogWarning($"{nameof(GetThumbnailTile)}: Couldn't generate thumbnail tile with hwaccel = {hwAccel}");
+                    _logger.LogWarning(
+                        $"{nameof(GetThumbnailTile)}: Couldn't generate thumbnail tile " +
+                        $"with hwaccel = {hwAccel}");
                 }
             }
             catch (Exception e)
