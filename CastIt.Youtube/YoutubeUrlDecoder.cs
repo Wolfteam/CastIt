@@ -397,7 +397,7 @@ namespace CastIt.Youtube
             if (string.IsNullOrWhiteSpace(finalUrl))
             {
                 _logger.LogWarning($"{nameof(GetAndSetRealUrl)}: Couldn't retrieve the final url");
-                throw new UrlCouldNotBeParsedException("Couldn't retrieve the final url");
+                throw new Exception("Couldn't retrieve the final url");
             }
 
             //The "n" parameter is scrambled too, and needs to be descrambled
@@ -506,7 +506,7 @@ namespace CastIt.Youtube
                 return new VideoQualities(fromFormats, fromAdaptiveFormats);
 
             _logger.LogWarning($"{nameof(Parse)}: Couldn't retrieve any qualities from body");
-            throw new UrlCouldNotBeParsedException("Couldn't retrieve any qualities");
+            throw new Exception("Couldn't retrieve any qualities");
         }
 
         private List<VideoQuality> ProcessObtainedFormats(string formatMatch, bool isAdaptive)
