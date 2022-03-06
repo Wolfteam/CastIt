@@ -24,6 +24,13 @@ namespace CastIt.Server.Services
             double seekSeconds,
             bool fileOptionsChanged,
             CancellationToken cancellationToken = default);
+
+        Task HandleSecondsChanged(
+            ServerFileItem file,
+            ServerAppSettings settings,
+            PlayMediaRequest request,
+            double newSeconds,
+            CancellationToken cancellationToken = default);
     }
 
     public class MediaRequestGeneratorFactory : IMediaRequestGeneratorFactory
@@ -35,7 +42,7 @@ namespace CastIt.Server.Services
         {
             _implementations.TryAdd(impl.Identifier, impl);
         }
-
+        //TODO: MAYBE CACHE THE CAN HANDLE REQUEST ?
         public async Task<PlayMediaRequest> BuildRequest(
             ServerFileItem file,
             ServerAppSettings settings,
@@ -43,15 +50,8 @@ namespace CastIt.Server.Services
             bool fileOptionsChanged,
             CancellationToken cancellationToken = default)
         {
-            foreach (var (_, impl) in _implementations)
-            {
-                if (await impl.CanHandleRequest(file.Path, file.Type, cancellationToken))
-                {
-                    return await impl.BuildRequest(file, settings, seekSeconds, fileOptionsChanged, cancellationToken);
-                }
-            }
-
-            throw new InvalidRequestException($"No implementation was found that can handle = {file.Path}");
+            var impl = await GetImplementation(file.Path, file.Type, cancellationToken);
+            return await impl.BuildRequest(file, settings, seekSeconds, fileOptionsChanged, cancellationToken);
         }
 
         public async Task<bool> CanHandleRequest(
@@ -69,6 +69,31 @@ namespace CastIt.Server.Services
             }
 
             return false;
+        }
+
+        public async Task HandleSecondsChanged(ServerFileItem file,
+            ServerAppSettings settings,
+            PlayMediaRequest request,
+            double newSeconds,
+            CancellationToken cancellationToken = default)
+        {
+            var impl = await GetImplementation(file.Path, file.Type, cancellationToken);
+            await impl.HandleSecondsChanged(file, settings, request, newSeconds, cancellationToken);
+        }
+
+        private async Task<IPlayMediaRequestGenerator> GetImplementation(
+            string path,
+            AppFileType type,
+            CancellationToken cancellationToken)
+        {
+            foreach (var (_, impl) in _implementations)
+            {
+                if (await impl.CanHandleRequest(path, type, cancellationToken))
+                {
+                    return impl;
+                }
+            }
+            throw new InvalidRequestException($"No implementation was found that can handle = {path}");
         }
     }
 }

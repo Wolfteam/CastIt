@@ -1,4 +1,5 @@
-﻿using CastIt.Domain.Dtos.Responses;
+﻿using CastIt.Domain;
+using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.GoogleCast.Shared.Device;
@@ -14,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Services
@@ -146,10 +149,20 @@ namespace CastIt.Server.Services
 
         private string GetLocalIpAddress(ICollection<string> addresses)
         {
-            string ipAddress = addresses.FirstOrDefault(s =>
-                !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
-                !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
-                !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
+            string ipAddress;
+            if (AppWebServerConstants.InDocker)
+            {
+                var name = Dns.GetHostName(); // get container id
+                var ip = Array.Find(Dns.GetHostEntry(name).AddressList, x => x.AddressFamily == AddressFamily.InterNetwork);
+                ipAddress = ip.ToString();
+            }
+            else
+            {
+                ipAddress = addresses.FirstOrDefault(s =>
+                    !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
+                    !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
+                    !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
+            }
 
             if (!string.IsNullOrWhiteSpace(ipAddress) && ipAddress.EndsWith("/"))
             {

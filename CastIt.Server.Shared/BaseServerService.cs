@@ -2,7 +2,6 @@
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Enums;
 using CastIt.Shared.Extensions;
-using Microsoft.AspNetCore.WebUtilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -102,10 +101,5 @@ namespace CastIt.Server.Shared
         }
 
         public abstract string GetOutputMimeType(string mrl);
-
-        private string SetUrlParameters(string baseUrl, object dto)
-        {
-            return QueryHelpers.AddQueryString(baseUrl, dto.ToKeyValue());
-        }
     }
 }

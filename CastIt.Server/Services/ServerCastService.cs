@@ -308,13 +308,6 @@ namespace CastIt.Server.Services
                     GenerateThumbnailRanges(type, CurrentPlayedFile.TotalSeconds);
                 }
 
-                if (type.IsLocalVideo() && !fileOptionsChanged)
-                {
-                    _logger.LogInformation($"{nameof(PlayFile)}: Setting the sub streams...");
-                    var (localSubsPath, filename) = TryGetSubTitlesLocalPath(CurrentPlayedFile.Path);
-                    CurrentPlayedFile.SetSubtitleStreams(localSubsPath, filename, _settings.LoadFirstSubtitleFoundAutomatically);
-                }
-
                 if (request.NeedsTinyCode)
                 {
                     await GenerateAndSetTinyCode(request);
@@ -449,7 +442,6 @@ namespace CastIt.Server.Services
 
         private async Task UpdateSecondsOfCurrent(double seconds)
         {
-            CurrentRequest.SeekSeconds = seconds;
             if (!CurrentRequest.NeedsTinyCode)
                 return;
             var dto = CurrentRequest.Base64.FromBase64<PlayAppFileRequestDto>();
@@ -472,11 +464,20 @@ namespace CastIt.Server.Services
                 return;
             }
 
-            if (position >= 0 && position <= 100)
+            if (!(position >= 0) || !(position <= 100))
             {
+                _logger.LogWarning($"{nameof(GoToPosition)} Cant go to position = {position}");
+                return;
+            }
+
+            try
+            {
+                //TODO: SUBS ARE BEING KEPT IN CACHE
                 FileLoading();
                 double seconds = position * totalSeconds / 100;
-                CurrentRequest.SeekSeconds = seconds;
+                await _mediaRequestGeneratorFactory.HandleSecondsChanged(
+                    CurrentPlayedFile, _settings.Settings, CurrentRequest,
+                    seconds, FileCancellationTokenSource.Token);
                 if (CurrentRequest.IsHandledByServer)
                 {
                     await UpdateSecondsOfCurrent(seconds);
@@ -486,26 +487,37 @@ namespace CastIt.Server.Services
                 {
                     await _player.SeekAsync(seconds);
                 }
-
                 FileLoaded(this, EventArgs.Empty);
             }
-
-            _logger.LogWarning($"{nameof(GoToPosition)} Cant go to position = {position}");
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"{nameof(GoToPosition)} Unknown error occurred");
+                await StopPlayback();
+                throw;
+            }
         }
 
         private async Task GoToPosition(PlayMediaRequest options)
         {
-            FileLoading();
-            if (options.IsHandledByServer)
+            try
             {
-                await PlayFile(options);
+                FileLoading();
+                if (options.IsHandledByServer)
+                {
+                    await PlayFile(options);
+                }
+                else
+                {
+                    await _player.SeekAsync(options.SeekSeconds);
+                }
+                FileLoaded(this, EventArgs.Empty);
             }
-            else
+            catch (Exception e)
             {
-                await _player.SeekAsync(options.SeekSeconds);
+                _logger.LogWarning(e, $"{nameof(GoToPosition)} Unknown error occurred");
+                await StopPlayback();
+                throw;
             }
-
-            FileLoaded(this, EventArgs.Empty);
         }
 
         public Task GoToPosition(double position)
@@ -535,18 +547,29 @@ namespace CastIt.Server.Services
                 seconds = 0;
             }
 
-            FileLoading();
-            if (CurrentRequest.IsHandledByServer)
+            try
             {
-                await UpdateSecondsOfCurrent(seconds);
-                await PlayFile(CurrentRequest);
+                FileLoading();
+                await _mediaRequestGeneratorFactory.HandleSecondsChanged(
+                    CurrentPlayedFile, _settings.Settings, CurrentRequest,
+                    seconds, FileCancellationTokenSource.Token);
+                if (CurrentRequest.IsHandledByServer)
+                {
+                    await UpdateSecondsOfCurrent(seconds);
+                    await PlayFile(CurrentRequest);
+                }
+                else
+                {
+                    await _player.SeekAsync(seconds);
+                }
+                FileLoaded(this, EventArgs.Empty);
             }
-            else
+            catch (Exception e)
             {
-                await _player.SeekAsync(seconds);
+                _logger.LogWarning(e, $"{nameof(GoToSeconds)} Unknown error occurred");
+                await StopPlayback();
+                throw;
             }
-
-            FileLoaded(this, EventArgs.Empty);
         }
 
         public async Task AddSeconds(double seconds)
@@ -584,18 +607,30 @@ namespace CastIt.Server.Services
                     $"they will be set to = {_player.CurrentMediaDuration}");
                 newValue = _player.CurrentMediaDuration;
             }
-            FileLoading();
-            if (CurrentRequest.IsHandledByServer)
-            {
-                await UpdateSecondsOfCurrent(newValue);
-                await PlayFile(CurrentRequest);
-            }
-            else
-            {
-                await _player.SeekAsync(newValue);
-            }
 
-            FileLoaded(this, EventArgs.Empty);
+            try
+            {
+                FileLoading();
+                await _mediaRequestGeneratorFactory.HandleSecondsChanged(
+                    CurrentPlayedFile, _settings.Settings, CurrentRequest,
+                    newValue, FileCancellationTokenSource.Token);
+                if (CurrentRequest.IsHandledByServer)
+                {
+                    await UpdateSecondsOfCurrent(newValue);
+                    await PlayFile(CurrentRequest);
+                }
+                else
+                {
+                    await _player.SeekAsync(newValue);
+                }
+                FileLoaded(this, EventArgs.Empty);
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"{nameof(AddSeconds)} Unknown error occurred");
+                await StopPlayback();
+                throw;
+            }
         }
 
         public async Task<double> SetVolume(double level)
@@ -673,12 +708,13 @@ namespace CastIt.Server.Services
 
         public Task SetCastRenderer(string id)
         {
+            IReceiver selected = AvailableDevices.Find(f => f.IsConnected);
             if (string.IsNullOrEmpty(id))
             {
-                return SetNullCastRenderer();
+                return SetNullCastRenderer(selected);
             }
             var renderer = AvailableDevices.Find(d => d.Id == id);
-            return renderer is null ? SetNullCastRenderer() : SetCastRenderer(renderer);
+            return renderer is null ? SetNullCastRenderer(selected) : SetCastRenderer(renderer);
         }
 
         public Task SetCastRenderer(string host, int port)
@@ -1138,20 +1174,6 @@ namespace CastIt.Server.Services
             return _imageProviderService.NoImageBytes;
         }
 
-        private (string, string) TryGetSubTitlesLocalPath(string mrl)
-        {
-            _logger.LogInformation($"{nameof(TryGetSubTitlesLocalPath)}: Checking if subtitle exist in the same dir as file = {mrl}");
-            var (possibleSubTitlePath, filename) = _fileService.TryGetSubTitlesLocalPath(mrl);
-            if (!string.IsNullOrWhiteSpace(possibleSubTitlePath))
-            {
-                _logger.LogInformation($"{nameof(TryGetSubTitlesLocalPath)}: Found subtitles in path = {possibleSubTitlePath}");
-                return (possibleSubTitlePath, filename);
-            }
-
-            _logger.LogInformation($"{nameof(TryGetSubTitlesLocalPath)}: No subtitles were found for file = {mrl}");
-            return (possibleSubTitlePath, filename);
-        }
-
         private void GenerateThumbnailRanges(AppFileType type, double totalSeconds)
         {
             _previewThumbnails.Clear();
@@ -1234,10 +1256,14 @@ namespace CastIt.Server.Services
             }
         }
 
-        private Task SetNullCastRenderer()
+        private async Task SetNullCastRenderer(IReceiver selected)
         {
             _renderWasSet = false;
-            return _player.DisconnectAsync();
+            await _player.DisconnectAsync();
+            if (selected != null)
+            {
+                _server.OnCastRendererSet?.Invoke(selected);
+            }
         }
         #endregion
     }

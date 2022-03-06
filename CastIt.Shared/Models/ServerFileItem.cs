@@ -225,7 +225,10 @@ namespace CastIt.Shared.Models
             return this;
         }
 
-        public ServerFileItem SetSubtitleStreams(string localSubsPath, string filename, bool loadFirstSubtitleFoundAutomatically)
+        public ServerFileItem SetSubtitleStreams(
+            string localSubsPath,
+            string filename,
+            bool loadFirstSubtitleFoundAutomatically)
         {
             CheckBeforeSettingStream();
             CurrentFileSubTitles.Clear();

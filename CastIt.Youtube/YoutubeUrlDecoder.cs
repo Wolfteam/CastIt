@@ -166,6 +166,12 @@ namespace CastIt.Youtube
             string url,
             CancellationToken cancellationToken = default)
         {
+            if (!IsYoutubeUrl(url))
+            {
+                _logger.LogWarning($"{nameof(ParsePlayList)}: Url = {url} is not a valid youtube url");
+                throw new UrlCouldNotBeParsedException(url);
+            }
+            
             var links = new List<string>();
             _logger.LogInformation($"{nameof(ParsePlayList)}: Parsing url = {url}");
 

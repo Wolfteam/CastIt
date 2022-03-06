@@ -2,6 +2,7 @@
 using CastIt.GoogleCast;
 using CastIt.Server.Controllers;
 using CastIt.Server.Hubs;
+using CastIt.Server.Middleware;
 using CastIt.Server.Services;
 using System.Collections.Generic;
 
@@ -28,7 +29,8 @@ namespace CastIt.Server.Common.Extensions
 
                    //Others
                    new FileToLog(typeof(Player), "castit_player"),
-                   new FileToLog(typeof(CastItHub), "hub_castit")
+                   new FileToLog(typeof(CastItHub), "hub_castit"),
+                   new FileToLog(typeof(ExceptionHandlerMiddleware), "middleware_exception")
                 });
             return logs;
         }

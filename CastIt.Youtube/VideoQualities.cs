@@ -6,8 +6,8 @@ namespace CastIt.Youtube
 {
     public class VideoQualities
     {
-        public List<VideoQuality> FromFormats { get; set; }
-        public List<VideoQuality> FromAdaptiveFormats { get; set; }
+        public List<VideoQuality> FromFormats { get; }
+        public List<VideoQuality> FromAdaptiveFormats { get; }
         public int SelectedQuality { get; private set; }
 
         public bool UseAdaptiveFormats =>

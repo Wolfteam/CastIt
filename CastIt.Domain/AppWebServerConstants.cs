@@ -1,4 +1,6 @@
-﻿namespace CastIt.Domain
+﻿using System;
+
+namespace CastIt.Domain
 {
     public static class AppWebServerConstants
     {
@@ -45,5 +47,8 @@
         public static double ThumbnailTileTotalWidth = ThumbnailImageWidth * ThumbnailsPerImageColumn;
 
         public static double ThumbnailTileTotalHeight = ThumbnailImageHeight * ThumbnailsPerImageRow;
+
+        public static bool InDocker
+            => Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
     }
 }

@@ -14,8 +14,18 @@ namespace CastIt.Shared.Server
 
         private static List<ProcessPort> GetNetStatPorts()
         {
-            var processPorts = new List<ProcessPort>();
+            if (OperatingSystem.IsWindows())
+            {
+                return GetWindowsPorts();
+            }
 
+            throw new PlatformNotSupportedException(
+                "Can't retrieve the open ports for the current platform");
+        }
+
+        private static List<ProcessPort> GetWindowsPorts()
+        {
+            var processPorts = new List<ProcessPort>();
             try
             {
                 using var proc = new Process();

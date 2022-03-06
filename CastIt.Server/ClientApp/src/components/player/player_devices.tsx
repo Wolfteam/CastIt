@@ -31,15 +31,14 @@ function PlayerDevices() {
     useEffect(() => {
         const onCastDeviceSetSubscription = onCastDeviceSet.subscribe((device) => {
             const existing = devices.find((d) => d.id === device.id);
-            if (devices.filter((d) => d.id === device.id).length > 0) {
-                const index = devices.indexOf(existing!);
-                const updatedDevices = [...devices];
-                updatedDevices.splice(index, 1);
-                updatedDevices.splice(index, 0, device);
-                setDevices(updatedDevices);
+            if (!existing) {
                 return;
             }
-            setDevices([...devices, device]);
+            const index = devices.indexOf(existing!);
+            const updatedDevices = [...devices];
+            updatedDevices.splice(index, 1);
+            updatedDevices.splice(index, 0, device);
+            setDevices(updatedDevices);
         });
 
         const onCastDevicesChangedSubscription = onCastDevicesChanged.subscribe((devices) => {
