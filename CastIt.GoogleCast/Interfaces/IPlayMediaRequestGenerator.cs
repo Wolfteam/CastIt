@@ -21,5 +21,12 @@ namespace CastIt.GoogleCast.Interfaces
             double seekSeconds,
             bool fileOptionsChanged,
             CancellationToken cancellationToken = default);
+
+        Task HandleSecondsChanged(
+            ServerFileItem file,
+            ServerAppSettings settings,
+            PlayMediaRequest request,
+            double newSeconds,
+            CancellationToken cancellationToken = default);
     }
 }

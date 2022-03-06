@@ -36,7 +36,6 @@ namespace CastIt.GoogleCast.Generator
 
         protected void SetStreams(ServerFileItem file, bool fileOptionsChanged)
         {
-            Logger.LogInformation($"{nameof(SetStreams)}: Setting the video and audio streams...");
             if (fileOptionsChanged)
                 return;
             Logger.LogInformation($"{nameof(SetStreams)}: Setting the video and audio streams...");
@@ -62,7 +61,7 @@ namespace CastIt.GoogleCast.Generator
             }
 
             Logger.LogInformation($"{nameof(SetSubtitlesIfAny)}: Subtitles were specified, generating a compatible one...");
-            string subtitleLocation = useSubTitleStream ? request.MediaInfo.ContentId : selectedSubtitlePath;
+            string subtitleLocation = useSubTitleStream ? file.Path : selectedSubtitlePath;
             string subTitleFilePath = FileService.GetSubTitleFilePath();
             await FFmpeg.GenerateSubTitles(
                 subtitleLocation,
@@ -81,6 +80,10 @@ namespace CastIt.GoogleCast.Generator
                 Language = "en-US",
                 TrackContentId = Server.GetSubTitleUrl(),
             };
+
+            request.MediaInfo.Tracks.RemoveAll(t => t.TrackId == SubTitleDefaultTrackId);
+            request.ActiveTrackIds.RemoveAll(t => t == SubTitleDefaultTrackId);
+
             request.MediaInfo.Tracks.Add(subtitle);
             request.MediaInfo.TextTrackStyle = new TextTrackStyle
             {

@@ -63,6 +63,13 @@ namespace CastIt.GoogleCast.LocalFile
             file.UpdateFileInfo(fileInfo);
             SetStreams(file, fileOptionsChanged);
 
+            if (file.Type.IsLocalVideo() && !fileOptionsChanged)
+            {
+                Logger.LogInformation($"{nameof(BuildRequest)}: Setting the sub streams...");
+                var (localSubsPath, filename) = TryGetSubTitlesLocalPath(file.Path);
+                file.SetSubtitleStreams(localSubsPath, filename, settings.LoadFirstSubtitleFoundAutomatically);
+            }
+
             bool videoNeedsTranscode = file.Type.IsLocalVideo() && FFmpeg.VideoNeedsTranscode(
                 file.CurrentFileVideoStreamIndex, settings.ForceVideoTranscode,
                 settings.VideoScale, file.FileInfo);
@@ -94,6 +101,17 @@ namespace CastIt.GoogleCast.LocalFile
 
             Logger.LogInformation($"{nameof(BuildRequest)}: Request was built");
             return request;
+        }
+
+        public async Task HandleSecondsChanged(
+            ServerFileItem file,
+            ServerAppSettings settings,
+            PlayMediaRequest request,
+            double newSeconds,
+            CancellationToken cancellationToken = default)
+        {
+            request.SeekSeconds = newSeconds;
+            await SetSubtitlesIfAny(file, settings, request, cancellationToken);
         }
 
         private PlayMediaRequest BuildRequest(LocalFileGeneratePlayMediaRequest options)
@@ -169,6 +187,26 @@ namespace CastIt.GoogleCast.LocalFile
 
             Logger.LogInformation($"{nameof(BuildRequest)}: Metadata was successfully created");
             return request;
+        }
+
+        private (string, string) TryGetSubTitlesLocalPath(string mrl)
+        {
+            Logger.LogInformation(
+                $"{nameof(TryGetSubTitlesLocalPath)}: Checking if subtitle exist in the same " +
+                $"dir as file = {mrl}");
+            var (possibleSubTitlePath, filename) = FileService.TryGetSubTitlesLocalPath(mrl);
+            if (!string.IsNullOrWhiteSpace(possibleSubTitlePath))
+            {
+                Logger.LogInformation(
+                    $"{nameof(TryGetSubTitlesLocalPath)}: Found subtitles in " +
+                    $"path = {possibleSubTitlePath}");
+                return (possibleSubTitlePath, filename);
+            }
+
+            Logger.LogInformation(
+                $"{nameof(TryGetSubTitlesLocalPath)}: No subtitles were found " +
+                $"for file = {mrl}");
+            return (possibleSubTitlePath, filename);
         }
     }
 }

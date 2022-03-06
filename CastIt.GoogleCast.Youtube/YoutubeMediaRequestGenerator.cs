@@ -87,6 +87,16 @@ namespace CastIt.GoogleCast.Youtube
                 seekSeconds, fileOptionsChanged, cancellationToken);
         }
 
+        public Task HandleSecondsChanged(ServerFileItem file,
+            ServerAppSettings settings,
+            PlayMediaRequest request,
+            double newSeconds,
+            CancellationToken cancellationToken = default)
+        {
+            request.SeekSeconds = newSeconds;
+            return Task.CompletedTask;
+        }
+
         private async Task<MediaInformation> BuildBasicMediaInformation(
             long fileId,
             YoutubeMedia ytMedia)

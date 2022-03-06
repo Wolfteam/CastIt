@@ -112,6 +112,10 @@ namespace CastIt.GoogleCast
 
         public void Disconnect(bool triggerDisconnectEvent, bool chromeCastAskedForDisconnection)
         {
+            if (CurrentReceiver != null)
+            {
+                CurrentReceiver.IsConnected = false;
+            }
             if (chromeCastAskedForDisconnection)
                 _logger.LogWarn($"{nameof(Disconnect)}: A dispose will take place and was requested from the chromecast");
             Dispose(triggerDisconnectEvent);

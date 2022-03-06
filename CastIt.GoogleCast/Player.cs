@@ -301,9 +301,9 @@ namespace CastIt.GoogleCast
             }
 
             CurrentContentId = media.ContentId;
-            CurrentMediaDuration = media.Duration ?? status?.Media?.Duration ?? 0;
-            CurrentVolumeLevel = status?.Volume?.Level ?? 0;
-            IsMuted = status?.Volume?.IsMuted ?? false;
+            CurrentMediaDuration = media.Duration ?? status.Media?.Duration ?? 0;
+            CurrentVolumeLevel = status.Volume?.Level ?? 0;
+            IsMuted = status.Volume?.IsMuted ?? false;
             ElapsedSeconds = 0;
             _seekedSeconds = seekedSeconds;
 

@@ -561,13 +561,12 @@ namespace CastIt.FFmpeg
                 _fileService.DeleteFilesInDirectory(Path.GetDirectoryName(subtitleFinalPath));
                 var builder = new FFmpegArgsBuilder();
                 builder.AddInputFile(filePath)
+                    .Seek(Math.Floor(seconds + subsDelayInSeconds))
                     .BeQuiet()
                     .SetAutoConfirmChanges()
                     .TrySetSubTitleEncoding(FileFormatConstants.AllowedSubtitleFormats);
                 builder.AddOutputFile(subtitleFinalPath)
-                    .Seek(Math.Floor(seconds))
                     .SetMap(index)
-                    .SetDelayInSeconds(subsDelayInSeconds)
                     .SetFormat("webvtt");
 
                 string cmd = builder.GetArgs();
