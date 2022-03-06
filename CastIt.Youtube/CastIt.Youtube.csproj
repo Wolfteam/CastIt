@@ -10,7 +10,7 @@
 
   <ItemGroup>
 	  <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
-	  <PackageReference Include="HtmlAgilityPack" Version="1.11.38" />
-	  <PackageReference Include="PCRE.NET" Version="0.18.0" />
+	  <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
+	  <PackageReference Include="PCRE.NET" Version="0.18.1" />
   </ItemGroup>
 </Project>
