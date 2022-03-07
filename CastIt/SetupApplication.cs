@@ -12,12 +12,10 @@ using CastIt.ViewModels;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using CastIt.Youtube;
-using Microsoft.Extensions.Logging;
 using MvvmCross;
 using MvvmCross.IoC;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
-using Serilog;
 using System.Collections.Generic;
 
 namespace CastIt
@@ -92,13 +90,7 @@ namespace CastIt
                 new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
                 new FileToLog(typeof(SplashViewModel), "vm_splash"),
             };
-
             logs.SetupLogging(basePath);
-            var loggerFactory = new LoggerFactory()
-                .AddSerilog();
-            //to resolve an ilogger<T> you need a iloggerfactory, thats why whe register both
-            Mvx.IoCProvider.RegisterSingleton(loggerFactory);
-            Mvx.IoCProvider.RegisterType(typeof(ILogger<>), typeof(Logger<>));
         }
     }
 }

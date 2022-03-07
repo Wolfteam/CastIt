@@ -1,4 +1,5 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Models;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Dialogs
 {
-    public class ChangeServerUrlDialogViewModel : BaseDialogViewModelResult<bool>
+    public class ChangeServerUrlDialogViewModel : BaseDialogViewModelResult<NavigationBoolResult>
     {
         private readonly IMvxNavigationService _navigationService;
         private readonly ICastItHubClientService _castItHub;
@@ -65,7 +66,7 @@ namespace CastIt.ViewModels.Dialogs
 
             SaveUrlCommand = new MvxAsyncCommand<string>(ChangeServerUrl);
 
-            CloseCommand = new MvxAsyncCommand(async () => await _navigationService.Close(this, false));
+            CloseCommand = new MvxAsyncCommand(async () => await _navigationService.Close(this, NavigationBoolResult.Fail()));
         }
 
         private async Task ChangeServerUrl(string url)
@@ -86,7 +87,7 @@ namespace CastIt.ViewModels.Dialogs
                     return;
                 }
 
-                await _navigationService.Close(this, true);
+                await _navigationService.Close(this, NavigationBoolResult.Succeed());
             }
             catch (Exception e)
             {

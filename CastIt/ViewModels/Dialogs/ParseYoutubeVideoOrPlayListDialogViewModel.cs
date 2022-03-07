@@ -1,4 +1,5 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Models;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Dialogs
 {
-    public class ParseYoutubeVideoOrPlayListDialogViewModel : BaseDialogViewModelResult<bool?>
+    public class ParseYoutubeVideoOrPlayListDialogViewModel : BaseDialogViewModelResult<NavigationBoolResult>
     {
         private readonly IMvxNavigationService _navigationService;
         private string _secondaryOkText;
@@ -24,7 +25,7 @@ namespace CastIt.ViewModels.Dialogs
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<ParseYoutubeVideoOrPlayListDialogViewModel> logger,
-            IMvxNavigationService navigationService) 
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
@@ -48,6 +49,6 @@ namespace CastIt.ViewModels.Dialogs
         }
 
         private Task CloseDialog(bool? parseVideo)
-            => _navigationService.Close(this, parseVideo);
+            => _navigationService.Close(this, !parseVideo.HasValue ? null : new NavigationBoolResult(parseVideo.Value));
     }
 }

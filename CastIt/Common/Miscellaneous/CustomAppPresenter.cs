@@ -21,14 +21,11 @@ namespace CastIt.Common.Miscellaneous
         {
             base.RegisterAttributeTypes();
             AttributeTypesToActionsDictionary.Register<CustomMvxContentPresentationAttribute>(
-                (viewType, attribute, request) =>
+                (_, attribute, request) =>
                 {
                     var view = WpfViewLoader.CreateView(request);
-                    return ShowContentView(view, (CustomMvxContentPresentationAttribute)attribute, request);
-                }, (viewModel, attribute) =>
-                {
-                    return CloseContentView(viewModel);
-                });
+                    return ShowContentView(view, attribute, request);
+                }, (viewModel, _) => CloseContentView(viewModel));
         }
 
         public override async Task<bool> Close(IMvxViewModel toClose)
@@ -49,7 +46,7 @@ namespace CastIt.Common.Miscellaneous
             MvxContentPresentationAttribute attribute,
             MvxViewModelRequest request)
         {
-            if (!(attribute is CustomMvxContentPresentationAttribute customAttribute))
+            if (attribute is not CustomMvxContentPresentationAttribute customAttribute)
                 return base.ShowContentView(element, attribute, request);
 
             var contentControl = FrameworkElementsDictionary.Keys

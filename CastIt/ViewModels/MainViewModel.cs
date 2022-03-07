@@ -4,6 +4,7 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Extensions;
 using CastIt.Interfaces;
+using CastIt.Models;
 using CastIt.Models.Messages;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
@@ -806,13 +807,14 @@ namespace CastIt.ViewModels
 
         private async Task ShowChangeServerUrlDialog()
         {
-            ServerIsRunning = await _navigationService.Navigate<ChangeServerUrlDialogViewModel, bool>();
+            var result = await _navigationService.Navigate<ChangeServerUrlDialogViewModel, NavigationBoolResult>();
+            ServerIsRunning = result!.Result;
         }
 
         private async Task ShowDownloadFfmpegDialog()
         {
-            bool filesWereDownloaded = await _navigationService.Navigate<DownloadDialogViewModel, bool>();
-            if (!filesWereDownloaded)
+            var result = await _navigationService.Navigate<DownloadDialogViewModel, NavigationBoolResult>();
+            if (!result!.Result)
             {
                 CloseAppCommand.Execute();
             }

@@ -4,6 +4,7 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Utils;
 using CastIt.Interfaces;
+using CastIt.Models;
 using CastIt.Models.Messages;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
@@ -372,19 +373,21 @@ namespace CastIt.ViewModels.Items
                 if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
                 {
                     Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
-                    bool? result = await _navigationService
-                        .Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, bool?>();
-                    switch (result)
+                    var result = await _navigationService
+                        .Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, NavigationBoolResult>();
+
+                    //Only video
+                    if (result?.Result == true)
                     {
-                        //Only video
-                        case true:
-                            Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
-                            await _castItHub.AddUrlFile(Id, url, true);
-                            return;
-                        //Cancel
-                        case null:
-                            Logger.LogInformation($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
-                            return;
+                        Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
+                        await _castItHub.AddUrlFile(Id, url, true);
+                        return;
+                    }
+                    //Cancel
+                    if (result == null)
+                    {
+                        Logger.LogInformation($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
+                        return;
                     }
                 }
                 Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist...");

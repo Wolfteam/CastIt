@@ -4,6 +4,7 @@ using CastIt.ViewModels.Items;
 using Microsoft.Win32;
 using MvvmCross.Base;
 using MvvmCross.Binding.BindingContext;
+using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using System;
@@ -12,6 +13,7 @@ using System.Linq;
 
 namespace CastIt.Views
 {
+    [MvxContentPresentation]
     [MvxViewFor(typeof(MainViewModel))]
     public partial class MainPage : MvxWpfView<MainViewModel>
     {

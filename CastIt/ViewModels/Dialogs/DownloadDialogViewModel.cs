@@ -1,4 +1,5 @@
 ﻿using CastIt.Interfaces;
+using CastIt.Models;
 using CastIt.Models.Messages;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
@@ -14,7 +15,7 @@ using Xabe.FFmpeg.Downloader;
 
 namespace CastIt.ViewModels.Dialogs
 {
-    public class DownloadDialogViewModel : BaseDialogViewModelResult<bool>
+    public class DownloadDialogViewModel : BaseDialogViewModelResult<NavigationBoolResult>
     {
         #region Members
         private readonly IMvxNavigationService _navigationService;
@@ -71,7 +72,7 @@ namespace CastIt.ViewModels.Dialogs
             base.SetCommands();
             OkCommand = new MvxAsyncCommand(DownloadMissingFiles);
 
-            CloseCommand = new MvxAsyncCommand(async () => await _navigationService.Close(this, false));
+            CloseCommand = new MvxAsyncCommand(async () => await _navigationService.Close(this, NavigationBoolResult.Fail()));
         }
 
         private async Task DownloadMissingFiles()
@@ -105,7 +106,7 @@ namespace CastIt.ViewModels.Dialogs
             }
             IsDownloading = false;
 
-            await _navigationService.Close(this, filesWereDownloaded);
+            await _navigationService.Close(this, new NavigationBoolResult(filesWereDownloaded));
         }
     }
 }
