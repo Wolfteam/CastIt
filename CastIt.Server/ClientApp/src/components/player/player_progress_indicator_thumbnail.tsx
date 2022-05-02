@@ -9,17 +9,12 @@ import { thumbnailImgHeight, thumbnailImgWidth } from '../../utils/app_constants
 const useStyles = makeStyles(() =>
     createStyles({
         root: {
-            display: 'inline-block',
-            position: 'relative',
             overflow: 'hidden',
-            width: thumbnailImgWidth,
-            height: thumbnailImgHeight,
             borderRadius: 20,
         },
         image: {
             width: thumbnailImgWidth,
             height: thumbnailImgHeight,
-            position: 'absolute',
             transformOrigin: 'left top',
         },
         text: {

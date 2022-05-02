@@ -2,7 +2,7 @@ import { alpha, AppBar, createStyles, IconButton, InputBase, makeStyles, Theme, 
 import SearchIcon from '@material-ui/icons/Search';
 import { Add, ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
 import { playListsPath } from '../../routes';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import React, { Fragment, useEffect, useState } from 'react';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
@@ -83,7 +83,7 @@ interface State {
 
 function PlayListAppBar(props: Props) {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const [search, setSearch] = useState<string>('');
     const [state, setState] = useState<State>({
         canGoToPlayedFile: false,
@@ -131,8 +131,7 @@ function PlayListAppBar(props: Props) {
     };
 
     const handleGoBackClick = () => {
-        console.log(history);
-        history.push(playListsPath);
+        navigate(playListsPath);
     };
 
     const handleGoToPlayedFile = () => {

@@ -15,7 +15,7 @@ import {
 } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { Add, Delete, MoreVert, Edit, Sort } from '@material-ui/icons';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { playListPath } from '../../routes';
 import RenamePlayListDialog from '../dialogs/rename_playlist_dialog';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
@@ -92,7 +92,7 @@ const initialState: State = {
 
 function PlayListCardItem(props: Props): JSX.Element {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState<HTMLElement>();
 
     const [state, setState] = useState(initialState);
@@ -137,7 +137,7 @@ function PlayListCardItem(props: Props): JSX.Element {
 
     const handleClick = (): void => {
         const route = playListPath.replace(':id', `${state.id}`);
-        history.push(route);
+        navigate(route);
     };
 
     const toggleRaised = (): void => {

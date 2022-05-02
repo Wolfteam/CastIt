@@ -83,6 +83,7 @@ function PlayerProgressIndicator() {
                     max={state.mediaDuration}
                     step={1}
                     valueLabelDisplay="auto"
+                    style={{marginTop: '5px'}}
                     disabled={!state.isPlayingOrPaused}
                     value={state.elapsedSeconds}
                     onChange={(e, val) => handleValueChanged(val as number)}

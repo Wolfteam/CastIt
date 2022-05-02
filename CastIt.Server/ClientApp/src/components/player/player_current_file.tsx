@@ -64,7 +64,7 @@ function PlayerCurrentFile() {
             onStoppedPlaybackSubscription.unsubscribe();
         };
     }, []);
-
+    
     const image = state.imageUrl ?? defaultImg;
 
     return (

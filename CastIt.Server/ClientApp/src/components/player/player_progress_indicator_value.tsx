@@ -15,15 +15,21 @@ const CustomTooltip = withStyles({
         height: thumbnailImgHeight,
         padding: 0,
         margin: 0,
-    },
+    }
 })(Tooltip);
 
 function PlayerProgressIndicatorValue(props: Props) {
     const { children, open, value } = props;
     const second = value < 0 ? 0 : Math.round(value);
-    
+
     return (
-        <CustomTooltip open={open} enterTouchDelay={0} placement="top" arrow title={<PlayerProgressIndicatorThumbnail second={second} />}>
+        <CustomTooltip
+            open={open}
+            enterTouchDelay={0}
+            placement="top"
+            arrow
+            title={<PlayerProgressIndicatorThumbnail second={second} />}
+        >
             {children}
         </CustomTooltip>
     );

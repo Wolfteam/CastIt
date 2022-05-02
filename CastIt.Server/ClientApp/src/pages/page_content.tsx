@@ -18,9 +18,11 @@ function PageContent(props: Props) {
     const classes = useStyles();
     if (props.useContainer) {
         return (
-            <Container id="page-content" maxWidth="xl" className={classes.root}>
-                {props.children}
-            </Container>
+            <div className={classes.root}>
+                <Container id="page-content" maxWidth="xl">
+                    {props.children}
+                </Container>
+            </div>
         );
     }
     return (

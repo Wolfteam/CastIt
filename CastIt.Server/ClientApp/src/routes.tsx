@@ -1,8 +1,8 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 export const playListsPath = '/';
-export const playListPath = '/playlist/:id';
+export const playListPath = 'playlist/:id';
 
 const PlayLists = React.lazy(() => import('./pages/playlists'));
 const PlayList = React.lazy(() => import('./pages/playlist'));
@@ -11,19 +11,19 @@ const Player = React.lazy(() => import('./components/player/player'));
 
 export const AppRoutes: React.FC = () => {
     return (
-        <Switch>
-            <Route exact path={playListPath} component={PlayList} key="playlists" />
-            <Route exact path={playListsPath} component={PlayLists} key="playlist" />
-            <Route path="*" component={NotFound} key="notfound" />
-        </Switch>
+        <Routes>
+            <Route path={playListPath} element={<PlayList />} key="playlists" />
+            <Route path={playListsPath} element={<PlayLists />} key="playlist" />
+            <Route path="*" element={<NotFound />} key="notfound" />
+        </Routes>
     );
 };
 
 export const PlayerRoutes: React.FC = () => {
     return (
-        <Switch>
-            <Route exact path={playListPath} component={Player} />
-            <Route exact path={playListsPath} component={Player} />
-        </Switch>
+        <Routes>
+            <Route path={playListPath} element={<Player />} />
+            <Route path={playListsPath} element={<Player />} />
+        </Routes>
     );
 };

@@ -105,13 +105,13 @@ function PlayLists() {
     }, []);
 
     const items = state.playLists.map((pl, index) => (
-        <Grid key={pl.id} item xs={6} sm={6} md={4} lg={3} xl={2}>
+        <Grid key={pl.id} item xs={12} sm={4} md={4} lg={3} xl={2}>
             <PlayListCardItem index={index} playList={pl} onReOrderClick={handleReOrderClick} />
         </Grid>
     ));
 
     const addNew = (
-        <Grid key="AddNewItem" item xs={6} sm={6} md={4} lg={3} xl={2} style={{ alignSelf: 'center' }}>
+        <Grid key="AddNewItem" item xs={12} sm={4} md={4} lg={3} xl={2} style={{ alignSelf: 'center' }}>
             <PlayListCardItem
                 playList={{
                     id: 0,

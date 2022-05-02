@@ -51,7 +51,7 @@ function Player() {
                 <Grid item xs={10} md={11}>
                     <PlayerProgressIndicator />
                 </Grid>
-                <Grid item xs={1} style={{ textAlign: 'center' }}>
+                <Grid item xs={2} md={1} style={{ textAlign: 'center' }}>
                     {toggleExpandButton}
                 </Grid>
             </Grid>

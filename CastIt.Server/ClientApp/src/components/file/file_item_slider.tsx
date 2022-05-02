@@ -31,7 +31,7 @@ function FileItemSlider(props: Props) {
                     {props.playedTime}
                 </Typography>
             </Grid>
-            <Grid item xs={8} style={{ marginBottom: 7 }}>
+            <Grid item xs={8} style={{ marginBottom: 7, paddingRight: '5px' }}>
                 {slider}
             </Grid>
             <Grid item xs={2}>

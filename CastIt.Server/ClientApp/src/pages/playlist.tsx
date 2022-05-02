@@ -1,6 +1,6 @@
 import { useSnackbar } from 'notistack';
 import { Fragment, useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Params, useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import { onPlayListsChanged, onPlayListChanged, onFileAdded, onFilesChanged, onFileDeleted } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
@@ -27,7 +27,7 @@ const useStyles = makeStyles(() =>
     })
 );
 
-interface Params {
+interface ComponentParams extends Params {
     id: string;
 }
 
@@ -45,14 +45,14 @@ function PlayList() {
     const [state, setState] = useState(initialState);
     const castItHub = useCastItHub();
     const { enqueueSnackbar } = useSnackbar();
-    const params = useParams<Params>();
+    const params = useParams<ComponentParams>();
 
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
 
     const classes = useStyles();
 
     const loadPlayList = useCallback(async () => {
-        const playList = await castItHub.connection.getPlayList(+params.id);
+        const playList = await castItHub.connection.getPlayList(+params.id!);
         setState((s) => ({
             ...s,
             playList: playList,
@@ -158,7 +158,7 @@ function PlayList() {
         };
     }, [state.playList]);
 
-    if (+params.id <= 0) {
+    if (+params.id! <= 0) {
         enqueueSnackbar(translations.invalidPlayList, { variant: 'warning' });
     }
 

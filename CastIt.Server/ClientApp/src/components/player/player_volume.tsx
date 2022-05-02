@@ -69,7 +69,7 @@ function PlayerVolume() {
 
     return (
         <Fragment>
-            <IconButton {...bindTrigger(popupState)}>
+            <IconButton disabled={!state.isConnected} {...bindTrigger(popupState)}>
                 <VolumeUp fontSize="large" />
             </IconButton>
             <Popover
