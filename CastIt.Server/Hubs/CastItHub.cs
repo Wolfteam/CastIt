@@ -35,13 +35,13 @@ namespace CastIt.Server.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            await SendSettingsChanged();
+            await SendSettingsChanged(false);
             if (_castService.IsPlayingOrPaused)
             {
-                await SendPlayerStatusChanged();
+                await SendPlayerStatusChanged(false);
             }
             await SendPlayListsToClient();
-            await SendCastDevicesChanged();
+            await SendCastDevicesChanged(false);
         }
 
         #region Client Msgs
@@ -410,10 +410,10 @@ namespace CastIt.Server.Hubs
             return Clients.All.FileLoaded(file);
         }
 
-        public Task SendPlayerStatusChanged()
+        public Task SendPlayerStatusChanged(bool all = true)
         {
             var status = _castService.GetPlayerStatus();
-            return Clients.All.PlayerStatusChanged(status);
+            return  all ? Clients.All.PlayerStatusChanged(status) : Clients.Caller.PlayerStatusChanged(status);
         }
 
         public Task SendEndReached(FileItemResponseDto file)
@@ -421,16 +421,16 @@ namespace CastIt.Server.Hubs
             return Clients.All.FileEndReached(file);
         }
 
-        public Task SendCastDevicesChanged()
+        public Task SendCastDevicesChanged(bool all = true)
         {
             var devices = _castService.AvailableDevices;
-            return Clients.All.CastDevicesChanged(devices);
+            return all ? Clients.All.CastDevicesChanged(devices) : Clients.Caller.CastDevicesChanged(devices);
         }
 
-        public Task SendSettingsChanged()
+        public Task SendSettingsChanged(bool all = true)
         {
             var settings = _settingsService.Settings;
-            return Clients.All.PlayerSettingsChanged(settings);
+            return all ? Clients.All.PlayerSettingsChanged(settings) : Clients.Caller.PlayerSettingsChanged(settings);
         }
 
         public Task SendServerMessage(AppMessageType type)
