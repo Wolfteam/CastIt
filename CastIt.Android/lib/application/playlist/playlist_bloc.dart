@@ -4,8 +4,8 @@ import 'package:bloc/bloc.dart';
 import 'package:castit/domain/extensions/string_extensions.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tuple/tuple.dart';
 

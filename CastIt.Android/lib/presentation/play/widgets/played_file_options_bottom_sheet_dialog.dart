@@ -22,8 +22,9 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
             if (ModalRoute.of(context)!.isCurrent) {
               Navigator.of(ctx).pop();
             }
+            return null;
           },
-          orElse: () {},
+          orElse: () => {},
         ),
         builder: (ctx, state) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

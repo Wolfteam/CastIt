@@ -4,8 +4,8 @@ import 'package:bloc/bloc.dart';
 import 'package:castit/domain/app_constants.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
+import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:meta/meta.dart';
 
 part 'played_file_options_bloc.freezed.dart';
 part 'played_file_options_event.dart';

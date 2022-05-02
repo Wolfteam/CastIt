@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:meta/meta.dart';
 
 part 'play_bloc.freezed.dart';
 part 'play_event.dart';

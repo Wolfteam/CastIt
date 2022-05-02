@@ -8,7 +8,6 @@ import 'package:castit/domain/services/locale_service.dart';
 import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'main_bloc.freezed.dart';

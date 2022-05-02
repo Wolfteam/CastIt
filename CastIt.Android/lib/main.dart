@@ -6,7 +6,6 @@ import 'package:castit/domain/services/settings_service.dart';
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/injection.dart';
 import 'package:castit/presentation/shared/extensions/app_theme_type_extensions.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

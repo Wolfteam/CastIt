@@ -65,10 +65,11 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
                     SchedulerBinding.instance!.addPostFrameCallback((_) => _animateToIndex(index));
                   }
                 }
+                return null;
               },
               disconnected: (_) => _refreshController.refreshCompleted(),
               close: (_) => Navigator.of(ctx).pop(),
-              orElse: () {},
+              orElse: () => {},
             ),
             builder: (ctx, state) => state.map(
               loading: (_) => const PlayListContentLoading(),

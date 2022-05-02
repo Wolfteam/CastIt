@@ -1,4 +1,4 @@
-package com.example.castit
+package com.miraisoft.castit
 
 import android.os.Bundle
 import android.util.Log

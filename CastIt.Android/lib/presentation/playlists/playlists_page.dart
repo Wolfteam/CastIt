@@ -32,7 +32,7 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
             listener: (ctx, state) => state.maybeMap(
               loaded: (_) => _refreshController.refreshCompleted(),
               disconnected: (_) => _refreshController.refreshCompleted(),
-              orElse: () {},
+              orElse: () => {},
             ),
             builder: (ctx, state) => SmartRefresher(
               header: const MaterialClassicHeader(),
