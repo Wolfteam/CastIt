@@ -47,7 +47,11 @@ class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<
             ),
             const Flexible(flex: 8, fit: FlexFit.tight, child: PlayProgressBar()),
             const Flexible(flex: 3, fit: FlexFit.tight, child: PlayProgressText()),
-            Flexible(flex: 19, fit: FlexFit.tight, child: PlayButtons(areDisabled: !state.maybeMap(playing: (_) => true, orElse: () => false))),
+            Flexible(
+              flex: 19,
+              fit: FlexFit.tight,
+              child: PlayButtons(areDisabled: !state.maybeMap(playing: (_) => true, orElse: () => false)),
+            ),
           ],
         ),
       ),

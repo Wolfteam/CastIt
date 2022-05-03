@@ -81,17 +81,51 @@ class PlayCoverImg extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const SizedBox(height: 20.0),
-              _buildTop(context),
+              _Top(
+                fileIdIsValid: fileIdIsValid,
+                playListIsValid: playListIsValid,
+                fileId: fileId,
+                playListId: playListId,
+                playListName: playListName,
+              ),
               const Spacer(),
-              _buildBottom(context),
+              _Bottom(
+                fileIdIsValid: fileIdIsValid,
+                playListIsValid: playListIsValid,
+                fileId: fileId,
+                playListId: playListId,
+                fileName: fileName,
+                loopFile: loopFile,
+                loopPlayList: loopPlayList,
+                shufflePlayList: shufflePlayList,
+              )
             ],
           ),
         )
       ],
     );
   }
+}
 
-  Widget _buildTop(BuildContext context) {
+class _Top extends StatelessWidget {
+  final int? fileId;
+  final int? playListId;
+  final String? playListName;
+
+  final bool fileIdIsValid;
+  final bool playListIsValid;
+
+  const _Top({
+    Key? key,
+    this.fileId,
+    this.playListId,
+    this.playListName,
+    required this.fileIdIsValid,
+    required this.playListIsValid,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     final i18n = S.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -130,7 +164,47 @@ class PlayCoverImg extends StatelessWidget {
     );
   }
 
-  Widget _buildBottom(BuildContext context) {
+  Future<void> _goToPlayList(BuildContext context) async {
+    await PlayListPage.forDetails(playListId!, fileId, context);
+  }
+
+  void _showFileOptionsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: Styles.modalBottomSheetShape,
+      isDismissible: true,
+      isScrollControlled: true,
+      builder: (_) => PlayedFileOptionsBottomSheetDialog(),
+    );
+  }
+}
+
+class _Bottom extends StatelessWidget {
+  final int? fileId;
+  final int? playListId;
+  final String? fileName;
+
+  final bool fileIdIsValid;
+  final bool playListIsValid;
+
+  final bool loopFile;
+  final bool loopPlayList;
+  final bool shufflePlayList;
+
+  const _Bottom({
+    Key? key,
+    this.fileId,
+    this.playListId,
+    this.fileName,
+    required this.fileIdIsValid,
+    required this.playListIsValid,
+    required this.loopFile,
+    required this.loopPlayList,
+    required this.shufflePlayList,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final i18n = S.of(context);
     return Container(
@@ -161,20 +235,6 @@ class PlayCoverImg extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _goToPlayList(BuildContext context) async {
-    await PlayListPage.forDetails(playListId!, fileId, context);
-  }
-
-  void _showFileOptionsModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
-      isScrollControlled: true,
-      builder: (_) => PlayedFileOptionsBottomSheetDialog(),
     );
   }
 

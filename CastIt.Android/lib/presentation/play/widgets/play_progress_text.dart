@@ -12,14 +12,7 @@ class PlayProgressText extends StatelessWidget {
       builder: (ctx, state) {
         final theme = Theme.of(context);
         final isDarkTheme = theme.brightness == Brightness.dark;
-        const dummy = Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-        );
-        return state.map(
-          connecting: (state) => dummy,
-          connected: (state) => dummy,
-          fileLoading: (state) => dummy,
-          fileLoadingFailed: (state) => dummy,
+        return state.maybeMap(
           playing: (state) {
             final current = Duration(seconds: (state.currentSeconds ?? 0).round()).formatDuration();
             final total = Duration(seconds: state.duration!.round()).formatDuration();
@@ -40,6 +33,9 @@ class PlayProgressText extends StatelessWidget {
               ),
             );
           },
+          orElse: () => const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+          ),
         );
       },
     );

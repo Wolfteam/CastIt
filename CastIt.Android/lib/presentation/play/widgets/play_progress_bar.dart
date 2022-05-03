@@ -9,31 +9,25 @@ class PlayProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PlayBloc, PlayState>(
-      builder: (ctx, state) {
-        final theme = Theme.of(context);
-        return state.map(
-          connecting: (_) => const _DummySlider(),
-          connected: (_) => const _DummySlider(),
-          fileLoading: (_) => const _DummySlider(),
-          fileLoadingFailed: (_) => const _DummySlider(),
-          playing: (state) {
-            if (state.duration! <= 0) {
-              return const _DummySlider(value: 100);
-            }
-            return Slider(
-              onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
-              value: state.currentSeconds!,
-              max: state.duration!,
-              activeColor: theme.colorScheme.secondary,
-              label: _generateLabel(state.currentSeconds!),
-              divisions: state.duration!.round(),
-              onChangeStart: (startValue) => context.read<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
-              onChangeEnd: (finalValue) =>
-                  context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
-            );
-          },
-        );
-      },
+      builder: (ctx, state) => state.maybeMap(
+        playing: (state) {
+          if (state.duration! <= 0) {
+            return const _DummySlider(value: 100);
+          }
+          return Slider(
+            onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
+            value: state.currentSeconds!,
+            max: state.duration!,
+            activeColor: Theme.of(context).colorScheme.secondary,
+            label: _generateLabel(state.currentSeconds!),
+            divisions: state.duration!.round(),
+            onChangeStart: (startValue) => context.read<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
+            onChangeEnd: (finalValue) =>
+                context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: finalValue.roundToDouble(), triggerGoToSeconds: true)),
+          );
+        },
+        orElse: () => const _DummySlider(),
+      ),
     );
   }
 

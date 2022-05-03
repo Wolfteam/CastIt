@@ -12,6 +12,14 @@ class PlayEvent with _$PlayEvent {
     required PlayedFile file,
   }) = _FileLoaded;
 
+  factory PlayEvent.fileChanged({
+    required FileItemResponseDto file,
+  }) = _FileChanged;
+
+  factory PlayEvent.playListChanged({
+    required GetAllPlayListResponseDto playList,
+  }) = _PlayListChanged;
+
   factory PlayEvent.timeChanged({
     required double seconds,
   }) = _TimeChanged;

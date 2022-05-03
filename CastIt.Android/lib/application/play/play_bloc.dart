@@ -36,6 +36,22 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       add(PlayEvent.stopped());
     });
 
+    _castItHub.fileChanged.stream.listen((tuple) {
+      //if the changed file is not the one being played just return
+      if (!tuple.item1) {
+        return;
+      }
+      add(PlayEvent.fileChanged(file: tuple.item2));
+    });
+
+    _castItHub.playListChanged.stream.listen((tuple) {
+      //if the changed playlist is not the one being played just return
+      if (!tuple.item1) {
+        return;
+      }
+      add(PlayEvent.playListChanged(playList: tuple.item2));
+    });
+
     _castItHub.fileTimeChanged.stream.listen((seconds) {
       if (isPlaying && (currentState.currentSeconds! - seconds).abs() >= 1) {
         add(PlayEvent.timeChanged(seconds: seconds));
@@ -70,6 +86,26 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         isDraggingSlider: false,
         playListTotalDuration: e.file.playListTotalDuration,
         playListPlayedTime: e.file.playListPlayedTime,
+      ),
+      fileChanged: (e) => state.maybeMap(
+        playing: (state) => state.copyWith(
+          id: e.file.id,
+          playListId: e.file.playListId,
+          filename: e.file.filename,
+          thumbPath: e.file.thumbnailUrl,
+          loopFile: e.file.loop,
+        ),
+        orElse: () => state,
+      ),
+      playListChanged: (e) => state.maybeMap(
+        playing: (state) => state.copyWith(
+          playlistName: e.playList.name,
+          playListTotalDuration: e.playList.totalDuration,
+          playListPlayedTime: e.playList.playedTime,
+          shufflePlayList: e.playList.shuffle,
+          loopPlayList: e.playList.loop,
+        ),
+        orElse: () => state,
       ),
       timeChanged: (e) {
         if (!isPlaying) {
