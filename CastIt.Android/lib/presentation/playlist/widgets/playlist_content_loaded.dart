@@ -18,7 +18,7 @@ class PlayListContentLoaded extends StatelessWidget {
   final ScrollController listViewScrollController;
 
   const PlayListContentLoaded({
-    Key? key,
+    super.key,
     required this.playListId,
     required this.isLoaded,
     required this.files,
@@ -26,7 +26,7 @@ class PlayListContentLoaded extends StatelessWidget {
     required this.itemHeight,
     required this.refreshController,
     required this.listViewScrollController,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

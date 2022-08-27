@@ -2,7 +2,7 @@ import 'package:castit/presentation/playlist/widgets/playlist_header.dart';
 import 'package:flutter/material.dart';
 
 class PlayListContentLoading extends StatelessWidget {
-  const PlayListContentLoading({Key? key}) : super(key: key);
+  const PlayListContentLoading({super.key});
 
   @override
   Widget build(BuildContext context) {

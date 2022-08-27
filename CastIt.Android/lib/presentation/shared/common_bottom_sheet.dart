@@ -1,23 +1,22 @@
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/shared/bottom_sheet_title.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
+import 'package:castit/presentation/shared/modal_sheet_separator.dart';
 import 'package:flutter/material.dart';
-
-import 'bottom_sheet_title.dart';
-import 'modal_sheet_separator.dart';
 
 class CommonBottomSheet extends StatelessWidget {
   final String title;
   final IconData titleIcon;
   final Widget child;
-  final Function? onOk;
-  final Function? onCancel;
+  final VoidCallback? onOk;
+  final VoidCallback? onCancel;
   final bool showOkButton;
   final bool showCancelButton;
   final String? okText;
   final String? cancelText;
 
   const CommonBottomSheet({
-    Key? key,
+    super.key,
     required this.title,
     required this.titleIcon,
     this.onOk,
@@ -27,7 +26,7 @@ class CommonBottomSheet extends StatelessWidget {
     this.showCancelButton = true,
     this.okText,
     this.cancelText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

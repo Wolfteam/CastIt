@@ -25,7 +25,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
   @override
   void initState() {
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(
       initialIndex: _index,
       length: _pages.length,
@@ -106,7 +106,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

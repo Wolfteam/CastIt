@@ -1,14 +1,13 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/enums/enums.dart';
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/intro/widgets/intro_page_item.dart';
+import 'package:castit/presentation/intro/widgets/skip_intro_bottom_sheet.dart';
+import 'package:castit/presentation/shared/change_connection_bottom_sheet_dialog.dart';
 import 'package:castit/presentation/shared/extensions/i18n_extensions.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../shared/change_connection_bottom_sheet_dialog.dart';
-import 'widgets/intro_page_item.dart';
-import 'widgets/skip_intro_bottom_sheet.dart';
 
 class IntroPage extends StatefulWidget {
   @override

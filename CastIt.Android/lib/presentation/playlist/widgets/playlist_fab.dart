@@ -14,14 +14,14 @@ class PlayListFab extends StatelessWidget {
   final bool isVisible;
 
   const PlayListFab({
-    Key? key,
+    super.key,
     required this.id,
     required this.name,
     required this.loop,
     required this.shuffle,
     required this.onArrowTopTap,
     required this.isVisible,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,16 +47,15 @@ class _CardRow extends StatelessWidget {
   final String name;
   final bool loop;
   final bool shuffle;
-  final Function onArrowTopTap;
+  final OnTap onArrowTopTap;
 
   const _CardRow({
-    Key? key,
     required this.id,
     required this.name,
     required this.loop,
     required this.shuffle,
     required this.onArrowTopTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

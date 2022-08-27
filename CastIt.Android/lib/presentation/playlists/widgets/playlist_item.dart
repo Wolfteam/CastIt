@@ -1,11 +1,10 @@
 import 'package:castit/application/bloc.dart';
+import 'package:castit/presentation/playlist/playlist_page.dart';
+import 'package:castit/presentation/playlist/widgets/item_counter.dart';
+import 'package:castit/presentation/playlists/widgets/playlist_options_bottom_sheet_dialog.dart';
+import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../playlist/playlist_page.dart';
-import '../../playlist/widgets/item_counter.dart';
-import '../../shared/extensions/styles.dart';
-import 'playlist_options_bottom_sheet_dialog.dart';
 
 class PlayListItem extends StatelessWidget {
   final int id;
@@ -22,8 +21,8 @@ class PlayListItem extends StatelessWidget {
     required this.loop,
     required this.shuffle,
     required this.totalDuration,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

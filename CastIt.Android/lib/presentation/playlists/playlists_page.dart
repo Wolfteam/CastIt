@@ -1,12 +1,11 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/playlists/widgets/playlist_item.dart';
 import 'package:castit/presentation/shared/page_header.dart';
 import 'package:castit/presentation/shared/something_went_wrong.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-
-import 'widgets/playlist_item.dart';
 
 class PlayListsPage extends StatefulWidget {
   @override

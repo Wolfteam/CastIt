@@ -11,12 +11,12 @@ class PlayedFileDropdownOption extends StatelessWidget {
   final List<FileItemOptionsResponseDto> options;
 
   const PlayedFileDropdownOption({
-    Key? key,
+    super.key,
     required this.title,
     required this.hint,
     required this.icon,
     required this.options,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

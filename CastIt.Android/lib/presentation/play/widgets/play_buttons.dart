@@ -7,10 +7,7 @@ class PlayButtons extends StatelessWidget {
 
   final bool areDisabled;
 
-  const PlayButtons({
-    Key? key,
-    this.areDisabled = false,
-  }) : super(key: key);
+  const PlayButtons({this.areDisabled = false});
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +31,15 @@ class PlayButtons extends StatelessWidget {
             onPressed: areDisabled ? null : () => _goTo(context, false, true),
             icon: Icon(Icons.skip_previous, color: iconColor),
           ),
-          Container(
+          DecoratedBox(
             decoration: BoxDecoration(
               color: theme.colorScheme.secondary,
               borderRadius: BorderRadius.circular(50.0),
             ),
             child: BlocBuilder<PlayBloc, PlayState>(
               builder: (ctx, state) => state.maybeMap(
-                playing: (state) => _buildPlayBackButton(context, state.isPaused!),
-                orElse: () => _buildPlayBackButton(context, false),
+                playing: (state) => _PlayBackButton(isPaused: state.isPaused!, isDisabled: areDisabled),
+                orElse: () => _PlayBackButton(isPaused: false, isDisabled: areDisabled),
               ),
             ),
           ),
@@ -63,10 +60,32 @@ class PlayButtons extends StatelessWidget {
     );
   }
 
-  IconButton _buildPlayBackButton(BuildContext ctx, bool isPaused) {
+  void _goTo(BuildContext ctx, bool next, bool previous) {
+    final bloc = ctx.read<ServerWsBloc>();
+    bloc.goTo(next: next, previous: previous);
+  }
+
+  void _skipThirtySeconds(BuildContext ctx, bool forward) {
+    final seconds = 30.0 * (forward ? 1 : -1);
+    final bloc = ctx.read<ServerWsBloc>();
+    bloc.skipSeconds(seconds);
+  }
+}
+
+class _PlayBackButton extends StatelessWidget {
+  final bool isDisabled;
+  final bool isPaused;
+
+  const _PlayBackButton({
+    required this.isDisabled,
+    required this.isPaused,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return IconButton(
       iconSize: 65,
-      onPressed: areDisabled ? null : () => _togglePlayBack(ctx),
+      onPressed: isDisabled ? null : () => _togglePlayBack(context),
       icon: Icon(
         isPaused ? Icons.pause : Icons.play_arrow,
         color: Colors.white,
@@ -77,16 +96,5 @@ class PlayButtons extends StatelessWidget {
   void _togglePlayBack(BuildContext ctx) {
     final bloc = ctx.read<ServerWsBloc>();
     bloc.togglePlayBack();
-  }
-
-  void _goTo(BuildContext ctx, bool next, bool previous) {
-    final bloc = ctx.read<ServerWsBloc>();
-    bloc.goTo(next: next, previous: previous);
-  }
-
-  void _skipThirtySeconds(BuildContext ctx, bool forward) {
-    final seconds = 30.0 * (forward ? 1 : -1);
-    final bloc = ctx.read<ServerWsBloc>();
-    bloc.skipSeconds(seconds);
   }
 }

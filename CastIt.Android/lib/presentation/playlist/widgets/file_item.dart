@@ -1,11 +1,10 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/models/models.dart';
+import 'package:castit/presentation/playlist/widgets/file_options_bottom_sheet_dialog.dart';
+import 'package:castit/presentation/playlist/widgets/item_counter.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'file_options_bottom_sheet_dialog.dart';
-import 'item_counter.dart';
 
 class FileItem extends StatefulWidget {
   final int position;
@@ -26,9 +25,9 @@ class FileItem extends StatefulWidget {
   final String fullTotalDuration;
 
   FileItem.fromItem({
+    super.key,
     required this.itemHeight,
     required FileItemResponseDto file,
-    Key? key,
   })  : id = file.id,
         position = file.position,
         playListId = file.playListId,
@@ -43,8 +42,7 @@ class FileItem extends StatefulWidget {
         loop = file.loop,
         subtitle = file.subTitle,
         playedSeconds = file.playedSeconds,
-        fullTotalDuration = file.fullTotalDuration,
-        super(key: key);
+        fullTotalDuration = file.fullTotalDuration;
 
   @override
   State<FileItem> createState() => _FileItemState();
@@ -108,7 +106,7 @@ class _Title extends StatelessWidget {
   final String name;
   final bool loop;
 
-  const _Title({Key? key, required this.name, required this.loop}) : super(key: key);
+  const _Title({required this.name, required this.loop});
 
   @override
   Widget build(BuildContext context) {
@@ -151,14 +149,13 @@ class _Content extends StatelessWidget {
   final String fullTotalDuration;
 
   const _Content({
-    Key? key,
     required this.id,
     required this.playListId,
     required this.path,
     required this.playedPercentage,
     required this.subtitle,
     required this.fullTotalDuration,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

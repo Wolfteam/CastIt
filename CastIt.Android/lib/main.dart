@@ -1,3 +1,4 @@
+import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:castit/domain/services/device_info_service.dart';
 import 'package:castit/domain/services/locale_service.dart';
@@ -5,15 +6,13 @@ import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/injection.dart';
+import 'package:castit/presentation/intro/intro_page.dart';
+import 'package:castit/presentation/main/main_page.dart';
 import 'package:castit/presentation/shared/extensions/app_theme_type_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
-import 'application/bloc.dart';
-import 'presentation/intro/intro_page.dart';
-import 'presentation/main/main_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

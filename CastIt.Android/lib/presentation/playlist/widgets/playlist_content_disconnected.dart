@@ -3,7 +3,7 @@ import 'package:castit/presentation/shared/something_went_wrong.dart';
 import 'package:flutter/material.dart';
 
 class PlayListContentDisconnected extends StatelessWidget {
-  const PlayListContentDisconnected({Key? key}) : super(key: key);
+  const PlayListContentDisconnected({super.key});
 
   @override
   Widget build(BuildContext context) {

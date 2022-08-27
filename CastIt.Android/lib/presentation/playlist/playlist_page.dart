@@ -62,7 +62,7 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
                 if (state.scrollToFileId != null) {
                   final index = state.files.indexWhere((el) => el.id == state.scrollToFileId!);
                   if (index >= 0) {
-                    SchedulerBinding.instance!.addPostFrameCallback((_) => _animateToIndex(index));
+                    SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(index));
                   }
                 }
                 return null;
