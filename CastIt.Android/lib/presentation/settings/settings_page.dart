@@ -13,6 +13,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClientMixin<SettingsPage> {
+  final _scrollController = ScrollController();
+
   @override
   bool get wantKeepAlive => true;
 
@@ -23,8 +25,9 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     return ListView.builder(
       shrinkWrap: true,
       itemCount: 6,
+      controller: _scrollController,
       itemBuilder: (ctx, index) {
-        switch(index) {
+        switch (index) {
           case 0:
             return PageHeader(
               title: i18n.settings,
