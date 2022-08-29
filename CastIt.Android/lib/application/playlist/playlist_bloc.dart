@@ -21,66 +21,77 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
 
   _LoadedState get currentState => state as _LoadedState;
 
-  PlayListBloc(this._castItHub) : super(PlayListState.loading());
+  PlayListBloc(this._castItHub) : super(PlayListState.loading()) {
+    on<_Disconnected>((event, emit) => PlayListState.disconnected(playListId: event.playListId));
 
-  @override
-  Stream<PlayListState> mapEventToState(PlayListEvent event) async* {
-    if (event is _Load || event is _Loaded) {
-      //If there were playlists loaded, hide them all!
-      yield initialState;
-    }
-
-    final s = event.map(
-      disconnected: (e) async => PlayListState.disconnected(playListId: e.playListId),
-      load: (e) async {
-        final playList = await _castItHub.loadPlayList(e.id);
-        return PlayListState.loaded(
-          playlistId: playList.id,
-          name: playList.name,
-          loop: playList.loop,
-          position: playList.position,
-          shuffle: playList.shuffle,
-          files: playList.files,
-          loaded: true,
-          scrollToFileId: e.scrollToFileId,
-        );
-      },
-      loaded: (e) async => PlayListState.loaded(
-        playlistId: e.playlist.id,
-        name: e.playlist.name,
-        loop: e.playlist.loop,
-        position: e.playlist.position,
-        shuffle: e.playlist.shuffle,
-        files: e.playlist.files,
+    on<_Load>((event, emit) async {
+      emit(initialState);
+      final playList = await _castItHub.loadPlayList(event.id);
+      final updatedState = PlayListState.loaded(
+        playlistId: playList.id,
+        name: playList.name,
+        loop: playList.loop,
+        position: playList.position,
+        shuffle: playList.shuffle,
+        files: playList.files,
         loaded: true,
-      ),
-      playListOptionsChanged: (e) async => currentState.copyWith(loop: e.loop, shuffle: e.shuffle),
-      toggleSearchBoxVisibility: (e) async => currentState.copyWith(
-        searchBoxIsVisible: !currentState.searchBoxIsVisible,
-      ),
-      searchBoxTextChanged: (e) async {
-        final isFiltering = !e.text.isNullEmptyOrWhitespace;
-        final filteredFiles = !isFiltering
-            ? <FileItemResponseDto>[]
-            : currentState.files.where((element) => element.filename.toLowerCase().contains(e.text.toLowerCase())).toList();
+        scrollToFileId: event.scrollToFileId,
+      );
+      emit(updatedState);
+      _clearPreviousScrolledFileIfNeeded(emit);
+    });
 
-        return currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
-      },
-      closePage: (e) async => PlayListState.close(),
-      notFound: (_) async => PlayListState.notFound(),
-      playListChanged: (e) async => _handlePlayListChanged(e.playList),
-      playListDeleted: (e) async => _handlePlayListDeleted(e.id),
-      fileAdded: (e) async => _handleFileAdded(e.file),
-      filesChanged: (e) async => _handleFilesChanged(e.files),
-      fileChanged: (e) async => _handleFileChanged(e.file),
-      fileDeleted: (e) async => _handleFileDeleted(e.playListId, e.id),
-    );
+    on<_Loaded>((event, emit) {
+      emit(initialState);
+      final updatedState = PlayListState.loaded(
+        playlistId: event.playlist.id,
+        name: event.playlist.name,
+        loop: event.playlist.loop,
+        position: event.playlist.position,
+        shuffle: event.playlist.shuffle,
+        files: event.playlist.files,
+        loaded: true,
+      );
+      emit(updatedState);
+      _clearPreviousScrolledFileIfNeeded(emit);
+    });
 
-    yield await s;
+    on<_PlayListOptionsChanged>((event, emit) => emit(currentState.copyWith(loop: event.loop, shuffle: event.shuffle)));
 
+    on<_ToggleSearchBoxVisibility>((event, emit) => emit(currentState.copyWith(searchBoxIsVisible: !currentState.searchBoxIsVisible)));
+
+    on<_SearchBoxTextChanged>((event, emit) {
+      final isFiltering = !event.text.isNullEmptyOrWhitespace;
+      final filteredFiles = !isFiltering
+          ? <FileItemResponseDto>[]
+          : currentState.files.where((element) => element.filename.toLowerCase().contains(event.text.toLowerCase())).toList();
+
+      final updatedState = currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
+      emit(updatedState);
+    });
+
+    on<_ClosePage>((event, emit) => emit(PlayListState.close()));
+
+    on<_PlayListNotFound>((event, emit) => emit(PlayListState.notFound()));
+
+    on<_PlayListChanged>((event, emit) => emit(_handlePlayListChanged(event.playList)));
+
+    on<_PlayListDeleted>((event, emit) => emit(_handlePlayListDeleted(event.id)));
+
+    on<_FileAdded>((event, emit) => emit(_handleFileAdded(event.file)));
+
+    on<_FilesChanged>((event, emit) => emit(_handleFilesChanged(event.files)));
+
+    on<_FileChanged>((event, emit) => emit(_handleFileChanged(event.file)));
+
+    on<_FilesDeleted>((event, emit) => emit(_handleFileDeleted(event.playListId, event.id)));
+  }
+
+  void _clearPreviousScrolledFileIfNeeded(Emitter<PlayListState> emit) {
     //Clear any previous scrolled file
     if (state is _LoadedState && currentState.scrollToFileId != null) {
-      yield currentState.copyWith.call(scrollToFileId: null);
+      final updatedState = currentState.copyWith.call(scrollToFileId: null);
+      emit(updatedState);
     }
   }
 

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
@@ -16,32 +14,30 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
 
   PlayListsState get initialState => PlayListsState.loading();
 
-  PlayListsBloc(this._castItHub) : super(PlayListsState.disconnected());
-
   _LoadedState get currentState => state as _LoadedState;
 
-  @override
-  Stream<PlayListsState> mapEventToState(PlayListsEvent event) async* {
-    if (event is _Load) {
-      yield initialState;
-    }
+  PlayListsBloc(this._castItHub) : super(PlayListsState.disconnected()) {
+    on<_Load>((event, emit) async {
+      emit(initialState);
+      await _castItHub.loadPlayLists();
+      emit(initialState);
+    });
 
-    final s = event.map(
-      load: (e) async {
-        await _castItHub.loadPlayLists();
-        return initialState;
-      },
-      loaded: (e) async => PlayListsState.loaded(
+    on<_Loaded>((event, emit) {
+      final updatedState = PlayListsState.loaded(
         reloads: state is _LoadedState ? currentState.reloads + 1 : 1,
-        playlists: e.playlists,
-      ),
-      added: (e) async => _handlePlayListAdded(e.playList),
-      changed: (e) async => _handlePlayListChanged(e.playList),
-      deleted: (e) async => _handlePlayListDeleted(e.id),
-      disconnected: (e) async => PlayListsState.disconnected(),
-    );
+        playlists: event.playlists,
+      );
+      emit(updatedState);
+    });
 
-    yield await s;
+    on<_Added>((event, emit) => emit(_handlePlayListAdded(event.playList)));
+
+    on<_Changed>((event, emit) => emit(_handlePlayListChanged(event.playList)));
+
+    on<_Deleted>((event, emit) => emit(_handlePlayListDeleted(event.id)));
+
+    on<_Disconnected>((event, emit) => emit(PlayListsState.disconnected()));
   }
 
   void listenHubEvents() {

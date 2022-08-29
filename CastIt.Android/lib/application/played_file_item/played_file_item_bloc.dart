@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -12,6 +10,18 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
   final CastItHubClientService _castItHub;
 
   PlayedFileItemBloc(this._castItHub) : super(const PlayedFileItemState.notPlaying()) {
+    on<_Playing>((event, emit) {
+      final updatedState = PlayedFileItemState.playing(
+        id: event.id,
+        playListId: event.playListId,
+        playedPercentage: event.playedPercentage,
+        fullTotalDuration: event.fullTotalDuration,
+      );
+      emit(updatedState);
+    });
+
+    on<_EndReached>((event, emit) => emit(const PlayedFileItemState.notPlaying()));
+
     _castItHub.fileChanged.stream.listen((event) {
       final file = event.item2;
       add(
@@ -23,20 +33,5 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
         ),
       );
     });
-  }
-
-  @override
-  Stream<PlayedFileItemState> mapEventToState(PlayedFileItemEvent event) async* {
-    final s = event.map(
-      playing: (e) => PlayedFileItemState.playing(
-        id: e.id,
-        playListId: e.playListId,
-        playedPercentage: e.playedPercentage,
-        fullTotalDuration: e.fullTotalDuration,
-      ),
-      endReached: (_) => const PlayedFileItemState.notPlaying(),
-    );
-
-    yield s;
   }
 }
