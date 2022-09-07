@@ -1,8 +1,11 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/enums/enums.dart';
+import 'package:castit/domain/extensions/string_extensions.dart';
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/presentation/settings/widgets/settings_card.dart';
+import 'package:castit/presentation/shared/common_dropdown_button.dart';
 import 'package:castit/presentation/shared/extensions/app_theme_type_extensions.dart';
+import 'package:castit/presentation/shared/utils/enum_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,7 +17,7 @@ class AccentColorSettingsCard extends StatelessWidget {
     final i18n = S.of(context);
     return SettingsCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
@@ -37,14 +40,22 @@ class AccentColorSettingsCard extends StatelessWidget {
           ),
           BlocBuilder<SettingsBloc, SettingsState>(
             builder: (context, state) => state.maybeMap(
-              loaded: (state) => GridView.count(
-                shrinkWrap: true,
-                primary: false,
-                padding: const EdgeInsets.all(20),
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                crossAxisCount: 5,
-                children: AppAccentColorType.values.map((val) => _AccentColorCell(value: val, isSelected: state.accentColor == val)).toList(),
+              loaded: (state) => CommonDropdownButton<AppAccentColorType>(
+                hint: i18n.chooseAccentColor,
+                showSubTitle: false,
+                values: AppAccentColorType.values.map((e) => TranslatedEnum(e, _formatEnumName(e))).toList()
+                  ..sort((x, y) => x.translation.compareTo(y.translation)),
+                leadingIconBuilder: (val) => Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: val.getAccentColor(),
+                  ),
+                  width: 20,
+                  height: 20,
+                ),
+                currentValue: state.accentColor,
+                onChanged: (newValue, _) => _accentColorChanged(context, newValue),
               ),
               orElse: () => const CircularProgressIndicator(),
             ),
@@ -53,25 +64,11 @@ class AccentColorSettingsCard extends StatelessWidget {
       ),
     );
   }
-}
 
-class _AccentColorCell extends StatelessWidget {
-  final AppAccentColorType value;
-  final bool isSelected;
-
-  const _AccentColorCell({required this.value, required this.isSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = value.getAccentColor();
-    return InkWell(
-      onTap: () => _accentColorChanged(context, value),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        color: color,
-        child: isSelected ? const Icon(Icons.check, color: Colors.white) : null,
-      ),
-    );
+  String _formatEnumName(AppAccentColorType color) {
+    final name = color.name;
+    final words = name.split(RegExp('(?<=[a-z])(?=[A-Z])'));
+    return words.map((e) => e.toCapitalized()).join(' ');
   }
 
   void _accentColorChanged(BuildContext context, AppAccentColorType newValue) {
