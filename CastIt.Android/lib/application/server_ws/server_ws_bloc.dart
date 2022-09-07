@@ -29,10 +29,17 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       }
 
       await _castItHub.disconnectFromHub(triggerEvent: false);
-      final updatedState = currentState.copyWith(
-        isConnectedToWs: false,
-        castItUrl: _settings.castItUrl,
-        connectionRetries: currentState.connectionRetries! + 1,
+      final updatedState = state.map(
+        loaded: (state) => state.copyWith(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: currentState.connectionRetries! + 1,
+        ),
+        loading: (_) => ServerWsState.loaded(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: 0,
+        ),
       );
       emit(updatedState);
     });
@@ -41,6 +48,7 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
       if (!_castItHub.isConnected) {
         await _castItHub.connectToHub();
       }
+
       final updatedState = ServerWsState.loaded(
         castItUrl: _settings.castItUrl,
         connectionRetries: 0,
@@ -51,10 +59,20 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
 
     on<_Disconnect>((event, emit) async {
       await _castItHub.disconnectFromHub();
-      final updatedState = currentState.copyWith(
-        isConnectedToWs: false,
-        castItUrl: _settings.castItUrl,
-        connectionRetries: currentState.connectionRetries! + 1,
+      if (state is! _LoadedState) {
+        return;
+      }
+      final updatedState = state.map(
+        loading: (_) => ServerWsState.loaded(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: 0,
+        ),
+        loaded: (state) => state.copyWith(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: currentState.connectionRetries! + 1,
+        ),
       );
       emit(updatedState);
     });
