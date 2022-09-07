@@ -43,13 +43,15 @@ class PlayCoverImg extends StatelessWidget {
     return Stack(
       children: <Widget>[
         if (!thumbUrl.isNullEmptyOrWhitespace && !showLoading)
-          CachedNetworkImage(
-            imageUrl: thumbUrl!,
-            fit: BoxFit.fitHeight,
-            height: double.maxFinite,
-            filterQuality: FilterQuality.high,
-            placeholder: (ctx, url) => dummyIndicator,
-            errorWidget: (ctx, url, error) => Center(child: Text(s.unknownErrorLoadingFile)),
+          Center(
+            child: CachedNetworkImage(
+              imageUrl: thumbUrl!,
+              fit: BoxFit.fitHeight,
+              height: double.maxFinite,
+              filterQuality: FilterQuality.high,
+              placeholder: (ctx, url) => dummyIndicator,
+              errorWidget: (ctx, url, error) => Center(child: Text(s.unknownErrorLoadingFile)),
+            ),
           ),
         if (showLoading) dummyIndicator,
         DecoratedBox(

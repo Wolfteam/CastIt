@@ -1,36 +1,28 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/enums/enums.dart';
 import 'package:castit/generated/l10n.dart';
-import 'package:castit/presentation/play/play_page.dart';
-import 'package:castit/presentation/playlists/playlists_page.dart';
-import 'package:castit/presentation/settings/settings_page.dart';
+import 'package:castit/presentation/desktop_tablet_scaffold.dart';
+import 'package:castit/presentation/mobile_scaffold.dart';
 import 'package:castit/presentation/shared/change_connection_bottom_sheet_dialog.dart';
 import 'package:castit/presentation/shared/extensions/i18n_extensions.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class MainPage extends StatefulWidget {
   @override
   _MainPageState createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   bool _isShowingConnectionModal = false;
   bool _didChangeDependencies = false;
-  late TabController _tabController;
-  int _index = 0;
   bool _canShowConnectionModal = true;
-  final _pages = [PlayPage(), PlayListsPage(), SettingsPage()];
 
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
-    _tabController = TabController(
-      initialIndex: _index,
-      length: _pages.length,
-      vsync: this,
-    );
     super.initState();
   }
 
@@ -61,45 +53,25 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: BlocConsumer<MainBloc, MainState>(
-          listener: (ctx, state) async {
-            state.maybeMap(
-              loaded: (s) => _changeCurrentTab(s.currentSelectedTab),
-              orElse: () {},
-            );
+    final mq = MediaQuery.of(context);
+    return BlocConsumer<ServerWsBloc, ServerWsState>(
+      listener: (ctx, state) async {
+        state.map(
+          loaded: (s) async {
+            if (s.msgToShow != null) {
+              _showServerMsg(ctx, s.msgToShow!);
+            }
+            await _showConnectionDialog(s.isConnectedToWs!, s.castItUrl);
           },
-          builder: (ctx, state) => BlocConsumer<ServerWsBloc, ServerWsState>(
-            listener: (ctx2, state2) async {
-              state2.map(
-                loaded: (s) async {
-                  if (s.msgToShow != null) {
-                    _showServerMsg(ctx2, s.msgToShow!);
-                  }
-                  await _showConnectionDialog(s.isConnectedToWs!, s.castItUrl);
-                },
-                loading: (s) {
-                  if (_isShowingConnectionModal) {
-                    Navigator.pop(context);
-                  }
-                },
-              );
-            },
-            builder: (ctx2, state2) => TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: _pages,
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        showUnselectedLabels: true,
-        items: _buildBottomNavBars(),
-        type: BottomNavigationBarType.fixed,
-        onTap: (newIndex) => context.read<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
+          loading: (s) {
+            if (_isShowingConnectionModal) {
+              Navigator.pop(context);
+            }
+          },
+        );
+      },
+      builder: (ctx, state) => ResponsiveBuilder(
+        builder: (ctx, size) => mq.size.width > 800 && (size.isDesktop || size.isTablet) ? const DesktopTabletScaffold() : const MobileScaffold(),
       ),
     );
   }
@@ -108,31 +80,6 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  List<BottomNavigationBarItem> _buildBottomNavBars() {
-    final i18n = S.of(context);
-    return [
-      BottomNavigationBarItem(
-        label: i18n.playing,
-        icon: const Icon(Icons.play_arrow),
-      ),
-      BottomNavigationBarItem(
-        label: i18n.playlists,
-        icon: const Icon(Icons.playlist_play),
-      ),
-      BottomNavigationBarItem(
-        label: i18n.settings,
-        icon: const Icon(Icons.settings),
-      ),
-    ];
-  }
-
-  void _changeCurrentTab(int index) {
-    setState(() {
-      _index = index;
-      _tabController.index = index;
-    });
   }
 
   Future<void> _showConnectionDialog(bool isConnected, String currentCastIt) async {
