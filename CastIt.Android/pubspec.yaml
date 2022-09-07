@@ -47,17 +47,23 @@ dependencies:
 
 dev_dependencies:
   build_runner:
-  flutter_launcher_icons: ^0.10.0
-  flutter_test:
-    sdk: flutter
   freezed: ^2.1.0+1
+  icons_launcher: ^2.0.5
   json_serializable: ^6.2.0
   lint: ^1.8.2
 
-flutter_icons:
-  android: "launcher_icon"
-  ios: true
+dependency_overrides:
+  path: ^1.8.1
+
+icons_launcher:
   image_path: "assets/icon/icon.png"
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true
+    macos:
+      enable: true
 
 flutter:
   uses-material-design: true
