@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CastIt.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -110,20 +112,44 @@ namespace CastIt.Youtube.UnitTest
             info.IsHls.ShouldBeFalse();
         }
 
-        [Theory]
-        [InlineData("https://www.youtube.com/watch?v=8NzYo0jmYek")]
-        [InlineData("https://www.youtube.com/watch?v=uUBfbLdXArA")]
-        public async Task ParseBasicInfo_ValidHlsUrl_ReturnsBasicInfo(string url)
+        [Fact]
+        public async Task ParseBasicInfo_ValidHlsUrl_ReturnsBasicInfo()
         {
             //Arrange
+            var urls = new Dictionary<string, string>
+            {
+                {"TN EN VIVO", "https://www.youtube.com/watch?v=wHn1_QVoXGM"},
+                {"lofi hip hop radio", "https://www.youtube.com/watch?v=jfKfPfyJRdk"},
+                {"Noticias EN VIVO | Milenio Noticias", "https://www.youtube.com/watch?v=UWNlpWsNS4M"},
+                {"Noticias 24/7 FOROtv", "https://www.youtube.com/watch?v=prpSI_M_rSA"},
+                {"MULTIMEDIOS", "https://www.youtube.com/watch?v=Yspuna_xKFw"},
+                {"Sky News", "https://www.youtube.com/watch?v=9Auq9mYxFEE"},
+                {"euronews", "https://www.youtube.com/watch?v=JbKgQhFlMdU"},
+                {"Al Jazeera", "https://www.youtube.com/watch?v=F-POY4Q0QSI"},
+                {"DW", "https://www.youtube.com/watch?v=RTjbYKBB828"},
+                {"Meganoticias", "https://www.youtube.com/watch?v=f7_om6wwnps"}
+            };
             var decoder = GetService();
 
             //Act
-            var info = await decoder.ParseBasicInfo(url);
+            var finalUrls = new List<string>();
+            foreach (var kvp in urls)
+            {
+                try
+                {
+                    var info = await decoder.ParseBasicInfo(kvp.Value);
+                    CheckBasicInfo(info, false);
+                    info.IsHls.ShouldBeTrue();
+                    finalUrls.Add(info.Url);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
 
             //Assert
-            CheckBasicInfo(info, false);
-            info.IsHls.ShouldBeTrue();
+            finalUrls.Count.ShouldBeGreaterThan(0);
         }
 
         [Theory]
