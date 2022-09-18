@@ -64,15 +64,15 @@ class _DesktopTabletScaffoldState extends State<DesktopTabletScaffold> with Sing
                   Expanded(child: PlayListsPage()),
                 ],
               ),
-              SettingsPage()
+              const SettingsPage()
             ],
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _index,
           type: BottomNavigationBarType.fixed,
-          showUnselectedLabels: false,
-          showSelectedLabels: false,
+          showUnselectedLabels: true,
+          showSelectedLabels: true,
           iconSize: 40,
           items: [
             BottomNavigationBarItem(

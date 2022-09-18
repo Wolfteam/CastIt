@@ -61,45 +61,48 @@ class _CardRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     const iconSize = 30.0;
-    return Card(
-      elevation: 10,
-      shape: Styles.floatingCardShape,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            ButtonBar(
-              buttonPadding: EdgeInsets.zero,
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(Icons.loop, color: loop ? theme.colorScheme.secondary : null, size: iconSize),
-                  onPressed: () => _setPlayListOptions(!loop, shuffle, context),
-                ),
-                IconButton(
-                  icon: Icon(Icons.shuffle, color: shuffle ? theme.colorScheme.secondary : null, size: iconSize),
-                  onPressed: () => _setPlayListOptions(loop, !shuffle, context),
-                ),
-              ],
-            ),
-            Expanded(
-              child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
-            ),
-            ButtonBar(
-              buttonPadding: EdgeInsets.zero,
-              children: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.search, size: iconSize),
-                  onPressed: () => _toggleSearchBoxVisibility(context),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_upward, size: iconSize),
-                  onPressed: () => onArrowTopTap(),
-                ),
-              ],
-            )
-          ],
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 600),
+      child: Card(
+        elevation: 10,
+        shape: Styles.floatingCardShape,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              ButtonBar(
+                buttonPadding: EdgeInsets.zero,
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.loop, color: loop ? theme.colorScheme.secondary : null, size: iconSize),
+                    onPressed: () => _setPlayListOptions(!loop, shuffle, context),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.shuffle, color: shuffle ? theme.colorScheme.secondary : null, size: iconSize),
+                    onPressed: () => _setPlayListOptions(loop, !shuffle, context),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+              ),
+              ButtonBar(
+                buttonPadding: EdgeInsets.zero,
+                children: <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.search, size: iconSize),
+                    onPressed: () => _toggleSearchBoxVisibility(context),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_upward, size: iconSize),
+                    onPressed: () => onArrowTopTap(),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
