@@ -6,13 +6,32 @@ import 'package:castit/presentation/settings/widgets/player_settings_card.dart';
 import 'package:castit/presentation/settings/widgets/theme_settings_card.dart';
 import 'package:castit/presentation/shared/page_header.dart';
 import 'package:flutter/material.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    return Scaffold(
+      body: SafeArea(
+        child: ResponsiveBuilder(
+          builder: (ctx, size) => isPortrait ? const _MobileLayout() : const _DesktopTabletLayout(),
+        ),
+      ),
+    );
+  }
 }
 
-class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClientMixin<SettingsPage> {
+class _MobileLayout extends StatefulWidget {
+  const _MobileLayout();
+
+  @override
+  State<_MobileLayout> createState() => _MobileLayoutState();
+}
+
+class _MobileLayoutState extends State<_MobileLayout> with AutomaticKeepAliveClientMixin<_MobileLayout> {
   final _scrollController = ScrollController();
 
   @override
@@ -47,6 +66,47 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
             throw Exception('Invalid index');
         }
       },
+    );
+  }
+}
+
+class _DesktopTabletLayout extends StatelessWidget {
+  const _DesktopTabletLayout();
+
+  @override
+  Widget build(BuildContext context) {
+    final i18n = S.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      shrinkWrap: true,
+      children: [
+        PageHeader(
+          title: i18n.settings,
+          icon: Icons.settings,
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                children: const [
+                  ThemeSettingsCard(),
+                  AccentColorSettingsCard(),
+                  LanguageSettingsCard(),
+                  AboutSettingsCard(),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                children: const [
+                  PlayerSettingsCard(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
