@@ -1,11 +1,13 @@
 import 'dart:ui';
 
 import 'package:castit/application/bloc.dart';
+import 'package:castit/domain/enums/enums.dart';
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/presentation/intro/intro_page.dart';
 import 'package:castit/presentation/main_page.dart';
 import 'package:castit/presentation/shared/extensions/app_theme_type_extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -29,7 +31,10 @@ class AppWidget extends StatelessWidget {
           return MaterialApp(
             title: s.appTitle,
             theme: themeData,
-            home: s.firstInstall ? IntroPage() : MainPage(),
+            home: AnnotatedRegion(
+              value: s.theme == AppThemeType.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+              child: s.firstInstall ? IntroPage() : MainPage(),
+            ),
             //Without this, the lang won't be reloaded
             locale: locale,
             localizationsDelegates: delegates,
