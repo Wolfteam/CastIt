@@ -32,7 +32,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           TextButton(
-            style: TextButton.styleFrom(primary: textColor),
+            style: TextButton.styleFrom(foregroundColor: textColor),
             onPressed: () => _playFile(context, false),
             child: Row(
               children: <Widget>[
@@ -43,7 +43,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
             ),
           ),
           TextButton(
-            style: TextButton.styleFrom(primary: textColor),
+            style: TextButton.styleFrom(foregroundColor: textColor),
             onPressed: () => _playFile(context, true),
             child: Row(
               children: <Widget>[
@@ -54,7 +54,7 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
             ),
           ),
           TextButton(
-            style: TextButton.styleFrom(primary: textColor),
+            style: TextButton.styleFrom(foregroundColor: textColor),
             onPressed: () => _showDeleteModal(context),
             child: Row(
               children: <Widget>[

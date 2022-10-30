@@ -215,7 +215,6 @@ class _IntroPageState extends State<IntroPage> {
     await showModalBottomSheet<bool>(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => SkipIntroBottomSheet(),
     );

@@ -25,7 +25,7 @@ class DeviceInfoServiceImpl implements DeviceInfoService {
       _version = '${packageInfo.version}+${packageInfo.buildNumber}';
       _appName = packageInfo.appName;
       _deviceInfo = {
-        'Model': androidInfo.model ?? 'N/A',
+        'Model': androidInfo.model,
         'OsVersion': '${androidInfo.version.sdkInt}',
         'AppVersion': _version,
       };

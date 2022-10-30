@@ -55,7 +55,7 @@ class _MobileScaffoldState extends State<MobileScaffold> with SingleTickerProvid
             child: TabBarView(
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
-              children: [PlayPage(), PlayListsPage(), SettingsPage()],
+              children: [PlayPage(), PlayListsPage(), const SettingsPage()],
             ),
           ),
           bottomNavigationBar: BottomNavigationBar(

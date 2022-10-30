@@ -91,7 +91,6 @@ class _FileItemState extends State<FileItem> {
     final closePage = await showModalBottomSheet<bool>(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => FileOptionsBottomSheetDialog(id: widget.id, playListId: widget.playListId, fileName: widget.name),
     );
