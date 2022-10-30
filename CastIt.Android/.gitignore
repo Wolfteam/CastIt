@@ -4,6 +4,7 @@
 *.g.dart
 *.freezed.dart
 /lib/generated/**
+.fvm/flutter_sdk
 
 # Miscellaneous
 *.class
