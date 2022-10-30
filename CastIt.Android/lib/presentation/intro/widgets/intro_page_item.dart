@@ -1,6 +1,5 @@
+import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
-
-import '../../shared/extensions/styles.dart';
 
 class IntroPageItem extends StatelessWidget {
   final String mainTitle;
@@ -9,12 +8,12 @@ class IntroPageItem extends StatelessWidget {
   final Widget? extraContent;
 
   const IntroPageItem({
-    Key? key,
+    super.key,
     required this.mainTitle,
     required this.subTitle,
     required this.content,
     this.extraContent,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

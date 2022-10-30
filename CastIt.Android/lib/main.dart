@@ -1,24 +1,26 @@
+import 'dart:io';
+
+import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:castit/domain/services/device_info_service.dart';
 import 'package:castit/domain/services/locale_service.dart';
 import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
-import 'package:castit/generated/l10n.dart';
 import 'package:castit/injection.dart';
-import 'package:castit/presentation/shared/extensions/app_theme_type_extensions.dart';
+import 'package:castit/presentation/app_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-
-import 'application/bloc.dart';
-import 'presentation/intro/intro_page.dart';
-import 'presentation/main/main_page.dart';
+import 'package:window_size/window_size.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initInjection();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    setWindowMinSize(const Size(400, 700));
+    setWindowMaxSize(Size.infinite);
+  }
   runApp(MyApp());
 }
 
@@ -90,34 +92,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ],
-      child: BlocBuilder<MainBloc, MainState>(
-        builder: (ctx, state) => _buildApp(state),
-      ),
-    );
-  }
-
-  Widget _buildApp(MainState state) {
-    final delegates = <LocalizationsDelegate>[
-      S.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ];
-    return state.map<Widget>(
-      loading: (_) => const CircularProgressIndicator(),
-      loaded: (s) {
-        final locale = Locale(s.language.code, s.language.countryCode);
-        final themeData = s.accentColor.getThemeData(s.theme);
-        return MaterialApp(
-          title: s.appTitle,
-          theme: themeData,
-          home: s.firstInstall ? IntroPage() : MainPage(),
-          //Without this, the lang won't be reloaded
-          locale: locale,
-          localizationsDelegates: delegates,
-          supportedLocales: S.delegate.supportedLocales,
-        );
-      },
+      child: const AppWidget(),
     );
   }
 }

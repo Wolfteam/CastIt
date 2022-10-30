@@ -22,61 +22,80 @@ class ServerWsBloc extends Bloc<ServerWsEvent, ServerWsState> {
   _LoadedState get currentState => state as _LoadedState;
 
   ServerWsBloc(this._logger, this._settings, this._castItHub) : super(ServerWsState.loading()) {
-    _castItHub.serverMessageReceived.stream.listen((e) => add(ServerWsEvent.showMsg(type: e)));
-  }
+    on<_Disconnected>((event, emit) async {
+      if (_castItHub.isConnected) {
+        _logger.info(runtimeType, 'A server disconnected from ws event was raised but the server is running');
+        return;
+      }
 
-  @override
-  Stream<ServerWsState> mapEventToState(ServerWsEvent event) async* {
-    if (event is _Disconnected && _castItHub.isConnected) {
-      _logger.info(runtimeType, 'A server disconnected from ws event was raised but the server is running');
-      return;
-    }
-    _logger.info(runtimeType, 'Handling event = $event');
-    final s = event.when(
-      connectToWs: () async {
-        if (!_castItHub.isConnected) {
-          await _castItHub.connectToHub();
-        }
-        return ServerWsState.loaded(
+      await _castItHub.disconnectFromHub(triggerEvent: false);
+      final updatedState = state.map(
+        loaded: (state) => state.copyWith(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: currentState.connectionRetries! + 1,
+        ),
+        loading: (_) => ServerWsState.loaded(
+          isConnectedToWs: false,
           castItUrl: _settings.castItUrl,
           connectionRetries: 0,
-          isConnectedToWs: _castItHub.isConnected,
-        );
-      },
-      disconnectedFromWs: () async {
-        await _castItHub.disconnectFromHub(triggerEvent: false);
-        return currentState.copyWith(
-          isConnectedToWs: false,
-          castItUrl: _settings.castItUrl,
-          connectionRetries: currentState.connectionRetries! + 1,
-        );
-      },
-      disconnectFromWs: () async {
-        await _castItHub.disconnectFromHub();
-        return currentState.copyWith(
-          isConnectedToWs: false,
-          castItUrl: _settings.castItUrl,
-          connectionRetries: currentState.connectionRetries! + 1,
-        );
-      },
-      updateUrlAndConnectToWs: (newUrl) async {
-        _settings.castItUrl = newUrl.trim();
-        await _castItHub.connectToHub();
-        return currentState.copyWith(
-          isConnectedToWs: _castItHub.isConnected,
-          castItUrl: newUrl,
-          connectionRetries: currentState.connectionRetries! + 1,
-        );
-      },
-      showMsg: (msg) async {
-        return currentState.copyWith(msgToShow: msg);
-      },
-    );
+        ),
+      );
+      emit(updatedState);
+    });
 
-    yield await s;
-    if (currentState.msgToShow != null) {
-      yield currentState.copyWith(msgToShow: null);
-    }
+    on<_Connect>((event, emit) async {
+      if (!_castItHub.isConnected) {
+        await _castItHub.connectToHub();
+      }
+
+      final updatedState = ServerWsState.loaded(
+        castItUrl: _settings.castItUrl,
+        connectionRetries: 0,
+        isConnectedToWs: _castItHub.isConnected,
+      );
+      emit(updatedState);
+    });
+
+    on<_Disconnect>((event, emit) async {
+      await _castItHub.disconnectFromHub();
+      if (state is! _LoadedState) {
+        return;
+      }
+      final updatedState = state.map(
+        loading: (_) => ServerWsState.loaded(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: 0,
+        ),
+        loaded: (state) => state.copyWith(
+          isConnectedToWs: false,
+          castItUrl: _settings.castItUrl,
+          connectionRetries: currentState.connectionRetries! + 1,
+        ),
+      );
+      emit(updatedState);
+    });
+
+    on<_UpdateUrlAndConnect>((event, emit) async {
+      final url = event.castItUrl.trim();
+      _settings.castItUrl = url;
+      await _castItHub.connectToHub();
+      final updatedState = currentState.copyWith(
+        isConnectedToWs: _castItHub.isConnected,
+        castItUrl: url,
+        connectionRetries: currentState.connectionRetries! + 1,
+      );
+      emit(updatedState);
+    });
+
+    on<_ShowMessage>((event, emit) {
+      final updatedState = currentState.copyWith(msgToShow: event.type);
+      emit(updatedState);
+      emit(currentState.copyWith(msgToShow: null));
+    });
+
+    _castItHub.serverMessageReceived.stream.listen((e) => add(ServerWsEvent.showMsg(type: e)));
   }
 
   @override

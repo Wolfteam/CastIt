@@ -1,6 +1,5 @@
+import 'package:castit/domain/models/models.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-import 'models.dart';
 
 part 'played_file.freezed.dart';
 

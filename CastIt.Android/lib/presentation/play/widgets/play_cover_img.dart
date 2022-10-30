@@ -2,12 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/extensions/string_extensions.dart';
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/play/widgets/played_file_options_bottom_sheet_dialog.dart';
 import 'package:castit/presentation/playlist/playlist_page.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'played_file_options_bottom_sheet_dialog.dart';
 
 class PlayCoverImg extends StatelessWidget {
   final int? fileId;
@@ -25,7 +24,7 @@ class PlayCoverImg extends StatelessWidget {
   bool get playListIsValid => playListId != null && playListId! > 0;
 
   const PlayCoverImg({
-    Key? key,
+    super.key,
     this.fileId,
     this.playListId,
     this.playListName,
@@ -35,29 +34,27 @@ class PlayCoverImg extends StatelessWidget {
     this.loopPlayList = false,
     this.shufflePlayList = false,
     this.showLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     const dummyIndicator = Center(child: CircularProgressIndicator());
+    final s = S.of(context);
     return Stack(
       children: <Widget>[
         if (!thumbUrl.isNullEmptyOrWhitespace && !showLoading)
-          CachedNetworkImage(
-            imageUrl: thumbUrl!,
-            imageBuilder: (ctx, imageProvider) => Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: imageProvider,
-                  fit: BoxFit.fill,
-                ),
-              ),
+          Center(
+            child: CachedNetworkImage(
+              imageUrl: thumbUrl!,
+              fit: BoxFit.fitHeight,
+              height: double.maxFinite,
+              filterQuality: FilterQuality.high,
+              placeholder: (ctx, url) => dummyIndicator,
+              errorWidget: (ctx, url, error) => Center(child: Text(s.unknownErrorLoadingFile)),
             ),
-            placeholder: (ctx, url) => dummyIndicator,
-            errorWidget: (ctx, url, error) => Container(),
           ),
         if (showLoading) dummyIndicator,
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.5)],
@@ -65,8 +62,9 @@ class PlayCoverImg extends StatelessWidget {
               end: Alignment.topCenter,
             ),
           ),
+          child: const SizedBox.expand(),
         ),
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.8)],
@@ -74,6 +72,7 @@ class PlayCoverImg extends StatelessWidget {
               end: Alignment.bottomCenter,
             ),
           ),
+          child: const SizedBox.expand(),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -116,13 +115,12 @@ class _Top extends StatelessWidget {
   final bool playListIsValid;
 
   const _Top({
-    Key? key,
     this.fileId,
     this.playListId,
     this.playListName,
     required this.fileIdIsValid,
     required this.playListIsValid,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +190,6 @@ class _Bottom extends StatelessWidget {
   final bool shufflePlayList;
 
   const _Bottom({
-    Key? key,
     this.fileId,
     this.playListId,
     this.fileName,
@@ -201,7 +198,7 @@ class _Bottom extends StatelessWidget {
     required this.loopFile,
     required this.loopPlayList,
     required this.shufflePlayList,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

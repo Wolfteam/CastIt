@@ -9,10 +9,10 @@ class RenamePlayListBottomSheet extends StatefulWidget {
   final String currentName;
 
   const RenamePlayListBottomSheet({
-    Key? key,
+    super.key,
     required this.id,
     required this.currentName,
-  }) : super(key: key);
+  });
 
   @override
   _RenamePlayListBottomSheetState createState() => _RenamePlayListBottomSheetState();

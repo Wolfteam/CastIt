@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/models/models.dart';
 import 'package:castit/domain/services/castit_hub_client_service.dart';
@@ -12,7 +10,118 @@ part 'play_state.dart';
 class PlayBloc extends Bloc<PlayEvent, PlayState> {
   final CastItHubClientService _castItHub;
 
+  bool get isPlaying => state is _PlayingState;
+
+  _PlayingState get currentState => state as _PlayingState;
+
   PlayBloc(this._castItHub) : super(PlayState.connected()) {
+    on<_Connected>((event, emit) {
+      final updatedState = PlayState.connected();
+      emit(updatedState);
+    });
+
+    on<_FileLoading>((event, emit) {
+      final updatedState = PlayState.fileLoading();
+      emit(updatedState);
+    });
+
+    on<_FileLoadingError>((event, emit) {
+      final updatedState = PlayState.fileLoadingFailed(msg: event.msg);
+      emit(updatedState);
+    });
+
+    on<_FileLoaded>((event, emit) {
+      final updatedState = PlayState.playing(
+        id: event.file.id,
+        playListId: event.file.playListId,
+        filename: event.file.filename,
+        thumbPath: event.file.thumbnailUrl,
+        duration: event.file.duration,
+        isPaused: event.file.isPaused,
+        currentSeconds: event.file.currentSeconds,
+        playlistName: event.file.playListName,
+        loopFile: event.file.loopFile,
+        loopPlayList: event.file.loopPlayList,
+        shufflePlayList: event.file.shufflePlayList,
+        isDraggingSlider: false,
+        playListTotalDuration: event.file.playListTotalDuration,
+        playListPlayedTime: event.file.playListPlayedTime,
+      );
+      emit(updatedState);
+    });
+
+    on<_FileChanged>((event, emit) {
+      final updatedState = state.maybeMap(
+        playing: (state) => state.copyWith(
+          id: event.file.id,
+          playListId: event.file.playListId,
+          filename: event.file.filename,
+          thumbPath: event.file.thumbnailUrl,
+          loopFile: event.file.loop,
+        ),
+        orElse: () => state,
+      );
+      emit(updatedState);
+    });
+
+    on<_PlayListChanged>((event, emit) {
+      final updatedState = state.maybeMap(
+        playing: (state) => state.copyWith(
+          playlistName: event.playList.name,
+          playListTotalDuration: event.playList.totalDuration,
+          playListPlayedTime: event.playList.playedTime,
+          shufflePlayList: event.playList.shuffle,
+          loopPlayList: event.playList.loop,
+        ),
+        orElse: () => state,
+      );
+      emit(updatedState);
+    });
+
+    on<_TimeChanged>(_handleTimeChanged);
+
+    on<_Paused>((event, emit) {
+      if (!isPlaying) {
+        _emitDefaultState(emit);
+        return;
+      }
+      final updatedState = currentState.copyWith.call(isPaused: true);
+      emit(updatedState);
+    });
+
+    on<_Stopped>((event, emit) {
+      if (!isPlaying) {
+        _emitDefaultState(emit);
+        return;
+      }
+      emit(PlayState.connected());
+    });
+
+    on<_Disconnected>((event, emit) => emit(PlayState.connected()));
+
+    on<_SliderDragChanged>((event, emit) {
+      if (!isPlaying) {
+        _emitDefaultState(emit);
+        return;
+      }
+      final updatedState = currentState.copyWith.call(isDraggingSlider: event.isSliding);
+      emit(updatedState);
+    });
+
+    on<_SliderValueChanged>((event, emit) {
+      if (!isPlaying) {
+        _emitDefaultState(emit);
+        return;
+      }
+
+      if (event.triggerGoToSeconds) {
+        _castItHub.gotoSeconds(event.newValue);
+      }
+
+      final updatedState = currentState.copyWith.call(currentSeconds: event.newValue, isDraggingSlider: !event.triggerGoToSeconds);
+      emit(updatedState);
+    });
+
     _castItHub.connected.stream.listen((_) => add(PlayEvent.connected()));
 
     _castItHub.fileLoading.stream.listen((_) => add(PlayEvent.fileLoading()));
@@ -61,107 +170,29 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
     _castItHub.disconnected.stream.listen((_) => add(PlayEvent.disconnected()));
   }
 
-  bool get isPlaying => state is _PlayingState;
-
-  _PlayingState get currentState => state as _PlayingState;
-
-  @override
-  Stream<PlayState> mapEventToState(PlayEvent event) async* {
-    final s = event.map(
-      connected: (_) => PlayState.connected(),
-      fileLoading: (_) => PlayState.fileLoading(),
-      fileLoadingError: (e) => PlayState.fileLoadingFailed(msg: e.msg),
-      fileLoaded: (e) => PlayState.playing(
-        id: e.file.id,
-        playListId: e.file.playListId,
-        filename: e.file.filename,
-        thumbPath: e.file.thumbnailUrl,
-        duration: e.file.duration,
-        isPaused: e.file.isPaused,
-        currentSeconds: e.file.currentSeconds,
-        playlistName: e.file.playListName,
-        loopFile: e.file.loopFile,
-        loopPlayList: e.file.loopPlayList,
-        shufflePlayList: e.file.shufflePlayList,
-        isDraggingSlider: false,
-        playListTotalDuration: e.file.playListTotalDuration,
-        playListPlayedTime: e.file.playListPlayedTime,
-      ),
-      fileChanged: (e) => state.maybeMap(
-        playing: (state) => state.copyWith(
-          id: e.file.id,
-          playListId: e.file.playListId,
-          filename: e.file.filename,
-          thumbPath: e.file.thumbnailUrl,
-          loopFile: e.file.loop,
-        ),
-        orElse: () => state,
-      ),
-      playListChanged: (e) => state.maybeMap(
-        playing: (state) => state.copyWith(
-          playlistName: e.playList.name,
-          playListTotalDuration: e.playList.totalDuration,
-          playListPlayedTime: e.playList.playedTime,
-          shufflePlayList: e.playList.shuffle,
-          loopPlayList: e.playList.loop,
-        ),
-        orElse: () => state,
-      ),
-      timeChanged: (e) {
-        if (!isPlaying) {
-          return null;
-        }
-        if (currentState.isDraggingSlider!) {
-          return currentState.copyWith.call(isPaused: false);
-        }
-        //A live stream is being played
-        if (currentState.duration! <= 0) {
-          return currentState.copyWith.call(currentSeconds: e.seconds, isPaused: false);
-        }
-        final s = e.seconds >= currentState.duration! ? currentState.duration : e.seconds;
-        return currentState.copyWith.call(currentSeconds: s, isPaused: false);
-      },
-      paused: (_) {
-        if (!isPlaying) {
-          return null;
-        }
-        return currentState.copyWith.call(isPaused: true);
-      },
-      stopped: (_) {
-        if (!isPlaying) {
-          return null;
-        }
-        return PlayState.connected();
-      },
-      disconnected: (_) {
-        if (!isPlaying) {
-          return null;
-        }
-        return PlayState.connected();
-      },
-      sliderDragChanged: (e) {
-        if (!isPlaying) {
-          return null;
-        }
-        return currentState.copyWith.call(isDraggingSlider: e.isSliding);
-      },
-      sliderValueChanged: (e) {
-        if (!isPlaying) {
-          return null;
-        }
-
-        if (e.triggerGoToSeconds) {
-          _castItHub.gotoSeconds(e.newValue);
-        }
-
-        return currentState.copyWith.call(currentSeconds: e.newValue, isDraggingSlider: !e.triggerGoToSeconds);
-      },
-    );
-
-    if (s != null) {
-      yield s;
-    } else {
-      yield PlayState.connected();
+  void _handleTimeChanged(_TimeChanged event, Emitter<PlayState> emit) {
+    if (!isPlaying) {
+      _emitDefaultState(emit);
+      return;
     }
+    if (currentState.isDraggingSlider!) {
+      final updatedState = currentState.copyWith.call(isPaused: false);
+      emit(updatedState);
+      return;
+    }
+    //A live stream is being played
+    if (currentState.duration! <= 0) {
+      final updatedState = currentState.copyWith.call(currentSeconds: event.seconds, isPaused: false);
+      emit(updatedState);
+      return;
+    }
+
+    final s = event.seconds >= currentState.duration! ? currentState.duration : event.seconds;
+    final updatedState = currentState.copyWith.call(currentSeconds: s, isPaused: false);
+    emit(updatedState);
+  }
+
+  void _emitDefaultState(Emitter<PlayState> emit) {
+    emit(PlayState.connected());
   }
 }

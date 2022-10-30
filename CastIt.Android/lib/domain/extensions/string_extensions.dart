@@ -9,4 +9,10 @@ extension StringExtensions on String? {
 
   bool isLengthValid({int minLength = 0, int maxLength = 255}) =>
       this == null || this!.trim().isEmpty || this!.length > maxLength || this!.length < minLength;
+
+  String toCapitalized() => this == null
+      ? ''
+      : this!.isNotEmpty
+          ? '${this![0].toUpperCase()}${this!.substring(1).toLowerCase()}'
+          : '';
 }

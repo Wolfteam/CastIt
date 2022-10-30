@@ -1,10 +1,9 @@
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/playlists/widgets/delete_playlist_bottom_sheet.dart';
+import 'package:castit/presentation/playlists/widgets/rename_playlist_bottom_sheet.dart';
 import 'package:castit/presentation/shared/common_bottom_sheet.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
-
-import 'delete_playlist_bottom_sheet.dart';
-import 'rename_playlist_bottom_sheet.dart';
 
 class PlayListOptionsBottomSheetDialog extends StatelessWidget {
   final int playListId;

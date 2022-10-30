@@ -36,13 +36,8 @@ class PlayProgressBar extends StatelessWidget {
 
 class _DummySlider extends StatelessWidget {
   final double value;
-  final double max;
 
-  const _DummySlider({
-    Key? key,
-    this.value = 0,
-    this.max = 100,
-  }) : super(key: key);
+  const _DummySlider({this.value = 0});
 
   @override
   Widget build(BuildContext context) {

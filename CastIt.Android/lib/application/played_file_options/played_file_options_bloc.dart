@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:castit/domain/app_constants.dart';
 import 'package:castit/domain/models/models.dart';
@@ -17,6 +15,52 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
   final CastItHubClientService _castItHub;
 
   PlayedFileOptionsBloc(this._castItHub) : super(_initialState) {
+    on<_Loaded>((event, emit) {
+      final updatedState = state.map(
+        loaded: (state) => state.copyWith.call(options: event.options),
+        closed: (_) => PlayedFileOptionsState.loaded(options: event.options),
+      );
+
+      emit(updatedState);
+    });
+
+    on<_SetFileOption>((event, emit) async {
+      await _castItHub.setFileOptions(event.streamIndex, isAudio: event.isAudio, isQuality: event.isQuality, isSubtitle: event.isSubtitle);
+    });
+
+    on<_VolumeChanged>((event, emit) {
+      final updatedState = state.map(
+        loaded: (state) =>
+            state.isDraggingVolumeSlider ? state : state.copyWith(volumeLvl: event.volumeLvl * AppConstants.maxVolumeLevel, isMuted: event.isMuted),
+        closed: (s) => s,
+      );
+
+      emit(updatedState);
+    });
+
+    on<_SetVolume>((event, emit) async {
+      if (event.triggerChange) {
+        await _castItHub.setVolume(event.volumeLvl, isMuted: event.isMuted);
+      }
+
+      final updatedState = state.map(
+        loaded: (state) => state.copyWith(volumeLvl: event.volumeLvl, isMuted: event.isMuted, isDraggingVolumeSlider: !event.triggerChange),
+        closed: (s) => s,
+      );
+
+      emit(updatedState);
+    });
+
+    on<_CloseModal>((event, emit) => emit(const PlayedFileOptionsState.closed()));
+
+    on<_VolumeSliderDragStarted>((event, emit) {
+      final updatedState = state.map(
+        loaded: (state) => state.copyWith.call(isDraggingVolumeSlider: true),
+        closed: (state) => state,
+      );
+      emit(updatedState);
+    });
+
     _castItHub.fileOptionsLoaded.stream.listen((event) {
       final optionsChanged = _hasFileOptionsChanged(event);
       if (optionsChanged) {
@@ -39,42 +83,6 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
     _castItHub.fileLoading.stream.listen((event) {
       add(PlayedFileOptionsEvent.closeModal());
     });
-  }
-
-  @override
-  Stream<PlayedFileOptionsState> mapEventToState(PlayedFileOptionsEvent event) async* {
-    final s = event.map(
-      loaded: (e) async => state.map(
-        loaded: (state) => state.copyWith.call(options: e.options),
-        closed: (_) => PlayedFileOptionsState.loaded(options: e.options),
-      ),
-      setFileOption: (e) async {
-        await _castItHub.setFileOptions(e.streamIndex, isAudio: e.isAudio, isQuality: e.isQuality, isSubtitle: e.isSubtitle);
-        return state;
-      },
-      volumeChanged: (e) async => state.map(
-        loaded: (state) =>
-            state.isDraggingVolumeSlider ? state : state.copyWith(volumeLvl: e.volumeLvl * AppConstants.maxVolumeLevel, isMuted: e.isMuted),
-        closed: (s) => s,
-      ),
-      setVolume: (e) async {
-        if (e.triggerChange) {
-          await _castItHub.setVolume(e.volumeLvl, isMuted: e.isMuted);
-        }
-
-        return state.map(
-          loaded: (state) => state.copyWith(volumeLvl: e.volumeLvl, isMuted: e.isMuted, isDraggingVolumeSlider: !e.triggerChange),
-          closed: (s) => s,
-        );
-      },
-      closeModal: (e) async => const PlayedFileOptionsState.closed(),
-      volumeSliderDragStarted: (_) async => state.map(
-        loaded: (state) => state.copyWith.call(isDraggingVolumeSlider: true),
-        closed: (state) => state,
-      ),
-    );
-
-    yield await s;
   }
 
   bool _hasFileOptionsChanged(List<FileItemOptionsResponseDto> updated) => state.map(

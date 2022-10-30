@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/enums/enums.dart';
@@ -21,94 +19,104 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   SettingsState get initialState => SettingsState.loading();
 
-  SettingsBloc(this._settings, this._mainBloc, this._castItHub) : super(SettingsState.loading());
-
   _LoadedState get currentState => state as _LoadedState;
 
-  @override
-  Stream<SettingsState> mapEventToState(
-    SettingsEvent event,
-  ) async* {
-    final s = await event.map(
-      load: (event) async {
-        await _settings.init();
-        final packageInfo = await PackageInfo.fromPlatform();
-        final settings = _settings.appSettings;
-        return SettingsState.loaded(
-          appTheme: settings.appTheme,
-          useDarkAmoled: settings.useDarkAmoled,
-          accentColor: settings.accentColor,
-          appLanguage: settings.appLanguage,
-          castItUrl: settings.castItUrl,
-          isCastItUrlValid: true,
-          fFmpegExePath: '',
-          fFprobeExePath: '',
-          videoScale: VideoScaleType.original,
-          webVideoQuality: WebVideoQualityType.low,
-          enableHwAccel: false,
-          forceAudioTranscode: false,
-          forceVideoTranscode: false,
-          isConnected: false,
-          playFromTheStart: false,
-          playNextFileAutomatically: false,
-          appName: packageInfo.appName,
-          appVersion: packageInfo.version,
-          currentSubtitleBgColor: SubtitleBgColorType.transparent,
-          currentSubtitleFgColor: SubtitleFgColorType.white,
-          currentSubtitleFontScale: SubtitleFontScaleType.hundredAndFifty,
-          currentSubtitleFontFamily: TextTrackFontGenericFamilyType.casual,
-          currentSubtitleFontStyle: TextTrackFontStyleType.normal,
-          loadFirstSubtitleFoundAutomatically: true,
-          subtitleDelayInSeconds: 0,
-        );
-      },
-      connected: (event) async {
-        return currentState.copyWith(
-          isConnected: true,
-          fFmpegExePath: event.settings.fFmpegExePath,
-          fFprobeExePath: event.settings.fFprobeExePath,
-          videoScale: event.settings.videoScaleType,
-          enableHwAccel: event.settings.enableHardwareAcceleration,
-          forceAudioTranscode: event.settings.forceAudioTranscode,
-          forceVideoTranscode: event.settings.forceVideoTranscode,
-          playFromTheStart: event.settings.startFilesFromTheStart,
-          playNextFileAutomatically: event.settings.playNextFileAutomatically,
-          webVideoQuality: event.settings.webVideoQualityType,
-          //subs
-          currentSubtitleBgColor: event.settings.currentSubtitleBgColorType,
-          currentSubtitleFgColor: event.settings.currentSubtitleFgColorType,
-          currentSubtitleFontScale: event.settings.currentSubtitleFontScaleType,
-          currentSubtitleFontFamily: event.settings.currentSubtitleFontFamilyType,
-          currentSubtitleFontStyle: event.settings.currentSubtitleFontStyleType,
-          loadFirstSubtitleFoundAutomatically: event.settings.loadFirstSubtitleFoundAutomatically,
-          subtitleDelayInSeconds: event.settings.subtitleDelayInSeconds,
-        );
-      },
-      disconnected: (event) async => currentState.copyWith(isConnected: false),
-      themeChanged: (event) async {
-        _settings.appTheme = event.theme;
-        return currentState.copyWith(appTheme: event.theme);
-      },
-      accentColorChanged: (event) async {
-        _settings.accentColor = event.accentColor;
-        return currentState.copyWith(accentColor: event.accentColor);
-      },
-      languageChanged: (event) async {
-        if (event.lang == _settings.language) {
-          return currentState;
-        }
-        _settings.language = event.lang;
-        _mainBloc.add(MainEvent.languageChanged());
-        return currentState.copyWith(appLanguage: event.lang);
-      },
-      castItUrlChanged: (event) async {
-        final isValid = _isCastItUrlValid(event.castItUrl);
-        if (isValid) _settings.castItUrl = event.castItUrl;
-        return currentState.copyWith(isCastItUrlValid: isValid, castItUrl: event.castItUrl);
-      },
-    );
+  SettingsBloc(this._settings, this._mainBloc, this._castItHub) : super(SettingsState.loading()) {
+    on<_Load>((event, emit) async {
+      if (state is _LoadedState) {
+        return;
+      }
+      await _settings.init();
+      final packageInfo = await PackageInfo.fromPlatform();
+      final settings = _settings.appSettings;
+      final updatedState = SettingsState.loaded(
+        appTheme: settings.appTheme,
+        useDarkAmoled: settings.useDarkAmoled,
+        accentColor: settings.accentColor,
+        appLanguage: settings.appLanguage,
+        castItUrl: settings.castItUrl,
+        isCastItUrlValid: true,
+        fFmpegExePath: '',
+        fFprobeExePath: '',
+        videoScale: VideoScaleType.original,
+        webVideoQuality: WebVideoQualityType.low,
+        enableHwAccel: false,
+        forceAudioTranscode: false,
+        forceVideoTranscode: false,
+        isConnected: false,
+        playFromTheStart: false,
+        playNextFileAutomatically: false,
+        appName: packageInfo.appName,
+        appVersion: packageInfo.version,
+        currentSubtitleBgColor: SubtitleBgColorType.transparent,
+        currentSubtitleFgColor: SubtitleFgColorType.white,
+        currentSubtitleFontScale: SubtitleFontScaleType.hundredAndFifty,
+        currentSubtitleFontFamily: TextTrackFontGenericFamilyType.casual,
+        currentSubtitleFontStyle: TextTrackFontStyleType.normal,
+        loadFirstSubtitleFoundAutomatically: true,
+        subtitleDelayInSeconds: 0,
+      );
 
-    yield s;
+      emit(updatedState);
+    });
+
+    on<_Connected>((event, emit) {
+      final updatedState = currentState.copyWith(
+        isConnected: true,
+        fFmpegExePath: event.settings.fFmpegExePath,
+        fFprobeExePath: event.settings.fFprobeExePath,
+        videoScale: event.settings.videoScaleType,
+        enableHwAccel: event.settings.enableHardwareAcceleration,
+        forceAudioTranscode: event.settings.forceAudioTranscode,
+        forceVideoTranscode: event.settings.forceVideoTranscode,
+        playFromTheStart: event.settings.startFilesFromTheStart,
+        playNextFileAutomatically: event.settings.playNextFileAutomatically,
+        webVideoQuality: event.settings.webVideoQualityType,
+        //subs
+        currentSubtitleBgColor: event.settings.currentSubtitleBgColorType,
+        currentSubtitleFgColor: event.settings.currentSubtitleFgColorType,
+        currentSubtitleFontScale: event.settings.currentSubtitleFontScaleType,
+        currentSubtitleFontFamily: event.settings.currentSubtitleFontFamilyType,
+        currentSubtitleFontStyle: event.settings.currentSubtitleFontStyleType,
+        loadFirstSubtitleFoundAutomatically: event.settings.loadFirstSubtitleFoundAutomatically,
+        subtitleDelayInSeconds: event.settings.subtitleDelayInSeconds,
+      );
+
+      emit(updatedState);
+    });
+
+    on<_Disconnected>((event, emit) => emit(currentState.copyWith(isConnected: false)));
+
+    on<_ThemeChanged>((event, emit) {
+      _settings.appTheme = event.theme;
+      final updatedState = currentState.copyWith(appTheme: event.theme);
+      emit(updatedState);
+    });
+
+    on<_AccentColorChanged>((event, emit) {
+      _settings.accentColor = event.accentColor;
+      final updatedState = currentState.copyWith(accentColor: event.accentColor);
+      emit(updatedState);
+    });
+
+    on<_LanguageChanged>((event, emit) {
+      if (event.lang == _settings.language) {
+        return;
+      }
+      _settings.language = event.lang;
+      _mainBloc.add(MainEvent.languageChanged());
+      final updatedState = currentState.copyWith(appLanguage: event.lang);
+      emit(updatedState);
+    });
+
+    on<_CastItUrlChanged>((event, emit) {
+      final isValid = _isCastItUrlValid(event.castItUrl);
+      if (isValid) {
+        _settings.castItUrl = event.castItUrl;
+      }
+      final updatedState = currentState.copyWith(isCastItUrlValid: isValid, castItUrl: event.castItUrl);
+      emit(updatedState);
+    });
   }
 
   void listenHubEvents() {

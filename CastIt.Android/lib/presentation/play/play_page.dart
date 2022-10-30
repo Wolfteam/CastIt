@@ -1,11 +1,10 @@
 import 'package:castit/application/bloc.dart';
+import 'package:castit/presentation/play/widgets/play_buttons.dart';
+import 'package:castit/presentation/play/widgets/play_cover_img.dart';
 import 'package:castit/presentation/play/widgets/play_progress_bar.dart';
+import 'package:castit/presentation/play/widgets/play_progress_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'widgets/play_buttons.dart';
-import 'widgets/play_cover_img.dart';
-import 'widgets/play_progress_text.dart';
 
 class PlayPage extends StatefulWidget {
   @override

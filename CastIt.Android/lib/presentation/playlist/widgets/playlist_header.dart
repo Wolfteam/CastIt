@@ -1,20 +1,19 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/playlist/widgets/item_counter.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'item_counter.dart';
 
 class PlayListHeader extends StatefulWidget {
   final bool showSearch;
   final int? itemCount;
 
   const PlayListHeader({
-    Key? key,
+    super.key,
     required this.showSearch,
     this.itemCount,
-  }) : super(key: key);
+  });
 
   @override
   _PlayListHeaderState createState() => _PlayListHeaderState();
@@ -37,7 +36,7 @@ class _PlayListHeaderState extends State<PlayListHeader> {
     final i18n = S.of(context);
     final theme = Theme.of(context);
     if (widget.showSearch) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) => _searchFocusNode.requestFocus());
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) => _searchFocusNode.requestFocus());
     }
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),

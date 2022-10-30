@@ -1,11 +1,10 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/playlist/widgets/delete_file_bottom_sheet.dart';
 import 'package:castit/presentation/shared/common_bottom_sheet.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'delete_file_bottom_sheet.dart';
 
 class FileOptionsBottomSheetDialog extends StatelessWidget {
   final int id;

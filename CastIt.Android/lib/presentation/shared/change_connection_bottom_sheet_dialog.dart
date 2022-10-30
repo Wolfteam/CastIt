@@ -11,10 +11,10 @@ class ChangeConnectionBottomSheetDialog extends StatefulWidget {
   final bool showRefreshButton;
   final bool showOkButton;
   final Function(String)? onOk;
-  final Function? onCancel;
+  final VoidCallback? onCancel;
 
   const ChangeConnectionBottomSheetDialog({
-    Key? key,
+    super.key,
     required this.currentUrl,
     this.title,
     this.icon,
@@ -22,7 +22,7 @@ class ChangeConnectionBottomSheetDialog extends StatefulWidget {
     this.showRefreshButton = true,
     this.onOk,
     this.onCancel,
-  }) : super(key: key);
+  });
 
   @override
   _ChangeConnectionBottomSheetDialogState createState() => _ChangeConnectionBottomSheetDialogState();

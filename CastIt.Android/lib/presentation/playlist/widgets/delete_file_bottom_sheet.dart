@@ -1,9 +1,8 @@
 import 'package:castit/application/bloc.dart';
 import 'package:castit/generated/l10n.dart';
+import 'package:castit/presentation/shared/confirm_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../shared/confirm_bottom_sheet.dart';
 
 class DeleteFileBottomSheet extends StatelessWidget {
   final int id;
@@ -11,11 +10,11 @@ class DeleteFileBottomSheet extends StatelessWidget {
   final String fileName;
 
   const DeleteFileBottomSheet({
-    Key? key,
+    super.key,
     required this.id,
     required this.playListId,
     required this.fileName,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

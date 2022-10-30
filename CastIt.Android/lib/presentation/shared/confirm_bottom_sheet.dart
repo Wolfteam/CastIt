@@ -1,19 +1,17 @@
 import 'package:castit/presentation/shared/common_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
-import 'common_bottom_sheet.dart';
-
 class ConfirmBottomSheet extends StatelessWidget {
   final String title;
   final IconData icon;
   final String content;
   final String? okText;
   final String? cancelText;
-  final Function onOk;
-  final Function onCancel;
+  final VoidCallback onOk;
+  final VoidCallback onCancel;
 
   const ConfirmBottomSheet({
-    Key? key,
+    super.key,
     required this.title,
     required this.icon,
     required this.content,
@@ -21,7 +19,7 @@ class ConfirmBottomSheet extends StatelessWidget {
     required this.onCancel,
     this.okText,
     this.cancelText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

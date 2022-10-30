@@ -9,10 +9,10 @@ class PlayedFileVolumeOption extends StatelessWidget {
   final bool isMuted;
 
   const PlayedFileVolumeOption({
-    Key? key,
+    super.key,
     required this.volumeLevel,
     required this.isMuted,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
