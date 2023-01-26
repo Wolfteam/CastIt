@@ -42,7 +42,7 @@
     <PackageReference Include="MvvmCross.Plugin.ResxLocalization" Version="8.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
-    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.1.0" />
+    <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.2.4" />
   </ItemGroup>
 
   <ItemGroup>
