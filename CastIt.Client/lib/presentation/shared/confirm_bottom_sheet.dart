@@ -33,7 +33,7 @@ class ConfirmBottomSheet extends StatelessWidget {
       cancelText: cancelText,
       child: Padding(
         padding: const EdgeInsets.only(top: 10, left: 10),
-        child: Text(content, style: theme.textTheme.subtitle1),
+        child: Text(content, style: theme.textTheme.titleMedium),
       ),
     );
   }

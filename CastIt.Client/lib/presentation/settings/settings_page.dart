@@ -84,12 +84,12 @@ class _DesktopTabletLayout extends StatelessWidget {
           title: i18n.settings,
           icon: Icons.settings,
         ),
-        Row(
+        const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Column(
-                children: const [
+                children: [
                   ThemeSettingsCard(),
                   AccentColorSettingsCard(),
                   LanguageSettingsCard(),
@@ -99,7 +99,7 @@ class _DesktopTabletLayout extends StatelessWidget {
             ),
             Expanded(
               child: Column(
-                children: const [
+                children: [
                   PlayerSettingsCard(),
                 ],
               ),

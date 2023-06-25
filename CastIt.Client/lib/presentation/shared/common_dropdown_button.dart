@@ -66,7 +66,7 @@ class CommonDropdownButton<T> extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                       style: lang.enumValue == currentValue
-                          ? theme.textTheme.subtitle1!.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)
+                          ? theme.textTheme.titleMedium!.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)
                           : null,
                     ),
                   ),
@@ -100,7 +100,7 @@ class _DropdownListTitle extends StatelessWidget {
               margin: const EdgeInsets.only(left: 10),
               child: Text(
                 subTitle,
-                style: Theme.of(context).textTheme.caption,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
     );

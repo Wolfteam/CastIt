@@ -6,9 +6,9 @@ class PlayListContentLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: const [
+      children: [
         PlayListHeader(showSearch: false),
         Expanded(
           child: Center(

@@ -25,7 +25,7 @@ class ThemeSettingsCard extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 5),
                 child: Text(
                   i18n.theme,
-                  style: Theme.of(context).textTheme.headline6,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
             ],

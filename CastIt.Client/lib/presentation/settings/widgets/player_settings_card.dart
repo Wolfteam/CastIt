@@ -31,7 +31,7 @@ class PlayerSettingsCard extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 5),
                 child: Text(
                   i18n.playerSettings,
-                  style: textTheme.headline6,
+                  style: textTheme.titleLarge,
                 ),
               ),
             ],
@@ -65,7 +65,7 @@ class PlayerSettingsCard extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               state.castItUrl,
-                              style: theme.textTheme.caption,
+                              style: theme.textTheme.bodySmall,
                             ),
                           ),
                         ),

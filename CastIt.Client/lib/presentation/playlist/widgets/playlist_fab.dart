@@ -73,15 +73,16 @@ class _CardRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               ButtonBar(
-                buttonPadding: EdgeInsets.zero,
                 children: <Widget>[
                   IconButton(
                     icon: Icon(Icons.loop, color: loop ? theme.colorScheme.secondary : null, size: iconSize),
                     onPressed: () => _setPlayListOptions(!loop, shuffle, context),
+                    splashRadius: Styles.mediumButtonSplashRadius,
                   ),
                   IconButton(
                     icon: Icon(Icons.shuffle, color: shuffle ? theme.colorScheme.secondary : null, size: iconSize),
                     onPressed: () => _setPlayListOptions(loop, !shuffle, context),
+                    splashRadius: Styles.mediumButtonSplashRadius,
                   ),
                 ],
               ),
@@ -94,10 +95,12 @@ class _CardRow extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.search, size: iconSize),
                     onPressed: () => _toggleSearchBoxVisibility(context),
+                    splashRadius: Styles.mediumButtonSplashRadius,
                   ),
                   IconButton(
                     icon: const Icon(Icons.arrow_upward, size: iconSize),
                     onPressed: () => onArrowTopTap(),
+                    splashRadius: Styles.mediumButtonSplashRadius,
                   ),
                 ],
               )

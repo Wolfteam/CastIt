@@ -57,9 +57,9 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                   : _onRefreshClick,
         ),
         child: state.map(
-          loading: (_) => Column(
+          loading: (_) => const Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               CircularProgressIndicator(),
             ],
           ),
@@ -94,12 +94,12 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                     Text(
                       i18n.verifyCastItUrl,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.caption,
+                      style: theme.textTheme.bodySmall,
                     ),
                     Text(
                       i18n.makeSureYouAreConnected,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.caption,
+                      style: theme.textTheme.bodySmall,
                     )
                   ],
                 ),

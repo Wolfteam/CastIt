@@ -31,7 +31,7 @@ class PlayedFileVolumeOption extends StatelessWidget {
                 child: Text(
                   i18n.volume,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.subtitle1,
+                  style: theme.textTheme.titleMedium,
                 ),
               ),
             ],

@@ -15,7 +15,7 @@ class PlayProgressBar extends StatelessWidget {
             return const _DummySlider(value: 100);
           }
           return Slider(
-            onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value, triggerGoToSeconds: false)),
+            onChanged: (double value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value)),
             value: state.currentSeconds!,
             max: state.duration!,
             activeColor: Theme.of(context).colorScheme.secondary,

@@ -20,7 +20,7 @@ class PlayListContentNotFound extends StatelessWidget {
               Text(
                 s.playlistNotFound,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.headline4,
+                style: theme.textTheme.headlineMedium,
               ),
             ],
           ),

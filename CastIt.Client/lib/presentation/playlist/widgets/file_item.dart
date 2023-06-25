@@ -114,7 +114,7 @@ class _Title extends StatelessWidget {
       return Text(
         name,
         overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.headline6,
+        style: theme.textTheme.titleLarge,
       );
     }
     return Row(
@@ -126,7 +126,7 @@ class _Title extends StatelessWidget {
           child: Text(
             name,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.headline6,
+            style: theme.textTheme.titleLarge,
           ),
         ),
         const Flexible(

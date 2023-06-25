@@ -13,9 +13,9 @@ class SomethingWentWrong extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           const Icon(Icons.info_outline, size: 60),
-          Text(i18n.somethingWentWrong, textAlign: TextAlign.center, style: theme.textTheme.headline4),
-          Text(i18n.pleaseTryAgainLater, textAlign: TextAlign.center, style: theme.textTheme.headline5),
-          Text(i18n.makeSureYouAreConnected, textAlign: TextAlign.center, style: theme.textTheme.subtitle1),
+          Text(i18n.somethingWentWrong, textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
+          Text(i18n.pleaseTryAgainLater, textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
+          Text(i18n.makeSureYouAreConnected, textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
         ],
       ),
     );

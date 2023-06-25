@@ -25,7 +25,7 @@ class AboutSettingsCard extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 5),
                 child: Text(
                   i18n.about,
-                  style: textTheme.headline6,
+                  style: textTheme.titleLarge,
                 ),
               ),
             ],
@@ -49,14 +49,14 @@ class AboutSettingsCard extends StatelessWidget {
                 Text(
                   i18n.appName,
                   textAlign: TextAlign.center,
-                  style: textTheme.subtitle2,
+                  style: textTheme.titleSmall,
                 ),
                 BlocBuilder<SettingsBloc, SettingsState>(
                   builder: (context, state) => state.maybeMap(
                     loaded: (state) => Text(
                       i18n.appVersion(state.appVersion),
                       textAlign: TextAlign.center,
-                      style: textTheme.subtitle2,
+                      style: textTheme.titleSmall,
                     ),
                     orElse: () => const CircularProgressIndicator(),
                   ),
@@ -70,7 +70,7 @@ class AboutSettingsCard extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 10),
                   child: Text(
                     i18n.donations,
-                    style: textTheme.subtitle1!.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
                 Text(i18n.donationsMsg),
@@ -78,7 +78,7 @@ class AboutSettingsCard extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 10),
                   child: Text(
                     i18n.support,
-                    style: textTheme.subtitle1!.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
                 Container(

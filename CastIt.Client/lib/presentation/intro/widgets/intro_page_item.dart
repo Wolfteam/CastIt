@@ -19,7 +19,7 @@ class IntroPageItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      color: theme.backgroundColor.withOpacity(0.3),
+      color: theme.colorScheme.background.withOpacity(0.3),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       alignment: Alignment.center,
       child: Column(

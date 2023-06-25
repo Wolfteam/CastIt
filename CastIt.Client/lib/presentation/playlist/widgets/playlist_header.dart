@@ -91,6 +91,7 @@ class _PlayListHeaderState extends State<PlayListHeader> {
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: _cleanSearchText,
+                    splashRadius: Styles.smallButtonSplashRadius,
                   ),
                 ],
               ),

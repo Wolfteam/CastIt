@@ -33,7 +33,7 @@ class PlayListItem extends StatelessWidget {
         leading: const Icon(Icons.list, size: 36),
         title: Text(
           name,
-          style: theme.textTheme.headline6,
+          style: theme.textTheme.titleLarge,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Row(

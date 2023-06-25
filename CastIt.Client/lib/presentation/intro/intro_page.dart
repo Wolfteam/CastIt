@@ -171,7 +171,7 @@ class _IntroPageState extends State<IntroPage> {
             const Icon(Icons.language),
             Container(
               margin: const EdgeInsets.only(left: 5),
-              child: Text(i18n.language, style: Theme.of(context).textTheme.headline6),
+              child: Text(i18n.language, style: Theme.of(context).textTheme.titleLarge),
             ),
           ],
         ),
