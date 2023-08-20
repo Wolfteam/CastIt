@@ -1,4 +1,4 @@
-include: package:lint/analysis_options.yaml
+include: package:lint/strict.yaml
 
 linter:
   rules:
@@ -7,10 +7,11 @@ linter:
     depend_on_referenced_packages: false
 
 analyzer:
-  exclude: 
+  exclude:
     - '**/*.freezed.dart'
     - '**/*.g.dart'
     - lib/**/*.*.dart
-    - lib/generated/*
+    - lib/generated/*.dart
+    - lib/generated/**/*.dart
   errors:
     missing_return: error
