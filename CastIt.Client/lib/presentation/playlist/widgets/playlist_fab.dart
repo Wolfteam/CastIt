@@ -103,7 +103,7 @@ class _CardRow extends StatelessWidget {
                     splashRadius: Styles.mediumButtonSplashRadius,
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

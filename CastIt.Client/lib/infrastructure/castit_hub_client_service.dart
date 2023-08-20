@@ -128,7 +128,6 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
             case LogLevel.error:
             case LogLevel.critical:
               _logger.error(runtimeType, message);
-              break;
           }
         },
       );
@@ -272,13 +271,11 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         final pls = message as List<dynamic>;
         final playlists = pls.map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
         playListsChanged.add(playlists);
-        break;
       case _playerSettingsChanged:
         _logger.info(runtimeType, '_handleSocketMsg: Settings were loaded');
         final settings = ServerAppSettings.fromJson(message as Map<String, dynamic>);
         connected.add(null);
         settingsChanged.add(settings);
-        break;
       case _playerStatusChanged:
         final status = ServerPlayerStatusResponseDto.fromJson(message as Map<String, dynamic>);
         if (status.player.isPaused) {
@@ -296,56 +293,44 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         }
         final volume = VolumeLevelChangedResponseDto(isMuted: status.player.isMuted, volumeLevel: status.player.volumeLevel);
         volumeLevelChanged.add(volume);
-        break;
       case _playListAdded:
         final newPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
         playListAdded.add(newPl);
-        break;
       case _playListChanged:
         final updatedPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
         playListChanged.add(Tuple2(false, updatedPl));
-        break;
       case _playListsChanged:
         final playLists = (message as List<dynamic>).map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
         playListsChanged.add(playLists);
-        break;
       case _playListDeleted:
         final id = message as int;
         playListDeleted.add(id);
-        break;
       case _playListBusy:
         break;
       case _fileAdded:
         final file = FileItemResponseDto.fromJson(message as Map<String, dynamic>);
         fileAdded.add(file);
-        break;
       case _fileChanged:
         final file = FileItemResponseDto.fromJson(message as Map<String, dynamic>);
         fileChanged.add(Tuple2(false, file));
-        break;
       case _filesChanged:
         final files = (message as List<dynamic>).map((e) => FileItemResponseDto.fromJson(e as Map<String, dynamic>)).toList();
         filesChanged.add(files);
-        break;
       case _fileDeleted:
         final items = message as List<dynamic>;
         final playListId = items.first as int;
         final fileId = items.last as int;
         fileDeleted.add(Tuple2(playListId, fileId));
-        break;
       case _fileLoading:
         _logger.info(runtimeType, '_handleSocketMsg: A file is loading...');
         fileLoading.add(null);
-        break;
       case _serverMessage:
         final code = message as int;
         serverMessageReceived.add(getAppMessageType(code));
-        break;
       case _stoppedPlayback:
       case _fileEndReached:
         _logger.info(runtimeType, '_handleSocketMsg: File end reached');
         fileEndReached.add(null);
-        break;
       case _castDevicesChanged:
         break;
       case _castDeviceSet:

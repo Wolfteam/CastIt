@@ -128,12 +128,10 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
         setState(() {
           isFabVisible = true;
         });
-        break;
       case ScrollDirection.reverse:
         setState(() {
           isFabVisible = false;
         });
-        break;
     }
   }
 }

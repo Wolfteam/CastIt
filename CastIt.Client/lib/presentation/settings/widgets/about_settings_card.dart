@@ -42,9 +42,11 @@ class AboutSettingsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  child: Image.asset(Styles.appIconPath, width: 70, height: 70),
+                Image.asset(
+                  Styles.appIconPath,
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.contain,
                 ),
                 Text(
                   i18n.appName,

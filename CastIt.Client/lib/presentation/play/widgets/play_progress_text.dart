@@ -28,7 +28,7 @@ class PlayProgressText extends StatelessWidget {
                   Text(
                     total,
                     style: TextStyle(color: isDarkTheme ? Colors.white : Colors.black),
-                  )
+                  ),
                 ],
               ),
             );

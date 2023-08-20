@@ -40,7 +40,7 @@ class IntroPageItem extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
           ),
           const SizedBox(height: 20),
-          if (extraContent != null) extraContent!
+          if (extraContent != null) extraContent!,
         ],
       ),
     );
