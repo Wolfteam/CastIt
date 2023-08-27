@@ -48,6 +48,7 @@ extension AppThemeTypeExtensions on AppAccentColorType {
           primaryColorLight: color.withOpacity(0.5),
           primaryColorDark: color,
           colorScheme: ColorScheme.dark(primary: color, secondary: color),
+          useMaterial3: false,
         );
       case AppThemeType.light:
         return ThemeData.light().copyWith(
@@ -55,6 +56,7 @@ extension AppThemeTypeExtensions on AppAccentColorType {
           primaryColorLight: color.withOpacity(0.8),
           primaryColorDark: color,
           colorScheme: ColorScheme.light(primary: color, secondary: color),
+          useMaterial3: false,
         );
       default:
         throw Exception('The provided theme  = $theme is not valid ');
