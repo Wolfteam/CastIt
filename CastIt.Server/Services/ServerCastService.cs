@@ -1098,7 +1098,7 @@ namespace CastIt.Server.Services
                 if (CurrentPlayedFile.Type.IsLocalMusic())
                 {
                     //Images for music files don't change, that's why we return the original image here
-                    var pathTo = _fFmpeg.GetThumbnail(CurrentPlayedFile.Path);
+                    var pathTo = _fFmpeg.GetThumbnail(CurrentPlayedFile.Id, CurrentPlayedFile.Path);
                     var bytes = await File.ReadAllBytesAsync(pathTo);
                     return preview.SetImage(bytes).Generated().Image;
                 }

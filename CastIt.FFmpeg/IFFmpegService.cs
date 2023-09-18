@@ -15,9 +15,9 @@ namespace CastIt.FFmpeg
 
         void RefreshFfmpegPath(string ffmpegExePath, string ffprobeExePath);
 
-        string GetThumbnail(string mrl);
+        string GetThumbnail(long id, string mrl);
 
-        Task GenerateThumbnails(string mrl, bool hwAccelIsEnabled);
+        Task GenerateThumbnails(long id, string mrl, bool hwAccelIsEnabled);
 
         Task KillThumbnailProcess();
 

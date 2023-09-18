@@ -29,7 +29,7 @@ namespace CastIt.Server.Shared
 
         string GetPlayUrl(string code);
 
-        string GetChromeCastPreviewUrl(string filepath);
+        string GetChromeCastPreviewUrl(long fileId);
         string GetThumbnailPreviewUrl(long tentativeSecond);
         string GetSubTitleUrl();
         string GetOutputMimeType(string mrl);

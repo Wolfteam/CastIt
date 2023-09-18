@@ -115,8 +115,8 @@ namespace CastIt.Server.Services
             {
                 //Url file images are downloaded to disk
                 return currentPlayedFile.IsUrlFile
-                    ? GetPlayListImageUrl(_fileService.GetTemporalPreviewImagePath(currentPlayedFile.Id), true)
-                    : GetPlayListImageUrl(currentPlayedFile.Path, currentPlayedFile.IsLocalFile);
+                    ? GetPlayListImageUrl(currentPlayedFile.Id, _fileService.GetTemporalPreviewImagePath(currentPlayedFile.Id), true)
+                    : GetPlayListImageUrl(currentPlayedFile.Id, currentPlayedFile.Path, currentPlayedFile.IsLocalFile);
             }
 
             //If the item is not in the playlist, then try to return an image that is part of the playlist
@@ -128,13 +128,15 @@ namespace CastIt.Server.Services
             var selected = playList.Files
                 .Select(f => new
                 {
+                    Id = f.Id,
                     IsLocal = f.IsLocalFile,
                     Thumbnail = f.IsUrlFile
                         ? _fileService.GetTemporalPreviewImagePath(f.Id)
-                        : _fileService.GetFirstThumbnailFilePath(f.Name),
+                        : _fileService.GetFirstThumbnailFilePath(f.Id),
                 })
                 .FirstOrDefault(f => _fileService.Exists(f.Thumbnail));
-            return GetPlayListImageUrl(selected?.Thumbnail, selected?.IsLocal ?? false);
+
+            return GetPlayListImageUrl(selected?.Id, selected?.Thumbnail, selected?.IsLocal ?? false);
         }
 
         public bool IsNoImage(string filename)
@@ -146,16 +148,16 @@ namespace CastIt.Server.Services
         public string GetNoImagePath()
             => _noImgFoundPath;
 
-        private string GetPlayListImageUrl(string path, bool isLocal)
+        private string GetPlayListImageUrl(long? id, string path, bool isLocal)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            if (!id.HasValue || string.IsNullOrWhiteSpace(path))
             {
-                return _serverService.GetChromeCastPreviewUrl(GetNoImagePath());
+                return _serverService.GetChromeCastPreviewUrl(-1);
             }
 
             return _fileService.IsUrlFile(path) && !isLocal
                 ? path
-                : _serverService.GetChromeCastPreviewUrl(path);
+                : _serverService.GetChromeCastPreviewUrl(id.Value);
         }
     }
 }
