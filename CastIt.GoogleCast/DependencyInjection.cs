@@ -10,5 +10,10 @@ namespace CastIt.GoogleCast
         {
             return services.AddSingleton<IPlayer>(provider => new Player(provider.GetRequiredService<ILogger<Player>>()));
         }
+
+        public static IServiceCollection AddDummyGoogleCast(this IServiceCollection services)
+        {
+            return services.AddSingleton<IPlayer>(new DummyPlayer());
+        }
     }
 }
