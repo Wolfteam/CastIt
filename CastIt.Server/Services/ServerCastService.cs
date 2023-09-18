@@ -102,20 +102,24 @@ namespace CastIt.Server.Services
             _logger.LogInformation($"{nameof(Init)}: Initializing all...");
             await _appDataService.DeleteOldTinyCodes();
             var playLists = await _appDataService.GetAllPlayLists();
-            var tasks = playLists.ConvertAll(async pl =>
+            long[] playListIds = playLists.Select(pl => pl.Id).ToArray();
+            if (playListIds.Any())
             {
-                var files = await _appDataService.GetAllFiles(pl.Id);
-                var mapped = _mapper.Map<ServerPlayList>(pl);
-                mapped.Files = files
-                    .Select(f => ServerFileItem.From(_fileService, f))
-                    .OrderBy(f => f.Position)
-                    .ToList();
-                return mapped;
-            });
+                var files = await _appDataService.GetAllFilesByPlayListIds(playListIds);
+                var mappedPlayLists = new List<ServerPlayList>();
+                foreach (var pl in playLists)
+                {
+                    var mapped = _mapper.Map<ServerPlayList>(pl);
+                    mapped.Files = files
+                        .Where(f => f.PlayListId == pl.Id)
+                        .Select(f => ServerFileItem.From(_fileService, f))
+                        .OrderBy(f => f.Position)
+                        .ToList();
+                    mappedPlayLists.Add(mapped);
+                }
 
-            var mappedPlayLists = await Task.WhenAll(tasks);
-
-            PlayLists.AddRange(mappedPlayLists.OrderBy(pl => pl.Position));
+                PlayLists.AddRange(mappedPlayLists.OrderBy(pl => pl.Position));
+            }
 
             _player.FileLoading += FileLoading;
             _player.FileLoaded += FileLoaded;
