@@ -75,12 +75,12 @@ class _CardRow extends StatelessWidget {
               ButtonBar(
                 children: <Widget>[
                   IconButton(
-                    icon: Icon(Icons.loop, color: loop ? theme.colorScheme.secondary : null, size: iconSize),
+                    icon: Icon(Icons.loop, color: loop ? theme.colorScheme.primary : null, size: iconSize),
                     onPressed: () => _setPlayListOptions(!loop, shuffle, context),
                     splashRadius: Styles.mediumButtonSplashRadius,
                   ),
                   IconButton(
-                    icon: Icon(Icons.shuffle, color: shuffle ? theme.colorScheme.secondary : null, size: iconSize),
+                    icon: Icon(Icons.shuffle, color: shuffle ? theme.colorScheme.primary : null, size: iconSize),
                     onPressed: () => _setPlayListOptions(loop, !shuffle, context),
                     splashRadius: Styles.mediumButtonSplashRadius,
                   ),

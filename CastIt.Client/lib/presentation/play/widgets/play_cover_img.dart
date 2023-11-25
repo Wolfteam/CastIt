@@ -211,7 +211,7 @@ class _Bottom extends StatelessWidget {
         children: <Widget>[
           IconButton(
             tooltip: i18n.shufflePlayList,
-            icon: Icon(Icons.shuffle, color: shufflePlayList ? theme.colorScheme.secondary : Colors.white),
+            icon: Icon(Icons.shuffle, color: shufflePlayList ? theme.colorScheme.primary : Colors.white),
             onPressed: !playListIsValid ? null : () => _togglePlayListShuffle(context),
           ),
           Flexible(
@@ -227,7 +227,7 @@ class _Bottom extends StatelessWidget {
           ),
           IconButton(
             tooltip: i18n.loopFile,
-            icon: Icon(Icons.repeat, color: loopFile ? theme.colorScheme.secondary : Colors.white),
+            icon: Icon(Icons.repeat, color: loopFile ? theme.colorScheme.primary : Colors.white),
             onPressed: !fileIdIsValid ? null : () => _toggleFileLoop(context),
           ),
         ],

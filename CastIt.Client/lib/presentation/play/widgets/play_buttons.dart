@@ -9,15 +9,36 @@ class PlayButtons extends StatelessWidget {
   static const double _playbackIconSizeOnMobile = 65;
   static const double _playbackIconSizeDesktopOrTablet = 85;
 
+  final bool isLoading;
+  final bool isPlaying;
+  final bool isPaused;
   final bool areDisabled;
 
-  const PlayButtons({this.areDisabled = false});
+  const PlayButtons.loading()
+      : isLoading = true,
+        isPlaying = false,
+        isPaused = false,
+        areDisabled = true;
+
+  const PlayButtons.playing({required this.isPaused})
+      : isLoading = false,
+        isPlaying = true,
+        areDisabled = false;
+
+  const PlayButtons.disabled()
+      : isLoading = false,
+        isPlaying = false,
+        isPaused = false,
+        areDisabled = true;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
-    final iconColor = isDarkTheme ? Colors.white : Colors.black;
+    Color iconColor = isDarkTheme ? Colors.white : Colors.black;
+    if (areDisabled) {
+      iconColor = iconColor.withOpacity(0.5);
+    }
     return ResponsiveBuilder(
       builder: (ctx, sizing) {
         final isDesktopOrTable = sizing.isDesktop || sizing.isTablet;
@@ -42,15 +63,14 @@ class PlayButtons extends StatelessWidget {
               ),
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary,
+                  color: isPlaying ? theme.colorScheme.primary : iconColor,
                   borderRadius: BorderRadius.circular(50.0),
                 ),
-                child: BlocBuilder<PlayBloc, PlayState>(
-                  builder: (ctx, state) => state.maybeMap(
-                    playing: (state) => _PlayBackButton(iconSize: playBackIconSize, isPaused: state.isPaused!, isDisabled: areDisabled),
-                    orElse: () => _PlayBackButton(iconSize: playBackIconSize, isPaused: false, isDisabled: areDisabled),
-                  ),
-                ),
+                child: isLoading
+                    ? _PlayBackButton.loading(iconSize: playBackIconSize)
+                    : isPlaying || isPaused
+                        ? _PlayBackButton.playing(iconSize: playBackIconSize, isPaused: isPaused)
+                        : _PlayBackButton.disabled(iconSize: playBackIconSize),
               ),
               IconButton(
                 iconSize: iconSize,
@@ -87,20 +107,46 @@ class _PlayBackButton extends StatelessWidget {
   final double iconSize;
   final bool isDisabled;
   final bool isPaused;
+  final bool isLoading;
 
-  const _PlayBackButton({
-    required this.iconSize,
-    required this.isDisabled,
-    required this.isPaused,
-  });
+  const _PlayBackButton.disabled({required this.iconSize})
+      : isDisabled = true,
+        isPaused = false,
+        isLoading = false;
+
+  const _PlayBackButton.loading({required this.iconSize})
+      : isDisabled = false,
+        isPaused = false,
+        isLoading = true;
+
+  const _PlayBackButton.playing({required this.iconSize, required this.isPaused})
+      : isDisabled = false,
+        isLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return IconButton(
+        iconSize: iconSize,
+        onPressed: null,
+        icon: Stack(
+          alignment: Alignment.center,
+          children: [
+            const Icon(Icons.play_arrow),
+            SizedBox(
+              height: iconSize,
+              width: iconSize,
+              child: const CircularProgressIndicator(),
+            ),
+          ],
+        ),
+      );
+    }
     return IconButton(
       iconSize: iconSize,
       onPressed: isDisabled ? null : () => _togglePlayBack(context),
       icon: Icon(
-        isPaused ? Icons.pause : Icons.play_arrow,
+        !isPaused && !isDisabled ? Icons.pause : Icons.play_arrow,
         color: Colors.white,
       ),
     );

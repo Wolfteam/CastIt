@@ -112,7 +112,6 @@ class PlayerSettingsCard extends StatelessWidget {
               loaded: (state) => !state.isConnected
                   ? const SizedBox.shrink()
                   : SwitchListTile(
-                      activeColor: theme.colorScheme.secondary,
                       value: state.playFromTheStart,
                       title: Text(i18n.playFromTheStart),
                       onChanged: (newValue) => _updateServerSettings(context, state.copyWith.call(playFromTheStart: newValue)),
@@ -125,7 +124,6 @@ class PlayerSettingsCard extends StatelessWidget {
               loaded: (state) => !state.isConnected
                   ? const SizedBox.shrink()
                   : SwitchListTile(
-                      activeColor: theme.colorScheme.secondary,
                       value: state.playNextFileAutomatically,
                       title: Text(i18n.playNextFileAutomatically),
                       onChanged: (newValue) => _updateServerSettings(context, state.copyWith.call(playNextFileAutomatically: newValue)),
@@ -138,7 +136,6 @@ class PlayerSettingsCard extends StatelessWidget {
               loaded: (state) => !state.isConnected
                   ? const SizedBox.shrink()
                   : SwitchListTile(
-                      activeColor: theme.colorScheme.secondary,
                       value: state.forceVideoTranscode,
                       title: Text(i18n.forceVideoTranscode),
                       onChanged: (newValue) => _updateServerSettings(context, state.copyWith.call(forceVideoTranscode: newValue)),
@@ -151,7 +148,6 @@ class PlayerSettingsCard extends StatelessWidget {
               loaded: (state) => !state.isConnected
                   ? const SizedBox.shrink()
                   : SwitchListTile(
-                      activeColor: theme.colorScheme.secondary,
                       value: state.forceAudioTranscode,
                       title: Text(i18n.forceAudioTranscode),
                       onChanged: (newValue) => _updateServerSettings(context, state.copyWith.call(forceAudioTranscode: newValue)),
@@ -164,7 +160,6 @@ class PlayerSettingsCard extends StatelessWidget {
               loaded: (state) => !state.isConnected
                   ? const SizedBox.shrink()
                   : SwitchListTile(
-                      activeColor: theme.colorScheme.secondary,
                       value: state.enableHwAccel,
                       title: Text(i18n.enableHwAccel),
                       onChanged: (newValue) => _updateServerSettings(context, state.copyWith.call(enableHwAccel: newValue)),
