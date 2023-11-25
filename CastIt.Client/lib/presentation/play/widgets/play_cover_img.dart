@@ -97,10 +97,10 @@ class PlayCoverImg extends StatelessWidget {
                 loopFile: loopFile,
                 loopPlayList: loopPlayList,
                 shufflePlayList: shufflePlayList,
-              )
+              ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
@@ -157,7 +157,7 @@ class _Top extends StatelessWidget {
             color: Colors.white,
           ),
           onPressed: !fileIdIsValid ? null : () => _showFileOptionsModal(context),
-        )
+        ),
       ],
     );
   }

@@ -24,7 +24,7 @@ class PlayListContentNotFound extends StatelessWidget {
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }

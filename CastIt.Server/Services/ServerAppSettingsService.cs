@@ -163,7 +163,8 @@ namespace CastIt.Server.Services
                 ForceVideoTranscode = false,
                 StartFilesFromTheStart = true,
                 SubtitleDelayInSeconds = 0,
-                CurrentSubtitleBgColor = SubtitleBgColorType.Transparent
+                CurrentSubtitleBgColor = SubtitleBgColorType.Transparent,
+                WebVideoQuality = WebVideoQualityType.Traditional
             };
 
             return Task.FromResult(defaultSettings);

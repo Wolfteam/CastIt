@@ -57,9 +57,9 @@ class CommonBottomSheet extends StatelessWidget {
                     ElevatedButton(
                       onPressed: onOk != null ? () => onOk!() : null,
                       child: Text(okText ?? s.ok),
-                    )
+                    ),
                 ],
-              )
+              ),
           ],
         ),
       ),

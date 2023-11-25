@@ -185,9 +185,9 @@ class _Content extends StatelessWidget {
               trackHeight: 1,
               minThumbSeparation: 0,
               disabledActiveTrackColor: theme.colorScheme.secondary,
-              overlayShape: const RoundSliderThumbShape(enabledThumbRadius: 0.0, disabledThumbRadius: 0.0),
+              overlayShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
               thumbColor: Colors.transparent,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0.0, disabledThumbRadius: 0.0),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
             ),
             child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
               builder: (ctx, state) => Slider(

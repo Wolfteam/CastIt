@@ -79,13 +79,10 @@ namespace CastIt.Server.Shared
             return $"{baseUrl}/{AppWebServerConstants.ChromeCastPlayPath}/{code}";
         }
 
-        public virtual string GetChromeCastPreviewUrl(string filepath)
+        public virtual string GetChromeCastPreviewUrl(long fileId)
         {
-            if (string.IsNullOrEmpty(filepath))
-                return null;
             string baseUrl = GetChromeCastBaseUrl();
-            string filename = Path.GetFileName(filepath);
-            return $"{baseUrl}/{AppWebServerConstants.ChromeCastImagesPath}/{Uri.EscapeDataString(filename)}";
+            return $"{baseUrl}/{AppWebServerConstants.ChromeCastImagesPath}/{fileId}";
         }
 
         public virtual string GetThumbnailPreviewUrl(long tentativeSecond)

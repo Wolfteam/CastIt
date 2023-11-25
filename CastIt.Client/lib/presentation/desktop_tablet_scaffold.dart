@@ -64,7 +64,7 @@ class _DesktopTabletScaffoldState extends State<DesktopTabletScaffold> with Sing
                   Expanded(child: PlayListsPage()),
                 ],
               ),
-              const SettingsPage()
+              const SettingsPage(),
             ],
           ),
         ),

@@ -49,5 +49,9 @@
 	<false/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Required to discover the remote server</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Required to discover the remote server</string>
 </dict>
 </plist>

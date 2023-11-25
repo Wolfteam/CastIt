@@ -12,13 +12,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Controllers
 {
+#if !DEBUG
+    [ApiExplorerSettings(IgnoreApi = true)]
+#endif
     public class ChromeCastController : BaseController<ChromeCastController>
     {
         private readonly IFileService _fileService;
@@ -42,7 +44,6 @@ namespace CastIt.Server.Controllers
         }
 
         [HttpGet(AppWebServerConstants.ChromeCastPlayPath + "/{code}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task Play(string code)
         {
             try
@@ -86,15 +87,11 @@ namespace CastIt.Server.Controllers
             }
         }
 
-        [HttpGet(AppWebServerConstants.ChromeCastImagesPath + "/{filename}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public IActionResult GetImage(string filename)
+        [HttpGet(AppWebServerConstants.ChromeCastImagesPath + "/{fileId}")]
+        public IActionResult GetImage(long fileId)
         {
-            Logger.LogTrace($"{nameof(GetImage)}: Checking if we can retrieve image for file = {filename}...");
-            var path = _imageProviderService.IsNoImage(filename)
-                ? Path.Combine(_imageProviderService.GetImagesPath(), filename)
-                : Path.Combine(_fileService.GetPreviewsPath(), filename);
-
+            Logger.LogTrace($"{nameof(GetImage)}: Checking if we can retrieve image for fileId = {fileId}...");
+            string path = _fileService.GetFirstThumbnailFilePath(fileId);
             Logger.LogTrace($"{nameof(GetImage)}: Retrieving image for path = {path}...");
             if (!_fileService.IsLocalFile(path))
             {
@@ -105,7 +102,6 @@ namespace CastIt.Server.Controllers
         }
 
         [HttpGet(AppWebServerConstants.ChromeCastSubTitlesPath)]
-        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult GetSubtitleForPlayedFile()
         {
             Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: Retrieving subs for currentPlayedFile = {CastService.CurrentPlayedFile?.Filename}");

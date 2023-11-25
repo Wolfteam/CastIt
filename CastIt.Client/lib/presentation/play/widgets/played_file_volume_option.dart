@@ -52,9 +52,9 @@ class PlayedFileVolumeOption extends StatelessWidget {
               IconButton(
                 icon: Icon(isMuted ? Icons.volume_off : Icons.volume_up),
                 onPressed: () => _setVolume(context, volumeLevel, !isMuted, true),
-              )
+              ),
             ],
-          )
+          ),
         ],
       ),
     );

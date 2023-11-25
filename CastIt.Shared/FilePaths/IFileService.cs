@@ -8,13 +8,11 @@ namespace CastIt.Shared.FilePaths
 
         string GetPreviewsPath();
 
-        string GetFirstThumbnailFilePath(string filename);
+        string GetFirstThumbnailFilePath(long id);
 
-        string GetThumbnailFilePath(string filename, long second);
+        string GetThumbnailFilePath(long id, long second);
 
-        string GetPreviewThumbnailFilePath(string filename);
-
-        string GetClosestThumbnail(string filePath, long tentativeSecond, int thumbnailsEachSeconds = 5);
+        string GetPreviewThumbnailFilePath(long id);
 
         string GetSubTitleFolder();
 
@@ -28,6 +26,6 @@ namespace CastIt.Shared.FilePaths
 
         Task<string> DownloadAndSavePreviewImage(long id, string url, bool overrideIfExists = true);
 
-        Task<string> DownloadAndSavePreviewImage(string filename, string url, bool overrideIfExists = true);
+        Task<string> DownloadAndSavePreviewImage(long id, string filename, string url, bool overrideIfExists = true);
     }
 }

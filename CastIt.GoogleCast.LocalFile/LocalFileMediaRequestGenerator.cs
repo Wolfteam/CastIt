@@ -79,8 +79,8 @@ namespace CastIt.GoogleCast.LocalFile
             HwAccelDeviceType hwAccelToUse = file.Type.IsLocalVideo()
                 ? FFmpeg.GetHwAccelToUse(file.CurrentFileVideoStreamIndex, file.FileInfo, settings.EnableHardwareAcceleration)
                 : HwAccelDeviceType.None;
-            string thumbnail = FFmpeg.GetThumbnail(file.Path);
-            string thumbnailUrl = Server.GetChromeCastPreviewUrl(thumbnail);
+            string thumbnail = FFmpeg.GetThumbnail(file.Id, file.Path);
+            string thumbnailUrl = Server.GetChromeCastPreviewUrl(file.Id);
             var options = new LocalFileGeneratePlayMediaRequest
             {
                 FileInfo = file.FileInfo,

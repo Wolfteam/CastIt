@@ -158,12 +158,12 @@ namespace CastIt.GoogleCast
             _sender.Disconnected += OnDisconnect;
             _connectionChannel = new ConnectionChannel(destinationId);
             _heartbeatChannel = new HeartbeatChannel(destinationId);
+            _receiverChannel = new ReceiverChannel(destinationId);
             _mediaChannel = new MediaChannel(destinationId, async () =>
             {
                 var app = await _receiverChannel.GetApplication(_sender, _connectionChannel, _mediaChannel.Namespace);
                 return app.SessionId;
             });
-            _receiverChannel = new ReceiverChannel(destinationId);
         }
         #endregion
 

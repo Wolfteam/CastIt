@@ -100,7 +100,7 @@ class _ChangeConnectionBottomSheetDialogState extends State<ChangeConnectionBott
                       i18n.makeSureYouAreConnected,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall,
-                    )
+                    ),
                   ],
                 ),
               ),
