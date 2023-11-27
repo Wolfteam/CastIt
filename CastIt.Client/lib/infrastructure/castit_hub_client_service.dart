@@ -6,6 +6,7 @@ import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
 import 'package:signalr_core/signalr_core.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:tuple/tuple.dart';
 
 const String _sendPlayLists = 'SendPlayLists';
@@ -28,6 +29,29 @@ const String _serverMessage = 'ServerMessage';
 const String _castDeviceSet = 'CastDeviceSet';
 const String _castDevicesChanged = 'CastDevicesChanged';
 const String _castDeviceDisconnected = 'CastDeviceDisconnected';
+
+const _methodNames = <String>[
+  _sendPlayLists,
+  _stoppedPlayback,
+  _playListAdded,
+  _playListChanged,
+  _playListsChanged,
+  _playListDeleted,
+  _playListBusy,
+  _fileAdded,
+  _fileChanged,
+  _filesChanged,
+  _fileDeleted,
+  _fileLoading,
+  _fileLoaded,
+  _fileEndReached,
+  _playerStatusChanged,
+  _playerSettingsChanged,
+  _serverMessage,
+  _castDeviceSet,
+  _castDevicesChanged,
+  _castDeviceDisconnected,
+];
 
 class CastItHubClientServiceImpl implements CastItHubClientService {
   @override
@@ -103,6 +127,8 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
   final SettingsService _settings;
   HubConnection? _connection;
 
+  final _disconnectLock = Lock();
+
   @override
   bool get isConnected => _connection?.state == HubConnectionState.connected;
 
@@ -114,16 +140,18 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
     try {
       _logger.info(runtimeType, 'Trying to connect to hub on = $url ...');
       final options = HttpConnectionOptions(
+        skipNegotiation: true,
+        transport: HttpTransportType.webSockets,
         logging: (level, message) {
           switch (level) {
             case LogLevel.trace:
             case LogLevel.debug:
             case LogLevel.none:
             case LogLevel.information:
-              // _logger.info(runtimeType, message);
+              //_logger.info(runtimeType, message);
               break;
             case LogLevel.warning:
-              // _logger.warning(runtimeType, message);
+              //_logger.warning(runtimeType, message);
               break;
             case LogLevel.error:
             case LogLevel.critical:
@@ -168,52 +196,20 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
 
   @override
   Future<void> disconnectFromHub({bool triggerEvent = true}) async {
-    if (_connection != null) {
-      _connection!.off(_sendPlayLists);
+    await _disconnectLock.synchronized(() async {
+      if (_connection != null) {
+        for (final String methodName in _methodNames) {
+          _connection!.off(methodName);
+        }
 
-      _connection!.off(_playListAdded);
+        await _connection!.stop();
+      }
 
-      _connection!.off(_playListChanged);
-
-      _connection!.off(_playListsChanged);
-
-      _connection!.off(_playListDeleted);
-
-      _connection!.off(_playListBusy);
-
-      _connection!.off(_fileAdded);
-
-      _connection!.off(_fileChanged);
-
-      _connection!.off(_filesChanged);
-
-      _connection!.off(_fileDeleted);
-
-      _connection!.off(_fileLoading);
-
-      _connection!.off(_fileLoaded);
-
-      _connection!.off(_fileEndReached);
-
-      _connection!.off(_playerStatusChanged);
-
-      _connection!.off(_playerSettingsChanged);
-
-      _connection!.off(_serverMessage);
-
-      _connection!.off(_castDeviceSet);
-
-      _connection!.off(_castDevicesChanged);
-
-      _connection!.off(_castDeviceDisconnected);
-
-      await _connection!.stop();
-    }
-
-    _connection = null;
-    if (triggerEvent) {
-      disconnected.add(null);
-    }
+      _connection = null;
+      if (triggerEvent) {
+        disconnected.add(null);
+      }
+    });
   }
 
   void _listenHubEvents(HubConnection connection) {
