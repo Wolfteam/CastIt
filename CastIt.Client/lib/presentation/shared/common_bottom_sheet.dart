@@ -30,7 +30,6 @@ class CommonBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final s = S.of(context);
     return SingleChildScrollView(
       padding: MediaQuery.of(context).viewInsets,
@@ -49,12 +48,13 @@ class CommonBottomSheet extends StatelessWidget {
                 buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
                 children: <Widget>[
                   if (showCancelButton)
-                    OutlinedButton(
+                    ElevatedButton(
                       onPressed: onCancel != null ? () => onCancel!() : () => _cancel(context),
-                      child: Text(cancelText ?? s.cancel, style: TextStyle(color: theme.primaryColor)),
+                      child: Text(cancelText ?? s.cancel),
                     ),
                   if (showOkButton)
                     ElevatedButton(
+                      autofocus: true,
                       onPressed: onOk != null ? () => onOk!() : null,
                       child: Text(okText ?? s.ok),
                     ),

@@ -22,13 +22,12 @@ extension AppThemeTypeExtensions on AppAccentColorType {
         return Colors.purple;
       case AppAccentColorType.deepPurple:
         return Colors.deepPurple;
-      case AppAccentColorType.grey:
-        return Colors.grey;
       case AppAccentColorType.orange:
         return Colors.orange;
       case AppAccentColorType.yellow:
         return Colors.yellow;
       case AppAccentColorType.blueGrey:
+      case AppAccentColorType.grey:
         return Colors.blueGrey;
       case AppAccentColorType.teal:
         return Colors.teal;

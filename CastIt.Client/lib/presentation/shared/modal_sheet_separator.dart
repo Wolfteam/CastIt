@@ -12,7 +12,7 @@ class ModalSheetSeparator extends StatelessWidget {
           height: 10,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: theme.primaryColor,
+              color: theme.colorScheme.primary,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
