@@ -20,17 +20,14 @@
     "react-dom": "^18.1.0",
     "react-localization": "^1.0.19",
     "react-router-dom": "^6.3.0",
-    "react-scripts": "5.0.1",
     "rxjs": "^7.5.5",
     "typescript": "^4.6.4",
     "typescript-string-operations": "^1.4.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "tsc && vite build"
   },
   "eslintConfig": {
     "extends": [
@@ -55,6 +52,8 @@
     "@types/react-beautiful-dnd": "^13.1.2",
     "@types/react-dom": "^18.0.3",
     "@types/react-router-dom": "^5.3.3",
-    "@types/react-window": "^1.8.5"
+    "@types/react-window": "^1.8.5",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.1"
   }
 }
