@@ -129,7 +129,7 @@ namespace CastIt.GoogleCast.Youtube
         private async Task<string> CacheThumbnailImage(long fileId, string url)
         {
             var path = await FileService.DownloadAndSavePreviewImage(fileId, url);
-            return Server.GetChromeCastPreviewUrl(path);
+            return Server.GetChromeCastPreviewUrl(fileId);
         }
 
         private async Task<YoutubePlayMediaRequest> BuildRequestFromFormats(

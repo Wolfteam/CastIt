@@ -108,7 +108,7 @@ namespace CastIt.Common.Utils
             PlayListItemViewModel vm)
         {
             var existingImgPath = vm.Items
-                .Select(f => fileService.GetFirstThumbnailFilePath(f.Name))
+                .Select(f => fileService.GetFirstThumbnailFilePath(f.Id))
                 .Distinct()
                 .FirstOrDefault(fileService.Exists);
             return GetImageForPlayListItem(fileService, existingImgPath);

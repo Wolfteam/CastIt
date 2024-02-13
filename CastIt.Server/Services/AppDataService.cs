@@ -126,6 +126,11 @@ namespace CastIt.Server.Services
             return _db.Select<FileItem>().Where(pl => pl.PlayListId == playlistId).ToListAsync();
         }
 
+        public Task<List<FileItem>> GetAllFilesByPlayListIds(params long[] playListIds)
+        {
+            return _db.Select<FileItem>().Where(pl => playListIds.Contains(pl.PlayListId)).ToListAsync();
+        }
+
         public Task<FileItem> GetFile(long id)
         {
             return _db.Select<FileItem>().Where(f => f.Id == id).FirstAsync();

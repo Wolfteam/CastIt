@@ -45,54 +45,22 @@ namespace CastIt.Shared.FilePaths
             return CreateDirectory(basePath, SubTitlesFolderName);
         }
 
-        public string GetFirstThumbnailFilePath(string filename)
-            => GetThumbnailFilePath(filename, 0);
+        public string GetFirstThumbnailFilePath(long id)
+            => GetThumbnailFilePath(id, 0);
 
-        public string GetThumbnailFilePath(string filename, long second)
+        public string GetThumbnailFilePath(long id, long second)
         {
-            return Path.Combine(GetPreviewsPath(), $"{filename}_{second:D2}.jpg");
+            return Path.Combine(GetPreviewsPath(), $"{id}_{second:D2}.jpg");
         }
 
-        public string GetPreviewThumbnailFilePath(string filename)
+        public string GetPreviewThumbnailFilePath(long id)
         {
-            return Path.Combine(GetPreviewsPath(), $"{filename}_%02d.jpg");
+            return Path.Combine(GetPreviewsPath(), $"{id}_%02d.jpg");
         }
 
-        public string GetTempPreviewThumbnailFilePath(string filename)
+        public string GetTempPreviewThumbnailFilePath(long id)
         {
-            return Path.Combine(GetPreviewsPath(), $"{filename}.jpg");
-        }
-
-        public string GetClosestThumbnail(string filePath, long tentativeSecond, int thumbnailsEachSeconds = 5)
-        {
-            long second = tentativeSecond / thumbnailsEachSeconds;
-            string folder = GetPreviewsPath();
-            string filename = Path.GetFileName(filePath);
-            string searchPattern = $"{filename}_*";
-
-            try
-            {
-                var files = Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
-                    .Where(p => p.EndsWith(".jpg"))
-                    .Select(p => p.Substring(p.IndexOf(filename, StringComparison.OrdinalIgnoreCase)).Replace(filename, string.Empty))
-                    .Select(p => p.Substring(p.LastIndexOf("_", StringComparison.OrdinalIgnoreCase) + 1, p.IndexOf(".", StringComparison.OrdinalIgnoreCase) - 1))
-                    .Select(long.Parse)
-                    .ToList();
-
-                if (!files.Any())
-                    return null;
-
-                long closest = files.Aggregate((x, y) => Math.Abs(x - second) < Math.Abs(y - second) ? x : y);
-
-                if (Math.Abs(closest - second) > thumbnailsEachSeconds)
-                    return null;
-                string previewPath = GetThumbnailFilePath(filename, closest);
-                return previewPath;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            return GetFirstThumbnailFilePath(id);
         }
 
         public string GetSubTitleFilePath(string subsFilename = "subs.vtt")
@@ -114,20 +82,19 @@ namespace CastIt.Shared.FilePaths
 
         public string GetTemporalPreviewImagePath(long id)
         {
-            string filename = $"{id}_{TemporalImagePreviewFilename}";
-            string path = GetTempPreviewThumbnailFilePath(filename);
+            string path = GetTempPreviewThumbnailFilePath(id);
             return !Exists(path) ? null : path;
         }
 
         public Task<string> DownloadAndSavePreviewImage(long id, string url, bool overrideIfExists = true)
         {
             string filename = $"{id}_{TemporalImagePreviewFilename}";
-            return DownloadAndSavePreviewImage(filename, url, overrideIfExists);
+            return DownloadAndSavePreviewImage(id, filename, url, overrideIfExists);
         }
 
-        public async Task<string> DownloadAndSavePreviewImage(string filename, string url, bool overrideIfExists = true)
+        public async Task<string> DownloadAndSavePreviewImage(long id, string filename, string url, bool overrideIfExists = true)
         {
-            string path = GetTempPreviewThumbnailFilePath(filename);
+            string path = GetTempPreviewThumbnailFilePath(id);
             if (Exists(path) && !overrideIfExists)
             {
                 return path;

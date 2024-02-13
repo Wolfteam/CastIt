@@ -138,7 +138,7 @@ namespace CastIt.FFmpeg
             _generateAllThumbnailsProcess.StartInfo.FileName = _ffmpegExePath;
         }
 
-        public string GetThumbnail(string mrl)
+        public string GetThumbnail(long id, string mrl)
         {
             if (!_fileService.IsLocalFile(mrl))
             {
@@ -146,8 +146,7 @@ namespace CastIt.FFmpeg
                 return null;
             }
             CheckFfmpegExePaths();
-            var filename = Path.GetFileName(mrl);
-            var thumbnailPath = _fileService.GetFirstThumbnailFilePath(filename);
+            string thumbnailPath = _fileService.GetFirstThumbnailFilePath(id);
             if (File.Exists(thumbnailPath))
             {
                 return thumbnailPath;
@@ -189,7 +188,7 @@ namespace CastIt.FFmpeg
             return thumbnailPath;
         }
 
-        public async Task GenerateThumbnails(string mrl, bool hwAccelIsEnabled)
+        public async Task GenerateThumbnails(long id, string mrl, bool hwAccelIsEnabled)
         {
             if (!_fileService.IsLocalFile(mrl))
             {
@@ -207,8 +206,7 @@ namespace CastIt.FFmpeg
             if (fileInfo == null || fileInfo.Videos.Any(f => f.IsVideo) == false)
                 throw new InvalidOperationException($"The file = {mrl} does not have a valid file info or video stream");
 
-            var filename = Path.GetFileName(mrl);
-            string thumbnailPath = _fileService.GetPreviewThumbnailFilePath(filename);
+            string thumbnailPath = _fileService.GetPreviewThumbnailFilePath(id);
             bool useHwAccel = fileInfo.Videos.Find(f => f.IsVideo).VideoCodecIsValid(AllowedVideoCodecs) &&
                 _availableHwDevices.Contains(HwAccelDeviceType.Intel) &&
                 hwAccelIsEnabled;

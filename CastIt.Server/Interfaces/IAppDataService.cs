@@ -15,6 +15,7 @@ namespace CastIt.Server.Interfaces
         Task DeletePlayList(long id);
         Task DeletePlayLists(List<long> ids);
         Task<List<FileItem>> GetAllFiles(long playlistId);
+        Task<List<FileItem>> GetAllFilesByPlayListIds(params long[] playListIds);
         Task<FileItem> GetFile(long id);
         Task<FileItem> AddFile(
             long playListId,
