@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:castit/application/bloc.dart';
 import 'package:castit/domain/enums/enums.dart';
 import 'package:castit/generated/l10n.dart';
@@ -42,7 +44,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     debugPrint('State = $state');
-    if (state == AppLifecycleState.inactive) {
+    final bool disconnect = (state == AppLifecycleState.paused && (Platform.isAndroid || Platform.isIOS)) ||
+        (state == AppLifecycleState.hidden && (Platform.isMacOS || Platform.isWindows));
+    if (disconnect) {
       _canShowConnectionModal = false;
       context.read<ServerWsBloc>().add(ServerWsEvent.disconnectFromWs());
     } else if (state == AppLifecycleState.resumed) {

@@ -53,11 +53,12 @@ class _FileItemState extends State<FileItem> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      color: widget.isBeingPlayed ? theme.colorScheme.secondary.withOpacity(0.5) : null,
+      color: widget.isBeingPlayed ? theme.colorScheme.secondaryContainer : null,
       height: widget.itemHeight,
       child: ListTile(
         isThreeLine: true,
-        selected: widget.loop,
+        selected: widget.isBeingPlayed,
+        titleAlignment: ListTileTitleAlignment.titleHeight,
         leading: ItemCounter(widget.position),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         title: _Title(name: widget.name, loop: widget.loop),
@@ -131,7 +132,6 @@ class _Title extends StatelessWidget {
         ),
         const Flexible(
           flex: 10,
-          fit: FlexFit.tight,
           child: Icon(Icons.loop, size: 20),
         ),
       ],
@@ -178,28 +178,25 @@ class _Content extends StatelessWidget {
             ),
           ],
         ),
-        Container(
-          margin: const EdgeInsets.only(top: 5),
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 1,
-              minThumbSeparation: 0,
-              disabledActiveTrackColor: theme.colorScheme.secondary,
-              overlayShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
-              thumbColor: Colors.transparent,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
-            ),
-            child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-              builder: (ctx, state) => Slider(
-                value: state.maybeMap(
-                  playing: (state) => state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
-                  orElse: () => playedPercentage,
-                ),
-                max: 100,
-                activeColor: Colors.black,
-                inactiveColor: Colors.grey,
-                onChanged: null,
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 1,
+            minThumbSeparation: 0,
+            disabledActiveTrackColor: theme.colorScheme.secondary,
+            overlayShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
+            thumbColor: Colors.transparent,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
+          ),
+          child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
+            builder: (ctx, state) => Slider(
+              value: state.maybeMap(
+                playing: (state) => state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
+                orElse: () => playedPercentage,
               ),
+              max: 100,
+              activeColor: Colors.black,
+              inactiveColor: Colors.grey,
+              onChanged: null,
             ),
           ),
         ),

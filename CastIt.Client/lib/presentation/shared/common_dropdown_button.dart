@@ -29,7 +29,6 @@ class CommonDropdownButton<T> extends StatelessWidget {
     final theme = Theme.of(context);
     return DropdownButton<T>(
       isExpanded: isExpanded,
-      dropdownColor: Theme.of(context).cardColor,
       hint: Text(hint),
       value: currentValue,
       itemHeight: minItemHeight,

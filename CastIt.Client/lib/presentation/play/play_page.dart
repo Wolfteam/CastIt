@@ -20,7 +20,7 @@ class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<
     super.build(context);
     return Scaffold(
       body: BlocBuilder<PlayBloc, PlayState>(
-        builder: (ctx, state) => Column(
+        builder: (context, state) => Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -44,12 +44,33 @@ class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<
                 ),
               ),
             ),
-            const Flexible(flex: 8, fit: FlexFit.tight, child: PlayProgressBar()),
-            const Flexible(flex: 3, fit: FlexFit.tight, child: PlayProgressText()),
             Flexible(
-              flex: 19,
+              flex: 8,
               fit: FlexFit.tight,
-              child: PlayButtons(areDisabled: !state.maybeMap(playing: (_) => true, orElse: () => false)),
+              child: state.maybeMap(
+                playing: (state) => PlayProgressBar(duration: state.duration, currentSeconds: state.currentSeconds),
+                orElse: () => const PlayProgressBar(),
+              ),
+            ),
+            state.maybeMap(
+              playing: (state) => Flexible(
+                flex: 3,
+                fit: FlexFit.tight,
+                child: PlayProgressText(
+                  currentSeconds: state.currentSeconds,
+                  duration: state.duration,
+                ),
+              ),
+              orElse: () => const SizedBox.shrink(),
+            ),
+            Flexible(
+              flex: state.maybeMap(playing: (_) => 19, orElse: () => 22),
+              fit: FlexFit.tight,
+              child: state.maybeMap(
+                fileLoading: (state) => const PlayButtons.loading(),
+                playing: (state) => PlayButtons.playing(isPaused: state.isPaused ?? false),
+                orElse: () => const PlayButtons.disabled(),
+              ),
             ),
           ],
         ),
