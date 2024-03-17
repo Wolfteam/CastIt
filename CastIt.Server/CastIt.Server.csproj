@@ -12,7 +12,7 @@
   <PropertyGroup>
     <NoWarn>1591;NU1605</NoWarn>
     <DocumentationFile>CastIt.xml</DocumentationFile>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
@@ -78,7 +78,7 @@
 
     <!-- Include the newly-built files in the publish output -->
     <ItemGroup>
-      <DistFiles Include="$(SpaRoot)build\**" />
+      <DistFiles Include="$(SpaRoot)dist\**" />
       <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>%(DistFiles.Identity)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
