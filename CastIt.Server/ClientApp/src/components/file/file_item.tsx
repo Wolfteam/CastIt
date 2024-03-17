@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Divider, ListItem, ListItemText, Avatar, ListItemAvatar, Tooltip, Menu, MenuItem, useTheme } from '@mui/material';
+import { Typography, Divider, ListItem, ListItemText, Avatar, ListItemAvatar, Tooltip, Menu, MenuItem, useTheme, ListItemButton } from '@mui/material';
 import { IFileItemResponseDto } from '../../models';
 import { onFileChanged, onFileEndReached, onPlayerStatusChanged } from '../../services/castithub.service';
 import { Add, ClearAll, Delete, FileCopy, Loop, PlayArrow, Refresh } from '@mui/icons-material';
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
 import { useCastItHub } from '../../context/castit_hub.context';
@@ -252,8 +252,7 @@ function FileItem(props: Props) {
                     {...provided.draggableProps}
                     ref={provided.innerRef}
                 >
-                    <ListItem
-                        button
+                    <ListItemButton
                         onDoubleClick={() => handlePlay()}
                         className={state.isBeingPlayed ? classes.beingPlayed : ''}
                         style={{
@@ -277,7 +276,7 @@ function FileItem(props: Props) {
                             }
                         />
                         <FileItemDuration fullTotalDuration={state.fullTotalDuration} loop={state.loop} />
-                    </ListItem>
+                    </ListItemButton>
                     {contextMenu.mouseY === null ? null : (
                         <Menu
                             keepMounted

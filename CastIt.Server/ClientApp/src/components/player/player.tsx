@@ -21,6 +21,7 @@ const useStyles = makeStyles((theme) =>
             overflowX: 'clip',
             marginBottom: 30,
             padding: 0,
+            zIndex: theme.zIndex.fab * 2,
             backgroundColor: theme.palette.primary.dark,
             '&:hover': {
                 backgroundColor: theme.palette.primary.dark,

@@ -28,7 +28,7 @@ import { defaultImg } from '../../utils/app_constants';
 
 const useStyles = makeStyles({
     root: {
-        minWidth: 175
+        minWidth: 175,
     },
     title: {
         fontSize: 14,
@@ -36,10 +36,11 @@ const useStyles = makeStyles({
     image: {
         width: '100%',
         height: 250,
-        objectFit: "fill"
+        objectFit: 'fill',
     },
     moreButtons: {
         width: '100%',
+        color: 'white',
     },
     actionButtons: {
         justifyContent: 'flex-end',
@@ -64,6 +65,7 @@ const useStyles = makeStyles({
 interface Props {
     index: number;
     toAddNewItem?: boolean;
+    raised?: boolean;
     playList: IGetAllPlayListResponseDto;
     onReOrderClick?(): void;
 }
@@ -96,7 +98,6 @@ function PlayListCardItem(props: Props): JSX.Element {
     const [anchorEl, setAnchorEl] = useState<HTMLElement>();
 
     const [state, setState] = useState(initialState);
-    const [raised, setRaised] = useState(false);
     const [showRenameDialog, setShowRenameDialog] = useState(false);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
 
@@ -140,10 +141,6 @@ function PlayListCardItem(props: Props): JSX.Element {
         navigate(route);
     };
 
-    const toggleRaised = (): void => {
-        setRaised(!raised);
-    };
-
     const handleDelete = async (): Promise<void> => {
         await castItHub.connection.deletePlayList(state.id);
         handleClose();
@@ -176,18 +173,9 @@ function PlayListCardItem(props: Props): JSX.Element {
     const showMorePopup = Boolean(anchorEl);
     const moreId = anchorEl ? 'open-more-popover' : undefined;
 
-    const elevation = raised ? 24 : 2;
-
     if (props.toAddNewItem) {
         return (
-            <Card
-                className={classes.root}
-                elevation={elevation}
-                raised={raised}
-                onClick={handleAddNew}
-                onMouseOver={toggleRaised}
-                onMouseOut={toggleRaised}
-            >
+            <Card className={classes.root} onClick={handleAddNew}>
                 <CardActionArea style={{ height: '100%', textAlign: 'center' }}>
                     <CardContent>
                         <Grid container justifyContent="center" alignItems="center">
@@ -201,13 +189,12 @@ function PlayListCardItem(props: Props): JSX.Element {
     }
 
     if (!state.loaded) {
-        return <Card elevation={elevation} raised={raised} className={classes.root} />;
+        return <Card className={classes.root} />;
     }
 
     const image = state.imageUrl ?? defaultImg;
-
     return (
-        <Card elevation={elevation} raised={raised} className={classes.root} onMouseOver={toggleRaised} onMouseOut={toggleRaised}>
+        <Card className={classes.root} raised={props.raised}>
             <CardActionArea onClick={handleClick}>
                 <CardMedia className={classes.image} component="img" image={image} title={state.name} />
                 <CardContent className={classes.cardContent}>
@@ -229,7 +216,7 @@ function PlayListCardItem(props: Props): JSX.Element {
                     </Tooltip>
                 </CardContent>
             </CardActionArea>
-            <CardActions className={classes.actionButtons} disableSpacing={true}>
+            <CardActions className={classes.actionButtons} disableSpacing>
                 <IconButton onClick={() => setShowAddFilesDialog(true)} size="large">
                     <Add />
                 </IconButton>

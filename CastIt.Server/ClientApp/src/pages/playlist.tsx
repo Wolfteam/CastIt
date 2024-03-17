@@ -9,7 +9,7 @@ import { createStyles, makeStyles } from '@mui/styles';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import translations from '../services/translations';
 import PageContent from './page_content';
-import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { useCastItHub } from '../context/castit_hub.context';
 import NothingFound from '../components/nothing_found';
 import { Add } from '@mui/icons-material';
@@ -167,7 +167,8 @@ function PlayList() {
         if (!value || value === '') {
             setState((s) => ({ ...s, filteredFiles: s.playList?.files ?? [], searchText: value ?? '' }));
         } else {
-            const filteredFiles = state.playList?.files?.filter((f) => {
+            const filteredFiles =
+                state.playList?.files?.filter((f) => {
                     const includes = value.toLowerCase();
                     if (f.name) {
                         return f.name.toLowerCase().includes(includes);
@@ -222,7 +223,7 @@ function PlayList() {
                         <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="playlist-droppable" direction="vertical">
                                 {(provided) => (
-                                    <List {...provided.droppableProps}>
+                                    <List ref={provided.innerRef} {...provided.droppableProps}>
                                         {files}
                                         {provided.placeholder}
                                     </List>
