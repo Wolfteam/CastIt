@@ -1,5 +1,4 @@
 import { createTheme, ThemeProvider, Theme, StyledEngineProvider } from '@mui/material';
-import { adaptV4Theme } from '@mui/material/styles';
 import { green, purple } from '@mui/material/colors';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter } from 'react-router-dom';
@@ -19,8 +18,7 @@ declare module '@mui/styles/defaultTheme' {
   interface DefaultTheme extends Theme {}
 }
 
-
-const theme = createTheme(adaptV4Theme({
+const theme = createTheme({
     palette: {
         mode: 'dark',
         primary: {
@@ -30,7 +28,7 @@ const theme = createTheme(adaptV4Theme({
             main: green[500],
         },
     },
-}));
+});
 
 function App() {
     return (
