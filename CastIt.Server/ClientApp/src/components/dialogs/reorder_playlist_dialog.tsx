@@ -79,7 +79,7 @@ function ReOrderPlayListDialog(props: Props) {
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId="playlists-droppable" direction="vertical">
                         {(provided) => (
-                            <List {...provided.droppableProps} innerRef={provided.innerRef}>
+                            <List {...provided.droppableProps}>
                                 {items}
                                 {provided.placeholder}
                             </List>

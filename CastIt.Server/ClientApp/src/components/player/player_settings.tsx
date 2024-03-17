@@ -288,7 +288,7 @@ function PlayerSettings() {
                             </Grid>
                             <Grid item xs={12} className={classes.gridItemMargin}>
                                 <Typography color="textSecondary">{translations.options}</Typography>
-                                <Grid container className={classes.controlMargin}>
+                                <Grid container className={classes.generalGridMargin}>
                                     <Grid item xs={12} md={6}>
                                         <FormGroup row>
                                             <FormControlLabel
@@ -438,7 +438,7 @@ function PlayerSettings() {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} className={classes.controlMargin}>
+                            <Grid item xs={12} className={classes.generalGridMargin}>
                                 <Typography id="subtitle-delay-slider" gutterBottom color="textSecondary">
                                     {String.Format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
                                 </Typography>

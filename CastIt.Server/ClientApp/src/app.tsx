@@ -4,7 +4,7 @@ import { green, purple } from '@mui/material/colors';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter } from 'react-router-dom';
 import { SnackbarProvider } from 'notistack';
-import { AppRoutes, PlayerRoutes } from './routes';
+import { AppRoutes } from './routes';
 import { Suspense } from 'react';
 import ServerMessage from './components/server_message';
 import { TranslationContextProvider } from './context/translations.context';

@@ -222,7 +222,7 @@ function PlayList() {
                         <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="playlist-droppable" direction="vertical">
                                 {(provided) => (
-                                    <List {...provided.droppableProps} innerRef={provided.innerRef}>
+                                    <List {...provided.droppableProps}>
                                         {files}
                                         {provided.placeholder}
                                     </List>
