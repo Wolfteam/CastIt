@@ -1,21 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import {
-    Typography,
-    Divider,
-    ListItem,
-    ListItemText,
-    Avatar,
-    ListItemAvatar,
-    makeStyles,
-    Tooltip,
-    createStyles,
-    Menu,
-    MenuItem,
-    useTheme,
-} from '@material-ui/core';
+import { Typography, Divider, ListItem, ListItemText, Avatar, ListItemAvatar, Tooltip, Menu, MenuItem, useTheme } from '@mui/material';
 import { IFileItemResponseDto } from '../../models';
 import { onFileChanged, onFileEndReached, onPlayerStatusChanged } from '../../services/castithub.service';
-import { Add, ClearAll, Delete, FileCopy, Loop, PlayArrow, Refresh } from '@material-ui/icons';
+import { Add, ClearAll, Delete, FileCopy, Loop, PlayArrow, Refresh } from '@mui/icons-material';
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { Draggable } from 'react-beautiful-dnd';
@@ -23,6 +10,7 @@ import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { useSnackbar } from 'notistack';
+import { createStyles, makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) =>
     createStyles({

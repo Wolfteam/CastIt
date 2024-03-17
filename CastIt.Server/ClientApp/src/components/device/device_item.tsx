@@ -1,5 +1,5 @@
-import { Grid, IconButton, Typography } from '@material-ui/core';
-import { Tv, CastConnected, Cast } from '@material-ui/icons';
+import { Grid, IconButton, Typography } from '@mui/material';
+import { Tv, CastConnected, Cast } from '@mui/icons-material';
 import { useCastItHub } from '../../context/castit_hub.context';
 
 interface Props {
@@ -30,7 +30,9 @@ function DeviceItem(props: Props) {
                 </Grid>
             </Grid>
             <Grid item xs={1}>
-                <IconButton onClick={handleToggleConnect}>{connectedIcon}</IconButton>
+                <IconButton onClick={handleToggleConnect} size="large">
+                    {connectedIcon}
+                </IconButton>
             </Grid>
         </Grid>
     );

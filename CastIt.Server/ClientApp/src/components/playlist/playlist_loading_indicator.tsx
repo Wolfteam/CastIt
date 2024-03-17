@@ -1,7 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { onFileEndReached, onFileLoaded, onFileLoading, onPlayListBusy, onStoppedPlayback } from '../../services/castithub.service';
-import { IFileItemResponseDto } from '../../models';
-import { createStyles, LinearProgress, makeStyles } from '@material-ui/core';
+import React, {useEffect, useState} from 'react';
+import {
+    onFileEndReached,
+    onFileLoaded,
+    onFileLoading,
+    onPlayListBusy,
+    onStoppedPlayback
+} from '../../services/castithub.service';
+import {IFileItemResponseDto} from '../../models';
+import {LinearProgress} from '@mui/material';
+import {createStyles, makeStyles} from '@mui/styles';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -47,7 +54,7 @@ function PlayListLoadingIndicator(props: Props) {
             onStoppedPlaybackSubscription.unsubscribe();
         };
     }, [props.playListId]);
-    const loading = !isBusy ? null : <LinearProgress variant="indeterminate" className={classes.loading} />;
+    const loading = !isBusy ? null : <LinearProgress variant="indeterminate" className={classes.loading}/>;
     return loading;
 }
 

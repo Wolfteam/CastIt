@@ -1,6 +1,5 @@
 import {
     Button,
-    makeStyles,
     CardActions,
     CardActionArea,
     CardContent,
@@ -12,9 +11,10 @@ import {
     Typography,
     Card,
     Grid,
-} from '@material-ui/core';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useEffect, useState } from 'react';
-import { Add, Delete, MoreVert, Edit, Sort } from '@material-ui/icons';
+import { Add, Delete, MoreVert, Edit, Sort } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { playListPath } from '../../routes';
 import RenamePlayListDialog from '../dialogs/rename_playlist_dialog';
@@ -28,8 +28,7 @@ import { defaultImg } from '../../utils/app_constants';
 
 const useStyles = makeStyles({
     root: {
-        minWidth: 175,
-        maxWidth: 375,
+        minWidth: 175
     },
     title: {
         fontSize: 14,
@@ -37,6 +36,7 @@ const useStyles = makeStyles({
     image: {
         width: '100%',
         height: 250,
+        objectFit: "fill"
     },
     moreButtons: {
         width: '100%',
@@ -209,7 +209,7 @@ function PlayListCardItem(props: Props): JSX.Element {
     return (
         <Card elevation={elevation} raised={raised} className={classes.root} onMouseOver={toggleRaised} onMouseOut={toggleRaised}>
             <CardActionArea onClick={handleClick}>
-                <CardMedia className={classes.image} image={image} title={state.name} />
+                <CardMedia className={classes.image} component="img" image={image} title={state.name} />
                 <CardContent className={classes.cardContent}>
                     <Fab className={classes.fab} color="primary" component="div">
                         {state.numberOfFiles}
@@ -230,12 +230,12 @@ function PlayListCardItem(props: Props): JSX.Element {
                 </CardContent>
             </CardActionArea>
             <CardActions className={classes.actionButtons} disableSpacing={true}>
-                <IconButton onClick={() => setShowAddFilesDialog(true)}>
+                <IconButton onClick={() => setShowAddFilesDialog(true)} size="large">
                     <Add />
                 </IconButton>
                 <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} renderLoop />
                 <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} />
-                <IconButton onClick={handleShowMoreClick}>
+                <IconButton onClick={handleShowMoreClick} size="large">
                     <MoreVert />
                 </IconButton>
                 {!showMorePopup ? null : (

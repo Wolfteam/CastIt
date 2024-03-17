@@ -1,5 +1,6 @@
-import { makeStyles, createStyles, Container, Grid, Typography } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
+import {Container, Grid, Typography} from '@mui/material';
+import {createStyles, makeStyles} from '@mui/styles';
+import {Info} from '@mui/icons-material';
 import translations from '../services/translations';
 
 const useStyles = makeStyles((theme) =>
@@ -27,7 +28,7 @@ function NothingFound(props: Props) {
         <Container className={classes.root}>
             <Grid container className={classes.nothingFound} justifyContent="center" alignItems="center">
                 <Grid item xs={12}>
-                    {props.icon ?? <Info fontSize="large" />}
+                    {props.icon ?? <Info fontSize="large"/>}
                     <Typography>{props.text ?? translations.nothingFound}</Typography>
                     {props.children}
                 </Grid>

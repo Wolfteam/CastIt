@@ -1,10 +1,10 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, ListItem, List, Typography } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, ListItem, List, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import translations from '../../services/translations';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { IGetAllPlayListResponseDto } from '../../models';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { DragIndicator } from '@material-ui/icons';
+import { DragIndicator } from '@mui/icons-material';
 
 interface Props {
     isOpen: boolean;

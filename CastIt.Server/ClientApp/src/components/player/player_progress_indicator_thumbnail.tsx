@@ -1,6 +1,7 @@
-import { createStyles, makeStyles, Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import formatDuration from 'format-duration';
 import React, { useEffect, useState } from 'react';
+import { createStyles, makeStyles } from '@mui/styles';
 import { AppFile } from '../../enums';
 import { IFileThumbnailRangeResponseDto } from '../../models';
 import { onPlayerStatusChanged } from '../../services/castithub.service';

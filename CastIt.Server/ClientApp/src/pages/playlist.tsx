@@ -4,14 +4,15 @@ import { Params, useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import { onPlayListsChanged, onPlayListChanged, onFileAdded, onFilesChanged, onFileDeleted } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
-import { Button, CircularProgress, Container, createStyles, Grid, List, makeStyles } from '@material-ui/core';
+import { Button, CircularProgress, Container, Grid, List } from '@mui/material';
+import { createStyles, makeStyles } from '@mui/styles';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import translations from '../services/translations';
 import PageContent from './page_content';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 import { useCastItHub } from '../context/castit_hub.context';
 import NothingFound from '../components/nothing_found';
-import { Add } from '@material-ui/icons';
+import { Add } from '@mui/icons-material';
 import AddFilesDialog from '../components/dialogs/add_files_dialog';
 
 const useStyles = makeStyles(() =>
@@ -167,13 +168,13 @@ function PlayList() {
             setState((s) => ({ ...s, filteredFiles: s.playList?.files ?? [], searchText: value ?? '' }));
         } else {
             const filteredFiles = state.playList?.files?.filter((f) => {
-                const includes = value.toLowerCase();
-                if (f.name) {
-                    return f.name.toLowerCase().includes(includes);
-                }
+                    const includes = value.toLowerCase();
+                    if (f.name) {
+                        return f.name.toLowerCase().includes(includes);
+                    }
 
-                return f.filename.toLowerCase().includes(includes);
-            }) ?? [];
+                    return f.filename.toLowerCase().includes(includes);
+                }) ?? [];
             setState((s) => ({ ...s, filteredFiles: filteredFiles, searchText: value }));
         }
     };

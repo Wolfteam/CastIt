@@ -1,15 +1,16 @@
-import { alpha, AppBar, createStyles, IconButton, InputBase, makeStyles, Theme, Toolbar, Typography } from '@material-ui/core';
-import SearchIcon from '@material-ui/icons/Search';
-import { Add, ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
-import { playListsPath } from '../../routes';
-import { useNavigate } from 'react-router-dom';
-import React, { Fragment, useEffect, useState } from 'react';
+import {alpha, AppBar, IconButton, InputBase, Theme, Toolbar, Typography} from '@mui/material';
+import {createStyles, makeStyles} from '@mui/styles';
+import SearchIcon from '@mui/icons-material/Search';
+import {Add, ArrowBack, ArrowUpward, Redo} from '@mui/icons-material';
+import {playListsPath} from '../../routes';
+import {useNavigate} from 'react-router-dom';
+import React, {Fragment, useEffect, useState} from 'react';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
-import { onPlayerStatusChanged } from '../../services/castithub.service';
+import {onPlayerStatusChanged} from '../../services/castithub.service';
 import PlayListLoadingIndicator from './playlist_loading_indicator';
 import AddFilesDialog from '../dialogs/add_files_dialog';
-import { useCastItHub } from '../../context/castit_hub.context';
+import {useCastItHub} from '../../context/castit_hub.context';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -55,7 +56,7 @@ const useStyles = makeStyles((theme: Theme) =>
         inputInput: {
             padding: theme.spacing(1, 1, 1, 0),
             // vertical padding + font size from searchIcon
-            paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+            paddingLeft: `calc(1em + ${theme.spacing(4)})`,
             transition: theme.transitions.create('width'),
             width: '100%',
             [theme.breakpoints.up('sm')]: {
@@ -74,6 +75,7 @@ interface Props {
     shuffle?: boolean;
     name?: string;
     searchText?: string;
+
     onSearch(value: string | null): void;
 }
 
@@ -108,12 +110,12 @@ function PlayListAppBar(props: Props) {
             }
             if (!status.playedFile || status.playedFile.playListId !== props.id) {
                 if (state.canGoToPlayedFile) {
-                    setState((s) => ({ ...s, canGoToPlayedFile: false }));
+                    setState((s) => ({...s, canGoToPlayedFile: false}));
                 }
                 return;
             }
 
-            setState((s) => ({ ...s, canGoToPlayedFile: true }));
+            setState((s) => ({...s, canGoToPlayedFile: true}));
         });
 
         return () => {
@@ -162,15 +164,20 @@ function PlayListAppBar(props: Props) {
         <Fragment>
             <AppBar position="fixed" color="default">
                 <Toolbar>
-                    <IconButton edge="start" className={classes.menuButton} color="inherit" onClick={handleGoBackClick}>
-                        <ArrowBack />
+                    <IconButton
+                        edge="start"
+                        className={classes.menuButton}
+                        color="inherit"
+                        onClick={handleGoBackClick}
+                        size="large">
+                        <ArrowBack/>
                     </IconButton>
                     <Typography className={classes.title} variant="h6" noWrap>
                         {props.name}
                     </Typography>
                     <div className={classes.search}>
                         <div className={classes.searchIcon}>
-                            <SearchIcon />
+                            <SearchIcon/>
                         </div>
                         <InputBase
                             placeholder={`${translations.search}...`}
@@ -179,27 +186,27 @@ function PlayListAppBar(props: Props) {
                                 input: classes.inputInput,
                             }}
                             onChange={(e) => searchChanged(e.target.value)}
-                            inputProps={{ 'aria-label': 'search' }}
+                            inputProps={{'aria-label': 'search'}}
                         />
                     </div>
-                    <IconButton onClick={() => setShowAddFilesDialog(true)}>
-                        <Add />
+                    <IconButton onClick={() => setShowAddFilesDialog(true)} size="large">
+                        <Add/>
                     </IconButton>
-                    <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} renderLoop />
-                    <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} />
+                    <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} renderLoop/>
+                    <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle}/>
                     {state.canGoToPlayedFile ? (
-                        <IconButton color="inherit" onClick={handleGoToPlayedFile}>
-                            <Redo />
+                        <IconButton color="inherit" onClick={handleGoToPlayedFile} size="large">
+                            <Redo/>
                         </IconButton>
                     ) : null}
-                    <IconButton color="inherit" onClick={handleGoToTheTop}>
-                        <ArrowUpward />
+                    <IconButton color="inherit" onClick={handleGoToTheTop} size="large">
+                        <ArrowUpward/>
                     </IconButton>
                 </Toolbar>
-                <PlayListLoadingIndicator playListId={props.id} />
-                <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
+                <PlayListLoadingIndicator playListId={props.id}/>
+                <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles}/>
             </AppBar>
-            <Toolbar />
+            <Toolbar/>
         </Fragment>
     );
 }

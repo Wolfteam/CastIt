@@ -3,7 +3,7 @@ import { CastItHubService, onClientDisconnected, onPlayerStatusChanged } from '.
 import Loading from '../components/loading';
 import { useSnackbar } from 'notistack';
 import translations from '../services/translations';
-import { Button } from '@material-ui/core';
+import { Button } from '@mui/material';
 import NothingFound from '../components/nothing_found';
 import usePageVisibility from '../hooks/use_page_visibility.hook';
 import { isMobile, isTablet } from 'react-device-detect';

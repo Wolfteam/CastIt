@@ -1,5 +1,5 @@
-import { Container, Grid, Typography } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
+import { Container, Grid, Typography } from '@mui/material';
+import { Info } from '@mui/icons-material';
 import translations from '../services/translations';
 
 function NotFound() {

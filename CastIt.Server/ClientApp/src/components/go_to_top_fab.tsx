@@ -1,35 +1,38 @@
-import { useEffect, useState } from 'react'
-import { createStyles, Fab, makeStyles } from '@material-ui/core';
-import { ArrowUpward } from '@material-ui/icons';
+import { useEffect, useState } from 'react';
+import { Fab } from '@mui/material';
+import { createStyles, makeStyles } from '@mui/styles';
+import { ArrowUpward } from '@mui/icons-material';
 import React from 'react';
 
-const useStyles = makeStyles((theme) => createStyles({
-    backButton: {
-        marginTop: 10
-    },
-    fab: {
-        position: 'fixed',
-        bottom: theme.spacing(2),
-        right: theme.spacing(2),
-    },
-}));
+const useStyles = makeStyles((theme) =>
+    createStyles({
+        backButton: {
+            marginTop: 10,
+        },
+        fab: {
+            position: 'fixed',
+            bottom: theme.spacing(2),
+            right: theme.spacing(2),
+        },
+    })
+);
 
 function GoToTopFab() {
     const [scrolling, setScrolling] = useState<boolean>(false);
     const classes = useStyles();
 
     useEffect(() => {
-        window.addEventListener("scroll", handleScroll);
+        window.addEventListener('scroll', handleScroll);
         return () => {
-            window.removeEventListener("scroll", handleScroll);
-        }
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, []);
 
     const handleFabClick = () => {
         window.scrollTo({
             top: 0,
             left: 0,
-            behavior: "smooth"
+            behavior: 'smooth',
         });
     };
 
@@ -42,9 +45,11 @@ function GoToTopFab() {
         }
     };
 
-    return !scrolling ? null : <Fab className={classes.fab} onClick={handleFabClick}>
-        <ArrowUpward />
-    </Fab>;
+    return !scrolling ? null : (
+        <Fab className={classes.fab} onClick={handleFabClick}>
+            <ArrowUpward />
+        </Fab>
+    );
 }
 
-export default React.memo(GoToTopFab) 
+export default React.memo(GoToTopFab);

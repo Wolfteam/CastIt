@@ -1,4 +1,4 @@
-import { Grid, Slider, Typography } from '@material-ui/core';
+import { Grid, Slider, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
@@ -60,7 +60,7 @@ function PlayerProgressIndicator() {
         if (seconds < 0) {
             return;
         }
-        
+
         if (committed) {
             await castItHub.connection.gotoSeconds(seconds);
         }
@@ -74,26 +74,31 @@ function PlayerProgressIndicator() {
 
     return (
         <Grid container spacing={2} style={{ paddingRight: 10, paddingLeft: 10 }} alignItems="center" justifyContent="center">
-            <Grid item>
-                <Typography color="textSecondary">{state.playedTime}</Typography>
-            </Grid>
+            {state.playedTime && state.playedTime != '' && (
+                <Grid item>
+                    <Typography color="textSecondary">{state.playedTime}</Typography>
+                </Grid>
+            )}
             <Grid item xs>
                 <Slider
                     min={0}
                     max={state.mediaDuration}
                     step={1}
                     valueLabelDisplay="auto"
-                    style={{marginTop: '5px'}}
+                    style={{ marginTop: '5px' }}
+                    size="small"
                     disabled={!state.isPlayingOrPaused}
                     value={state.elapsedSeconds}
                     onChange={(e, val) => handleValueChanged(val as number)}
                     onChangeCommitted={(e, val) => handleValueChanged(val as number, true)}
-                    ValueLabelComponent={PlayerProgressIndicatorValue}
+                    components={{ ValueLabel: PlayerProgressIndicatorValue }}
                 />
             </Grid>
-            <Grid item>
-                <Typography color="textSecondary">{state.duration}</Typography>
-            </Grid>
+            {state.duration && state.duration != '' && (
+                <Grid item>
+                    <Typography color="textSecondary">{state.duration}</Typography>
+                </Grid>
+            )}
         </Grid>
     );
 }

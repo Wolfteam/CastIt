@@ -1,5 +1,6 @@
-import { Typography, ListItemSecondaryAction, makeStyles, createStyles, Grid, useMediaQuery, Theme } from '@material-ui/core';
-import { Loop } from '@material-ui/icons';
+import { Typography, ListItemSecondaryAction, Grid, useMediaQuery, Theme } from '@mui/material';
+import { createStyles, makeStyles } from '@mui/styles';
+import { Loop } from '@mui/icons-material';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -16,7 +17,7 @@ interface Props {
 
 function FileItemDuration(props: Props) {
     const classes = useStyles();
-    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('xs'));
+    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
     return (
         <ListItemSecondaryAction className={classes.duration}>

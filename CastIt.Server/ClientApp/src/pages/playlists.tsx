@@ -12,7 +12,7 @@ import {
 } from '../services/castithub.service';
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
-import { Grid } from '@material-ui/core';
+import { Grid } from '@mui/material';
 import ReOrderPlayListDialog from '../components/dialogs/reorder_playlist_dialog';
 import { useCastItHub } from '../context/castit_hub.context';
 

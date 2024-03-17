@@ -1,4 +1,5 @@
-import { Grid, Typography, Slider, createStyles, makeStyles, Theme, useMediaQuery } from '@material-ui/core';
+import { Grid, Typography, Slider, Theme, useMediaQuery } from '@mui/material';
+import { createStyles, makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -17,9 +18,9 @@ interface Props {
 
 function FileItemSlider(props: Props) {
     const classes = useStyles();
-    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('xs'));
+    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
-    const slider = <Slider value={props.playedPercentage} disabled className={classes.slider} />;
+    const slider = <Slider size="small" value={props.playedPercentage} disabled className={classes.slider} />;
     if (!isXsScreen) {
         return slider;
     }
@@ -31,7 +32,7 @@ function FileItemSlider(props: Props) {
                     {props.playedTime}
                 </Typography>
             </Grid>
-            <Grid item xs={8} style={{ marginBottom: 7, paddingRight: '5px' }}>
+            <Grid item xs={8} style={{ marginBottom: 7 }}>
                 {slider}
             </Grid>
             <Grid item xs={2}>

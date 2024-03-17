@@ -1,7 +1,14 @@
-import { Grid, LinearProgress, makeStyles, Tooltip, Typography } from '@material-ui/core';
-import { useEffect, useState } from 'react';
-import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
-import { defaultImg } from '../../utils/app_constants';
+import {Grid, LinearProgress, Tooltip, Typography} from '@mui/material';
+import {useEffect, useState} from 'react';
+import {
+    onPlayerStatusChanged,
+    onFileEndReached,
+    onFileLoading,
+    onFileLoaded,
+    onStoppedPlayback
+} from '../../services/castithub.service';
+import {defaultImg} from '../../utils/app_constants';
+import {makeStyles} from '@mui/styles';
 
 const useStyles = makeStyles({
     image: {
@@ -46,11 +53,11 @@ function PlayerCurrentFile() {
         });
 
         const onFileLoadingSubscription = onFileLoading.subscribe((_) => {
-            setState((s) => ({ ...s, loading: true }));
+            setState((s) => ({...s, loading: true}));
         });
 
         const onFileLoadedSubscription = onFileLoaded.subscribe((_) => {
-            setState((s) => ({ ...s, loading: false }));
+            setState((s) => ({...s, loading: false}));
         });
 
         const onFileEndReachedSubscription = onFileEndReached.subscribe((_) => setState(initialState));
@@ -64,15 +71,15 @@ function PlayerCurrentFile() {
             onStoppedPlaybackSubscription.unsubscribe();
         };
     }, []);
-    
+
     const image = state.imageUrl ?? defaultImg;
 
     return (
         <Grid container wrap="nowrap" alignItems="center">
-            <Grid item style={{ display: 'flex' }}>
-                <img className={classes.image} src={image} alt="Current file" />
+            <Grid item style={{display: 'flex'}}>
+                <img className={classes.image} src={image} alt="Current file"/>
             </Grid>
-            <Grid item className={classes.text} style={{ paddingLeft: '10px' }}>
+            <Grid item className={classes.text} style={{paddingLeft: '10px'}}>
                 <Tooltip title={state.title}>
                     <Typography variant="h5" component="h2" className={classes.text}>
                         {state.title}
@@ -83,7 +90,7 @@ function PlayerCurrentFile() {
                         {state.subtitle}
                     </Typography>
                 </Tooltip>
-                {state.loading ? <LinearProgress /> : null}
+                {state.loading ? <LinearProgress/> : null}
             </Grid>
         </Grid>
     );

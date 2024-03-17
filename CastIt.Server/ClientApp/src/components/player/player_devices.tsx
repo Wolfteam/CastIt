@@ -1,12 +1,13 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Button, createStyles, Dialog, DialogActions, DialogContent, IconButton, LinearProgress, makeStyles } from '@material-ui/core';
-import { Tv } from '@material-ui/icons';
+import { Button, Dialog, DialogActions, DialogContent, IconButton, LinearProgress, List } from '@mui/material';
+import { Tv } from '@mui/icons-material';
 import DeviceItem from '../device/device_item';
 import { onCastDevicesChanged, onCastDeviceSet } from '../../services/castithub.service';
 import translations from '../../services/translations';
 import { IReceiver } from '../../models';
 import AppDialogTitle from '../dialogs/app_dialog_title';
 import { useCastItHub } from '../../context/castit_hub.context';
+import { createStyles, makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -50,7 +51,7 @@ function PlayerDevices() {
             onCastDeviceSetSubscription.unsubscribe();
             onCastDevicesChangedSubscription.unsubscribe();
         };
-    }, [devices]);
+    }, []);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -71,12 +72,15 @@ function PlayerDevices() {
 
     return (
         <Fragment>
-            <IconButton onClick={handleClickOpen}>
+            <IconButton onClick={handleClickOpen} size="large">
                 <Tv fontSize="large" />
             </IconButton>
             <Dialog fullWidth={true} open={open} maxWidth="xs" onClose={handleClose}>
                 <AppDialogTitle title={translations.devices} icon={<Tv />} close={handleClose} />
-                <DialogContent>{isRefreshing ? <LinearProgress /> : deviceItems}</DialogContent>
+                {isRefreshing && <LinearProgress />}
+                <DialogContent style={{ paddingBottom: 0, paddingTop: 0 }}>
+                    <List>{deviceItems}</List>
+                </DialogContent>
                 <DialogActions>
                     <Button
                         color="primary"

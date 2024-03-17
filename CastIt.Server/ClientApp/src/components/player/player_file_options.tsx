@@ -1,7 +1,8 @@
-import { makeStyles, createStyles, IconButton, Divider, ListItemText, Menu, MenuItem } from '@material-ui/core';
-import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@material-ui/icons';
-import MenuIcon from '@material-ui/icons/Menu';
+import { IconButton, Divider, ListItemText, Menu, MenuItem } from '@mui/material';
+import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@mui/icons-material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { Fragment, useEffect, useState } from 'react';
+import { createStyles, makeStyles } from '@mui/styles';
 import PopupState, { bindTrigger, bindMenu, InjectedProps } from 'material-ui-popup-state';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { IFileItemOptionsResponseDto } from '../../models';
@@ -151,7 +152,7 @@ function PlayerFileOptions() {
         <PopupState variant="popover">
             {(popupState) => (
                 <Fragment>
-                    <IconButton color="inherit" {...bindTrigger(popupState)}>
+                    <IconButton color="inherit" {...bindTrigger(popupState)} size="large">
                         <MenuIcon fontSize="large" />
                     </IconButton>
                     <AddSubtitlesDialog isOpen={showAddSubtitles} onClose={handleSubtitlesSet} />
