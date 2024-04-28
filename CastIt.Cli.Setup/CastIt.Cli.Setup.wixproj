@@ -1,8 +1,8 @@
 ﻿<Project>
-  <Import Project="Sdk.props" Sdk="WixToolset.Sdk" Version="4.0.4" />
+  <Import Project="Sdk.props" Sdk="WixToolset.Sdk" Version="5.0.0" />
   <PropertyGroup>
     <OutputName>CastItCliSetup-$(Configuration)-$(Platform)-</OutputName>
-	<OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
     <!--This makes the output installer will be in a folder that is not culture specific-->
     <Cultures>;</Cultures>
   </PropertyGroup>
@@ -13,8 +13,8 @@
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
-    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.Heat" Version="5.0.0" />
   </ItemGroup>
   <PropertyGroup>
     <!--This is the installer version, you should manually change it when creating a new installer-->
@@ -22,14 +22,17 @@
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);CliBasePath=Publish</DefineConstants>
-  </PropertyGroup>	
-  <Import Project="Sdk.targets" Sdk="WixToolset.Sdk" Version="4.0.4" />	
+  </PropertyGroup>
+  <Import Project="Sdk.targets" Sdk="WixToolset.Sdk" Version="5.0.0" />
   <Target Name="BeforeBuild">
     <!--First we clean delete the bin directories-->
-    <Exec Command="if exist Publish rd /s /q Publish"></Exec>
-    <Exec Command="rd /s /q ..\CastIt.Cli\bin\"></Exec>
+    <Exec Command="if exist Publish rd /s /q Publish">
+    </Exec>
+    <Exec Command="rd /s /q ..\CastIt.Cli\bin\">
+    </Exec>
     <!--Then, we publish our apps-->
-    <Exec Command="dotnet publish ../CastIt.Cli/CastIt.Cli.csproj -c $(Configuration) -r win-$(Platform) --self-contained -p:PublishSingleFile=true -o Publish"></Exec>
+    <Exec Command="dotnet publish ../CastIt.Cli/CastIt.Cli.csproj -c $(Configuration) -r win-$(Platform) --self-contained -p:PublishSingleFile=true -o Publish">
+    </Exec>
     <!--Here we get the assembly versions-->
     <GetAssemblyIdentity AssemblyFiles="..\CastIt.Cli\bin\$(Configuration)\net8.0\win-$(Platform)\CastIt.dll">
       <Output TaskParameter="Assemblies" ItemName="CliAssembly" />
