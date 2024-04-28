@@ -15,7 +15,7 @@ function FileItemSlider(props: Props) {
             disabled
             sx={(theme) => ({
                 color: `${theme.palette.primary.main} !important`,
-                padding: 0,
+                padding: '0 !important',
             })}
         />
     );
