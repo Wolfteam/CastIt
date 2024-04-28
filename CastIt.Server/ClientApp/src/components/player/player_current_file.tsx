@@ -1,14 +1,7 @@
 import { Grid, LinearProgress, Tooltip, Typography } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
 import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
 import { defaultImg } from '../../utils/app_constants';
-
-const StyledTypography = styled(Typography)({
-    textOverflow: 'ellipsis',
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-});
 
 interface State {
     title: string;
@@ -66,14 +59,16 @@ function PlayerCurrentFile() {
             <Grid item style={{ display: 'flex' }}>
                 <img style={{ height: 100, objectFit: 'contain' }} src={image} alt="Current file" />
             </Grid>
-            <Grid item style={{ paddingLeft: '10px' }}>
+            <Grid item className="text-overflow-elipsis" style={{ paddingLeft: '10px' }}>
                 <Tooltip title={state.title}>
-                    <StyledTypography variant="h5">
+                    <Typography variant="h5" className="text-overflow-elipsis">
                         {state.title}
-                    </StyledTypography>
+                    </Typography>
                 </Tooltip>
                 <Tooltip title={state.subtitle}>
-                    <StyledTypography color="textSecondary">{state.subtitle}</StyledTypography>
+                    <Typography className="text-overflow-elipsis" color="textSecondary">
+                        {state.subtitle}
+                    </Typography>
                 </Tooltip>
                 {state.loading ? <LinearProgress /> : null}
             </Grid>

@@ -91,7 +91,7 @@ function PlayerProgressIndicator() {
                     value={state.elapsedSeconds}
                     onChange={(e, val) => handleValueChanged(val as number)}
                     onChangeCommitted={(e, val) => handleValueChanged(val as number, true)}
-                    components={{ ValueLabel: PlayerProgressIndicatorValue }}
+                    slots={{valueLabel:PlayerProgressIndicatorValue}}
                 />
             </Grid>
             {state.duration && state.duration != '' && (

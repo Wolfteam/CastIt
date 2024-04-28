@@ -103,7 +103,7 @@ function PlayerFileOptions() {
         popupState: InjectedProps,
         icon: JSX.Element | null = null
     ): JSX.Element => (
-        <MenuItem key={key} sx={{ marginLeft: 20 }} disabled={!isEnabled} onClick={() => handleOptionChange(Number(key), popupState)}>
+        <MenuItem key={key} sx={{paddingLeft: 5}} disabled={!isEnabled} onClick={() => handleOptionChange(Number(key), popupState)}>
             {isSelected ? <CheckTwoTone /> : icon}
             <StyledListItemText primary={text} />
         </MenuItem>

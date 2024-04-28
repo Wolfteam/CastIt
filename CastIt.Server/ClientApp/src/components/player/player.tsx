@@ -38,7 +38,7 @@ function Player() {
                             bottom: 0,
                             position: 'absolute',
                             overflowX: 'clip',
-                            marginBottom: 5,
+                            marginBottom: 4,
                             padding: 0,
                             zIndex: theme.zIndex.fab * 2,
                             backgroundColor: theme.palette.primary.dark,
