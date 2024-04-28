@@ -1,11 +1,11 @@
 import { useSnackbar } from 'notistack';
+import { styled } from '@mui/material/styles';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Params, useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import { onPlayListsChanged, onPlayListChanged, onFileAdded, onFilesChanged, onFileDeleted } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
 import { Button, CircularProgress, Container, Grid, List } from '@mui/material';
-import { createStyles, makeStyles } from '@mui/styles';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import translations from '../services/translations';
 import PageContent from './page_content';
@@ -15,18 +15,24 @@ import NothingFound from '../components/nothing_found';
 import { Add } from '@mui/icons-material';
 import AddFilesDialog from '../components/dialogs/add_files_dialog';
 
-const useStyles = makeStyles(() =>
-    createStyles({
-        nothingFound: {
-            textAlign: 'center',
-            height: '100%',
-        },
-        loadingPlayList: {
-            height: '100%',
-            textAlign: 'center',
-        },
-    })
-);
+const PREFIX = 'PlayList';
+
+const classes = {
+    nothingFound: `${PREFIX}-nothingFound`,
+    loadingPlayList: `${PREFIX}-loadingPlayList`,
+};
+
+const StyledPageContent = styled(PageContent)(() => ({
+    [`&.${classes.nothingFound}`]: {
+        textAlign: 'center',
+        height: '100%',
+    },
+
+    [`&.${classes.loadingPlayList}`]: {
+        height: '100%',
+        textAlign: 'center',
+    },
+}));
 
 interface ComponentParams extends Params {
     id: string;
@@ -49,8 +55,6 @@ function PlayList() {
     const params = useParams<ComponentParams>();
 
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
-
-    const classes = useStyles();
 
     const loadPlayList = useCallback(async () => {
         const playList = await castItHub.connection.getPlayList(+params.id!);
@@ -247,7 +251,7 @@ function PlayList() {
         );
 
     return (
-        <PageContent>
+        <StyledPageContent>
             <Fragment>
                 <PlayListAppBar
                     id={state.playList!.id}
@@ -259,7 +263,7 @@ function PlayList() {
                 />
                 {content}
             </Fragment>
-        </PageContent>
+        </StyledPageContent>
     );
 }
 
