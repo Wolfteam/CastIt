@@ -37,6 +37,23 @@ const StyledSearchIconContainer = styled(`div`)(({ theme }) => ({
     justifyContent: 'center',
 }));
 
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    width: '100%',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        // vertical padding + font size from searchIcon
+        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        transition: theme.transitions.create('width'),
+        [theme.breakpoints.up('sm')]: {
+            width: '12ch',
+            '&:focus': {
+                width: '30ch',
+            },
+        },
+    },
+}));
+
 interface Props {
     id: number;
     loop?: boolean;
@@ -142,39 +159,15 @@ function PlayListAppBar(props: Props) {
                     >
                         <ArrowBack />
                     </IconButton>
-                    <Typography
-                        variant="h6"
-                        noWrap
-                        sx={(theme) => ({
-                            flexGrow: 1,
-                            display: 'none',
-                            [theme.breakpoints.up('sm')]: {
-                                display: 'block',
-                            },
-                        })}
-                    >
+                    <Typography variant="h6" noWrap sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
                         {props.name}
                     </Typography>
                     <StyledSearchContainer>
                         <StyledSearchIconContainer>
                             <SearchIcon />
                         </StyledSearchIconContainer>
-                        <InputBase
+                        <StyledInputBase
                             placeholder={`${translations.search}...`}
-                            sx={(theme) => ({
-                                color: 'inherit',
-                                padding: theme.spacing(1, 1, 1, 0),
-                                // vertical padding + font size from searchIcon
-                                paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-                                transition: theme.transitions.create('width'),
-                                width: '100%',
-                                [theme.breakpoints.up('sm')]: {
-                                    width: '12ch',
-                                    '&:focus': {
-                                        width: '20ch',
-                                    },
-                                },
-                            })}
                             onChange={(e) => searchChanged(e.target.value)}
                             inputProps={{ 'aria-label': 'search' }}
                         />

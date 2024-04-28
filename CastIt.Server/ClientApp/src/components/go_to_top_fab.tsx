@@ -1,25 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Fab } from '@mui/material';
-import { createStyles, makeStyles } from '@mui/styles';
 import { ArrowUpward } from '@mui/icons-material';
 import React from 'react';
 
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        backButton: {
-            marginTop: 10,
-        },
-        fab: {
-            position: 'fixed',
-            bottom: theme.spacing(2),
-            right: theme.spacing(2),
-        },
-    })
-);
-
 function GoToTopFab() {
     const [scrolling, setScrolling] = useState<boolean>(false);
-    const classes = useStyles();
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
@@ -46,7 +31,14 @@ function GoToTopFab() {
     };
 
     return !scrolling ? null : (
-        <Fab className={classes.fab} onClick={handleFabClick}>
+        <Fab
+            onClick={handleFabClick}
+            sx={(theme) => ({
+                position: 'fixed',
+                bottom: theme.spacing(2),
+                right: theme.spacing(2),
+            })}
+        >
             <ArrowUpward />
         </Fab>
     );
