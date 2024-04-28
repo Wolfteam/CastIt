@@ -17,13 +17,13 @@ interface Props {
 
 function FileItemDuration(props: Props) {
     const classes = useStyles();
-    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    const hideDuration = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'));
 
     return (
         <ListItemSecondaryAction className={classes.duration}>
             <Grid container justifyContent="center" alignItems="center" className={'text-overflow-elipsis'}>
                 {props.loop ? <Loop fontSize="small" /> : null}
-                {!isXsScreen ? <Typography>{props.fullTotalDuration}</Typography> : null}
+                {!hideDuration ? <Typography>{props.fullTotalDuration}</Typography> : null}
             </Grid>
         </ListItemSecondaryAction>
     );

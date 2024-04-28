@@ -18,29 +18,30 @@ interface Props {
 
 function FileItemSlider(props: Props) {
     const classes = useStyles();
-    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    const showInlineDurations = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'));
 
     const slider = <Slider size="small" value={props.playedPercentage} disabled className={classes.slider} />;
-    if (!isXsScreen) {
+    if (!showInlineDurations) {
         return slider;
     }
 
     return (
-        <Grid container justifyContent="space-between" alignItems="center">
-            <Grid item xs={2}>
-                <Typography variant="subtitle1" className={'text-overflow-elipsis'} align="left">
-                    {props.playedTime}
-                </Typography>
+        <>
+            <Grid container justifyContent="space-between" alignItems="center">
+                <Grid item xs={6}>
+                    <Typography variant="subtitle1" className={'text-overflow-elipsis'} align="left">
+                        {props.playedTime}
+                    </Typography>
+                </Grid>
+
+                <Grid item xs={6}>
+                    <Typography variant="subtitle1" className={'text-overflow-elipsis'} align="right">
+                        {props.duration}
+                    </Typography>
+                </Grid>
             </Grid>
-            <Grid item xs={8} style={{ marginBottom: 7 }}>
-                {slider}
-            </Grid>
-            <Grid item xs={2}>
-                <Typography variant="subtitle1" className={'text-overflow-elipsis'} align="right">
-                    {props.duration}
-                </Typography>
-            </Grid>
-        </Grid>
+            <Grid container>{slider}</Grid>
+        </>
     );
 }
 
