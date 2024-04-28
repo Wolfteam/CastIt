@@ -12,7 +12,7 @@
   <PropertyGroup>
     <NoWarn>1591;NU1605</NoWarn>
     <DocumentationFile>CastIt.xml</DocumentationFile>
-    <Version>1.1.2</Version>
+    <Version>1.2.0</Version>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
