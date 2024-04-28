@@ -23,7 +23,7 @@ namespace CastIt.Youtube
             //k.s(from stream map field "s") holds the input scrambled signature
             //k.sp(from stream map field "sp") holds a parameter name(normally
             //"signature" or "sig") to set with the output, descrambled signature
-            string descramblerPattern = @"(?<=[,&|]).(=).+(?=\(decodeURIComponent)";
+            string descramblerPattern = @"(?=[a-zA-Z]).(=).([a-zA-Z]).(?=\(decodeURIComponent)";
             var descramblerMatch = Regex.Match(js, descramblerPattern);
             if (string.IsNullOrEmpty(descramblerMatch.Value))
             {
@@ -31,7 +31,8 @@ namespace CastIt.Youtube
                 return s;
             }
 
-            string descrambler = descramblerMatch.Value.Substring(descramblerMatch.Value.IndexOf("=", StringComparison.Ordinal) + 1);
+            //m=pt
+            string descrambler = descramblerMatch.Value.Trim().Substring(descramblerMatch.Value.IndexOf("=", StringComparison.Ordinal) + 1);
             if (SpecialCharsExists(descrambler))
             {
                 _logger.LogInformation($"{nameof(JsDescramble)}: Descrambler = {descrambler} contains special chars, escaping the first one");

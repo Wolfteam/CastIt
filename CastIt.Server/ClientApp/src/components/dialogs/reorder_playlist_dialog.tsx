@@ -1,10 +1,10 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, ListItem, List, Typography } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, ListItem, List, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import translations from '../../services/translations';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { IGetAllPlayListResponseDto } from '../../models';
-import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { DragIndicator } from '@material-ui/icons';
+import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
+import { DragIndicator } from '@mui/icons-material';
 
 interface Props {
     isOpen: boolean;
@@ -61,16 +61,9 @@ function ReOrderPlayListDialog(props: Props) {
         return null;
     }
 
-    const items = state.positions.map((item, index) => (
-        <Draggable index={index} draggableId={`${item.id}_${item.name}`}>
-            {(provided) => (
-                <ListItem ref={provided.innerRef} {...provided.dragHandleProps} {...provided.draggableProps}>
-                    <DragIndicator />
-                    <Typography>{item.name}</Typography>
-                </ListItem>
-            )}
-        </Draggable>
-    ));
+    const items = state.positions.map((item, index) => {
+        return <Item key={item.id} index={index} playlist={item} />;
+    });
 
     return (
         <Dialog open={props.isOpen} onClose={() => props.onClose()} maxWidth="sm" fullWidth>
@@ -79,7 +72,7 @@ function ReOrderPlayListDialog(props: Props) {
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId="playlists-droppable" direction="vertical">
                         {(provided) => (
-                            <List {...provided.droppableProps} innerRef={provided.innerRef}>
+                            <List {...provided.droppableProps} ref={provided.innerRef}>
                                 {items}
                                 {provided.placeholder}
                             </List>
@@ -93,6 +86,31 @@ function ReOrderPlayListDialog(props: Props) {
                 </Button>
             </DialogActions>
         </Dialog>
+    );
+}
+
+interface ItemProps {
+    index: number;
+    playlist: IPlayListPosition;
+}
+
+function Item(props: ItemProps) {
+    const theme = useTheme();
+    return (
+        <Draggable index={props.index} draggableId={`${props.playlist.id}_${props.playlist.name}`}>
+            {(provided, snapshot) => (
+                <div ref={provided.innerRef} {...provided.dragHandleProps} {...provided.draggableProps}>
+                    <ListItem
+                        style={{
+                            backgroundColor: snapshot.isDragging ? theme.palette.primary.dark : '',
+                        }}
+                    >
+                        <DragIndicator />
+                        <Typography>{props.playlist.name}</Typography>
+                    </ListItem>
+                </div>
+            )}
+        </Draggable>
     );
 }
 

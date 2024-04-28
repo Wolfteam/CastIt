@@ -1,6 +1,5 @@
 import {
     Button,
-    makeStyles,
     CardActions,
     CardActionArea,
     CardContent,
@@ -12,9 +11,10 @@ import {
     Typography,
     Card,
     Grid,
-} from '@material-ui/core';
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 import React, { useEffect, useState } from 'react';
-import { Add, Delete, MoreVert, Edit, Sort } from '@material-ui/icons';
+import { Add, Delete, MoreVert, Edit, Sort } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { playListPath } from '../../routes';
 import RenamePlayListDialog from '../dialogs/rename_playlist_dialog';
@@ -26,44 +26,25 @@ import { IGetAllPlayListResponseDto } from '../../models';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { defaultImg } from '../../utils/app_constants';
 
-const useStyles = makeStyles({
-    root: {
-        minWidth: 175,
-        maxWidth: 375,
-    },
-    title: {
-        fontSize: 14,
-    },
-    image: {
-        width: '100%',
-        height: 250,
-    },
-    moreButtons: {
-        width: '100%',
-    },
-    actionButtons: {
-        justifyContent: 'flex-end',
-        '& button': {
-            padding: 5,
-        },
-    },
-    cardContent: {
-        paddingBottom: 0,
-    },
-    fab: {
-        float: 'right',
-        marginTop: -50,
-    },
-    name: {
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-    },
+const StyledRootCard = styled(Card)({
+    minWidth: 175,
+});
+
+const StyledTypography = styled(Typography)({
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+});
+
+const StyledMoreButtons = styled(Button)({
+    width: '100%',
+    color: 'white',
 });
 
 interface Props {
     index: number;
     toAddNewItem?: boolean;
+    raised?: boolean;
     playList: IGetAllPlayListResponseDto;
     onReOrderClick?(): void;
 }
@@ -91,12 +72,10 @@ const initialState: State = {
 };
 
 function PlayListCardItem(props: Props): JSX.Element {
-    const classes = useStyles();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState<HTMLElement>();
 
     const [state, setState] = useState(initialState);
-    const [raised, setRaised] = useState(false);
     const [showRenameDialog, setShowRenameDialog] = useState(false);
     const [showAddFilesDialog, setShowAddFilesDialog] = useState(false);
 
@@ -140,10 +119,6 @@ function PlayListCardItem(props: Props): JSX.Element {
         navigate(route);
     };
 
-    const toggleRaised = (): void => {
-        setRaised(!raised);
-    };
-
     const handleDelete = async (): Promise<void> => {
         await castItHub.connection.deletePlayList(state.id);
         handleClose();
@@ -176,18 +151,9 @@ function PlayListCardItem(props: Props): JSX.Element {
     const showMorePopup = Boolean(anchorEl);
     const moreId = anchorEl ? 'open-more-popover' : undefined;
 
-    const elevation = raised ? 24 : 2;
-
     if (props.toAddNewItem) {
         return (
-            <Card
-                className={classes.root}
-                elevation={elevation}
-                raised={raised}
-                onClick={handleAddNew}
-                onMouseOver={toggleRaised}
-                onMouseOut={toggleRaised}
-            >
+            <StyledRootCard onClick={handleAddNew}>
                 <CardActionArea style={{ height: '100%', textAlign: 'center' }}>
                     <CardContent>
                         <Grid container justifyContent="center" alignItems="center">
@@ -196,46 +162,51 @@ function PlayListCardItem(props: Props): JSX.Element {
                         </Grid>
                     </CardContent>
                 </CardActionArea>
-            </Card>
+            </StyledRootCard>
         );
     }
 
     if (!state.loaded) {
-        return <Card elevation={elevation} raised={raised} className={classes.root} />;
+        return <StyledRootCard />;
     }
 
     const image = state.imageUrl ?? defaultImg;
-
     return (
-        <Card elevation={elevation} raised={raised} className={classes.root} onMouseOver={toggleRaised} onMouseOut={toggleRaised}>
+        <StyledRootCard raised={props.raised}>
             <CardActionArea onClick={handleClick}>
-                <CardMedia className={classes.image} image={image} title={state.name} />
-                <CardContent className={classes.cardContent}>
-                    <Fab className={classes.fab} color="primary" component="div">
+                <CardMedia component="img" image={image} title={state.name} sx={{ width: '100%', height: 250, objectFit: 'fill' }} />
+                <CardContent sx={{ paddingBottom: 0 }}>
+                    <Fab color="primary" component="div" sx={{ float: 'right', marginTop: -50 }}>
                         {state.numberOfFiles}
                     </Fab>
-                    <Typography className={classes.title} color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: 14 }}>
                         {translations.playList}
                     </Typography>
                     <Tooltip title={state.name}>
-                        <Typography variant="h5" component="h2" className={classes.name}>
+                        <StyledTypography variant="h5">
                             {state.name}
-                        </Typography>
+                        </StyledTypography>
                     </Tooltip>
                     <Tooltip title={state.totalDuration}>
-                        <Typography color="textSecondary" className={classes.name}>
-                            {state.totalDuration}
-                        </Typography>
+                        <StyledTypography color="textSecondary">{state.totalDuration}</StyledTypography>
                     </Tooltip>
                 </CardContent>
             </CardActionArea>
-            <CardActions className={classes.actionButtons} disableSpacing={true}>
-                <IconButton onClick={() => setShowAddFilesDialog(true)}>
+            <CardActions
+                disableSpacing
+                sx={{
+                    justifyContent: 'flex-end',
+                    '& button': {
+                        padding: 1
+                    },
+                }}
+            >
+                <IconButton onClick={() => setShowAddFilesDialog(true)} size="large">
                     <Add />
                 </IconButton>
                 <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} renderLoop />
                 <PlayListLoopShuffleButton id={state.id} loop={state.loop} shuffle={state.shuffle} />
-                <IconButton onClick={handleShowMoreClick}>
+                <IconButton onClick={handleShowMoreClick} size="large">
                     <MoreVert />
                 </IconButton>
                 {!showMorePopup ? null : (
@@ -253,21 +224,21 @@ function PlayListCardItem(props: Props): JSX.Element {
                             horizontal: 'center',
                         }}
                     >
-                        <Button className={classes.moreButtons} size="small" startIcon={<Edit />} onClick={() => setShowRenameDialog(true)}>
+                        <StyledMoreButtons size="small" startIcon={<Edit />} onClick={() => setShowRenameDialog(true)}>
                             {translations.rename}
-                        </Button>
-                        <Button className={classes.moreButtons} size="small" startIcon={<Sort />} onClick={handleSort}>
+                        </StyledMoreButtons>
+                        <StyledMoreButtons size="small" startIcon={<Sort />} onClick={handleSort}>
                             {translations.sort}
-                        </Button>
-                        <Button className={classes.moreButtons} size="small" startIcon={<Delete />} onClick={handleDelete}>
+                        </StyledMoreButtons>
+                        <StyledMoreButtons size="small" startIcon={<Delete />} onClick={handleDelete}>
                             {translations.delete}
-                        </Button>
+                        </StyledMoreButtons>
                     </Popover>
                 )}
                 <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
                 <RenamePlayListDialog isOpen={showRenameDialog} name={state.name} onClose={handleRename} />
             </CardActions>
-        </Card>
+        </StyledRootCard>
     );
 }
 

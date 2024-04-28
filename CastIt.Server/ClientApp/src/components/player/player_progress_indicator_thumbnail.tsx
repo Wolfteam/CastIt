@@ -1,31 +1,10 @@
-import { createStyles, makeStyles, Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import formatDuration from 'format-duration';
 import React, { useEffect, useState } from 'react';
 import { AppFile } from '../../enums';
 import { IFileThumbnailRangeResponseDto } from '../../models';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
-import { thumbnailImgHeight, thumbnailImgWidth } from '../../utils/app_constants';
-
-const useStyles = makeStyles(() =>
-    createStyles({
-        root: {
-            overflow: 'hidden',
-            borderRadius: 20,
-        },
-        image: {
-            width: thumbnailImgWidth,
-            height: thumbnailImgHeight,
-            transformOrigin: 'left top',
-        },
-        text: {
-            position: 'absolute',
-            right: 16,
-            bottom: 8,
-            fontWeight: 'bold',
-            color: 'white',
-        },
-    })
-);
+import { thumbnailImgHeight, thumbnailImgWidth, thumbnailsPerImageRow } from '../../utils/app_constants';
 
 interface Props {
     second: number;
@@ -64,7 +43,6 @@ const getPositionToUse = (second: number, thumbnailRanges: IFileThumbnailRangeRe
 
     const x = -position.x * thumbnailImgWidth;
     const y = -position.y * thumbnailImgHeight;
-
     return {
         x: x,
         y: y,
@@ -74,7 +52,6 @@ const getPositionToUse = (second: number, thumbnailRanges: IFileThumbnailRangeRe
 };
 
 function PlayerProgressIndicatorThumbnail(props: Props) {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
@@ -82,9 +59,9 @@ function PlayerProgressIndicatorThumbnail(props: Props) {
             if (!status) {
                 return;
             }
-
             if ((status.playedFile!.type & AppFile.localVideo) !== AppFile.localVideo) {
-                setState({ ...initialState, url: status.thumbnailRanges[0].previewThumbnailUrl, useTransform: false });
+                const url = status.thumbnailRanges[0].previewThumbnailUrl ?? status.playedFile?.thumbnailUrl;
+                setState({ ...initialState, url: url, useTransform: false });
             } else {
                 const second = props.second;
                 const newState = getPositionToUse(second, status.thumbnailRanges);
@@ -99,12 +76,41 @@ function PlayerProgressIndicatorThumbnail(props: Props) {
         };
     }, [props.second]);
 
-    const transform = state.useTransform ? `matrix(1, 0, 0, 1, ${state.x}, ${state.y}) scale(5, 5) ` : '';
+    const transform = state.useTransform ? `matrix(${thumbnailsPerImageRow}, 0, 0, ${thumbnailsPerImageRow}, ${state.x}, ${state.y})` : '';
     const elapsed = formatDuration(props.second * 1000, { leading: true });
     return (
-        <div className={classes.root}>
-            <img className={classes.image} style={{ transform: transform }} src={state.url} alt="Preview thumbnail" />
-            <Typography className={classes.text}>{elapsed}</Typography>
+        <div
+            style={{
+                overflow: 'hidden',
+                borderRadius: 20,
+                width: thumbnailImgWidth,
+                height: thumbnailImgHeight,
+            }}
+        >
+            <img
+                style={{
+                    width: thumbnailImgWidth,
+                    height: thumbnailImgHeight,
+                    transformOrigin: 'left top',
+                    transform: transform,
+                }}
+                src={state.url}
+                alt="Preview thumbnail"
+            />
+            <Typography
+                sx={{
+                    position: 'absolute',
+                    width: '100%',
+                    right: 16,
+                    bottom: 8,
+                    textAlign: 'end',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    textShadow: '1px 1px 2px black',
+                }}
+            >
+                {elapsed}
+            </Typography>
         </div>
     );
 }

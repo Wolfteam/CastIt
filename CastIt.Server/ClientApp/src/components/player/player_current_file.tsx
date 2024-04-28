@@ -1,19 +1,7 @@
-import { Grid, LinearProgress, makeStyles, Tooltip, Typography } from '@material-ui/core';
+import { Grid, LinearProgress, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
 import { defaultImg } from '../../utils/app_constants';
-
-const useStyles = makeStyles({
-    image: {
-        height: 100,
-        objectFit: 'contain',
-    },
-    text: {
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-    },
-});
 
 interface State {
     title: string;
@@ -28,7 +16,6 @@ const initialState: State = {
 };
 
 function PlayerCurrentFile() {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
@@ -64,22 +51,22 @@ function PlayerCurrentFile() {
             onStoppedPlaybackSubscription.unsubscribe();
         };
     }, []);
-    
+
     const image = state.imageUrl ?? defaultImg;
 
     return (
         <Grid container wrap="nowrap" alignItems="center">
             <Grid item style={{ display: 'flex' }}>
-                <img className={classes.image} src={image} alt="Current file" />
+                <img style={{ height: 100, objectFit: 'contain' }} src={image} alt="Current file" />
             </Grid>
-            <Grid item className={classes.text} style={{ paddingLeft: '10px' }}>
+            <Grid item className="text-overflow-elipsis" style={{ paddingLeft: '10px' }}>
                 <Tooltip title={state.title}>
-                    <Typography variant="h5" component="h2" className={classes.text}>
+                    <Typography variant="h5" className="text-overflow-elipsis">
                         {state.title}
                     </Typography>
                 </Tooltip>
                 <Tooltip title={state.subtitle}>
-                    <Typography color="textSecondary" className={classes.text}>
+                    <Typography className="text-overflow-elipsis" color="textSecondary">
                         {state.subtitle}
                     </Typography>
                 </Tooltip>

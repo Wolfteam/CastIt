@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { IGetAllPlayListResponseDto } from '../models';
 import {
     onPlayListAdded,
-    onPlayListsLoaded,
     onPlayListDeleted,
     onPlayListChanged,
     onPlayListsChanged,
@@ -12,7 +11,7 @@ import {
 } from '../services/castithub.service';
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
-import { Grid } from '@material-ui/core';
+import { Grid } from '@mui/material';
 import ReOrderPlayListDialog from '../components/dialogs/reorder_playlist_dialog';
 import { useCastItHub } from '../context/castit_hub.context';
 
@@ -29,6 +28,7 @@ const initialState: State = {
 function PlayLists() {
     const [state, setState] = useState(initialState);
     const [showReorderDialog, setShowReorderDialog] = useState(false);
+    const [raisedPlayList, setRaisedPlayList] = useState<number | null>();
 
     const castItHub = useCastItHub();
 
@@ -104,14 +104,26 @@ function PlayLists() {
         setShowReorderDialog(true);
     }, []);
 
+    const toggleRaised = (id: number, raised: boolean) => setRaisedPlayList(raised ? id : null);
+
     const items = state.playLists.map((pl, index) => (
-        <Grid key={pl.id} item xs={12} sm={4} md={4} lg={3} xl={2}>
-            <PlayListCardItem index={index} playList={pl} onReOrderClick={handleReOrderClick} />
+        <Grid
+            key={pl.id}
+            item
+            xs={12}
+            sm={4}
+            md={3}
+            lg={3}
+            xl={2}
+            onMouseOver={(_) => toggleRaised(pl.id, true)}
+            onMouseOut={(_) => toggleRaised(pl.id, false)}
+        >
+            <PlayListCardItem index={index} playList={pl} onReOrderClick={handleReOrderClick} raised={raisedPlayList == pl.id} />
         </Grid>
     ));
 
     const addNew = (
-        <Grid key="AddNewItem" item xs={12} sm={4} md={4} lg={3} xl={2} style={{ alignSelf: 'center' }}>
+        <Grid key="AddNewItem" item xs={12} sm={4} md={3} lg={3} xl={2} style={{ alignSelf: 'center' }}>
             <PlayListCardItem
                 playList={{
                     id: 0,
@@ -131,10 +143,9 @@ function PlayLists() {
     );
 
     items.push(addNew);
-
     return (
         <PageContent useContainer>
-            <Grid container spacing={3} style={{ marginTop: 20, marginBottom: 20 }}>
+            <Grid container spacing={2} style={{ marginTop: 20, marginBottom: 20 }}>
                 {items}
                 <ReOrderPlayListDialog isOpen={showReorderDialog} onClose={() => setShowReorderDialog(false)} playLists={state.playLists} />
             </Grid>

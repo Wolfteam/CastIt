@@ -1,35 +1,30 @@
-import { Close } from '@material-ui/icons';
-import { createStyles, DialogTitle, Grid, IconButton, makeStyles, Typography } from '@material-ui/core';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        dialogTitle: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: theme.palette.primary.main,
-        },
-        title: {
-            paddingLeft: 10,
-        },
-    })
-);
+import { Close } from '@mui/icons-material';
+import { DialogTitle, Grid, IconButton, Typography } from '@mui/material';
 
 interface Props {
     icon: JSX.Element;
     title: string;
+
     close(): void;
 }
 
 function AppDialogTitle(props: Props) {
-    const classes = useStyles();
     return (
-        <DialogTitle disableTypography className={classes.dialogTitle}>
+        <DialogTitle
+            sx={(theme) => ({
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: `${theme.palette.primary.main}`,
+            })}
+        >
             <Grid container alignItems="center">
                 {props.icon}
-                <Typography className={classes.title} variant="h6">{props.title}</Typography>
+                <Typography variant="h6" sx={{ paddingLeft: 2 }}>
+                    {props.title}
+                </Typography>
             </Grid>
-            <IconButton onClick={props.close}>
+            <IconButton onClick={props.close} size="large">
                 <Close />
             </IconButton>
         </DialogTitle>

@@ -1,4 +1,4 @@
-import { Container, Grid, CircularProgress, Typography } from '@material-ui/core';
+import { Container, Grid, CircularProgress, Typography } from '@mui/material';
 
 interface Props {
     message?: string;

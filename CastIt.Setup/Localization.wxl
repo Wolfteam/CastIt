@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
-<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
-  <String Id="ProductName">CastIt</String>
-  <String Id="ProductName_x86">CastIt (32 bits)</String>
-  <String Id="ProductName_x64">CastIt (64 bits)</String>
-  <String Id="Company">MiraiSoft</String>
-  <String Id="Description">An app to cast your files in a simple way</String>
-  <String Id="Comments">Made with love</String>
-  <String Id="Keywords">Desktop, .Net Core</String>
-  <String Id="Languages">1033</String>
-  <String Id="Ok">Ok</String>
-  <String Id="Launch">Launch</String>
+﻿<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ProductName" Value="CastIt" />
+  <String Id="ProductName_x86" Value="CastIt (32 bits)" />
+  <String Id="ProductName_x64" Value="CastIt (64 bits)" />
+  <String Id="Company" Value="MiraiSoft" />
+  <String Id="Description" Value="An app to cast your files in a simple way" />
+  <String Id="Comments" Value="Made with love" />
+  <String Id="Keywords" Value="Desktop, .Net Core" />
+  <String Id="Languages" Value="1033" />
+  <String Id="Ok" Value="Ok" />
+  <String Id="Launch" Value="Launch" />
 
-  <String Id="DowngradeErrorMsg">A newer version of CastIt is already installed.</String>
+  <String Id="DowngradeErrorMsg" Value="A newer version of CastIt is already installed." />
 </WixLocalization>

@@ -9,7 +9,7 @@ import {
     FormGroup,
     Switch,
     FormControlLabel,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useState } from 'react';
 import translations from '../../services/translations';
 

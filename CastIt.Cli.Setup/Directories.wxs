@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
 
       <!--Start menu-->
       <!--<Directory Id="ProgramMenuFolder">
@@ -12,19 +10,18 @@
 
       <!--If 64 bits-->
       <?if $(var.Platform)=x64?>
-      <Directory Id="ProgramFiles64Folder">
+      <StandardDirectory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)">
           <Directory Id="CliInstallFolder" Name="Cli" />
         </Directory>
-      </Directory>
+      </StandardDirectory>
       <!--Else 32 bits-->
       <?else?>
-      <Directory Id="ProgramFilesFolder">
+      <StandardDirectory Id="ProgramFilesFolder">
         <Directory Id="INSTALLFOLDER" Name="!(loc.ProductName)">
           <Directory Id="CliInstallFolder" Name="Cli" />
         </Directory>
-      </Directory>
+      </StandardDirectory>
       <?endif?>
-    </Directory>
-  </Fragment>
+    </Fragment>
 </Wix>

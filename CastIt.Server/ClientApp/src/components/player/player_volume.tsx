@@ -1,7 +1,7 @@
-import { Grid, IconButton, Popover, Slider } from '@material-ui/core';
+import { Grid, IconButton, Popover, Slider } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Fragment } from 'react';
-import { VolumeOff, VolumeUp } from '@material-ui/icons';
+import { VolumeOff, VolumeUp } from '@mui/icons-material';
 import { usePopupState, bindTrigger, bindPopover } from 'material-ui-popup-state/hooks';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { useCastItHub } from '../../context/castit_hub.context';
@@ -69,15 +69,17 @@ function PlayerVolume() {
 
     return (
         <Fragment>
-            <IconButton disabled={!state.isConnected} {...bindTrigger(popupState)}>
+            <IconButton disabled={!state.isConnected} {...bindTrigger(popupState)} size="large">
                 <VolumeUp fontSize="large" />
             </IconButton>
             <Popover
                 {...bindPopover(popupState)}
-                PaperProps={{
-                    style: {
-                        width: 320,
-                        overflowY: 'hidden',
+                slotProps={{
+                    paper: {
+                        style: {
+                            width: 320,
+                            overflowY: 'hidden',
+                        },
                     },
                 }}
                 anchorOrigin={{
@@ -99,7 +101,7 @@ function PlayerVolume() {
                     }}
                 >
                     <Grid item xs={2}>
-                        <IconButton onClick={() => handleVolumeChange(state.volume, !state.isMuted, true)}>
+                        <IconButton onClick={() => handleVolumeChange(state.volume, !state.isMuted, true)} size="large">
                             {state.isMuted ? <VolumeOff fontSize="medium" /> : <VolumeUp fontSize="medium" />}
                         </IconButton>
                     </Grid>

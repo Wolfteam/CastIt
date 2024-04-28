@@ -1,13 +1,5 @@
-import { Typography, ListItemSecondaryAction, makeStyles, createStyles, Grid, useMediaQuery, Theme } from '@material-ui/core';
-import { Loop } from '@material-ui/icons';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        duration: {
-            top: '44%',
-        },
-    })
-);
+import { Typography, ListItemSecondaryAction, Grid, useMediaQuery, Theme } from '@mui/material';
+import { Loop } from '@mui/icons-material';
 
 interface Props {
     loop: boolean;
@@ -15,14 +7,13 @@ interface Props {
 }
 
 function FileItemDuration(props: Props) {
-    const classes = useStyles();
-    const isXsScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('xs'));
+    const hideDuration = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'));
 
     return (
-        <ListItemSecondaryAction className={classes.duration}>
+        <ListItemSecondaryAction sx={{ top: '44%' }}>
             <Grid container justifyContent="center" alignItems="center" className={'text-overflow-elipsis'}>
                 {props.loop ? <Loop fontSize="small" /> : null}
-                {!isXsScreen ? <Typography>{props.fullTotalDuration}</Typography> : null}
+                {!hideDuration ? <Typography>{props.fullTotalDuration}</Typography> : null}
             </Grid>
         </ListItemSecondaryAction>
     );

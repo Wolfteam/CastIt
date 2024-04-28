@@ -1,6 +1,6 @@
-import { Grid, IconButton } from '@material-ui/core';
+import { Grid, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { SkipPrevious, SkipNext, FastForward, FastRewind, PlayArrow, Stop, Pause } from '@material-ui/icons';
+import { SkipPrevious, SkipNext, FastForward, FastRewind, PlayArrow, Stop, Pause } from '@mui/icons-material';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { useCastItHub } from '../../context/castit_hub.context';
 
@@ -54,22 +54,40 @@ function PlayerControls() {
 
     return (
         <Grid container alignItems="stretch" justifyContent="center">
-            <IconButton disabled={!state.isPlayingOrPaused} onClick={() => handleSkipOrPrevious(false, true)}>
+            <IconButton
+                disabled={!state.isPlayingOrPaused}
+                onClick={() => handleSkipOrPrevious(false, true)}
+                size="large">
                 <SkipPrevious fontSize="large" />
             </IconButton>
-            <IconButton disabled={!state.isPlayingOrPaused} onClick={() => handleGoToSeconds(true)}>
+            <IconButton
+                disabled={!state.isPlayingOrPaused}
+                onClick={() => handleGoToSeconds(true)}
+                size="large">
                 <FastRewind fontSize="large" />
             </IconButton>
-            <IconButton disabled={!state.isPlayingOrPaused} onClick={handleTogglePlayBack}>
+            <IconButton
+                disabled={!state.isPlayingOrPaused}
+                onClick={handleTogglePlayBack}
+                size="large">
                 {state.isPaused ? <PlayArrow fontSize="large" /> : <Pause fontSize="large" />}
             </IconButton>
-            <IconButton disabled={!state.isPlayingOrPaused} onClick={handleStopPlayback}>
+            <IconButton
+                disabled={!state.isPlayingOrPaused}
+                onClick={handleStopPlayback}
+                size="large">
                 <Stop fontSize="large" />
             </IconButton>
-            <IconButton disabled={!state.isPlayingOrPaused} onClick={() => handleGoToSeconds(false)}>
+            <IconButton
+                disabled={!state.isPlayingOrPaused}
+                onClick={() => handleGoToSeconds(false)}
+                size="large">
                 <FastForward fontSize="large" />
             </IconButton>
-            <IconButton disabled={!state.isPlayingOrPaused} onClick={() => handleSkipOrPrevious(true, false)}>
+            <IconButton
+                disabled={!state.isPlayingOrPaused}
+                onClick={() => handleSkipOrPrevious(true, false)}
+                size="large">
                 <SkipNext fontSize="large" />
             </IconButton>
         </Grid>

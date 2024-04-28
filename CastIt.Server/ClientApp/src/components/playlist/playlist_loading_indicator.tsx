@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { onFileEndReached, onFileLoaded, onFileLoading, onPlayListBusy, onStoppedPlayback } from '../../services/castithub.service';
 import { IFileItemResponseDto } from '../../models';
-import { createStyles, LinearProgress, makeStyles } from '@material-ui/core';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        loading: {
-            position: 'sticky',
-            top: 0,
-        },
-    })
-);
+import { LinearProgress } from '@mui/material';
 
 interface Props {
     playListId: number;
@@ -18,7 +9,6 @@ interface Props {
 
 function PlayListLoadingIndicator(props: Props) {
     const [isBusy, setIsBusy] = useState(false);
-    const classes = useStyles();
 
     useEffect(() => {
         const handleFileChanged = (file: IFileItemResponseDto, isBusy: boolean): void => {
@@ -47,7 +37,7 @@ function PlayListLoadingIndicator(props: Props) {
             onStoppedPlaybackSubscription.unsubscribe();
         };
     }, [props.playListId]);
-    const loading = !isBusy ? null : <LinearProgress variant="indeterminate" className={classes.loading} />;
+    const loading = !isBusy ? null : <LinearProgress variant="indeterminate" sx={{ position: 'sticky', top: 0 }} />;
     return loading;
 }
 
