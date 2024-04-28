@@ -183,7 +183,7 @@ function PlayListCardItem(props: Props): JSX.Element {
                         {translations.playList}
                     </Typography>
                     <Tooltip title={state.name}>
-                        <StyledTypography variant="h5" component="h2">
+                        <StyledTypography variant="h5">
                             {state.name}
                         </StyledTypography>
                     </Tooltip>

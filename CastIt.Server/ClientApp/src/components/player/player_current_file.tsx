@@ -68,7 +68,7 @@ function PlayerCurrentFile() {
             </Grid>
             <Grid item style={{ paddingLeft: '10px' }}>
                 <Tooltip title={state.title}>
-                    <StyledTypography variant="h5" component="h2">
+                    <StyledTypography variant="h5">
                         {state.title}
                     </StyledTypography>
                 </Tooltip>
