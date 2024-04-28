@@ -1,5 +1,6 @@
 ﻿using CastIt.ViewModels.Items;
 using MvvmCross.Binding.BindingContext;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace CastIt.Views.UserControls
@@ -21,8 +22,18 @@ namespace CastIt.Views.UserControls
 
         private async void Control_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            await GoToPlayList();
+        }
+
+        private async void OnFabClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+            await GoToPlayList();
+        }
+
+        private async Task GoToPlayList()
+        {
             var window = System.Windows.Application.Current.MainWindow as MainWindow;
-            if (!(window?.Content is MainPage view))
+            if (window?.Content is not MainPage view)
                 return;
 
             await view.ViewModel.GoToPlayList(Vm);

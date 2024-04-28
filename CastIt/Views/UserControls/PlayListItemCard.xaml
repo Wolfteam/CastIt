@@ -42,6 +42,7 @@
                 Margin="0,0,5,-20"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
+                Click="OnFabClick"
                 Content="{Binding NumberOfFiles}"
                 Foreground="White"
                 Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" />
