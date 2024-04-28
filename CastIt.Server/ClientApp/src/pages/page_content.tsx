@@ -1,13 +1,17 @@
-import { Container, createStyles, makeStyles } from '@material-ui/core';
+import { Container } from '@mui/material';
+import { styled } from '@mui/material/styles';
+const PREFIX = 'PageContent';
 
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        root: {
-            flex: 'auto',
-            overflowY: 'auto',
-        },
-    })
-);
+const classes = {
+    root: `${PREFIX}-root`,
+};
+
+const Root = styled('div')((_) => ({
+    [`&.${classes.root}`]: {
+        flex: 'auto',
+        overflowY: 'auto',
+    },
+}));
 
 interface Props {
     useContainer?: boolean;
@@ -15,20 +19,19 @@ interface Props {
 }
 
 function PageContent(props: Props) {
-    const classes = useStyles();
     if (props.useContainer) {
         return (
-            <div className={classes.root}>
-                <Container id="page-content" maxWidth="xl">
+            <Root className={classes.root}>
+                <Container id="page-content" sx={{ maxWidth: '2000px !important' }}>
                     {props.children}
                 </Container>
-            </div>
+            </Root>
         );
     }
     return (
-        <div id="page-content" className={classes.root}>
+        <Root id="page-content" className={classes.root}>
             {props.children}
-        </div>
+        </Root>
     );
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle, Grid, DialogActions, Button, TextField, FormGroup } from '@material-ui/core';
+import { Dialog, DialogContent, DialogTitle, Grid, DialogActions, Button, TextField, FormGroup } from '@mui/material';
 import translations from '../../services/translations';
 
 interface Props {

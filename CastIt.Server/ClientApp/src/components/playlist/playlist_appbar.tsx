@@ -1,9 +1,10 @@
-import { alpha, AppBar, createStyles, IconButton, InputBase, makeStyles, Theme, Toolbar, Typography } from '@material-ui/core';
-import SearchIcon from '@material-ui/icons/Search';
-import { Add, ArrowBack, ArrowUpward, Redo } from '@material-ui/icons';
+import { alpha, AppBar, IconButton, InputBase, Theme, Toolbar, Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import SearchIcon from '@mui/icons-material/Search';
+import { Add, ArrowBack, ArrowUpward, Redo } from '@mui/icons-material';
 import { playListsPath } from '../../routes';
 import { useNavigate } from 'react-router-dom';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PlayListLoopShuffleButton from './playlist_loop_shuffle_button';
 import translations from '../../services/translations';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
@@ -11,62 +12,47 @@ import PlayListLoadingIndicator from './playlist_loading_indicator';
 import AddFilesDialog from '../dialogs/add_files_dialog';
 import { useCastItHub } from '../../context/castit_hub.context';
 
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        root: {
-            flexGrow: 1,
-        },
-        menuButton: {
-            marginRight: theme.spacing(2),
-        },
-        title: {
-            flexGrow: 1,
-            display: 'none',
-            [theme.breakpoints.up('sm')]: {
-                display: 'block',
+const StyledSearchContainer = styled(`div`)(({ theme }) => ({
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.common.white, 0.25),
+    },
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+        marginLeft: theme.spacing(1),
+        width: 'auto',
+    },
+}));
+
+const StyledSearchIconContainer = styled(`div`)(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    width: '100%',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        // vertical padding + font size from searchIcon
+        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        transition: theme.transitions.create('width'),
+        [theme.breakpoints.up('sm')]: {
+            width: '12ch',
+            '&:focus': {
+                width: '30ch',
             },
         },
-        search: {
-            position: 'relative',
-            borderRadius: theme.shape.borderRadius,
-            backgroundColor: alpha(theme.palette.common.white, 0.15),
-            '&:hover': {
-                backgroundColor: alpha(theme.palette.common.white, 0.25),
-            },
-            marginLeft: 0,
-            width: '100%',
-            [theme.breakpoints.up('sm')]: {
-                marginLeft: theme.spacing(1),
-                width: 'auto',
-            },
-        },
-        searchIcon: {
-            padding: theme.spacing(0, 2),
-            height: '100%',
-            position: 'absolute',
-            pointerEvents: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        inputRoot: {
-            color: 'inherit',
-        },
-        inputInput: {
-            padding: theme.spacing(1, 1, 1, 0),
-            // vertical padding + font size from searchIcon
-            paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-            transition: theme.transitions.create('width'),
-            width: '100%',
-            [theme.breakpoints.up('sm')]: {
-                width: '12ch',
-                '&:focus': {
-                    width: '20ch',
-                },
-            },
-        },
-    })
-);
+    },
+}));
 
 interface Props {
     id: number;
@@ -74,6 +60,7 @@ interface Props {
     shuffle?: boolean;
     name?: string;
     searchText?: string;
+
     onSearch(value: string | null): void;
 }
 
@@ -82,7 +69,6 @@ interface State {
 }
 
 function PlayListAppBar(props: Props) {
-    const classes = useStyles();
     const navigate = useNavigate();
     const [search, setSearch] = useState<string>('');
     const [state, setState] = useState<State>({
@@ -159,40 +145,44 @@ function PlayListAppBar(props: Props) {
     };
 
     return (
-        <Fragment>
+        <>
             <AppBar position="fixed" color="default">
                 <Toolbar>
-                    <IconButton edge="start" className={classes.menuButton} color="inherit" onClick={handleGoBackClick}>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={handleGoBackClick}
+                        size="large"
+                        sx={(theme) => ({
+                            marginRight: theme.spacing(2),
+                        })}
+                    >
                         <ArrowBack />
                     </IconButton>
-                    <Typography className={classes.title} variant="h6" noWrap>
+                    <Typography variant="h6" noWrap sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
                         {props.name}
                     </Typography>
-                    <div className={classes.search}>
-                        <div className={classes.searchIcon}>
+                    <StyledSearchContainer>
+                        <StyledSearchIconContainer>
                             <SearchIcon />
-                        </div>
-                        <InputBase
+                        </StyledSearchIconContainer>
+                        <StyledInputBase
                             placeholder={`${translations.search}...`}
-                            classes={{
-                                root: classes.inputRoot,
-                                input: classes.inputInput,
-                            }}
                             onChange={(e) => searchChanged(e.target.value)}
                             inputProps={{ 'aria-label': 'search' }}
                         />
-                    </div>
-                    <IconButton onClick={() => setShowAddFilesDialog(true)}>
+                    </StyledSearchContainer>
+                    <IconButton onClick={() => setShowAddFilesDialog(true)} size="large">
                         <Add />
                     </IconButton>
                     <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} renderLoop />
                     <PlayListLoopShuffleButton id={props.id} loop={props.loop} shuffle={props.shuffle} />
                     {state.canGoToPlayedFile ? (
-                        <IconButton color="inherit" onClick={handleGoToPlayedFile}>
+                        <IconButton color="inherit" onClick={handleGoToPlayedFile} size="large">
                             <Redo />
                         </IconButton>
                     ) : null}
-                    <IconButton color="inherit" onClick={handleGoToTheTop}>
+                    <IconButton color="inherit" onClick={handleGoToTheTop} size="large">
                         <ArrowUpward />
                     </IconButton>
                 </Toolbar>
@@ -200,7 +190,7 @@ function PlayListAppBar(props: Props) {
                 <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
             </AppBar>
             <Toolbar />
-        </Fragment>
+        </>
     );
 }
 

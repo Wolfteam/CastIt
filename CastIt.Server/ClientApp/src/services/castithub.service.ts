@@ -26,7 +26,7 @@ export const onClientDisconnected = new Subject<void>();
 export const onPlayerStatusChanged = new BehaviorSubject<IServerPlayerStatusResponseDto | null>(null);
 export const onPlayerSettingsChanged = new BehaviorSubject<IServerAppSettings | null>(null);
 export const onCastDeviceSet = new Subject<IReceiver>();
-export const onCastDevicesChanged = new Subject<IReceiver[]>();
+export const onCastDevicesChanged = new BehaviorSubject<IReceiver[]>([]);
 export const onCastDeviceDisconnected = new Subject<void>();
 export const onServerMessage = new Subject<AppMessage>();
 export const onStoppedPlayback = new Subject<void>();
@@ -143,7 +143,7 @@ export class CastItHubService {
     };
 
     getAllPlayLists = async (): Promise<IGetAllPlayListResponseDto[]> => {
-        return await this.send<IGetAllPlayListResponseDto[]>('GetAllPlayLists') ?? [];
+        return (await this.send<IGetAllPlayListResponseDto[]>('GetAllPlayLists')) ?? [];
     };
 
     getPlayList = async (id: number): Promise<IPlayListItemResponseDto> => {

@@ -1,6 +1,5 @@
 import {
     CircularProgress,
-    createStyles,
     Dialog,
     DialogContent,
     Divider,
@@ -10,15 +9,14 @@ import {
     Grid,
     IconButton,
     InputLabel,
-    makeStyles,
     Select,
     Slider,
     Switch,
-    Theme,
     Typography,
-} from '@material-ui/core';
-import { Settings } from '@material-ui/icons';
-import { Fragment, useContext, useEffect, useState } from 'react';
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { Settings } from '@mui/icons-material';
+import { useContext, useEffect, useState } from 'react';
 import {
     VideoScale,
     SubtitleBgColor,
@@ -37,17 +35,18 @@ import { String } from 'typescript-string-operations';
 import AppDialogTitle from '../dialogs/app_dialog_title';
 import { useCastItHub } from '../../context/castit_hub.context';
 
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        formControl: {
-            margin: theme.spacing(1),
-            minWidth: 150,
-        },
-        gridItemMargin: {
-            margin: theme.spacing(2, 1, 2, 1),
-        },
-    })
-);
+const StyledFormControl = styled(FormControl)(({ theme }) => ({
+    margin: theme.spacing(1),
+    minWidth: 150,
+}));
+
+const StyledGeneralGrid = styled(Grid)(({ theme }) => ({
+    margin: theme.spacing(1),
+}));
+
+const StyledGridItem = styled(Grid)(({ theme }) => ({
+    margin: theme.spacing(2, 0, 0, 0),
+}));
 
 interface State {
     settings?: IServerAppSettings;
@@ -59,7 +58,6 @@ interface SelectOption {
 }
 
 function PlayerSettings() {
-    const classes = useStyles();
     const [open, setOpen] = useState(false);
     const [state, setState] = useState<State>({});
     const [translationContext, translationState] = useContext(TranslationContext);
@@ -122,7 +120,10 @@ function PlayerSettings() {
         return { text: `${val}p`, value: val };
     }).map(generateSelectOption);
 
-    const subsBgColorOptions = mapEnum(SubtitleBgColor, (val) => ({ text: translations.default, value: val })).map(generateSelectOption);
+    const subsBgColorOptions = mapEnum(SubtitleBgColor, (val) => ({
+        text: translations.default,
+        value: val,
+    })).map(generateSelectOption);
 
     const subsFgColorOptions = mapEnum(SubtitleFgColor, (val) => {
         switch (val) {
@@ -165,7 +166,10 @@ function PlayerSettings() {
         }
     }).map(generateSelectOption);
 
-    const subFontScaleOptions = mapEnum(SubtitleFontScale, (val) => ({ text: `${val} %`, value: val })).map(generateSelectOption);
+    const subFontScaleOptions = mapEnum(SubtitleFontScale, (val) => ({
+        text: `${val} %`,
+        value: val,
+    })).map(generateSelectOption);
 
     const handleOpenDialog = (): void => {
         setOpen(true);
@@ -206,8 +210,8 @@ function PlayerSettings() {
     };
 
     return (
-        <Fragment>
-            <IconButton onClick={handleOpenDialog}>
+        <>
+            <IconButton onClick={handleOpenDialog} size="large">
                 <Settings fontSize="large" />
             </IconButton>
             <Dialog fullWidth={true} open={open} maxWidth="lg" onClose={handleCloseDialog}>
@@ -215,251 +219,255 @@ function PlayerSettings() {
                 <DialogContent>
                     <Grid container alignItems="flex-start" justifyContent="space-between">
                         <Grid item xs={12} md={6}>
-                            <Grid container>
-                                <Grid item xs={12} className={classes.gridItemMargin}>
-                                    <Typography color="textSecondary">{translations.general}</Typography>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="theme">{translations.theme}</InputLabel>
-                                        <Select
-                                            native
-                                            value={0}
-                                            inputProps={{
-                                                name: 'theme',
-                                                id: 'theme',
-                                            }}
-                                        >
-                                            <option value={0}>{translations.dark}</option>
-                                            <option value={1}>{translations.light}</option>
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="language">{translations.language}</InputLabel>
-                                        <Select
-                                            native
-                                            value={getLanguageEnum(translationContext!.currentLanguage)}
-                                            onChange={(e) => handleLanguageChange(e.target.value as number)}
-                                            inputProps={{
-                                                name: 'language',
-                                                id: 'language',
-                                            }}
-                                        >
-                                            {languageOptions}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="video-scale">{translations.videoScale}</InputLabel>
-                                        <Select
-                                            native
-                                            value={state.settings.videoScale}
-                                            onChange={(e) => handleSettingsChange('videoScale', e.target.value)}
-                                            inputProps={{
-                                                name: 'video-scale',
-                                                id: 'video-scale',
-                                            }}
-                                        >
-                                            {videoScaleOptions}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="supported-video-qualities">{translations.webVideoQuality}</InputLabel>
-                                        <Select
-                                            native
-                                            value={state.settings.webVideoQuality}
-                                            onChange={(e) => handleSettingsChange('webVideoQuality', e.target.value)}
-                                            inputProps={{
-                                                name: 'supported-video-qualities',
-                                                id: 'supported-video-qualities',
-                                            }}
-                                        >
-                                            {supportedWebVideoQualities}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} className={classes.gridItemMargin}>
-                                    <Typography color="textSecondary">{translations.options}</Typography>
-                                    <Grid container>
-                                        <Grid item xs={12} md={6}>
-                                            <FormGroup row>
-                                                <FormControlLabel
-                                                    control={<Switch color="primary" checked={true} />}
-                                                    label={translations.showFileDetails}
-                                                />
-                                                <FormControlLabel
-                                                    control={
-                                                        <Switch
-                                                            onChange={(e, checked) =>
-                                                                handleSettingsChange('startFilesFromTheStart', checked)
-                                                            }
-                                                            color="primary"
-                                                            checked={state.settings.startFilesFromTheStart}
-                                                        />
-                                                    }
-                                                    label={translations.startFilesFromTheStart}
-                                                />
-                                                <FormControlLabel
-                                                    control={
-                                                        <Switch
-                                                            onChange={(e, checked) =>
-                                                                handleSettingsChange('playNextFileAutomatically', checked)
-                                                            }
-                                                            color="primary"
-                                                            checked={state.settings.playNextFileAutomatically}
-                                                        />
-                                                    }
-                                                    label={translations.playNextFileAutomatically}
-                                                />
-                                            </FormGroup>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <FormGroup row>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Switch
-                                                            onChange={(e, checked) => handleSettingsChange('forceVideoTranscode', checked)}
-                                                            color="primary"
-                                                            checked={state.settings.forceVideoTranscode}
-                                                        />
-                                                    }
-                                                    label={translations.forceVideoTranscode}
-                                                />
-                                                <FormControlLabel
-                                                    control={
-                                                        <Switch
-                                                            onChange={(e, checked) => handleSettingsChange('forceAudioTranscode', checked)}
-                                                            color="primary"
-                                                            checked={state.settings.forceAudioTranscode}
-                                                        />
-                                                    }
-                                                    label={translations.forceAudioTranscode}
-                                                />
-                                                <FormControlLabel
-                                                    control={
-                                                        <Switch
-                                                            onChange={(e, checked) =>
-                                                                handleSettingsChange('enableHardwareAcceleration', checked)
-                                                            }
-                                                            color="primary"
-                                                            checked={state.settings.enableHardwareAcceleration}
-                                                        />
-                                                    }
-                                                    label={translations.enableHardwareAcceleration}
-                                                />
-                                            </FormGroup>
-                                        </Grid>
+                            <StyledGridItem item xs={12}>
+                                <Typography color="textSecondary">{translations.general}</Typography>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.theme}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.theme}
+                                        value={0}
+                                        inputProps={{
+                                            name: 'theme',
+                                            id: 'theme',
+                                        }}
+                                    >
+                                        <option value={0}>{translations.dark}</option>
+                                        <option value={1}>{translations.light}</option>
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.language}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.language}
+                                        value={getLanguageEnum(translationContext!.currentLanguage)}
+                                        onChange={(e) => handleLanguageChange(e.target.value as number)}
+                                        inputProps={{
+                                            name: 'language',
+                                            id: 'language',
+                                        }}
+                                    >
+                                        {languageOptions}
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.videoScale}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.videoScale}
+                                        value={state.settings.videoScale}
+                                        onChange={(e) => handleSettingsChange('videoScale', e.target.value)}
+                                        inputProps={{
+                                            name: 'video-scale',
+                                            id: 'video-scale',
+                                        }}
+                                    >
+                                        {videoScaleOptions}
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.webVideoQuality}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.webVideoQuality}
+                                        value={state.settings.webVideoQuality}
+                                        onChange={(e) => handleSettingsChange('webVideoQuality', e.target.value)}
+                                        inputProps={{
+                                            name: 'supported-video-qualities',
+                                            id: 'supported-video-qualities',
+                                        }}
+                                    >
+                                        {supportedWebVideoQualities}
+                                    </Select>
+                                </StyledFormControl>
+                            </StyledGridItem>
+                            <StyledGridItem item xs={12}>
+                                <Typography color="textSecondary">{translations.options}</Typography>
+                                <StyledGeneralGrid container>
+                                    <Grid item xs={12} md={6}>
+                                        <FormGroup row>
+                                            <FormControlLabel
+                                                control={<Switch color="primary" checked={true} />}
+                                                label={translations.showFileDetails}
+                                            />
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        onChange={(e, checked) => handleSettingsChange('startFilesFromTheStart', checked)}
+                                                        color="primary"
+                                                        checked={state.settings.startFilesFromTheStart}
+                                                    />
+                                                }
+                                                label={translations.startFilesFromTheStart}
+                                            />
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        onChange={(e, checked) =>
+                                                            handleSettingsChange('playNextFileAutomatically', checked)
+                                                        }
+                                                        color="primary"
+                                                        checked={state.settings.playNextFileAutomatically}
+                                                    />
+                                                }
+                                                label={translations.playNextFileAutomatically}
+                                            />
+                                        </FormGroup>
                                     </Grid>
-                                </Grid>
-                            </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <FormGroup row>
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        onChange={(e, checked) => handleSettingsChange('forceVideoTranscode', checked)}
+                                                        color="primary"
+                                                        checked={state.settings.forceVideoTranscode}
+                                                    />
+                                                }
+                                                label={translations.forceVideoTranscode}
+                                            />
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        onChange={(e, checked) => handleSettingsChange('forceAudioTranscode', checked)}
+                                                        color="primary"
+                                                        checked={state.settings.forceAudioTranscode}
+                                                    />
+                                                }
+                                                label={translations.forceAudioTranscode}
+                                            />
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        onChange={(e, checked) =>
+                                                            handleSettingsChange('enableHardwareAcceleration', checked)
+                                                        }
+                                                        color="primary"
+                                                        checked={state.settings.enableHardwareAcceleration}
+                                                    />
+                                                }
+                                                label={translations.enableHardwareAcceleration}
+                                            />
+                                        </FormGroup>
+                                    </Grid>
+                                </StyledGeneralGrid>
+                            </StyledGridItem>
                         </Grid>
                         <Divider orientation="vertical" flexItem />
                         <Grid item xs={12} md={5}>
-                            <Grid container>
-                                <Grid item xs={12} className={classes.gridItemMargin}>
-                                    <Typography color="textSecondary">{translations.subtitles}</Typography>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="font-color">{translations.fontColor}</InputLabel>
-                                        <Select
-                                            native
-                                            value={state.settings!.currentSubtitleFgColor}
-                                            onChange={(e) => handleSettingsChange('currentSubtitleFgColor', e.target.value)}
-                                            inputProps={{
-                                                name: 'font-color',
-                                                id: 'font-color',
-                                            }}
-                                        >
-                                            {subsFgColorOptions}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="font-bg">{translations.fontBackground}</InputLabel>
-                                        <Select
-                                            native
-                                            onChange={(e) => handleSettingsChange('currentSubtitleBgColor', e.target.value)}
-                                            value={state.settings!.currentSubtitleBgColor}
-                                            inputProps={{
-                                                name: 'font-bg',
-                                                id: 'font-bg',
-                                            }}
-                                        >
-                                            {subsBgColorOptions}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="font-style">{translations.fontStyle}</InputLabel>
-                                        <Select
-                                            native
-                                            value={state.settings!.currentSubtitleFontStyle}
-                                            onChange={(e) => handleSettingsChange('currentSubtitleFontStyle', e.target.value)}
-                                            inputProps={{
-                                                name: 'font-style',
-                                                id: 'font-style',
-                                            }}
-                                        >
-                                            {subFontStyleOptions}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="font-family">{translations.fontFamily}</InputLabel>
-                                        <Select
-                                            native
-                                            onChange={(e) => handleSettingsChange('currentSubtitleFontFamily', e.target.value)}
-                                            value={state.settings!.currentSubtitleFontFamily}
-                                            inputProps={{
-                                                name: 'font-family',
-                                                id: 'font-family',
-                                            }}
-                                        >
-                                            {subFontGenericFamilyOptions}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl className={classes.formControl}>
-                                        <InputLabel htmlFor="font-scale">{translations.fontScale}</InputLabel>
-                                        <Select
-                                            native
-                                            onChange={(e) => handleSettingsChange('currentSubtitleFontScale', e.target.value)}
-                                            value={state.settings!.currentSubtitleFontScale}
-                                            inputProps={{
-                                                name: 'font-scale',
-                                                id: 'font-scale',
-                                            }}
-                                        >
-                                            {subFontScaleOptions}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} className={classes.gridItemMargin}>
-                                    <Typography id="subtitle-delay-slider" gutterBottom>
-                                        {String.Format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
-                                    </Typography>
-                                    <Slider
-                                        min={-10}
-                                        max={10}
-                                        step={0.1}
-                                        onChangeCommitted={(e, val) => handleSettingsChange('subtitleDelayInSeconds', val)}
-                                        onChange={(e, val) => handleSubtitlesDelayChange(val as number)}
-                                        value={state.settings.subtitleDelayInSeconds}
-                                        aria-labelledby="subtitle-delay-slider"
+                            <StyledGridItem item xs={12}>
+                                <Typography color="textSecondary">{translations.subtitles}</Typography>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.fontColor}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.fontColor}
+                                        value={state.settings!.currentSubtitleFgColor}
+                                        onChange={(e) => handleSettingsChange('currentSubtitleFgColor', e.target.value)}
+                                        inputProps={{
+                                            name: 'font-color',
+                                            id: 'font-color',
+                                        }}
+                                    >
+                                        {subsFgColorOptions}
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.fontBackground}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.fontBackground}
+                                        onChange={(e) => handleSettingsChange('currentSubtitleBgColor', e.target.value)}
+                                        value={state.settings!.currentSubtitleBgColor}
+                                        inputProps={{
+                                            name: 'font-bg',
+                                            id: 'font-bg',
+                                        }}
+                                    >
+                                        {subsBgColorOptions}
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.fontStyle}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.fontStyle}
+                                        value={state.settings!.currentSubtitleFontStyle}
+                                        onChange={(e) => handleSettingsChange('currentSubtitleFontStyle', e.target.value)}
+                                        inputProps={{
+                                            name: 'font-style',
+                                            id: 'font-style',
+                                        }}
+                                    >
+                                        {subFontStyleOptions}
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.fontFamily}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.fontFamily}
+                                        onChange={(e) => handleSettingsChange('currentSubtitleFontFamily', e.target.value)}
+                                        value={state.settings!.currentSubtitleFontFamily}
+                                        inputProps={{
+                                            name: 'font-family',
+                                            id: 'font-family',
+                                        }}
+                                    >
+                                        {subFontGenericFamilyOptions}
+                                    </Select>
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
+                                    <InputLabel>{translations.fontScale}</InputLabel>
+                                    <Select
+                                        native
+                                        label={translations.fontScale}
+                                        onChange={(e) => handleSettingsChange('currentSubtitleFontScale', e.target.value)}
+                                        value={state.settings!.currentSubtitleFontScale}
+                                        inputProps={{
+                                            name: 'font-scale',
+                                            id: 'font-scale',
+                                        }}
+                                    >
+                                        {subFontScaleOptions}
+                                    </Select>
+                                </StyledFormControl>
+                            </StyledGridItem>
+                            <StyledGeneralGrid item xs={12}>
+                                <Typography id="subtitle-delay-slider" gutterBottom color="textSecondary">
+                                    {String.Format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
+                                </Typography>
+                                <Slider
+                                    min={-10}
+                                    max={10}
+                                    step={0.1}
+                                    size="small"
+                                    onChangeCommitted={(e, val) => handleSettingsChange('subtitleDelayInSeconds', val)}
+                                    onChange={(e, val) => handleSubtitlesDelayChange(val as number)}
+                                    value={state.settings.subtitleDelayInSeconds}
+                                    aria-labelledby="subtitle-delay-slider"
+                                />
+                                <FormGroup row>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                onChange={(e, checked) =>
+                                                    handleSettingsChange('loadFirstSubtitleFoundAutomatically', checked)
+                                                }
+                                                color="primary"
+                                                checked={state.settings.loadFirstSubtitleFoundAutomatically}
+                                            />
+                                        }
+                                        label={translations.loadFirstSubtitleFoundAutomatically}
                                     />
-                                    <FormGroup row>
-                                        <FormControlLabel
-                                            control={
-                                                <Switch
-                                                    onChange={(e, checked) =>
-                                                        handleSettingsChange('loadFirstSubtitleFoundAutomatically', checked)
-                                                    }
-                                                    color="primary"
-                                                    checked={state.settings.loadFirstSubtitleFoundAutomatically}
-                                                />
-                                            }
-                                            label={translations.loadFirstSubtitleFoundAutomatically}
-                                        />
-                                    </FormGroup>
-                                </Grid>
-                            </Grid>
+                                </FormGroup>
+                            </StyledGeneralGrid>
                         </Grid>
                     </Grid>
                 </DialogContent>
             </Dialog>
-        </Fragment>
+        </>
     );
 }
 

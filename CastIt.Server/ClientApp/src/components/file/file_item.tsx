@@ -1,43 +1,31 @@
 import React, { useEffect, useState } from 'react';
+import { styled } from '@mui/material/styles';
 import {
     Typography,
     Divider,
-    ListItem,
     ListItemText,
     Avatar,
     ListItemAvatar,
-    makeStyles,
     Tooltip,
-    createStyles,
     Menu,
     MenuItem,
     useTheme,
-} from '@material-ui/core';
+    ListItemButton,
+} from '@mui/material';
 import { IFileItemResponseDto } from '../../models';
 import { onFileChanged, onFileEndReached, onPlayerStatusChanged } from '../../services/castithub.service';
-import { Add, ClearAll, Delete, FileCopy, Loop, PlayArrow, Refresh } from '@material-ui/icons';
+import { Add, ClearAll, Delete, FileCopy, Loop, PlayArrow, Refresh } from '@mui/icons-material';
 import translations from '../../services/translations';
 import AddFilesDialog from '../dialogs/add_files_dialog';
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { useSnackbar } from 'notistack';
 
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        position: {
-            color: theme.palette.getContrastText(theme.palette.primary.main),
-            backgroundColor: theme.palette.primary.main,
-        },
-        beingPlayed: {
-            backgroundColor: theme.palette.primary.light,
-        },
-        menuItemText: {
-            marginLeft: 10,
-        },
-    })
-);
+const StyledListItemText = styled(ListItemText)({
+    marginLeft: 10,
+});
 
 interface Props {
     index: number;
@@ -85,7 +73,6 @@ const initialContextMenuState: ContextMenuState = {
 };
 
 function FileItem(props: Props) {
-    const classes = useStyles();
     const theme = useTheme();
     const [state, setState] = useState<State>(initialState);
     const [contextMenu, setContextMenu] = useState(initialContextMenuState);
@@ -249,7 +236,7 @@ function FileItem(props: Props) {
     const toggleLoopMenuItem = state.isBeingPlayed ? (
         <MenuItem onClick={handleToggleLoop}>
             <Loop fontSize="small" />
-            <ListItemText className={classes.menuItemText} primary={!state.loop ? translations.loop : translations.disableLoop} />
+            <StyledListItemText primary={!state.loop ? translations.loop : translations.disableLoop} />
         </MenuItem>
     ) : null;
 
@@ -264,16 +251,22 @@ function FileItem(props: Props) {
                     {...provided.draggableProps}
                     ref={provided.innerRef}
                 >
-                    <ListItem
-                        button
+                    <ListItemButton
                         onDoubleClick={() => handlePlay()}
-                        className={state.isBeingPlayed ? classes.beingPlayed : ''}
+                        sx={state.isBeingPlayed ? { backgroundColor: 'primary.light' } : null}
                         style={{
                             backgroundColor: snapshot.isDragging ? theme.palette.primary.dark : '',
                         }}
                     >
                         <ListItemAvatar>
-                            <Avatar className={classes.position}>{state.position}</Avatar>
+                            <Avatar
+                                sx={(theme) => ({
+                                    color: theme.palette.getContrastText(theme.palette.primary.main),
+                                    backgroundColor: theme.palette.primary.main
+                                })}
+                            >
+                                {state.position}
+                            </Avatar>
                         </ListItemAvatar>
                         <ListItemText
                             primary={title}
@@ -289,7 +282,7 @@ function FileItem(props: Props) {
                             }
                         />
                         <FileItemDuration fullTotalDuration={state.fullTotalDuration} loop={state.loop} />
-                    </ListItem>
+                    </ListItemButton>
                     {contextMenu.mouseY === null ? null : (
                         <Menu
                             keepMounted
@@ -304,31 +297,31 @@ function FileItem(props: Props) {
                         >
                             <MenuItem onClick={() => handlePlay()}>
                                 <PlayArrow fontSize="small" />
-                                <ListItemText className={classes.menuItemText} primary={translations.play} />
+                                <StyledListItemText primary={translations.play} />
                             </MenuItem>
                             <MenuItem onClick={() => handlePlay(true)}>
                                 <Refresh fontSize="small" />
-                                <ListItemText className={classes.menuItemText} primary={translations.playFromTheStart} />
+                                <StyledListItemText primary={translations.playFromTheStart} />
                             </MenuItem>
                             {toggleLoopMenuItem}
                             <MenuItem onClick={handleShowAddFilesDialog}>
                                 <Add fontSize="small" />
-                                <ListItemText className={classes.menuItemText} primary={translations.addFiles} />
+                                <StyledListItemText primary={translations.addFiles} />
                             </MenuItem>
                             {secure ? (
                                 <MenuItem onClick={handleCopy}>
                                     <FileCopy fontSize="small" />
-                                    <ListItemText className={classes.menuItemText} primary={translations.copyPath} />
+                                    <StyledListItemText primary={translations.copyPath} />
                                 </MenuItem>
                             ) : null}
                             {/* TODO: REMOVE ALL SELECTED AND SELECT ALL */}
                             <MenuItem onClick={handleDelete}>
                                 <Delete fontSize="small" />
-                                <ListItemText className={classes.menuItemText} primary={translations.remove} />
+                                <StyledListItemText primary={translations.remove} />
                             </MenuItem>
                             <MenuItem onClick={handleRemoveAllMissing}>
                                 <ClearAll fontSize="small" />
-                                <ListItemText className={classes.menuItemText} primary={translations.removeAllMissing} />
+                                <StyledListItemText primary={translations.removeAllMissing} />
                             </MenuItem>
                         </Menu>
                     )}

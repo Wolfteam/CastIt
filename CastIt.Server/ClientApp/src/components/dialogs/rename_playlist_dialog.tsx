@@ -1,4 +1,4 @@
-import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import translations from '../../services/translations';
 

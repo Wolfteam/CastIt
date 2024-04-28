@@ -1,4 +1,4 @@
-import { makeStyles, Grid, createStyles, IconButton } from '@material-ui/core';
+import { Box, Button, Grid, IconButton } from '@mui/material';
 import PlayerProgressIndicator from './player_progress_indicator';
 import PlayerControls from './player_controls';
 import PlayerVolume from './player_volume';
@@ -6,21 +6,8 @@ import PlayerSettings from './player_settings';
 import PlayerDevices from './player_devices';
 import PlayerCurrentFile from './player_current_file';
 import PlayerFileOptions from './player_file_options';
-import { ExpandLess, ExpandMore } from '@material-ui/icons';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useState } from 'react';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        root: {
-            bottom: 0,
-            left: 0,
-            right: 0,
-            position: 'sticky',
-            overflowX: 'clip',
-            backgroundColor: theme.palette.primary.dark,
-        },
-    })
-);
 
 interface State {
     isExpanded: boolean;
@@ -31,7 +18,6 @@ const initialState: State = {
 };
 
 function Player() {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     const handleToggleExpand = () =>
@@ -39,27 +25,39 @@ function Player() {
             isExpanded: !state.isExpanded,
         });
 
-    const toggleExpandButton = (
-        <IconButton onClick={handleToggleExpand}>
-            {state.isExpanded ? <ExpandMore fontSize="large" /> : <ExpandLess fontSize="large" />}
-        </IconButton>
-    );
-
     if (!state.isExpanded) {
         return (
-            <Grid container className={classes.root} justifyContent="center" alignItems="center">
-                <Grid item xs={10} md={11}>
-                    <PlayerProgressIndicator />
+            <Box sx={(theme) => ({ backgroundColor: theme.palette.primary.dark })}>
+                <PlayerProgressIndicator />
+                <Grid container justifyContent="center">
+                    <Button
+                        disableRipple={true}
+                        disableTouchRipple={true}
+                        disableFocusRipple={true}
+                        sx={(theme) => ({
+                            bottom: 0,
+                            position: 'absolute',
+                            overflowX: 'clip',
+                            marginBottom: 4,
+                            padding: 0,
+                            zIndex: theme.zIndex.fab * 2,
+                            backgroundColor: theme.palette.primary.dark,
+                            borderRadius: '15px 15px 0px 0px',
+                            '&:hover': {
+                                backgroundColor: theme.palette.primary.dark,
+                            },
+                        })}
+                        onClick={handleToggleExpand}
+                    >
+                        <ExpandLess fontSize="large" htmlColor="white" />
+                    </Button>
                 </Grid>
-                <Grid item xs={2} md={1} style={{ textAlign: 'center' }}>
-                    {toggleExpandButton}
-                </Grid>
-            </Grid>
+            </Box>
         );
     }
 
     return (
-        <Grid container className={classes.root} justifyContent="center" alignItems="center">
+        <Grid container justifyContent="center" alignItems="center" sx={(theme) => ({ backgroundColor: theme.palette.primary.dark })}>
             <Grid item xs={12} md={3}>
                 <PlayerCurrentFile />
             </Grid>
@@ -79,7 +77,9 @@ function Player() {
                     <PlayerSettings />
                     <PlayerDevices />
                     <PlayerFileOptions />
-                    {toggleExpandButton}
+                    <IconButton onClick={handleToggleExpand} size="large">
+                        <ExpandMore fontSize="large" />
+                    </IconButton>
                 </Grid>
             </Grid>
         </Grid>

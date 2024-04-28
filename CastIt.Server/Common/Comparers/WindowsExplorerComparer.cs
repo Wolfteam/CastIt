@@ -13,7 +13,12 @@ namespace CastIt.Server.Common.Comparers
 
         public int Compare(string x, string y)
         {
-            return StrCmpLogicalW(x, y);
+            if (OperatingSystem.IsWindows())
+            {
+                return StrCmpLogicalW(x, y);
+            }
+
+            return string.Compare(x, y, StringComparison.Ordinal);
         }
     }
 
@@ -31,14 +36,28 @@ namespace CastIt.Server.Common.Comparers
 
         public int Compare(ServerFileItem x, ServerFileItem y)
         {
+            if (x == null || y == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            bool isWindows = OperatingSystem.IsWindows();
             return _mode switch
             {
-                SortModeType.AlphabeticalPathAsc => StrCmpLogicalW(x!.Path, y!.Path),
-                SortModeType.AlphabeticalPathDesc => StrCmpLogicalW(y!.Path, x!.Path),
-                SortModeType.AlphabeticalNameAsc => StrCmpLogicalW(x!.Filename, y!.Filename),
-                SortModeType.AlphabeticalNameDesc => StrCmpLogicalW(y!.Filename, x!.Filename),
-                SortModeType.DurationAsc => x!.TotalSeconds.CompareTo(y!.TotalSeconds),
-                SortModeType.DurationDesc => y!.TotalSeconds.CompareTo(x!.TotalSeconds),
+                SortModeType.AlphabeticalPathAsc => isWindows
+                    ? StrCmpLogicalW(x.Path, y.Path)
+                    : string.Compare(x.Path, y.Path, StringComparison.Ordinal),
+                SortModeType.AlphabeticalPathDesc => isWindows
+                    ? StrCmpLogicalW(y.Path, x.Path)
+                    : string.Compare(y.Path, x.Path, StringComparison.Ordinal),
+                SortModeType.AlphabeticalNameAsc => isWindows
+                    ? StrCmpLogicalW(x.Filename, y.Filename)
+                    : string.Compare(x.Filename, y.Filename, StringComparison.Ordinal),
+                SortModeType.AlphabeticalNameDesc => isWindows
+                    ? StrCmpLogicalW(y.Filename, x.Filename)
+                    : string.Compare(y.Filename, x.Filename, StringComparison.Ordinal),
+                SortModeType.DurationAsc => x.TotalSeconds.CompareTo(y.TotalSeconds),
+                SortModeType.DurationDesc => y.TotalSeconds.CompareTo(x.TotalSeconds),
                 _ => throw new ArgumentOutOfRangeException(nameof(_mode), _mode, "Invalid sort mode")
             };
         }

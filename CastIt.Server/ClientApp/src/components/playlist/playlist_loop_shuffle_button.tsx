@@ -1,5 +1,5 @@
-import { IconButton, Tooltip } from '@material-ui/core';
-import { Loop, Shuffle } from '@material-ui/icons';
+import { IconButton, Tooltip } from '@mui/material';
+import { Loop, Shuffle } from '@mui/icons-material';
 import { useCastItHub } from '../../context/castit_hub.context';
 import translations from '../../services/translations';
 
@@ -21,7 +21,9 @@ function PlayListLoopShuffleButton(props: Props) {
         const color = props.loop ? 'primary' : undefined;
         return (
             <Tooltip title={translations.loop}>
-                <IconButton onClick={() => handleOptionChanged(!props.loop, props.shuffle)}>
+                <IconButton
+                    onClick={() => handleOptionChanged(!props.loop, props.shuffle)}
+                    size="large">
                     <Loop color={color} />
                 </IconButton>
             </Tooltip>
@@ -31,7 +33,9 @@ function PlayListLoopShuffleButton(props: Props) {
     const color = props.shuffle ? 'primary' : undefined;
     return (
         <Tooltip title={translations.shuffle}>
-            <IconButton onClick={() => handleOptionChanged(props.loop, !props.shuffle)}>
+            <IconButton
+                onClick={() => handleOptionChanged(props.loop, !props.shuffle)}
+                size="large">
                 <Shuffle color={color} />
             </IconButton>
         </Tooltip>

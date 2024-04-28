@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { Typography, Tooltip } from '@material-ui/core';
+import { Typography, Tooltip } from '@mui/material';
 import FileItemSlider from './file_item_slider';
 
 interface Props {

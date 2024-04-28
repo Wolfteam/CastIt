@@ -1,18 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\CastIt.Domain\CastIt.Domain.csproj" />
     <ProjectReference Include="..\CastIt.Shared\CastIt.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.WebUtilities">
-      <HintPath>C:\Program Files\dotnet\packs\Microsoft.AspNetCore.App.Ref\6.0.0\ref\net6.0\Microsoft.AspNetCore.WebUtilities.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

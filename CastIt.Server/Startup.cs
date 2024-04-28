@@ -103,7 +103,7 @@ namespace CastIt.Server
             services.AddSwagger("CastIt", "CastIt.xml");
 
             // In production, the React files will be served from this directory
-            services.AddSpaStaticFiles(configuration => configuration.RootPath = "ClientApp/build");
+            services.AddSpaStaticFiles(configuration => configuration.RootPath = "ClientApp/dist");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

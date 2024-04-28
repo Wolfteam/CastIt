@@ -1,19 +1,6 @@
-import { makeStyles, createStyles, Container, Grid, Typography } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
+import { Container, Grid, Typography } from '@mui/material';
+import { Info } from '@mui/icons-material';
 import translations from '../services/translations';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        root: {
-            flex: 'auto',
-            height: '100%',
-        },
-        nothingFound: {
-            textAlign: 'center',
-            height: '100%',
-        },
-    })
-);
 
 interface Props {
     icon?: JSX.Element;
@@ -22,10 +9,9 @@ interface Props {
 }
 
 function NothingFound(props: Props) {
-    const classes = useStyles();
     return (
-        <Container className={classes.root}>
-            <Grid container className={classes.nothingFound} justifyContent="center" alignItems="center">
+        <Container sx={{ flex: 'auto', height: '100%' }}>
+            <Grid container justifyContent="center" alignItems="center" sx={{ textAlign: 'center', height: '100%' }}>
                 <Grid item xs={12}>
                     {props.icon ?? <Info fontSize="large" />}
                     <Typography>{props.text ?? translations.nothingFound}</Typography>

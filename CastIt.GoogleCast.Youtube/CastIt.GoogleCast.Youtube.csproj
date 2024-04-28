@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\CastIt.FFmpeg\CastIt.FFmpeg.csproj" />
     <ProjectReference Include="..\CastIt.GoogleCast.Generator\CastIt.GoogleCast.Generator.csproj" />
