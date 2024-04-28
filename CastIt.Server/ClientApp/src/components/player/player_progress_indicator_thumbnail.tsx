@@ -1,32 +1,10 @@
 import { Typography } from '@mui/material';
 import formatDuration from 'format-duration';
 import React, { useEffect, useState } from 'react';
-import { createStyles, makeStyles } from '@mui/styles';
 import { AppFile } from '../../enums';
 import { IFileThumbnailRangeResponseDto } from '../../models';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { thumbnailImgHeight, thumbnailImgWidth } from '../../utils/app_constants';
-
-const useStyles = makeStyles(() =>
-    createStyles({
-        root: {
-            overflow: 'hidden',
-            borderRadius: 20,
-        },
-        image: {
-            width: thumbnailImgWidth,
-            height: thumbnailImgHeight,
-            transformOrigin: 'left top',
-        },
-        text: {
-            position: 'absolute',
-            right: 16,
-            bottom: 8,
-            fontWeight: 'bold',
-            color: 'white',
-        },
-    })
-);
 
 interface Props {
     second: number;
@@ -75,7 +53,6 @@ const getPositionToUse = (second: number, thumbnailRanges: IFileThumbnailRangeRe
 };
 
 function PlayerProgressIndicatorThumbnail(props: Props) {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
@@ -103,9 +80,28 @@ function PlayerProgressIndicatorThumbnail(props: Props) {
     const transform = state.useTransform ? `matrix(1, 0, 0, 1, ${state.x}, ${state.y}) scale(5, 5) ` : '';
     const elapsed = formatDuration(props.second * 1000, { leading: true });
     return (
-        <div className={classes.root}>
-            <img className={classes.image} style={{ transform: transform }} src={state.url} alt="Preview thumbnail" />
-            <Typography className={classes.text}>{elapsed}</Typography>
+        <div style={{ overflow: 'hidden', borderRadius: 20 }}>
+            <img
+                style={{
+                    width: thumbnailImgWidth,
+                    height: thumbnailImgHeight,
+                    transformOrigin: 'left top',
+                    transform: transform,
+                }}
+                src={state.url}
+                alt="Preview thumbnail"
+            />
+            <Typography
+                sx={{
+                    position: 'absolute',
+                    right: 16,
+                    bottom: 8,
+                    fontWeight: 'bold',
+                    color: 'white',
+                }}
+            >
+                {elapsed}
+            </Typography>
         </div>
     );
 }

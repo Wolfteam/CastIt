@@ -1,20 +1,5 @@
 import { Close } from '@mui/icons-material';
 import { DialogTitle, Grid, IconButton, Typography } from '@mui/material';
-import { createStyles, makeStyles } from '@mui/styles';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        dialogTitle: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: theme.palette.primary.main,
-        },
-        title: {
-            paddingLeft: 10,
-        },
-    })
-);
 
 interface Props {
     icon: JSX.Element;
@@ -24,12 +9,18 @@ interface Props {
 }
 
 function AppDialogTitle(props: Props) {
-    const classes = useStyles();
     return (
-        <DialogTitle className={classes.dialogTitle}>
+        <DialogTitle
+            sx={(theme) => ({
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: `${theme.palette.primary.main}`,
+            })}
+        >
             <Grid container alignItems="center">
                 {props.icon}
-                <Typography className={classes.title} variant="h6">
+                <Typography variant="h6" sx={{ paddingLeft: 2 }}>
                     {props.title}
                 </Typography>
             </Grid>

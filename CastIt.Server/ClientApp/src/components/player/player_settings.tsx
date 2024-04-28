@@ -12,12 +12,11 @@ import {
     Select,
     Slider,
     Switch,
-    Theme,
     Typography,
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Settings } from '@mui/icons-material';
-import { createStyles, makeStyles } from '@mui/styles';
-import { Fragment, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import {
     VideoScale,
     SubtitleBgColor,
@@ -36,20 +35,18 @@ import { String } from 'typescript-string-operations';
 import AppDialogTitle from '../dialogs/app_dialog_title';
 import { useCastItHub } from '../../context/castit_hub.context';
 
-const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        formControl: {
-            margin: theme.spacing(1),
-            minWidth: 150,
-        },
-        generalGridMargin: {
-            margin: theme.spacing(1),
-        },
-        gridItemMargin: {
-            margin: theme.spacing(2, 0, 0, 0),
-        },
-    })
-);
+const StyledFormControl = styled(FormControl)(({ theme }) => ({
+    margin: theme.spacing(1),
+    minWidth: 150,
+}));
+
+const StyledGeneralGrid = styled(Grid)(({ theme }) => ({
+    margin: theme.spacing(1),
+}));
+
+const StyledGridItem = styled(Grid)(({ theme }) => ({
+    margin: theme.spacing(2, 0, 0, 0),
+}));
 
 interface State {
     settings?: IServerAppSettings;
@@ -61,7 +58,6 @@ interface SelectOption {
 }
 
 function PlayerSettings() {
-    const classes = useStyles();
     const [open, setOpen] = useState(false);
     const [state, setState] = useState<State>({});
     const [translationContext, translationState] = useContext(TranslationContext);
@@ -214,7 +210,7 @@ function PlayerSettings() {
     };
 
     return (
-        <Fragment>
+        <>
             <IconButton onClick={handleOpenDialog} size="large">
                 <Settings fontSize="large" />
             </IconButton>
@@ -223,9 +219,9 @@ function PlayerSettings() {
                 <DialogContent>
                     <Grid container alignItems="flex-start" justifyContent="space-between">
                         <Grid item xs={12} md={6}>
-                            <Grid item xs={12} className={classes.gridItemMargin}>
+                            <StyledGridItem item xs={12}>
                                 <Typography color="textSecondary">{translations.general}</Typography>
-                                <FormControl className={classes.formControl} size="small">
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.theme}</InputLabel>
                                     <Select
                                         native
@@ -239,8 +235,8 @@ function PlayerSettings() {
                                         <option value={0}>{translations.dark}</option>
                                         <option value={1}>{translations.light}</option>
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.language}</InputLabel>
                                     <Select
                                         native
@@ -254,8 +250,8 @@ function PlayerSettings() {
                                     >
                                         {languageOptions}
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.videoScale}</InputLabel>
                                     <Select
                                         native
@@ -269,8 +265,8 @@ function PlayerSettings() {
                                     >
                                         {videoScaleOptions}
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.webVideoQuality}</InputLabel>
                                     <Select
                                         native
@@ -284,11 +280,11 @@ function PlayerSettings() {
                                     >
                                         {supportedWebVideoQualities}
                                     </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12} className={classes.gridItemMargin}>
+                                </StyledFormControl>
+                            </StyledGridItem>
+                            <StyledGridItem item xs={12}>
                                 <Typography color="textSecondary">{translations.options}</Typography>
-                                <Grid container className={classes.generalGridMargin}>
+                                <StyledGeneralGrid container>
                                     <Grid item xs={12} md={6}>
                                         <FormGroup row>
                                             <FormControlLabel
@@ -355,14 +351,14 @@ function PlayerSettings() {
                                             />
                                         </FormGroup>
                                     </Grid>
-                                </Grid>
-                            </Grid>
+                                </StyledGeneralGrid>
+                            </StyledGridItem>
                         </Grid>
                         <Divider orientation="vertical" flexItem />
                         <Grid item xs={12} md={5}>
-                            <Grid item xs={12} className={classes.gridItemMargin}>
+                            <StyledGridItem item xs={12}>
                                 <Typography color="textSecondary">{translations.subtitles}</Typography>
-                                <FormControl className={classes.formControl} size="small">
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.fontColor}</InputLabel>
                                     <Select
                                         native
@@ -376,8 +372,8 @@ function PlayerSettings() {
                                     >
                                         {subsFgColorOptions}
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.fontBackground}</InputLabel>
                                     <Select
                                         native
@@ -391,8 +387,8 @@ function PlayerSettings() {
                                     >
                                         {subsBgColorOptions}
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.fontStyle}</InputLabel>
                                     <Select
                                         native
@@ -406,8 +402,8 @@ function PlayerSettings() {
                                     >
                                         {subFontStyleOptions}
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.fontFamily}</InputLabel>
                                     <Select
                                         native
@@ -421,8 +417,8 @@ function PlayerSettings() {
                                     >
                                         {subFontGenericFamilyOptions}
                                     </Select>
-                                </FormControl>
-                                <FormControl className={classes.formControl} size="small">
+                                </StyledFormControl>
+                                <StyledFormControl size="small">
                                     <InputLabel>{translations.fontScale}</InputLabel>
                                     <Select
                                         native
@@ -436,9 +432,9 @@ function PlayerSettings() {
                                     >
                                         {subFontScaleOptions}
                                     </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12} className={classes.generalGridMargin}>
+                                </StyledFormControl>
+                            </StyledGridItem>
+                            <StyledGeneralGrid item xs={12}>
                                 <Typography id="subtitle-delay-slider" gutterBottom color="textSecondary">
                                     {String.Format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
                                 </Typography>
@@ -466,12 +462,12 @@ function PlayerSettings() {
                                         label={translations.loadFirstSubtitleFoundAutomatically}
                                     />
                                 </FormGroup>
-                            </Grid>
+                            </StyledGeneralGrid>
                         </Grid>
                     </Grid>
                 </DialogContent>
             </Dialog>
-        </Fragment>
+        </>
     );
 }
 

@@ -1,25 +1,13 @@
-import {Grid, LinearProgress, Tooltip, Typography} from '@mui/material';
-import {useEffect, useState} from 'react';
-import {
-    onPlayerStatusChanged,
-    onFileEndReached,
-    onFileLoading,
-    onFileLoaded,
-    onStoppedPlayback
-} from '../../services/castithub.service';
-import {defaultImg} from '../../utils/app_constants';
-import {makeStyles} from '@mui/styles';
+import { Grid, LinearProgress, Tooltip, Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { useEffect, useState } from 'react';
+import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
+import { defaultImg } from '../../utils/app_constants';
 
-const useStyles = makeStyles({
-    image: {
-        height: 100,
-        objectFit: 'contain',
-    },
-    text: {
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-    },
+const StyledTypography = styled(Typography)({
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
 });
 
 interface State {
@@ -35,7 +23,6 @@ const initialState: State = {
 };
 
 function PlayerCurrentFile() {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
@@ -53,11 +40,11 @@ function PlayerCurrentFile() {
         });
 
         const onFileLoadingSubscription = onFileLoading.subscribe((_) => {
-            setState((s) => ({...s, loading: true}));
+            setState((s) => ({ ...s, loading: true }));
         });
 
         const onFileLoadedSubscription = onFileLoaded.subscribe((_) => {
-            setState((s) => ({...s, loading: false}));
+            setState((s) => ({ ...s, loading: false }));
         });
 
         const onFileEndReachedSubscription = onFileEndReached.subscribe((_) => setState(initialState));
@@ -76,21 +63,19 @@ function PlayerCurrentFile() {
 
     return (
         <Grid container wrap="nowrap" alignItems="center">
-            <Grid item style={{display: 'flex'}}>
-                <img className={classes.image} src={image} alt="Current file"/>
+            <Grid item style={{ display: 'flex' }}>
+                <img style={{ height: 100, objectFit: 'contain' }} src={image} alt="Current file" />
             </Grid>
-            <Grid item className={classes.text} style={{paddingLeft: '10px'}}>
+            <Grid item style={{ paddingLeft: '10px' }}>
                 <Tooltip title={state.title}>
-                    <Typography variant="h5" component="h2" className={classes.text}>
+                    <StyledTypography variant="h5" component="h2">
                         {state.title}
-                    </Typography>
+                    </StyledTypography>
                 </Tooltip>
                 <Tooltip title={state.subtitle}>
-                    <Typography color="textSecondary" className={classes.text}>
-                        {state.subtitle}
-                    </Typography>
+                    <StyledTypography color="textSecondary">{state.subtitle}</StyledTypography>
                 </Tooltip>
-                {state.loading ? <LinearProgress/> : null}
+                {state.loading ? <LinearProgress /> : null}
             </Grid>
         </Grid>
     );

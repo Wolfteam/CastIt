@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, IconButton, LinearProgress, List } from '@mui/material';
 import { Tv } from '@mui/icons-material';
 import DeviceItem from '../device/device_item';
@@ -7,23 +7,8 @@ import translations from '../../services/translations';
 import { IReceiver } from '../../models';
 import AppDialogTitle from '../dialogs/app_dialog_title';
 import { useCastItHub } from '../../context/castit_hub.context';
-import { createStyles, makeStyles } from '@mui/styles';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        dialogTitle: {
-            backgroundColor: theme.palette.primary.main,
-        },
-        refreshButton: {
-            width: '100%',
-            marginLeft: 20,
-            marginRight: 20,
-        },
-    })
-);
 
 function PlayerDevices() {
-    const classes = useStyles();
     const [devices, setDevices] = useState<IReceiver[]>([]);
     const [open, setOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -71,7 +56,7 @@ function PlayerDevices() {
     ));
 
     return (
-        <Fragment>
+        <>
             <IconButton onClick={handleClickOpen} size="large">
                 <Tv fontSize="large" />
             </IconButton>
@@ -86,14 +71,14 @@ function PlayerDevices() {
                         color="primary"
                         variant="outlined"
                         disabled={isRefreshing}
-                        className={classes.refreshButton}
+                        sx={{ width: '100%', marginLeft: 20, marginRight: 20 }}
                         onClick={handleRefreshDevices}
                     >
                         {isRefreshing ? translations.refreshing : translations.refresh}
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Fragment>
+        </>
     );
 }
 

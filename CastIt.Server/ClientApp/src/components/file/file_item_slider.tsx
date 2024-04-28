@@ -1,14 +1,4 @@
 import { Grid, Typography, Slider, Theme, useMediaQuery } from '@mui/material';
-import { createStyles, makeStyles } from '@mui/styles';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        slider: {
-            color: `${theme.palette.primary.main} !important`,
-            padding: 0,
-        },
-    })
-);
 
 interface Props {
     playedTime: string;
@@ -17,10 +7,18 @@ interface Props {
 }
 
 function FileItemSlider(props: Props) {
-    const classes = useStyles();
     const showInlineDurations = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'));
-
-    const slider = <Slider size="small" value={props.playedPercentage} disabled className={classes.slider} />;
+    const slider = (
+        <Slider
+            size="small"
+            value={props.playedPercentage}
+            disabled
+            sx={(theme) => ({
+                color: `${theme.palette.primary.main} !important`,
+                padding: 0,
+            })}
+        />
+    );
     if (!showInlineDurations) {
         return slider;
     }

@@ -8,27 +8,6 @@ import PlayerCurrentFile from './player_current_file';
 import PlayerFileOptions from './player_file_options';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useState } from 'react';
-import { createStyles, makeStyles } from '@mui/styles';
-
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        root: {
-            backgroundColor: theme.palette.primary.dark,
-        },
-        expandButton: {
-            bottom: 0,
-            position: 'absolute',
-            overflowX: 'clip',
-            marginBottom: 30,
-            padding: 0,
-            zIndex: theme.zIndex.fab * 2,
-            backgroundColor: theme.palette.primary.dark,
-            '&:hover': {
-                backgroundColor: theme.palette.primary.dark,
-            },
-        },
-    })
-);
 
 interface State {
     isExpanded: boolean;
@@ -39,7 +18,6 @@ const initialState: State = {
 };
 
 function Player() {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
 
     const handleToggleExpand = () =>
@@ -49,14 +27,26 @@ function Player() {
 
     if (!state.isExpanded) {
         return (
-            <Box className={classes.root}>
+            <Box sx={(theme) => ({ backgroundColor: theme.palette.primary.dark })}>
                 <PlayerProgressIndicator />
                 <Grid container justifyContent="center">
                     <Button
                         disableRipple={true}
                         disableTouchRipple={true}
                         disableFocusRipple={true}
-                        className={classes.expandButton}
+                        sx={(theme) => ({
+                            bottom: 0,
+                            position: 'absolute',
+                            overflowX: 'clip',
+                            marginBottom: 5,
+                            padding: 0,
+                            zIndex: theme.zIndex.fab * 2,
+                            backgroundColor: theme.palette.primary.dark,
+                            borderRadius: '15px 15px 0px 0px',
+                            '&:hover': {
+                                backgroundColor: theme.palette.primary.dark,
+                            },
+                        })}
                         onClick={handleToggleExpand}
                     >
                         <ExpandLess fontSize="large" htmlColor="white" />
@@ -67,7 +57,7 @@ function Player() {
     }
 
     return (
-        <Grid container className={classes.root} justifyContent="center" alignItems="center">
+        <Grid container justifyContent="center" alignItems="center" sx={(theme) => ({ backgroundColor: theme.palette.primary.dark })}>
             <Grid item xs={12} md={3}>
                 <PlayerCurrentFile />
             </Grid>

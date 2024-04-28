@@ -1,8 +1,8 @@
 import { IconButton, Divider, ListItemText, Menu, MenuItem } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Fragment, useEffect, useState } from 'react';
-import { createStyles, makeStyles } from '@mui/styles';
 import PopupState, { bindTrigger, bindMenu, InjectedProps } from 'material-ui-popup-state';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { IFileItemOptionsResponseDto } from '../../models';
@@ -10,16 +10,9 @@ import translations from '../../services/translations';
 import { useCastItHub } from '../../context/castit_hub.context';
 import AddSubtitlesDialog from '../dialogs/add_subtitles_dialog';
 
-const useStyles = makeStyles((theme) =>
-    createStyles({
-        menuItemText: {
-            marginLeft: 10,
-        },
-        subMenuItem: {
-            marginLeft: 20,
-        },
-    })
-);
+const StyledListItemText = styled(ListItemText)({
+    marginLeft: 10,
+});
 
 interface State {
     contentIsBeingPlayed: boolean;
@@ -44,7 +37,6 @@ const initialState: State = {
 const loadSubsKey = -999;
 
 function PlayerFileOptions() {
-    const classes = useStyles();
     const [state, setState] = useState(initialState);
     const castItHub = useCastItHub();
     const [showAddSubtitles, setshowAddSubtitles] = useState(false);
@@ -111,14 +103,9 @@ function PlayerFileOptions() {
         popupState: InjectedProps,
         icon: JSX.Element | null = null
     ): JSX.Element => (
-        <MenuItem
-            key={key}
-            className={classes.subMenuItem}
-            disabled={!isEnabled}
-            onClick={() => handleOptionChange(Number(key), popupState)}
-        >
+        <MenuItem key={key} sx={{ marginLeft: 20 }} disabled={!isEnabled} onClick={() => handleOptionChange(Number(key), popupState)}>
             {isSelected ? <CheckTwoTone /> : icon}
-            <ListItemText className={classes.menuItemText} primary={text} />
+            <StyledListItemText primary={text} />
         </MenuItem>
     );
 
@@ -159,19 +146,19 @@ function PlayerFileOptions() {
                     <Menu {...bindMenu(popupState)}>
                         <MenuItem disabled>
                             <Subtitles />
-                            <ListItemText className={classes.menuItemText} primary={translations.subtitles} />
+                            <StyledListItemText primary={translations.subtitles} />
                         </MenuItem>
                         {subtitles(popupState)}
                         <Divider />
                         <MenuItem disabled>
                             <Audiotrack />
-                            <ListItemText className={classes.menuItemText} primary={translations.audio} />
+                            <StyledListItemText primary={translations.audio} />
                         </MenuItem>
                         {audios(popupState)}
                         <Divider />
                         <MenuItem disabled>
                             <HighQuality />
-                            <ListItemText className={classes.menuItemText} primary={translations.quality} />
+                            <StyledListItemText primary={translations.quality} />
                         </MenuItem>
                         {qualities(popupState)}
                     </Menu>
