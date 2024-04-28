@@ -120,7 +120,13 @@ namespace CastIt.FFmpeg
             };
 
             if (!string.IsNullOrWhiteSpace(ffmpegExePath) && !string.IsNullOrWhiteSpace(ffprobeExePath))
+            {
                 RefreshFfmpegPath(ffmpegExePath, ffprobeExePath);
+            }
+            else
+            {
+                TrySetFFmpegPaths();
+            }
 
             SetAvailableHwAccelDevices();
 
@@ -885,6 +891,39 @@ namespace CastIt.FFmpeg
 
             if (!_fileService.IsLocalFile(_ffprobeExePath))
                 throw new FFmpegInvalidExecutable(_ffmpegExePath, _ffprobeExePath);
+        }
+
+        private void TrySetFFmpegPaths()
+        {
+            string path = Environment.GetEnvironmentVariable("PATH");
+            string ffmpegExePath = GetFFmpegPath(path);
+            string ffprobeExePath = GetFFmpegPath(path, "ffprobe");
+            RefreshFfmpegPath(ffmpegExePath, ffprobeExePath);
+            return;
+
+            static string GetFFmpegPath(string path, string exeName = "ffmpeg")
+            {
+                string[] paths = path.Split(Path.PathSeparator);
+                string ffmpegPath = paths
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => Path.Combine(x, exeName))
+                    .FirstOrDefault(File.Exists);
+
+                if (string.IsNullOrWhiteSpace(ffmpegPath))
+                {
+                    ffmpegPath = Array.Find(paths, x =>
+                        !string.IsNullOrWhiteSpace(x) &&
+                        x.EndsWith($"{exeName}.exe") &&
+                        File.Exists(x));
+                }
+
+                if (string.IsNullOrWhiteSpace(ffmpegPath) && OperatingSystem.IsWindows())
+                {
+                    ffmpegPath = exeName;
+                }
+
+                return ffmpegPath;
+            }
         }
     }
 }
