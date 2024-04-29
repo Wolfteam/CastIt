@@ -42,7 +42,10 @@ namespace CastIt.Server
                 b.AddDebug();
                 b.AddConsole();
                 b.AddSerilog();
-                b.AddEventLog();
+                if (OperatingSystem.IsWindows())
+                {
+                    b.AddEventLog();
+                }
             });
 
             //Cors is required for the subtitles to work
