@@ -14,13 +14,7 @@ namespace CastIt.Shared.Server
 
         private static List<ProcessPort> GetNetStatPorts()
         {
-            if (OperatingSystem.IsWindows())
-            {
-                return GetWindowsPorts();
-            }
-
-            throw new PlatformNotSupportedException(
-                "Can't retrieve the open ports for the current platform");
+            return OperatingSystem.IsWindows() ? GetWindowsPorts() : [];
         }
 
         private static List<ProcessPort> GetWindowsPorts()
