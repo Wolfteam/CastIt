@@ -1,0 +1,18 @@
+version: '3.4'
+
+name: castit
+networks:
+  app_network:
+    driver: bridge
+services:
+  server:
+    image: ${DOCKER_REGISTRY-}castitserver
+    build:
+      context: .
+      dockerfile: CastIt.Server/Dockerfile
+    ports:
+      - "9696:8080"
+    networks:
+      - app_network
+    environment:
+      CASTIT_SERVER_URL: $CASTIT_SERVER_URL

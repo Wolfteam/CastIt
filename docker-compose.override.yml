@@ -1,0 +1,17 @@
+version: '3.4'
+x-asp-common-variables: &asp-common-variables
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: "https://+:443;http://+:80;https://+:8081;http://+:8080"
+x-asp-common-volumes: &asp-common-volumes
+# If you are on windows use these:
+#  - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+#  - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+# Otherwise use these:
+  - ~/.aspnet/https:/root/.aspnet/https:ro
+  - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+  - ~/.aws/credentials:/root/.aws/credentials:ro
+services:
+  server:
+    environment:
+      <<: *asp-common-variables
+    volumes: *asp-common-volumes
