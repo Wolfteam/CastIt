@@ -25,6 +25,7 @@ namespace CastIt.Server.Services
     {
         private readonly ILogger<CastItHostedService> _logger;
         private readonly IServerCastService _castService;
+        private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private readonly IHubContext<CastItHub, ICastItHub> _castItHub;
         private readonly IServerAppSettingsService _appSettings;
         private readonly IFileWatcherService _fileWatcherService;
@@ -39,6 +40,7 @@ namespace CastIt.Server.Services
         public CastItHostedService(
             ILogger<CastItHostedService> logger,
             IServerCastService castService,
+            IHostApplicationLifetime hostApplicationLifetime,
             IHubContext<CastItHub, ICastItHub> castItHub,
             IServerAppSettingsService appSettings,
             IFileWatcherService fileWatcherService,
@@ -50,6 +52,7 @@ namespace CastIt.Server.Services
         {
             _logger = logger;
             _castService = castService;
+            _hostApplicationLifetime = hostApplicationLifetime;
             _castItHub = castItHub;
             _appSettings = appSettings;
             _fileWatcherService = fileWatcherService;
@@ -94,42 +97,46 @@ namespace CastIt.Server.Services
             _serverService.OnFilesAdded = OnFilesAdded;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        private Task WaitForApplicationStarted()
         {
-            try
-            {
-                _logger.LogInformation($"{nameof(StartAsync)}: Deleting server logs and previews...");
-                _fileService.DeleteServerLogsAndPreviews();
-
-                _logger.LogInformation($"{nameof(StartAsync)}: Initializing server...");
-                await _serverService.Init();
-
-                _logger.LogInformation($"{nameof(StartAsync)}: Initializing castit service...");
-                await _castService.Init();
-
-                _logger.LogInformation($"{nameof(StartAsync)}: Initializing app settings...");
-                await _appSettings.Init();
-
-                _logger.LogInformation($"{nameof(StartAsync)}: Initializing ffmpeg...");
-                await _fFmpegService.Init(_appSettings.FFmpegExePath, _appSettings.FFprobeExePath);
-
-                _logger.LogInformation($"{nameof(StartAsync)}: Initializing file watchers...");
-                InitializeOrUpdateFileWatcher(false);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"{nameof(StartAsync)}: Unknown error while starting the service");
-                throw;
-            }
-            finally
-            {
-                _logger.LogInformation($"{nameof(StartAsync)}: Initialization completed");
-                await base.StartAsync(cancellationToken);
-            }
+            var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _hostApplicationLifetime.ApplicationStarted.Register(() => completionSource.TrySetResult());
+            return completionSource.Task;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation($"{nameof(ExecuteAsync)}: Waiting for app to become ready...");
+            await WaitForApplicationStarted();
+
+            try
+            {
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Deleting server logs and previews...");
+                _fileService.DeleteServerLogsAndPreviews();
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing server...");
+                await _serverService.Init();
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing castit service...");
+                await _castService.Init();
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing app settings...");
+                await _appSettings.Init();
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing ffmpeg...");
+                await _fFmpegService.Init(_appSettings.FFmpegExePath, _appSettings.FFprobeExePath);
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing file watchers...");
+                InitializeOrUpdateFileWatcher(false);
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Initialization completed");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(ExecuteAsync)}: Unknown error while starting the service");
+                throw;
+            }
+
             _logger.LogInformation($"{nameof(ExecuteAsync)}: Refreshing play lists images...");
             _castService.RefreshPlayListImages();
 
