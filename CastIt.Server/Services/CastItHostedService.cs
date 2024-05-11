@@ -156,7 +156,7 @@ namespace CastIt.Server.Services
                 await _castItHub.Clients.All.ServerMessage(AppMessageType.ServerIsClosing);
 
                 _logger.LogInformation($"{nameof(StopAsync)}: Cancelling any pending duration job...");
-                _setDurationTokenSource.Cancel();
+                await _setDurationTokenSource.CancelAsync();
 
                 _logger.LogInformation($"{nameof(StopAsync)}: Stop listening to folders...");
                 _fileWatcherService.StopListening();

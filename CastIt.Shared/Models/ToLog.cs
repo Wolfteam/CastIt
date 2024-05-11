@@ -44,7 +44,7 @@ public class ToLog
 
     public ToLog(string filename)
     {
-        LogFileName = filename;
+        LogFileName = filename.ToLowerInvariant();
 
         if (!Path.HasExtension(LogFileName))
         {
@@ -119,10 +119,10 @@ public class ToLog
             typeName = typeName.Replace(reserved, val, StringComparison.OrdinalIgnoreCase);
         }
 
-        string[] parts = Regex.Split(typeName, @"(?<!^)(?=[A-Z])");
+        string[] parts = Regex.Split(typeName, "(?<!^)(?=[A-Z])");
         if (parts.Length < 2)
         {
-            throw new ArgumentOutOfRangeException(typeName, "The type name cannot be split");
+            return typeName;
         }
 
         string suffix = parts.Last().ToLowerInvariant();
