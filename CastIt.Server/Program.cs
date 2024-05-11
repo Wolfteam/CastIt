@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using CastIt.Domain;
+using CastIt.Domain.Utils;
 using CastIt.FFmpeg;
 using CastIt.GoogleCast;
 using CastIt.GoogleCast.Interfaces;
@@ -21,16 +20,16 @@ using CastIt.Shared;
 using CastIt.Shared.Extensions;
 using CastIt.Shared.Models;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
+using DependencyInjection = CastIt.FFmpeg.DependencyInjection;
 
-bool logToFiles = !AppWebServerConstants.InDocker;
-string? logsPath = logToFiles ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs") : null;
-
+string logsPath = AppFileUtils.GetServerLogsPath();
 Log.Logger = LoggingExtensions.CreateBootstrapperLogger(new ToLog(nameof(Program)), logsPath);
 
 try
@@ -47,13 +46,16 @@ try
         })
         .Concat(ToLog.From(typeof(AppDataService)))
         .Concat(ToLog.From(typeof(CastItHub)))
-        .Concat(ToLog.From(typeof(CastIt.FFmpeg.DependencyInjection)))
+        .Concat(ToLog.From(typeof(DependencyInjection)))
         .Concat(ToLog.From(typeof(CastIt.GoogleCast.DependencyInjection)))
         .Concat(ToLog.From(typeof(CastIt.GoogleCast.LocalFile.DependencyInjection)))
         .Concat(ToLog.From(typeof(CastIt.GoogleCast.Youtube.DependencyInjection)))
         .Concat(ToLog.From(typeof(CastIt.Youtube.DependencyInjection)))
         .ToArray();
-    builder.Host.ConfigureAppLogging(logsPath, false, true, logs);
+    builder.Host.ConfigureAppLogging(logsPath, false, false, logs);
+
+    Log.Information("Configuring settings...");
+    bool useDummyPlayer = builder.Configuration.GetValue<bool>("USE_DUMMY_PLAYER");
 
     Log.Information("Configuring services...");
     IServiceCollection services = builder.Services;
@@ -89,8 +91,7 @@ try
         .AddFileService()
         .AddTelemetry()
         .AddFFmpeg()
-        .AddGoogleCast()
-        //.AddDummyGoogleCast()
+        .AddGoogleCast(useDummyPlayer)
         .AddGoogleCastYoutube()
         .AddGoogleCastLocalFiles();
     services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
