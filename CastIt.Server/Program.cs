@@ -61,11 +61,6 @@ namespace CastIt.Server
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    if (port > 0)
-                    {
-                        webBuilder.UseKestrel(options => options.ListenAnyIP(port));
-                    }
-
                     webBuilder.UseStartup(factory => new Startup(factory.Configuration));
                 })
                 //This has to happen AFTER ConfigureWebHostDefaults in order to get the server ip address
