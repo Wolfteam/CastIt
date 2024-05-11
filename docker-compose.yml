@@ -1,5 +1,3 @@
-version: '3.4'
-
 name: castit
 networks:
   app_network:
@@ -12,6 +10,7 @@ services:
       dockerfile: CastIt.Server/Dockerfile
     ports:
       - "9696:8080"
+      - "9697:8081"
     networks:
       - app_network
     environment:
