@@ -23,6 +23,7 @@ using CastIt.Shared.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
@@ -36,6 +37,7 @@ try
 {
     Log.Information("Creating builder...");
     var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseWindowsService();
 
     Log.Information("Configuring logs...");
     var logs = ToLog.From<BaseController>()
@@ -51,17 +53,12 @@ try
         .Concat(ToLog.From(typeof(CastIt.GoogleCast.Youtube.DependencyInjection)))
         .Concat(ToLog.From(typeof(CastIt.Youtube.DependencyInjection)))
         .ToArray();
-    builder.Host.ConfigureAppLogging(logsPath, false, false, logs);
+    builder.Host.ConfigureAppLogging(logsPath, false, true, logs);
 
     Log.Information("Configuring services...");
     IServiceCollection services = builder.Services;
-    //Cors is required for the subtitles to work
-    services.AddCors();
-
-    //Should be more than enough for the hosted service to complete
-    services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(15));
-
-    services.AddFileService().AddTelemetry();
+    services.AddEndpointsApiExplorer();
+    services.AddHealthChecks();
     services.AddControllers()
         .AddNewtonsoftJson(options =>
         {
@@ -71,15 +68,29 @@ try
             options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             options.SerializerSettings.Formatting = Formatting.Indented;
         });
+    services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(15));
     services.AddSignalR(o => { o.EnableDetailedErrors = true; });
+    services.AddSpaStaticFiles(configuration => configuration.RootPath = "ClientApp/dist");
+    services.AddLogging(c =>
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            c.AddEventLog();
+        }
+    });
+
     services.AddSingleton<IAppDataService, AppDataService>();
     services.AddSingleton<IServerCastService, ServerCastService>();
     services.AddSingleton<IServerAppSettingsService, ServerAppSettingsService>();
     services.AddSingleton<IServerService, ServerService>();
     services.AddSingleton<IImageProviderService, ImageProviderService>();
     services.AddSingleton<IFileWatcherService, FileWatcherService>();
-    services.AddFFmpeg()
+    services
+        .AddFileService()
+        .AddTelemetry()
+        .AddFFmpeg()
         .AddGoogleCast()
+        //.AddDummyGoogleCast()
         .AddGoogleCastYoutube()
         .AddGoogleCastLocalFiles();
     services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
@@ -110,9 +121,6 @@ try
 
     services.AddSwagger("CastIt", "CastIt.xml");
 
-    // In production, the React files will be served from this directory
-    services.AddSpaStaticFiles(configuration => configuration.RootPath = "ClientApp/dist");
-
     services.AddHostedService<CastItHostedService>();
 
     Log.Information("Building app...");
@@ -131,23 +139,24 @@ try
         app.UseHttpsRedirection();
     }
 
+
     app.UseStaticFiles();
     app.UseSpaStaticFiles();
     app.UseRouting();
-
+    //For some reason this one is required otherwise UseSpa will "eat" the maphub route
+    app.UseEndpoints(_ => {});
     //Cors is required for the subtitles to work
     app.UseCors(options =>
         options.AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader()
     );
+    app.UseHealthChecks("/healthcheck");
     app.UseMiddleware<ExceptionHandlerMiddleware>();
 
+    app.UseSwagger("CastIt");
     app.MapControllers();
     app.MapHub<CastItHub>("/CastItHub");
-
-    app.UseSwagger("CastIt");
-
     app.UseSpa(spa =>
     {
         spa.Options.SourcePath = "ClientApp";
