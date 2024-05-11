@@ -5,56 +5,55 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CastIt.FFmpeg
+namespace CastIt.FFmpeg;
+
+public interface IFFmpegService
 {
-    public interface IFFmpegService
-    {
-        CancellationTokenSource TokenSource { get; }
+    CancellationTokenSource TokenSource { get; }
 
-        Task Init(string ffmpegExePath, string ffprobeExePath);
+    Task Init(string ffmpegExePath, string ffprobeExePath);
 
-        void RefreshFfmpegPath(string ffmpegExePath, string ffprobeExePath);
+    void RefreshFfmpegPath(string ffmpegExePath, string ffprobeExePath);
 
-        string GetThumbnail(long id, string mrl);
+    string GetThumbnail(long id, string mrl);
 
-        Task GenerateThumbnails(long id, string mrl, bool hwAccelIsEnabled);
+    Task GenerateThumbnails(long id, string mrl, bool hwAccelIsEnabled);
 
-        Task KillThumbnailProcess();
+    Task KillThumbnailProcess();
 
-        Task KillTranscodeProcess();
+    Task KillTranscodeProcess();
 
-        Task<Stream> TranscodeVideo(TranscodeVideoFile options);
+    Task<Stream> TranscodeVideo(TranscodeVideoFile options);
 
-        Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options);
+    Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options);
 
-        Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token);
+    Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token);
 
-        Task GenerateSubTitles(
-            string filePath,
-            string subtitleFinalPath,
-            double seconds,
-            int index,
-            double subsDelayInSeconds,
-            CancellationToken token);
+    Task GenerateSubTitles(
+        string filePath,
+        string subtitleFinalPath,
+        double seconds,
+        int index,
+        double subsDelayInSeconds,
+        CancellationToken token);
 
-        bool VideoNeedsTranscode(
-            int videoStreamIndex,
-            bool forceVideoTranscode,
-            VideoScaleType selectedScale,
-            FFProbeFileInfo fileInfo);
+    bool VideoNeedsTranscode(
+        int videoStreamIndex,
+        bool forceVideoTranscode,
+        VideoScaleType selectedScale,
+        FFProbeFileInfo fileInfo);
 
-        bool AudioNeedsTranscode(
-            int audioStreamIndex,
-            bool forceAudioTranscode,
-            FFProbeFileInfo fileInfo,
-            bool checkIfAudioIsNull = false);
+    bool AudioNeedsTranscode(
+        int audioStreamIndex,
+        bool forceAudioTranscode,
+        FFProbeFileInfo fileInfo,
+        bool checkIfAudioIsNull = false);
 
-        HwAccelDeviceType GetHwAccelToUse(
-            int videoStreamIndex,
-            FFProbeFileInfo fileInfo,
-            bool shouldUseHwAccel = true,
-            bool isHls = false);
+    HwAccelDeviceType GetHwAccelToUse(
+        int videoStreamIndex,
+        FFProbeFileInfo fileInfo,
+        bool shouldUseHwAccel = true,
+        bool isHls = false);
 
-        Task<byte[]> GetThumbnailTile(string mrl, long tentativeSecond, int fps);
-    }
+    Task<byte[]> GetThumbnailTile(string mrl, long tentativeSecond, int fps);
 }
