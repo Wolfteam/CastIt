@@ -7,9 +7,11 @@ namespace CastIt.Domain.Utils
     {
         public static string GetBaseAppFolder(string appName = "CastIt")
         {
-            var folder = CreateDirectory(
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                appName);
+            var specialFolder = OperatingSystem.IsWindows()
+                ? Environment.SpecialFolder.CommonApplicationData
+                : Environment.SpecialFolder.LocalApplicationData;
+
+            string folder = CreateDirectory(Environment.GetFolderPath(specialFolder), appName);
             return folder;
         }
 
