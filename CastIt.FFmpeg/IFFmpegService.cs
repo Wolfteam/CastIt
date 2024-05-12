@@ -25,7 +25,7 @@ public interface IFFmpegService
 
     Task<Stream> TranscodeVideo(TranscodeVideoFile options);
 
-    Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options);
+    Task<Stream> TranscodeMusic(TranscodeMusicFile options);
 
     Task<FFProbeFileInfo> GetFileInfo(string filePath, CancellationToken token);
 

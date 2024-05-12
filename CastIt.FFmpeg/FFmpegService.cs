@@ -509,13 +509,13 @@ public class FFmpegService : IFFmpegService
         return _transcodeProcess.StandardOutput.BaseStream;
     }
 
-    public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options)
+    public async Task<Stream> TranscodeMusic(TranscodeMusicFile options)
     {
         await CheckBeforeTranscode();
         return await TranscodeMusic(options, TokenSource.Token);
     }
 
-    public async Task<MemoryStream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token)
+    public async Task<Stream> TranscodeMusic(TranscodeMusicFile options, CancellationToken token)
     {
         string path = options.StreamUrls.First();
         var fileInfo = await GetFileInfo(path, token).ConfigureAwait(false);
@@ -541,14 +541,10 @@ public class FFmpegService : IFFmpegService
         _logger.LogInformation($"{nameof(TranscodeMusic)}: Trying to transcode file with CMD = {cmd}");
         _transcodeProcess.StartInfo.Arguments = cmd;
         _transcodeProcess.Start();
-        var memoryStream = new MemoryStream();
-        var stream = _transcodeProcess.StandardOutput.BaseStream as FileStream;
-        await stream!.CopyToAsync(memoryStream, token).ConfigureAwait(false);
 
-        memoryStream.Position = 0;
         _logger.LogInformation($"{nameof(TranscodeMusic)}: Transcode completed for file = {path}");
 
-        return memoryStream;
+        return _transcodeProcess.StandardOutput.BaseStream;
     }
 
     public async Task GenerateSubTitles(
