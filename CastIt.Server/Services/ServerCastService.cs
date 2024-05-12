@@ -956,7 +956,7 @@ namespace CastIt.Server.Services
 
             if (update)
             {
-                _logger.LogTrace($"{nameof(UpdateFileItem)}: FileId = {file.Id} will be updated...");
+                _logger.LogInformation($"{nameof(UpdateFileItem)}: FileId = {file.Id} will be updated...");
                 await _appDataService.UpdateFile(file.Id, file.Filename, file.SubTitle, file.TotalSeconds);
                 SendFileChanged(_mapper.Map<FileItemResponseDto>(file));
             }

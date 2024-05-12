@@ -73,9 +73,7 @@ public class ChromeCastController : BaseController
             {
                 var options = GetMusicFileOptions(dto);
                 Logger.LogInformation($"{nameof(Play)}: Handling request for music file with options = {{@Options}}", options);
-                await using var memoryStream = await _ffmpegService.TranscodeMusic(options).ConfigureAwait(false);
-                //TODO: THIS LENGTH IS NOT WORKING PROPERLY
-                HttpContext.Response.ContentLength = memoryStream.Length;
+                var memoryStream = await _ffmpegService.TranscodeMusic(options).ConfigureAwait(false);
                 await memoryStream.CopyToAsync(HttpContext.Response.Body, _ffmpegService.TokenSource.Token).ConfigureAwait(false);
             }
         }
