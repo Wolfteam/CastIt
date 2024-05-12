@@ -673,17 +673,10 @@ namespace CastIt.Server.Services
 
         public async Task StopAsync()
         {
-            FileCancellationTokenSource.Cancel();
-
-            _logger.LogInformation($"{nameof(StopAsync)}: Saving the changes made to the play lists + files...");
-            var files = PlayLists.SelectMany(pl => pl.Files)
-                .Where(f => f.WasPlayed || f.PositionChanged)
-                .ToList();
-            await _appDataService.SavePlayListChanges(PlayLists);
-            await _appDataService.SaveFileChanges(files);
+            await FileCancellationTokenSource.CancelAsync();
+            await SavePlayListAndFileChanges();
             _appDataService.Close();
 
-            _logger.LogInformation($"{nameof(StopAsync)}: Changes were saved");
             try
             {
                 _logger.LogInformation($"{nameof(StopAsync)} Clean them all started...");
@@ -708,6 +701,18 @@ namespace CastIt.Server.Services
                 _logger.LogError(ex, $"{nameof(StopAsync)}: An unknown error occurred");
                 _telemetry.TrackError(ex);
             }
+        }
+
+        public async Task SavePlayListAndFileChanges()
+        {
+            _logger.LogInformation(
+                $"{nameof(SavePlayListAndFileChanges)}: Saving the changes made to the play lists + files...");
+            List<ServerFileItem> files = PlayLists.SelectMany(pl => pl.Files)
+                .Where(f => f.WasPlayed || f.PositionChanged)
+                .ToList();
+            await _appDataService.SavePlayListChanges(PlayLists);
+            await _appDataService.SaveFileChanges(files);
+            _logger.LogInformation($"{nameof(SavePlayListAndFileChanges)}: Changes were saved");
         }
 
         public Task SetCastRenderer(string id)

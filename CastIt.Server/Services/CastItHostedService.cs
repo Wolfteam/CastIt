@@ -111,9 +111,6 @@ namespace CastIt.Server.Services
 
             try
             {
-                _logger.LogInformation($"{nameof(ExecuteAsync)}: Deleting server logs and previews...");
-                _fileService.DeleteServerLogsAndPreviews();
-
                 _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing server...");
                 await _serverService.Init();
 

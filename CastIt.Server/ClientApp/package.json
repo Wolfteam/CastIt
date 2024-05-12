@@ -24,7 +24,7 @@
     "web-vitals": "^3.5.2"
   },
   "scripts": {
-    "start": "vite",
+    "start": "echo Starting the development server && vite",
     "build": "tsc && vite build"
   },
   "eslintConfig": {

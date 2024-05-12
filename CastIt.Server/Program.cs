@@ -10,7 +10,6 @@ using CastIt.GoogleCast.Youtube;
 using CastIt.Server.Common;
 using CastIt.Server.Common.Extensions;
 using CastIt.Server.Controllers;
-using CastIt.Server.FileWatcher;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Middleware;
@@ -20,18 +19,19 @@ using CastIt.Shared;
 using CastIt.Shared.Extensions;
 using CastIt.Shared.Models;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Quartz;
 using Serilog;
 using DependencyInjection = CastIt.FFmpeg.DependencyInjection;
 
 string logsPath = AppFileUtils.GetServerLogsPath();
 Log.Logger = LoggingExtensions.CreateBootstrapperLogger(new ToLog(nameof(Program)), logsPath);
-
 try
 {
     Log.Information("Creating builder...");
@@ -79,6 +79,26 @@ try
         {
             c.AddEventLog();
         }
+    });
+    services.AddQuartz(options =>
+    {
+        options.SchedulerId = options.SchedulerName = "CastIt.Server";
+        options.CheckConfiguration = true;
+
+        DateTimeOffset startAt = DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(2));
+        options.ScheduleJob<DeleteOldFilesJob>(trigger => trigger
+            .WithIdentity($"{nameof(DeleteOldFilesJob)}-trigger".ToLowerInvariant())
+            .StartAt(startAt)
+            .WithDailyTimeIntervalSchedule(12, IntervalUnit.Hour)
+        );
+        options.ScheduleJob<SavePlayListAndFileChangesJob>(trigger => trigger
+            .WithIdentity($"{nameof(SavePlayListAndFileChangesJob)}-trigger".ToLowerInvariant())
+            .StartAt(startAt)
+            .WithDailyTimeIntervalSchedule(3, IntervalUnit.Hour)
+        );
+    }).AddQuartzHostedService(options =>
+    {
+        options.WaitForJobsToComplete = true;
     });
 
     services.AddSingleton<IAppDataService, AppDataService>();
@@ -145,7 +165,7 @@ try
     app.UseSpaStaticFiles();
     app.UseRouting();
     //For some reason this one is required otherwise UseSpa will "eat" the maphub route
-    app.UseEndpoints(_ => {});
+    app.UseEndpoints(_ => { });
     //Cors is required for the subtitles to work
     app.UseCors(options =>
         options.AllowAnyOrigin()
@@ -161,11 +181,11 @@ try
     app.UseSpa(spa =>
     {
         spa.Options.SourcePath = "ClientApp";
+        spa.Options.DevServerPort = 3000;
 
         if (app.Environment.IsDevelopment())
         {
-            spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
-            //spa.UseReactDevelopmentServer(npmScript: "start");
+            spa.UseReactDevelopmentServer("start");
         }
     });
 
