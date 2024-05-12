@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace CastIt.Domain
@@ -8,8 +9,6 @@ namespace CastIt.Domain
     {
         public const double ThumbnailWidth = 200;
         public const double ThumbnailHeight = 150;
-        public const string FullElapsedTimeFormat = @"hh\:mm\:ss";
-        public const string ShortElapsedTimeFormat = @"mm\:ss";
 
         public static IReadOnlyList<string> AllowedFormats
             => AllowedVideoFormats.Concat(AllowedMusicFormats).ToList();
@@ -53,10 +52,19 @@ namespace CastIt.Domain
 
         public static string FormatDuration(double seconds)
         {
-            //here backslash is used to tell that colon is
-            //not the part of format, it just a character that we want in output
             var time = TimeSpan.FromSeconds(seconds);
-            return time.ToString(time.Hours > 0 ? FullElapsedTimeFormat : ShortElapsedTimeFormat);
+            string format = @"mm\:ss";
+            if (time.TotalHours >= 1)
+            {
+                format = @"hh\:" + format;
+            }
+
+            if (time.TotalDays >= 1)
+            {
+                format = @"d\+" + format;
+            }
+
+            return time.ToString(format, CultureInfo.InvariantCulture);
         }
 
         public static string FormatDuration(double playedSeconds, double totalSeconds, bool isUrlFile, bool exists)
