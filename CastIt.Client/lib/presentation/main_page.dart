@@ -93,7 +93,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       await showModalBottomSheet(
         context: context,
         shape: Styles.modalBottomSheetShape,
-        isDismissible: true,
         isScrollControlled: true,
         builder: (_) => ChangeConnectionBottomSheetDialog(currentUrl: currentCastIt),
       );

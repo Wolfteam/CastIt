@@ -60,7 +60,6 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => RenamePlayListBottomSheet(id: playListId, currentName: playListName),
     );
@@ -71,7 +70,6 @@ class PlayListOptionsBottomSheetDialog extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => DeletePlayListBottomSheet(playListId: playListId, playListName: playListName),
     );
