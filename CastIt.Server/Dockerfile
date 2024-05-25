@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-RUN apt-get update -yq && apt-get install ffmpeg -yq
+RUN apt-get update -yq && apt-get install ffmpeg iputils-ping -yq
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
