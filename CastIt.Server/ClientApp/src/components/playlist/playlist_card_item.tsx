@@ -27,7 +27,7 @@ import { useCastItHub } from '../../context/castit_hub.context';
 import { defaultImg } from '../../utils/app_constants';
 
 const StyledRootCard = styled(Card)({
-    minWidth: 175,
+    minWidth: 175
 });
 
 const StyledTypography = styled(Typography)({
@@ -176,7 +176,7 @@ function PlayListCardItem(props: Props): JSX.Element {
             <CardActionArea onClick={handleClick}>
                 <CardMedia component="img" image={image} title={state.name} sx={{ width: '100%', height: 250, objectFit: 'fill' }} />
                 <CardContent sx={{ paddingBottom: 0 }}>
-                    <Fab color="primary" component="div" sx={{ float: 'right', marginTop: -50 }}>
+                    <Fab color="primary" component="div" style={{ float: 'right', marginTop: -50 }}>
                         {state.numberOfFiles}
                     </Fab>
                     <Typography color="textSecondary" gutterBottom sx={{ fontSize: 14 }}>
