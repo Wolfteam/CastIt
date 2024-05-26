@@ -1,7 +1,6 @@
 ﻿using CastIt.Domain.Exceptions;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
-using PCRE;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -48,10 +47,11 @@ namespace CastIt.Youtube
             {
                 return false;
             }
+
             return Uri.TryCreate(url, UriKind.Absolute, out _) &&
                    (Regex.IsMatch(url, YoutubeRegex) ||
-                   Regex.IsMatch(url, ConsentRegex) ||
-                   url.Contains("youtu.be"));
+                    Regex.IsMatch(url, ConsentRegex) ||
+                    url.Contains("youtu.be"));
         }
 
         public bool IsPlayList(string url)
@@ -59,7 +59,8 @@ namespace CastIt.Youtube
             try
             {
                 var query = GetQueryParams(url);
-                return IsYoutubeUrl(url) && query.AllKeys.Contains(YoutubePlayListQueryParam, StringComparer.OrdinalIgnoreCase);
+                return IsYoutubeUrl(url) &&
+                       query.AllKeys.Contains(YoutubePlayListQueryParam, StringComparer.OrdinalIgnoreCase);
             }
             catch (Exception e)
             {
@@ -93,6 +94,7 @@ namespace CastIt.Youtube
                 {
                     throw new UrlCouldNotBeParsedException(finalUrl);
                 }
+
                 return await ParseBasicInfo(finalUrl, cancellationToken);
             }
 
@@ -142,7 +144,8 @@ namespace CastIt.Youtube
             CancellationToken cancellationToken = default)
         {
             desiredQuality ??= DefaultQuality;
-            _logger.LogInformation($"{nameof(Parse)}: Trying to parse url = {basicInfo.Url}. Desired quality = {desiredQuality}");
+            _logger.LogInformation(
+                $"{nameof(Parse)}: Trying to parse url = {basicInfo.Url}. Desired quality = {desiredQuality}");
 
             string fmt = string.Empty;
             if (IsHtmlPage(basicInfo.Url))
@@ -171,7 +174,7 @@ namespace CastIt.Youtube
                 _logger.LogWarning($"{nameof(ParsePlayList)}: Url = {url} is not a valid youtube url");
                 throw new UrlCouldNotBeParsedException(url);
             }
-            
+
             var links = new List<string>();
             _logger.LogInformation($"{nameof(ParsePlayList)}: Parsing url = {url}");
 
@@ -181,7 +184,8 @@ namespace CastIt.Youtube
                 //Here we want an url like this: https://www.youtube.com/playlist?list=someplaylistid
                 string playlistId = GetPlayListId(url);
                 url = $"{YoutubeUrl}{YouTubePlayListPath}?{YoutubePlayListQueryParam}={playlistId}";
-                _logger.LogInformation($"{nameof(ParsePlayList)}: Url is playlist and video, the final url will be = {url}");
+                _logger.LogInformation(
+                    $"{nameof(ParsePlayList)}: Url is playlist and video, the final url will be = {url}");
             }
 
             string body = await GetContentFromUrl(url, cancellationToken);
@@ -211,6 +215,7 @@ namespace CastIt.Youtube
                     .Distinct()
                     .ToList();
             }
+
             _logger.LogInformation($"{nameof(ParsePlayList)}: Got {links.Count} link(s)");
 
             return links;
@@ -268,7 +273,8 @@ namespace CastIt.Youtube
         private string RemoveNotNeededParams(string url)
         {
             string videoId = GetVideoId(url);
-            return url.Substring(0, url.IndexOf("?", StringComparison.Ordinal) + 1) + $"{YoutubeVideoQueryParam}={videoId}";
+            return url.Substring(0, url.IndexOf("?", StringComparison.Ordinal) + 1) +
+                   $"{YoutubeVideoQueryParam}={videoId}";
         }
 
         private string GetJsUrl(string body)
@@ -276,13 +282,15 @@ namespace CastIt.Youtube
             var jsMatch = Regex.Match(body, "(\"js\":.*?.js)");
             if (!jsMatch.Success)
             {
-                _logger.LogInformation($"{nameof(GetJsUrl)}: Js url was not found in json key = 'js', checking json key = 'jsUrl'...");
+                _logger.LogInformation(
+                    $"{nameof(GetJsUrl)}: Js url was not found in json key = 'js', checking json key = 'jsUrl'...");
                 jsMatch = Regex.Match(body, "(\"jsUrl\":.*?.js)");
             }
 
             if (!jsMatch.Success)
             {
-                _logger.LogInformation($"{nameof(GetJsUrl)}: Js url was not found in player config, checking if we have a jsUrl key in the body...");
+                _logger.LogInformation(
+                    $"{nameof(GetJsUrl)}: Js url was not found in player config, checking if we have a jsUrl key in the body...");
                 jsMatch = Regex.Match(body, "(\"jsUrl\":.*?.js)");
             }
 
@@ -327,14 +335,17 @@ namespace CastIt.Youtube
                     //TODO: NOT SURE ABOUT THIS REGEX
                     throw new NotImplementedException();
                 }
+
                 //TODO: COMPLETE THIS CASE
-                int startIndex = body.IndexOf(UrlEncodedStreamMap, StringComparison.OrdinalIgnoreCase) + UrlEncodedStreamMap.Length + 1;  // is the opening "
+                int startIndex = body.IndexOf(UrlEncodedStreamMap, StringComparison.OrdinalIgnoreCase) +
+                                 UrlEncodedStreamMap.Length + 1; // is the opening "
                 string urlMap = body.Substring(startIndex);
                 int end = urlMap.IndexOf("\"", StringComparison.Ordinal);
                 if (end > 0)
                 {
                     urlMap = urlMap.Substring(0, end);
                 }
+
                 string url = GetUrlEncodedStream(urlMap);
                 media.SetFromFormat(url);
                 return;
@@ -343,13 +354,13 @@ namespace CastIt.Youtube
             VideoQualities qualities = media.VideoQualities;
             if (!qualities.UseAdaptiveFormats)
             {
-                string stream = qualities.GetStreamFromFormats(desiredQuality);
+                StreamFormat stream = qualities.GetStreamFromFormats(desiredQuality);
                 string url = await GetFinalUrl(stream, jsUrl, cancellationToken);
                 media.SetFromFormat(url);
                 return;
             }
 
-            var (videoStream, audioStream) = qualities.GetStreamsFromAdaptiveFormats(desiredQuality);
+            (StreamFormat videoStream, StreamFormat audioStream) = qualities.GetStreamsFromAdaptiveFormats(desiredQuality);
 
             string finalVideoUrl = await GetFinalUrl(videoStream, jsUrl, cancellationToken);
             string finalAudioUrl = await GetFinalUrl(audioStream, jsUrl, cancellationToken);
@@ -358,34 +369,20 @@ namespace CastIt.Youtube
         }
 
         private async Task<string> GetFinalUrl(
-            string pickedQualityUrl,
+            StreamFormat streamFormat,
             string jsUrl,
             CancellationToken cancellationToken = default)
         {
-            string cipherPattern = @"(?<=\\""signatureCipher\\"":).+";
-            string cipher = Regex.Match(pickedQualityUrl, cipherPattern).Value;
-            if (string.IsNullOrEmpty(cipher))
-            {
-                _logger.LogInformation($"{nameof(GetAndSetRealUrl)}: SignatureUrl key was not found, checking for any other cipher...");
-                cipher = Regex.Match(pickedQualityUrl, @"(?<=\""[a-zA-Z]*[Cc]ipher\"":).+").Value;
-            }
-
+            string cipher = streamFormat.SignatureCipher;
             jsUrl = ReplaceWithAmpersand(jsUrl);
             string js = await GetContentFromUrl(jsUrl, cancellationToken);
             string finalUrl;
             if (string.IsNullOrEmpty(cipher))
             {
-                _logger.LogInformation($"{nameof(GetAndSetRealUrl)}: Body doesn't contain a cipher, checking if the url is already unscrambled...");
+                _logger.LogInformation(
+                    $"{nameof(GetAndSetRealUrl)}: Body doesn't contain a cipher, checking if the url is already unscrambled...");
                 //Unscrambled signature, already included in ready-to-use URL
-                string urlPattern = @"(?<=url\\"":\\"").*?(?=\\"")";
-                if (!Regex.Match(pickedQualityUrl, urlPattern).Success)
-                {
-                    urlPattern = "(?<=url\":\").*?(?=\")";
-                    _logger.LogInformation($"{nameof(GetAndSetRealUrl)}: Url not found, checking with another pattern...");
-                }
-
-                string url = Regex.Match(pickedQualityUrl, urlPattern).Value;
-                finalUrl = DecodeUrlString(url);
+                finalUrl = DecodeUrlString(streamFormat.Url);
             }
             else
             {
@@ -420,6 +417,7 @@ namespace CastIt.Youtube
             {
                 return finalUrl;
             }
+
             return Regex.Replace(finalUrl, nPattern, $"&n={descrambledN}");
         }
 
@@ -429,7 +427,8 @@ namespace CastIt.Youtube
         {
             int attempts = 1;
             using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36");
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36");
             while (attempts >= 0)
             {
                 attempts--;
@@ -471,7 +470,7 @@ namespace CastIt.Youtube
             }
 
             return string.IsNullOrWhiteSpace(formatMatch.Value)
-                ? new List<VideoQuality>()
+                ? []
                 : ProcessObtainedFormats(formatMatch.Value, false);
         }
 
@@ -492,7 +491,7 @@ namespace CastIt.Youtube
             }
 
             return string.IsNullOrWhiteSpace(formatMatch.Value)
-                ? new List<VideoQuality>()
+                ? []
                 : ProcessObtainedFormats(formatMatch.Value, true);
         }
 
@@ -512,44 +511,23 @@ namespace CastIt.Youtube
         private List<VideoQuality> ProcessObtainedFormats(string formatMatch, bool isAdaptive)
         {
             string streamMap = ReplaceWithAmpersand(DecodeUrlString(formatMatch));
+            StreamFormats streamFormats = StreamFormats.GetStreamsFromStreamMap(streamMap);
 
-            string heightPatternA = @"(?<=\\""height\\"":).+?(?=,)";
-            string heightPatternB = @"(?<=\""height\"":).+?(?=,)";
-            string videoPattern = "\"mimeType\":\"video.mp4";
-            string audioPattern = "\"mimeType\":\"audio.mp4";
-            //https://stackoverflow.com/questions/14952113/how-can-i-match-nested-brackets-using-regex
-            var streams = PcreRegex.Matches(streamMap, @"\{((?>[^{}]+)|(?R))*\}")
-                .Where(match => !isAdaptive ||
-                                Regex.IsMatch(match.Value, videoPattern) ||
-                                Regex.IsMatch(match.Value, audioPattern))
-                .Select(stream => stream.Value)
-                .ToList();
             var qualities = new List<VideoQuality>();
-            foreach (string stream in streams)
+            foreach (StreamFormat format in streamFormats.AllFormats)
             {
-                if (Regex.IsMatch(stream, audioPattern))
+                if (format.IsAudio)
                 {
-                    qualities.Add(VideoQuality.OnlyAudio(stream));
+                    qualities.Add(VideoQuality.OnlyAudio(format));
                     continue;
                 }
 
-                var val = Regex.Match(stream, heightPatternA).Value;
-                if (string.IsNullOrEmpty(val))
-                {
-                    val = Regex.Match(stream, heightPatternB).Value;
-                }
-
-                if (string.IsNullOrEmpty(val))
-                {
-                    _logger.LogWarning($"{nameof(GetVideoQualities)}: Couldn't retrieve height from = {stream}");
-                }
-
-                int quality = int.Parse(string.IsNullOrEmpty(val) ? "-1" : val);
+                int quality = format.Height ?? -1;
                 if (qualities.All(q => q.Quality != quality) && quality > 0)
                 {
                     qualities.Add(isAdaptive
-                        ? VideoQuality.OnlyVideo(stream, quality)
-                        : VideoQuality.VideoAndAudio(stream, quality));
+                        ? VideoQuality.OnlyVideo(format, quality)
+                        : VideoQuality.VideoAndAudio(format, quality));
                 }
             }
 
@@ -569,6 +547,7 @@ namespace CastIt.Youtube
                     break;
                 sb.Append(t);
             }
+
             return sb.ToString();
         }
 
@@ -603,7 +582,8 @@ namespace CastIt.Youtube
             if (string.IsNullOrEmpty(str))
                 return null;
             var contentStr = new StringBuilder();
-            int contentStart = str.IndexOf(ContentValueKeyWord, StringComparison.OrdinalIgnoreCase) + ContentValueKeyWord.Length;
+            int contentStart = str.IndexOf(ContentValueKeyWord, StringComparison.OrdinalIgnoreCase) +
+                               ContentValueKeyWord.Length;
             if (contentStart <= 0)
                 return contentStr.ToString();
             while (true)
@@ -613,6 +593,7 @@ namespace CastIt.Youtube
                     break;
                 contentStr.Append(ch);
             }
+
             return contentStr.ToString();
         }
 
@@ -627,8 +608,8 @@ namespace CastIt.Youtube
             {
                 ch = body[index++];
                 value.Append(ch);
-            }
-            while (ch != '>');
+            } while (ch != '>');
+
             return GetKeyContentValue(value.ToString());
         }
 
@@ -636,14 +617,8 @@ namespace CastIt.Youtube
         {
             cipher = ReplaceWithAmpersand(cipher);
 
-            string urlPattern = @"(?<=url[^&]+).*?(?=\\"")";
+            string urlPattern = @"(?<=url[^&]+).*";
             var urlMatch = Regex.Match(cipher, urlPattern);
-            if (!urlMatch.Success)
-            {
-                _logger.LogInformation($"{nameof(GetUrlFromCipher)}: No match was found, trying without the backslash in the pattern...");
-                urlMatch = Regex.Match(cipher, @"(?<=url[^&]+).*?(?=\"")");
-            }
-
             if (string.IsNullOrEmpty(urlMatch.Value))
             {
                 var msg = $"Couldn't retrieve url from cipher = {cipher}";
@@ -658,7 +633,8 @@ namespace CastIt.Youtube
             string s = DecodeUrlString(Regex.Match(cipher, sPattern).Value);
             if (string.IsNullOrEmpty(s))
             {
-                _logger.LogInformation($"{nameof(GetUrlFromCipher)}: Couldn't find the sPattern in cipher, trying without the backslash in the pattern...");
+                _logger.LogInformation(
+                    $"{nameof(GetUrlFromCipher)}: Couldn't find the sPattern in cipher, trying without the backslash in the pattern...");
                 s = DecodeUrlString(Regex.Match(cipher, @"(?<=\""s=)([^&]+)").Value);
             }
 
