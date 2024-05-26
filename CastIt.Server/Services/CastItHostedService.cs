@@ -123,6 +123,12 @@ namespace CastIt.Server.Services
                 _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing ffmpeg...");
                 await _fFmpegService.Init(_appSettings.FFmpegExePath, _appSettings.FFprobeExePath);
 
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Refreshing play lists images...");
+                _castService.RefreshPlayListImages();
+
+                _logger.LogInformation($"{nameof(ExecuteAsync)}: Setting missing file info for pending files...");
+                await _castService.SetFileInfoForPendingFiles();
+
                 _logger.LogInformation($"{nameof(ExecuteAsync)}: Initializing file watchers...");
                 InitializeOrUpdateFileWatcher(false);
 
@@ -133,14 +139,6 @@ namespace CastIt.Server.Services
                 _logger.LogError(e, $"{nameof(ExecuteAsync)}: Unknown error while starting the service");
                 throw;
             }
-
-            _logger.LogInformation($"{nameof(ExecuteAsync)}: Refreshing play lists images...");
-            _castService.RefreshPlayListImages();
-
-            _logger.LogInformation($"{nameof(ExecuteAsync)}: Setting missing file info for pending files...");
-            await _castService.SetFileInfoForPendingFiles();
-
-            UpdateFileWatchers();
             _logger.LogInformation($"{nameof(ExecuteAsync)}: Process completed");
         }
 
@@ -183,7 +181,8 @@ namespace CastIt.Server.Services
             _logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Got = {dirs.Count} directories...");
             if (!update)
             {
-                _logger.LogInformation($"{nameof(InitializeOrUpdateFileWatcher)}: Starting to watch for {dirs.Count} directories...");
+                _logger.LogInformation(
+                    $"{nameof(InitializeOrUpdateFileWatcher)}: Starting to watch for {dirs.Count} directories...");
                 _fileWatcherService.StartListening(dirs);
                 _fileWatcherService.OnFileCreated = OnFwCreated;
                 _fileWatcherService.OnFileChanged = OnFwChanged;
@@ -199,23 +198,50 @@ namespace CastIt.Server.Services
 
         private List<string> GetFoldersToWatch()
         {
-            var dirs = _castService.PlayLists.SelectMany(pl => pl.Files)
+            List<string> dirs = _castService.PlayLists.SelectMany(pl => pl.Files)
                 .Where(f => f.IsLocalFile)
-                .Select(f => Path.GetDirectoryName(f.Path))
-                .Distinct()
+                .Select(f => Path.GetDirectoryName(f.Path)!)
+                .OrderBy(f => f.Length)
                 .ToList();
-            return dirs;
-        }
 
-        //AKA UpdatePlayedTime
-        private void UpdateFileWatchers()
-        {
-            var dirs = GetFoldersToWatch();
-            _fileWatcherService.UpdateWatchers(dirs, false);
-            //TODO: PLAYLISTS CHANGED
+            if (dirs.Count == 0)
+            {
+                return [];
+            }
+
+            var dirsToWatch = new List<Uri>();
+            for (int i = 0; i < dirs.Count; i++)
+            {
+                string currentPath = $"{dirs[i]}/";
+                Uri currentUri = new Uri(currentPath);
+                if (i == 0)
+                {
+                    dirsToWatch.Add(currentUri);
+                    continue;
+                }
+
+
+                bool insert = true;
+                foreach (Uri uri in dirsToWatch)
+                {
+                    if (uri.IsBaseOf(currentUri))
+                    {
+                        insert = false;
+                        break;
+                    }
+                }
+
+                if (insert)
+                {
+                    dirsToWatch.Add(currentUri);
+                }
+            }
+
+            return dirsToWatch.Select(uri => uri.AbsolutePath).ToList();
         }
 
         #region CastIt Handlers
+
         private async void OnFileDeleted(long playListId, long id)
         {
             await _castItHub.Clients.All.FileDeleted(playListId, id);
@@ -332,7 +358,8 @@ namespace CastIt.Server.Services
 
         private async void OnEndReached()
         {
-            _logger.LogInformation($"{nameof(OnEndReached)}: End reached for = {_castService.CurrentPlayedFile?.Filename}");
+            _logger.LogInformation(
+                $"{nameof(OnEndReached)}: End reached for = {_castService.CurrentPlayedFile?.Filename}");
             _castService.CurrentPlayedFile?.EndReached();
             await _castItHub.Clients.All.FileEndReached(_castService.GetCurrentPlayedFile());
             _castService.CleanPlayedFile(false);
@@ -341,7 +368,8 @@ namespace CastIt.Server.Services
 
         private async void OnFilesAdded(long playListId, FileItem[] files)
         {
-            _logger.LogInformation($"{nameof(OnFilesAdded)}: {files.Length} file(s) were added for playListId = {playListId}... Adding them...");
+            _logger.LogInformation(
+                $"{nameof(OnFilesAdded)}: {files.Length} file(s) were added for playListId = {playListId}... Adding them...");
             try
             {
                 await PlayListBusy(playListId, true);
@@ -352,7 +380,8 @@ namespace CastIt.Server.Services
                     await _castService.AddFile(playListId, file);
                 }
 
-                _logger.LogInformation($"{nameof(OnFilesAdded)}: Successfully added all the files to playListId = {playListId}");
+                _logger.LogInformation(
+                    $"{nameof(OnFilesAdded)}: Successfully added all the files to playListId = {playListId}");
             }
             catch (Exception e)
             {
@@ -391,9 +420,11 @@ namespace CastIt.Server.Services
         {
             await _castItHub.Clients.All.PlayerSettingsChanged(settings);
         }
+
         #endregion
 
         #region FileWatcher Handlers
+
         private Task OnFwCreated(string path, bool isAFolder)
         {
             return OnFwChanged(path, isAFolder);
@@ -457,6 +488,7 @@ namespace CastIt.Server.Services
                 OnPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playlist));
             }
         }
+
         #endregion
     }
 }

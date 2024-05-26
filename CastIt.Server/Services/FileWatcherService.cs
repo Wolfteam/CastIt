@@ -131,31 +131,9 @@ public class FileWatcherService : IFileWatcherService
         watcher.Changed += OnChanged;
         watcher.Deleted += OnChanged;
         watcher.Renamed += OnRenamed;
+        watcher.IncludeSubdirectories = true;
         watcher.EnableRaisingEvents = true;
         _watchers.Add(path, watcher);
-        WatchFolder(path);
-    }
-
-    private void WatchFolder(string path)
-    {
-        _logger.LogInformation($"{nameof(WatchFolder)}: Starting the watcher for dir path = {path}");
-        if (_dirWatchers.ContainsKey(path))
-        {
-            StopListening(_dirWatchers[path], true);
-            _dirWatchers.Remove(path);
-        }
-        //TODO: NOT WORKING..
-        var watcher = new FileSystemWatcher(path)
-        {
-            NotifyFilter = NotifyFilters.DirectoryName
-        };
-        watcher.Error += OnError;
-        watcher.Created += OnFolderChanged;
-        watcher.Changed += OnFolderChanged;
-        watcher.Deleted += OnFolderChanged;
-        watcher.Renamed += OnFolderRenamed;
-        watcher.EnableRaisingEvents = true;
-        _dirWatchers.Add(path, watcher);
     }
 
     private void OnError(object sender, ErrorEventArgs e)
@@ -171,16 +149,6 @@ public class FileWatcherService : IFileWatcherService
     private async void OnRenamed(object source, RenamedEventArgs e)
     {
         await OnRenamed(e.OldFullPath, e.FullPath, false);
-    }
-
-    private async void OnFolderChanged(object source, FileSystemEventArgs e)
-    {
-        await OnChanged(e.FullPath, e.ChangeType, true);
-    }
-
-    private async void OnFolderRenamed(object source, RenamedEventArgs e)
-    {
-        await OnRenamed(e.OldFullPath, e.FullPath, true);
     }
 
     private async Task OnChanged(string fullPath, WatcherChangeTypes changeType, bool isAFolder)
