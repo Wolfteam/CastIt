@@ -20,7 +20,7 @@
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentMigrator" Version="5.2.0" />
     <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
-    <PackageReference Include="FreeSql.Provider.SqliteCore" Version="3.2.822" />
+    <PackageReference Include="FreeSql.Provider.SqliteCore" Version="3.2.832" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.6" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
