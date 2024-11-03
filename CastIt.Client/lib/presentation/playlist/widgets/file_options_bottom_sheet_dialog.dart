@@ -79,7 +79,6 @@ class FileOptionsBottomSheetDialog extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => DeleteFileBottomSheet(id: id, playListId: playListId, fileName: fileName),
     );

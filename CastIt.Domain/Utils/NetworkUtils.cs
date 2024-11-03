@@ -11,15 +11,13 @@ namespace CastIt.Domain.Utils
             const string host = "google.com";
 
             var ping = new Ping();
-            var buffer = new byte[32];
-            var pingOptions = new PingOptions();
 
             try
             {
-                var reply = ping.Send(host, timeout, buffer, pingOptions);
+                var reply = ping.SendPingAsync(host, timeout).GetAwaiter().GetResult();
                 return reply?.Status == IPStatus.Success;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return false;
             }

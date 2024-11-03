@@ -19,8 +19,8 @@ class ServerAppSettings {
 
   TextTrackFontGenericFamilyType get currentSubtitleFontFamilyType => TextTrackFontGenericFamilyType.values[currentSubtitleFontFamily];
 
-  final String fFmpegExePath;
-  final String fFprobeExePath;
+  final String? fFmpegExePath;
+  final String? fFprobeExePath;
 
   final bool startFilesFromTheStart;
   final bool playNextFileAutomatically;
