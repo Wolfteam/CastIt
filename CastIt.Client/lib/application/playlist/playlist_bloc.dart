@@ -7,7 +7,6 @@ import 'package:castit/domain/services/castit_hub_client_service.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tuple/tuple.dart';
 
 part 'playlist_bloc.freezed.dart';
 part 'playlist_event.dart';
@@ -309,11 +308,11 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     );
   }
 
-  void _onPlayListChanged(Tuple2<bool, GetAllPlayListResponseDto> event) {
+  void _onPlayListChanged((bool, GetAllPlayListResponseDto) event) {
     state.maybeMap(
       loaded: (_) {
-        final changeComesFromPlayedFile = event.item1;
-        final playList = event.item2;
+        final changeComesFromPlayedFile = event.$1;
+        final playList = event.$2;
         if (!changeComesFromPlayedFile) {
           add(PlayListEvent.playListChanged(playList: playList));
         }
@@ -336,13 +335,13 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     );
   }
 
-  void _onFileChanged(Tuple2<bool, FileItemResponseDto> event) {
+  void _onFileChanged((bool, FileItemResponseDto) event) {
     state.maybeMap(
       loaded: (state) {
         //The second part of the if is to make sure that we only trigger the change
         // if we had a previously played file
-        final changeComesFromPlayedFile = event.item1;
-        final file = event.item2;
+        final changeComesFromPlayedFile = event.$1;
+        final file = event.$2;
         final currentPlayedFile = state.files.firstWhereOrNull((el) => el.isBeingPlayed);
         if (!changeComesFromPlayedFile || currentPlayedFile?.id != file.id) {
           add(PlayListEvent.fileChanged(file: file));
@@ -359,9 +358,9 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
     );
   }
 
-  void _onFileDeleted(Tuple2<int, int> event) {
+  void _onFileDeleted((int, int) event) {
     state.maybeMap(
-      loaded: (_) => add(PlayListEvent.fileDeleted(playListId: event.item1, id: event.item2)),
+      loaded: (_) => add(PlayListEvent.fileDeleted(playListId: event.$1, id: event.$2)),
       orElse: () {},
     );
   }

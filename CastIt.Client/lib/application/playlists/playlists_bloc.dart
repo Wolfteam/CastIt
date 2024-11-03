@@ -63,8 +63,8 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
     _castItHub.playListChanged.stream.listen((e) {
       state.maybeMap(
         loaded: (state) {
-          final changeComesFromPlayedFile = e.item1;
-          final playList = e.item2;
+          final changeComesFromPlayedFile = e.$1;
+          final playList = e.$2;
           if (!changeComesFromPlayedFile) {
             add(PlayListsEvent.changed(playList: playList));
           }

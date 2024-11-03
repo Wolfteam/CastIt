@@ -147,18 +147,18 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
 
     _castItHub.fileChanged.stream.listen((tuple) {
       //if the changed file is not the one being played just return
-      if (!tuple.item1) {
+      if (!tuple.$1) {
         return;
       }
-      add(PlayEvent.fileChanged(file: tuple.item2));
+      add(PlayEvent.fileChanged(file: tuple.$2));
     });
 
     _castItHub.playListChanged.stream.listen((tuple) {
       //if the changed playlist is not the one being played just return
-      if (!tuple.item1) {
+      if (!tuple.$1) {
         return;
       }
-      add(PlayEvent.playListChanged(playList: tuple.item2));
+      add(PlayEvent.playListChanged(playList: tuple.$2));
     });
 
     _castItHub.fileTimeChanged.stream.listen((seconds) {
