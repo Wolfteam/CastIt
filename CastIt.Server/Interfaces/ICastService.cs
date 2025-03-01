@@ -13,6 +13,7 @@ namespace CastIt.Server.Interfaces
 
         Task Init();
         Task StopAsync();
+        Task SavePlayListAndFileChanges();
         Task AddSeconds(double seconds);
         Task GoToSeconds(double seconds);
         Task GoToPosition(double position);

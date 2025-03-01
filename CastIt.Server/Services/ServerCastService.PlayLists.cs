@@ -167,18 +167,28 @@ namespace CastIt.Server.Services
             }
 
             int startIndex = playList.Files.Count + 1;
-            var files = paths.Where(path =>
-            {
-                var ext = Path.GetExtension(path);
-                return FileFormatConstants.AllowedFormats.Contains(ext.ToLower()) && playList.Files.All(f => f.Path != path);
-            }).OrderBy(p => p, new WindowsExplorerComparer())
+            List<FileItem> files = paths.Where(path =>
+                {
+                    string filename = Path.GetFileName(path);
+                    string ext = Path.GetExtension(path);
+                    return !filename.StartsWith('.') &&
+                           FileFormatConstants.AllowedFormats.Contains(ext, StringComparer.OrdinalIgnoreCase) &&
+                           playList.Files.All(f => f.Path != path);
+                })
+                .OrderBy(p => p, new WindowsExplorerComparer())
                 .Select((path, index) => new FileItem
                 {
                     Position = startIndex + index,
                     PlayListId = playListId,
                     Path = path,
                     CreatedAt = DateTime.Now
-                }).ToList();
+                })
+                .ToList();
+
+            if (files.Count == 0)
+            {
+                return;
+            }
 
             var createdFiles = await _appDataService.AddFiles(files);
             _server.OnFilesAdded.Invoke(playListId, createdFiles.ToArray());

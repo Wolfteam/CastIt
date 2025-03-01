@@ -7,7 +7,6 @@ import 'package:castit/domain/services/logging_service.dart';
 import 'package:castit/domain/services/settings_service.dart';
 import 'package:signalr_core/signalr_core.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:tuple/tuple.dart';
 
 const String _sendPlayLists = 'SendPlayLists';
 const String _stoppedPlayback = 'StoppedPlayBack';
@@ -106,7 +105,7 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
   final StreamController<List<GetAllPlayListResponseDto>> playListsChanged = StreamController.broadcast();
 
   @override
-  final StreamController<Tuple2<bool, GetAllPlayListResponseDto>> playListChanged = StreamController.broadcast();
+  final StreamController<(bool, GetAllPlayListResponseDto)> playListChanged = StreamController.broadcast();
 
   @override
   final StreamController<int> playListDeleted = StreamController.broadcast();
@@ -115,13 +114,13 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
   final StreamController<FileItemResponseDto> fileAdded = StreamController.broadcast();
 
   @override
-  final StreamController<Tuple2<bool, FileItemResponseDto>> fileChanged = StreamController.broadcast();
+  final StreamController<(bool, FileItemResponseDto)> fileChanged = StreamController.broadcast();
 
   @override
   final StreamController<List<FileItemResponseDto>> filesChanged = StreamController.broadcast();
 
   @override
-  final StreamController<Tuple2<int, int>> fileDeleted = StreamController.broadcast();
+  final StreamController<(int, int)> fileDeleted = StreamController.broadcast();
 
   final LoggingService _logger;
   final SettingsService _settings;
@@ -278,10 +277,10 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
           filePaused.add(null);
         }
         if (status.playedFile != null) {
-          playListChanged.add(Tuple2(true, status.playList!));
+          playListChanged.add((true, status.playList!));
           final f = PlayedFile.from(status);
           fileLoaded.add(f);
-          fileChanged.add(Tuple2(true, status.playedFile!));
+          fileChanged.add((true, status.playedFile!));
           fileOptionsLoaded.add(status.playedFile!.streams);
           fileTimeChanged.add(f.currentSeconds);
         } else {
@@ -294,7 +293,7 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         playListAdded.add(newPl);
       case _playListChanged:
         final updatedPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
-        playListChanged.add(Tuple2(false, updatedPl));
+        playListChanged.add((false, updatedPl));
       case _playListsChanged:
         final playLists = (message as List<dynamic>).map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
         playListsChanged.add(playLists);
@@ -308,7 +307,7 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         fileAdded.add(file);
       case _fileChanged:
         final file = FileItemResponseDto.fromJson(message as Map<String, dynamic>);
-        fileChanged.add(Tuple2(false, file));
+        fileChanged.add((false, file));
       case _filesChanged:
         final files = (message as List<dynamic>).map((e) => FileItemResponseDto.fromJson(e as Map<String, dynamic>)).toList();
         filesChanged.add(files);
@@ -316,7 +315,7 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         final items = message as List<dynamic>;
         final playListId = items.first as int;
         final fileId = items.last as int;
-        fileDeleted.add(Tuple2(playListId, fileId));
+        fileDeleted.add((playListId, fileId));
       case _fileLoading:
         _logger.info(runtimeType, '_handleSocketMsg: A file is loading...');
         fileLoading.add(null);

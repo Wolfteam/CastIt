@@ -134,7 +134,11 @@ namespace CastIt.Server.Services
         public override async Task<ServerAppSettings> UpdateSettings(ServerAppSettings settings, bool saveToFileSystem = false)
         {
             Logger.LogInformation($"{nameof(UpdateSettings)}: Trying to update settings...");
-            _fFmpegService.RefreshFfmpegPath(settings.FFmpegExePath, settings.FFprobeExePath);
+            if (!string.IsNullOrWhiteSpace(settings.FFmpegExePath) &&
+                !string.IsNullOrWhiteSpace(settings.FFprobeExePath))
+            {
+                _fFmpegService.RefreshFfmpegPath(settings.FFmpegExePath, settings.FFprobeExePath);
+            }
             Settings.UpdateWith(settings);
             if (saveToFileSystem)
             {

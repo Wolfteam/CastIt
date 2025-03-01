@@ -170,7 +170,6 @@ class _Top extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => PlayedFileOptionsBottomSheetDialog(),
     );
@@ -235,8 +234,7 @@ class _Bottom extends StatelessWidget {
     );
   }
 
-  Future<void> _togglePlayListShuffle(BuildContext context) =>
-      context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
+  Future<void> _togglePlayListShuffle(BuildContext context) => context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
 
   Future<void> _toggleFileLoop(BuildContext context) => context.read<ServerWsBloc>().loopFile(fileId!, playListId!, loop: !loopFile);
 }

@@ -146,7 +146,6 @@ namespace CastIt.GoogleCast
             IsPlaying = false;
             await Task.Delay(TimeSpan.FromSeconds(2));
             CancelAndSetListenerToken(false);
-            EndReached?.Invoke(this, EventArgs.Empty);
             return new MediaStatus();
         }
 

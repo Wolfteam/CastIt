@@ -1,0 +1,23 @@
+# Commented parts are meant to be used in release
+name: castit
+services:
+  server:
+    image: ${DOCKER_REGISTRY-}castitserver
+    #image: castit
+    build:
+      context: .
+      dockerfile: CastIt.Server/Dockerfile
+    privileged: true
+    #network_mode: "host"
+    #ports are not needed in release mode
+    ports:
+      - "9696:8080"
+      - "9697:8081"
+    environment:
+      CASTIT_SERVER_URL: $CASTIT_SERVER_URL
+    volumes:
+      - ~/Desktop/CastIt:/usr/share/CastIt
+      - ~/Music:/medias/wolfteam20:ro
+      #- /media/wolfteam20/Drive/Data:/media/wolfteam20:ro
+      # Do not forget to sudo chmod -R a+rwx /home/wolfteam20/Desktop/CastItData
+      #- /home/wolfteam20/Desktop/CastItData:/usr/share/CastIt

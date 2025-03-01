@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:castit/domain/enums/enums.dart';
 import 'package:castit/domain/models/models.dart';
-import 'package:tuple/tuple.dart';
 
 abstract class CastItHubClientService {
   StreamController<void> get connected;
@@ -39,17 +38,17 @@ abstract class CastItHubClientService {
 
   StreamController<List<GetAllPlayListResponseDto>> get playListsChanged;
 
-  StreamController<Tuple2<bool, GetAllPlayListResponseDto>> get playListChanged;
+  StreamController<(bool, GetAllPlayListResponseDto)> get playListChanged;
 
   StreamController<int> get playListDeleted;
 
   StreamController<FileItemResponseDto> get fileAdded;
 
-  StreamController<Tuple2<bool, FileItemResponseDto>> get fileChanged;
+  StreamController<(bool, FileItemResponseDto)> get fileChanged;
 
   StreamController<List<FileItemResponseDto>> get filesChanged;
 
-  StreamController<Tuple2<int, int>> get fileDeleted;
+  StreamController<(int, int)> get fileDeleted;
 
   bool get isConnected;
 

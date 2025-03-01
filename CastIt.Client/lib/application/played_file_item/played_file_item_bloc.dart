@@ -23,7 +23,7 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
     on<_EndReached>((event, emit) => emit(const PlayedFileItemState.notPlaying()));
 
     _castItHub.fileChanged.stream.listen((event) {
-      final file = event.item2;
+      final file = event.$2;
       add(
         PlayedFileItemEvent.playing(
           id: file.id,

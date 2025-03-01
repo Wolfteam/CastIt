@@ -99,7 +99,7 @@ namespace CastIt.Server.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning($"Could obtain local ip address, remaining attempts = {attempts}");
+                    _logger.LogWarning(e, $"Could obtain local ip address, remaining attempts = {attempts}");
                     if (attempts <= 0)
                     {
                         _logger.LogError(e, "We were not able to get the local ip address");
@@ -149,27 +149,48 @@ namespace CastIt.Server.Services
 
         private string GetLocalIpAddress(ICollection<string> addresses)
         {
-            string ipAddress;
+            if (addresses.Count == 0)
+            {
+                return null;
+            }
+
             if (AppWebServerConstants.InDocker)
             {
-                var name = Dns.GetHostName(); // get container id
-                var ip = Array.Find(Dns.GetHostEntry(name).AddressList, x => x.AddressFamily == AddressFamily.InterNetwork);
-                ipAddress = ip.ToString();
-            }
-            else
-            {
-                ipAddress = addresses.FirstOrDefault(s =>
-                    !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
-                    !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
-                    !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
+                _logger.LogInformation("Running in container, retrieving url from environment variable...");
+                string url = Environment.GetEnvironmentVariable("CASTIT_SERVER_URL");
+                if (!string.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.Absolute, out _))
+                {
+                    return CleanUrl(url);
+                }
+
+                throw new InvalidOperationException(
+                    "When running in a container, the server environment variable must be set " +
+                    "and must be in the form of {Scheme}://{Host}:{Port}");
             }
 
-            if (!string.IsNullOrWhiteSpace(ipAddress) && ipAddress.EndsWith("/"))
+            _logger.LogInformation("Running locally, retrieving url from {Addresses}...", addresses);
+            string ipAddress = addresses.FirstOrDefault(s =>
+                !s.Contains("*", StringComparison.OrdinalIgnoreCase) &&
+                !s.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
+                !s.Contains("[::]")) ?? WebServerUtils.GetWebServerIpAddress();
+
+            if (string.IsNullOrWhiteSpace(ipAddress) && addresses.Count != 0)
             {
-                ipAddress = ipAddress[..^1];
+                int startPort = int.Parse(addresses.First().Split(':').Last());
+                ipAddress = WebServerUtils.GetWebServerIpAddress(startPort);
             }
 
-            return ipAddress;
+            return CleanUrl(ipAddress);
+
+            static string CleanUrl(string url)
+            {
+                if (!string.IsNullOrWhiteSpace(url) && url.EndsWith('/'))
+                {
+                    url = url[..^1];
+                }
+
+                return url;
+            }
         }
     }
 }

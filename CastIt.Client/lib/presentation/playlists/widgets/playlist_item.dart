@@ -61,7 +61,6 @@ class PlayListItem extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: Styles.modalBottomSheetShape,
-      isDismissible: true,
       isScrollControlled: true,
       builder: (_) => PlayListOptionsBottomSheetDialog(playListId: id, playListName: name),
     );
