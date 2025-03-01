@@ -30,13 +30,7 @@ class PlayListFab extends StatelessWidget {
       child: AnimatedOpacity(
         opacity: isVisible ? 1 : 0,
         duration: const Duration(milliseconds: 250),
-        child: _CardRow(
-          id: id,
-          name: name,
-          loop: loop,
-          shuffle: shuffle,
-          onArrowTopTap: onArrowTopTap,
-        ),
+        child: _CardRow(id: id, name: name, loop: loop, shuffle: shuffle, onArrowTopTap: onArrowTopTap),
       ),
     );
   }
@@ -49,13 +43,7 @@ class _CardRow extends StatelessWidget {
   final bool shuffle;
   final OnTap onArrowTopTap;
 
-  const _CardRow({
-    required this.id,
-    required this.name,
-    required this.loop,
-    required this.shuffle,
-    required this.onArrowTopTap,
-  });
+  const _CardRow({required this.id, required this.name, required this.loop, required this.shuffle, required this.onArrowTopTap});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +60,7 @@ class _CardRow extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              ButtonBar(
+              OverflowBar(
                 children: <Widget>[
                   IconButton(
                     icon: Icon(Icons.loop, color: loop ? theme.colorScheme.primary : null, size: iconSize),
@@ -86,11 +74,8 @@ class _CardRow extends StatelessWidget {
                   ),
                 ],
               ),
-              Expanded(
-                child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
-              ),
-              ButtonBar(
-                buttonPadding: EdgeInsets.zero,
+              Expanded(child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+              OverflowBar(
                 children: <Widget>[
                   IconButton(
                     icon: const Icon(Icons.search, size: iconSize),

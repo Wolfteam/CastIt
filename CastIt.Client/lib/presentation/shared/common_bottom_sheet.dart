@@ -44,20 +44,12 @@ class CommonBottomSheet extends StatelessWidget {
             BottomSheetTitle(icon: titleIcon, title: title),
             child,
             if (showOkButton || showCancelButton)
-              ButtonBar(
-                buttonPadding: const EdgeInsets.symmetric(horizontal: 10),
+              OverflowBar(
+                alignment: MainAxisAlignment.end,
                 children: <Widget>[
                   if (showCancelButton)
-                    ElevatedButton(
-                      onPressed: onCancel != null ? () => onCancel!() : () => _cancel(context),
-                      child: Text(cancelText ?? s.cancel),
-                    ),
-                  if (showOkButton)
-                    ElevatedButton(
-                      autofocus: true,
-                      onPressed: onOk != null ? () => onOk!() : null,
-                      child: Text(okText ?? s.ok),
-                    ),
+                    ElevatedButton(onPressed: onCancel != null ? () => onCancel!() : () => _cancel(context), child: Text(cancelText ?? s.cancel)),
+                  if (showOkButton) ElevatedButton(autofocus: true, onPressed: onOk != null ? () => onOk!() : null, child: Text(okText ?? s.ok)),
                 ],
               ),
           ],
