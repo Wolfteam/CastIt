@@ -234,8 +234,7 @@ class _Bottom extends StatelessWidget {
     );
   }
 
-  Future<void> _togglePlayListShuffle(BuildContext context) =>
-      context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
+  Future<void> _togglePlayListShuffle(BuildContext context) => context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
 
   Future<void> _toggleFileLoop(BuildContext context) => context.read<ServerWsBloc>().loopFile(fileId!, playListId!, loop: !loopFile);
 }
