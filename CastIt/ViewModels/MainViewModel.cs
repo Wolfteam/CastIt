@@ -270,7 +270,6 @@ namespace CastIt.ViewModels
         public IMvxCommand OpenDevicesCommand { get; private set; }
         public IMvxCommand SnackbarActionCommand { get; private set; }
         public IMvxAsyncCommand<long> GoToSecondsCommand { get; private set; }
-        public IMvxAsyncCommand ShowDownloadDialogCommand { get; private set; }
         public IMvxAsyncCommand<FileItemOptionsViewModel> FileOptionsChangedCommand { get; private set; }
         public IMvxCommand OpenSubTitleFileDialogCommand { get; private set; }
         public IMvxAsyncCommand<string> SetSubTitlesCommand { get; private set; }
@@ -361,8 +360,6 @@ namespace CastIt.ViewModels
 
             GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
 
-            ShowDownloadDialogCommand = new MvxAsyncCommand(ShowDownloadFfmpegDialog);
-
             FileOptionsChangedCommand = new MvxAsyncCommand<FileItemOptionsViewModel>(FileOptionsChanged);
 
             OpenSubTitleFileDialogCommand = new MvxCommand(() => _openSubTitleFileDialog.Raise());
@@ -388,7 +385,6 @@ namespace CastIt.ViewModels
                 Messenger.Subscribe<SnackbarMessage>(async msg => await ShowSnackbarMsg(msg.Message)),
                 Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy),
                 Messenger.Subscribe<UseGridViewMessage>(async (_) => await GoToPlayLists()),
-                Messenger.Subscribe<ShowDownloadFFmpegDialogMessage>(async _ => await ShowDownloadDialogCommand.ExecuteAsync()),
             });
         }
 
@@ -809,19 +805,6 @@ namespace CastIt.ViewModels
         {
             var result = await _navigationService.Navigate<ChangeServerUrlDialogViewModel, NavigationBoolResult>();
             ServerIsRunning = result!.Result;
-        }
-
-        private async Task ShowDownloadFfmpegDialog()
-        {
-            var result = await _navigationService.Navigate<DownloadDialogViewModel, NavigationBoolResult>();
-            if (!result!.Result)
-            {
-                CloseAppCommand.Execute();
-            }
-            else
-            {
-                await ShowSnackbarMsg(GetText("AppIsRdyToUse"));
-            }
         }
         #endregion
     }
