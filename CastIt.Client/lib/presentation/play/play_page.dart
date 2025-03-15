@@ -20,60 +20,64 @@ class _PlayPageState extends State<PlayPage> with AutomaticKeepAliveClientMixin<
     super.build(context);
     return Scaffold(
       body: BlocBuilder<PlayBloc, PlayState>(
-        builder: (context, state) => Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Flexible(
-              fit: FlexFit.tight,
-              flex: 70,
-              child: state.map(
-                connecting: (s) => const PlayCoverImg(showLoading: true),
-                connected: (s) => const PlayCoverImg(),
-                fileLoading: (s) => const PlayCoverImg(showLoading: true),
-                fileLoadingFailed: (s) => const PlayCoverImg(),
-                playing: (s) => PlayCoverImg(
-                  fileId: s.id,
-                  playListId: s.playListId,
-                  fileName: s.filename,
-                  playListName: s.playlistName,
-                  thumbUrl: s.thumbPath,
-                  loopFile: s.loopFile,
-                  loopPlayList: s.loopPlayList,
-                  shufflePlayList: s.shufflePlayList,
+        builder:
+            (context, state) => Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Flexible(
+                  fit: FlexFit.tight,
+                  flex: 70,
+                  child: switch (state) {
+                    PlayStateConnectingState() => const PlayCoverImg(showLoading: true),
+                    PlayStateConnectedState() => const PlayCoverImg(),
+                    PlayStateFileLoadingState() => const PlayCoverImg(showLoading: true),
+                    PlayStateFileLoadingFailedState() => const PlayCoverImg(),
+                    final PlayStatePlayingState state => PlayCoverImg(
+                      fileId: state.id,
+                      playListId: state.playListId,
+                      fileName: state.filename,
+                      playListName: state.playlistName,
+                      thumbUrl: state.thumbPath,
+                      loopFile: state.loopFile,
+                      loopPlayList: state.loopPlayList,
+                      shufflePlayList: state.shufflePlayList,
+                    ),
+                  },
                 ),
-              ),
-            ),
-            Flexible(
-              flex: 8,
-              fit: FlexFit.tight,
-              child: state.maybeMap(
-                playing: (state) => PlayProgressBar(duration: state.duration, currentSeconds: state.currentSeconds),
-                orElse: () => const PlayProgressBar(),
-              ),
-            ),
-            state.maybeMap(
-              playing: (state) => Flexible(
-                flex: 3,
-                fit: FlexFit.tight,
-                child: PlayProgressText(
-                  currentSeconds: state.currentSeconds,
-                  duration: state.duration,
+                Flexible(
+                  flex: 8,
+                  fit: FlexFit.tight,
+                  child: switch (state) {
+                    final PlayStatePlayingState state => PlayProgressBar(
+                      duration: state.duration,
+                      currentSeconds: state.currentSeconds,
+                    ),
+                    _ => const PlayProgressBar(),
+                  },
                 ),
-              ),
-              orElse: () => const SizedBox.shrink(),
+                switch (state) {
+                  final PlayStatePlayingState state => Flexible(
+                    flex: 3,
+                    fit: FlexFit.tight,
+                    child: PlayProgressText(currentSeconds: state.currentSeconds, duration: state.duration),
+                  ),
+                  _ => const SizedBox.shrink(),
+                },
+                Flexible(
+                  flex: switch (state) {
+                    PlayStatePlayingState() => 19,
+                    _ => 22,
+                  },
+                  fit: FlexFit.tight,
+                  child: switch (state) {
+                    final PlayStatePlayingState state => PlayButtons.playing(isPaused: state.isPaused ?? false),
+                    PlayStateFileLoadingState() => const PlayButtons.loading(),
+                    _ => const PlayButtons.disabled(),
+                  },
+                ),
+              ],
             ),
-            Flexible(
-              flex: state.maybeMap(playing: (_) => 19, orElse: () => 22),
-              fit: FlexFit.tight,
-              child: state.maybeMap(
-                fileLoading: (state) => const PlayButtons.loading(),
-                playing: (state) => PlayButtons.playing(isPaused: state.isPaused ?? false),
-                orElse: () => const PlayButtons.disabled(),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

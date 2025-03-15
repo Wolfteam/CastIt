@@ -34,10 +34,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     if (_didChangeDependencies) return;
     //If we don't do this, the PlayListsBloc and SettingsBloc constructors won't be called
     //ending in the fact that we won't listen to the hub events
-    context.read<SettingsBloc>().add(SettingsEvent.load());
+    context.read<SettingsBloc>().add(const SettingsEvent.load());
     context.read<PlayListsBloc>().listenHubEvents();
     context.read<SettingsBloc>().listenHubEvents();
-    context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+    context.read<ServerWsBloc>().add(const ServerWsEvent.connectToWs());
     _didChangeDependencies = true;
   }
 
@@ -49,10 +49,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         (state == AppLifecycleState.hidden && (Platform.isMacOS || Platform.isWindows));
     if (disconnect) {
       _canShowConnectionModal = false;
-      context.read<ServerWsBloc>().add(ServerWsEvent.disconnectFromWs());
+      context.read<ServerWsBloc>().add(const ServerWsEvent.disconnectFromWs());
     } else if (state == AppLifecycleState.resumed) {
       _canShowConnectionModal = true;
-      context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+      context.read<ServerWsBloc>().add(const ServerWsEvent.connectToWs());
     }
   }
 
@@ -61,23 +61,25 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     final mq = MediaQuery.of(context);
     return BlocConsumer<ServerWsBloc, ServerWsState>(
       listener: (ctx, state) async {
-        await state.map(
-          loaded: (s) async {
-            if (s.msgToShow != null) {
-              _showServerMsg(ctx, s.msgToShow!);
-            }
-            await _showConnectionDialog(s.isConnectedToWs!, s.castItUrl);
-          },
-          loading: (s) {
+        switch (state) {
+          case ServerWsStateLoadingState():
             if (_isShowingConnectionModal) {
               Navigator.pop(context);
             }
-          },
-        );
+          case ServerWsStateLoadedState():
+            if (state.msgToShow != null) {
+              _showServerMsg(ctx, state.msgToShow!);
+            }
+            await _showConnectionDialog(state.isConnectedToWs!, state.castItUrl);
+        }
       },
       builder:
           (ctx, state) => ResponsiveBuilder(
-            builder: (ctx, size) => mq.size.width > 800 && (size.isDesktop || size.isTablet) ? const DesktopTabletScaffold() : const MobileScaffold(),
+            builder:
+                (ctx, size) =>
+                    mq.size.width > 800 && (size.isDesktop || size.isTablet)
+                        ? const DesktopTabletScaffold()
+                        : const MobileScaffold(),
           ),
     );
   }
@@ -119,7 +121,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(left: 10),
-              child: Text(s.translateAppMsgType(msg), style: const TextStyle(color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
+              child: Text(
+                s.translateAppMsgType(msg),
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ],

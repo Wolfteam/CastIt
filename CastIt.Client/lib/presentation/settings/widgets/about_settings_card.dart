@@ -21,72 +21,40 @@ class AboutSettingsCard extends StatelessWidget {
           Row(
             children: <Widget>[
               const Icon(Icons.info_outline),
-              Container(
-                margin: const EdgeInsets.only(left: 5),
-                child: Text(
-                  i18n.about,
-                  style: textTheme.titleLarge,
-                ),
-              ),
+              Container(margin: const EdgeInsets.only(left: 5), child: Text(i18n.about, style: textTheme.titleLarge)),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Text(
-              i18n.appInfo,
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ),
+          Padding(padding: const EdgeInsets.only(top: 5), child: Text(i18n.appInfo, style: const TextStyle(color: Colors.grey))),
           Container(
             margin: const EdgeInsets.only(left: 16, right: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Image.asset(
-                  Styles.appIconPath,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.contain,
-                ),
-                Text(
-                  i18n.appName,
-                  textAlign: TextAlign.center,
-                  style: textTheme.titleSmall,
-                ),
+                Image.asset(Styles.appIconPath, width: 70, height: 70, fit: BoxFit.contain),
+                Text(i18n.appName, textAlign: TextAlign.center, style: textTheme.titleSmall),
                 BlocBuilder<SettingsBloc, SettingsState>(
-                  builder: (context, state) => state.maybeMap(
-                    loaded: (state) => Text(
-                      i18n.appVersion(state.appVersion),
-                      textAlign: TextAlign.center,
-                      style: textTheme.titleSmall,
-                    ),
-                    orElse: () => const CircularProgressIndicator(),
-                  ),
+                  builder:
+                      (context, state) => Text(
+                        switch (state) {
+                          SettingsStateLoadingState() => '',
+                          SettingsStateLoadedState() => i18n.appVersion(state.appVersion),
+                        },
+                        textAlign: TextAlign.center,
+                        style: textTheme.titleSmall,
+                      ),
                 ),
-                Text(
-                  i18n.aboutSummary,
-                  textAlign: TextAlign.center,
-                ),
+                Text(i18n.aboutSummary, textAlign: TextAlign.center),
                 SettingsLink(title: i18n.desktopApp, url: AppConstants.githubReleasePage),
                 Container(
                   margin: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    i18n.donations,
-                    style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
-                  ),
+                  child: Text(i18n.donations, style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
                 ),
                 Text(i18n.donationsMsg),
                 Container(
                   margin: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    i18n.support,
-                    style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
-                  ),
+                  child: Text(i18n.support, style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
                 ),
-                Container(
-                  margin: const EdgeInsets.only(top: 5),
-                  child: Text(i18n.donationSupport),
-                ),
+                Container(margin: const EdgeInsets.only(top: 5), child: Text(i18n.donationSupport)),
                 SettingsLink(title: i18n.issues, url: AppConstants.githubIssuesPage),
               ],
             ),

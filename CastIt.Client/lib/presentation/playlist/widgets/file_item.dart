@@ -24,25 +24,22 @@ class FileItem extends StatefulWidget {
   final double playedSeconds;
   final String fullTotalDuration;
 
-  FileItem.fromItem({
-    super.key,
-    required this.itemHeight,
-    required FileItemResponseDto file,
-  })  : id = file.id,
-        position = file.position,
-        playListId = file.playListId,
-        isBeingPlayed = file.isBeingPlayed,
-        totalSeconds = file.totalSeconds,
-        name = file.filename,
-        path = file.path,
-        exists = file.exists,
-        isLocalFile = file.isLocalFile,
-        isUrlFile = file.isUrlFile,
-        playedPercentage = file.playedPercentage,
-        loop = file.loop,
-        subtitle = file.subTitle,
-        playedSeconds = file.playedSeconds,
-        fullTotalDuration = file.fullTotalDuration;
+  FileItem.fromItem({super.key, required this.itemHeight, required FileItemResponseDto file})
+    : id = file.id,
+      position = file.position,
+      playListId = file.playListId,
+      isBeingPlayed = file.isBeingPlayed,
+      totalSeconds = file.totalSeconds,
+      name = file.filename,
+      path = file.path,
+      exists = file.exists,
+      isLocalFile = file.isLocalFile,
+      isUrlFile = file.isUrlFile,
+      playedPercentage = file.playedPercentage,
+      loop = file.loop,
+      subtitle = file.subTitle,
+      playedSeconds = file.playedSeconds,
+      fullTotalDuration = file.fullTotalDuration;
 
   @override
   State<FileItem> createState() => _FileItemState();
@@ -84,7 +81,7 @@ class _FileItemState extends State<FileItem> {
   }
 
   void _goToMainPage() {
-    context.read<MainBloc>().add(MainEvent.goToTab(index: 0));
+    context.read<MainBloc>().add(const MainEvent.goToTab(index: 0));
     Navigator.of(context).pop();
   }
 
@@ -112,11 +109,7 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (!loop) {
-      return Text(
-        name,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.titleLarge,
-      );
+      return Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge);
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -124,16 +117,9 @@ class _Title extends StatelessWidget {
         Flexible(
           flex: 90,
           fit: FlexFit.tight,
-          child: Text(
-            name,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleLarge,
-          ),
+          child: Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge),
         ),
-        const Flexible(
-          flex: 10,
-          child: Icon(Icons.loop, size: 20),
-        ),
+        const Flexible(flex: 10, child: Icon(Icons.loop, size: 20)),
       ],
     );
   }
@@ -168,13 +154,12 @@ class _Content extends StatelessWidget {
           children: <Widget>[
             Text(subtitle, overflow: TextOverflow.ellipsis),
             BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-              builder: (ctx, state) => Text(
-                state.maybeMap(
-                  playing: (state) => state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
-                  orElse: () => fullTotalDuration,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+              builder:
+                  (ctx, state) => Text(switch (state) {
+                    PlayedFileItemStateNotPlayingState() => fullTotalDuration,
+                    PlayedFileItemStateLoadedState() =>
+                      state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
+                  }, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
@@ -188,16 +173,18 @@ class _Content extends StatelessWidget {
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
           ),
           child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-            builder: (ctx, state) => Slider(
-              value: state.maybeMap(
-                playing: (state) => state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
-                orElse: () => playedPercentage,
-              ),
-              max: 100,
-              activeColor: Colors.black,
-              inactiveColor: Colors.grey,
-              onChanged: null,
-            ),
+            builder:
+                (ctx, state) => Slider(
+                  value: switch (state) {
+                    PlayedFileItemStateNotPlayingState() => playedPercentage,
+                    PlayedFileItemStateLoadedState() =>
+                      state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
+                  },
+                  max: 100,
+                  activeColor: Colors.black,
+                  inactiveColor: Colors.grey,
+                  onChanged: null,
+                ),
           ),
         ),
       ],

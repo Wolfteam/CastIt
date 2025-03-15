@@ -24,41 +24,35 @@ class AccentColorSettingsCard extends StatelessWidget {
               const Icon(Icons.colorize),
               Container(
                 margin: const EdgeInsets.only(left: 5),
-                child: Text(
-                  i18n.accentColor,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                child: Text(i18n.accentColor, style: Theme.of(context).textTheme.titleLarge),
               ),
             ],
           ),
           Padding(
             padding: const EdgeInsets.only(top: 5),
-            child: Text(
-              i18n.chooseAccentColor,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(i18n.chooseAccentColor, style: const TextStyle(color: Colors.grey)),
           ),
           BlocBuilder<SettingsBloc, SettingsState>(
-            builder: (context, state) => state.maybeMap(
-              loaded: (state) => CommonDropdownButton<AppAccentColorType>(
-                hint: i18n.chooseAccentColor,
-                showSubTitle: false,
-                values: AppAccentColorType.values.map((e) => TranslatedEnum(e, _formatEnumName(e))).toList()
-                  ..sort((x, y) => x.translation.compareTo(y.translation)),
-                leadingIconBuilder: (val) => Container(
-                  margin: const EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: val.getAccentColor(),
+            builder:
+                (context, state) => switch (state) {
+                  SettingsStateLoadingState() => const CircularProgressIndicator(),
+                  SettingsStateLoadedState() => CommonDropdownButton<AppAccentColorType>(
+                    hint: i18n.chooseAccentColor,
+                    showSubTitle: false,
+                    values:
+                        AppAccentColorType.values.map((e) => TranslatedEnum(e, _formatEnumName(e))).toList()
+                          ..sort((x, y) => x.translation.compareTo(y.translation)),
+                    leadingIconBuilder:
+                        (val) => Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: val.getAccentColor()),
+                          width: 20,
+                          height: 20,
+                        ),
+                    currentValue: state.accentColor,
+                    onChanged: (newValue, _) => _accentColorChanged(context, newValue),
                   ),
-                  width: 20,
-                  height: 20,
-                ),
-                currentValue: state.accentColor,
-                onChanged: (newValue, _) => _accentColorChanged(context, newValue),
-              ),
-              orElse: () => const CircularProgressIndicator(),
-            ),
+                },
           ),
         ],
       ),

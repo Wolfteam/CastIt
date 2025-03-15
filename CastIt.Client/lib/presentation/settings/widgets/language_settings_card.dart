@@ -23,31 +23,30 @@ class LanguageSettingsCard extends StatelessWidget {
               const Icon(Icons.language),
               Container(
                 margin: const EdgeInsets.only(left: 5),
-                child: Text(
-                  i18n.language,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                child: Text(i18n.language, style: Theme.of(context).textTheme.titleLarge),
               ),
             ],
           ),
           Padding(
             padding: const EdgeInsets.only(top: 5),
-            child: Text(
-              i18n.chooseLanguage,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(i18n.chooseLanguage, style: const TextStyle(color: Colors.grey)),
           ),
           BlocBuilder<SettingsBloc, SettingsState>(
-            builder: (context, state) => state.maybeMap(
-              loaded: (state) => CommonDropdownButton<AppLanguageType>(
-                hint: i18n.chooseLanguage,
-                showSubTitle: false,
-                values: [AppLanguageType.english, AppLanguageType.spanish].map((e) => TranslatedEnum(e, i18n.translateAppLanguageType(e))).toList(),
-                currentValue: state.appLanguage,
-                onChanged: (newValue, _) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
-              ),
-              orElse: () => const CircularProgressIndicator(),
-            ),
+            builder:
+                (context, state) => switch (state) {
+                  SettingsStateLoadingState() => const CircularProgressIndicator(),
+                  SettingsStateLoadedState() => CommonDropdownButton<AppLanguageType>(
+                    hint: i18n.chooseLanguage,
+                    showSubTitle: false,
+                    values:
+                        [
+                          AppLanguageType.english,
+                          AppLanguageType.spanish,
+                        ].map((e) => TranslatedEnum(e, i18n.translateAppLanguageType(e))).toList(),
+                    currentValue: state.appLanguage,
+                    onChanged: (newValue, _) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue)),
+                  ),
+                },
           ),
         ],
       ),

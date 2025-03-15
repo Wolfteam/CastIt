@@ -17,32 +17,28 @@ class AppWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MainBloc, MainState>(
-      builder: (ctx, state) => state.map<Widget>(
-        loading: (_) => const CircularProgressIndicator(),
-        loaded: (s) {
-          final delegates = <LocalizationsDelegate>[
-            S.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ];
-          final locale = Locale(s.language.code, s.language.countryCode);
-          final themeData = s.accentColor.getThemeData(s.theme);
-          return MaterialApp(
-            title: s.appTitle,
-            theme: themeData,
-            home: AnnotatedRegion(
-              value: s.theme == AppThemeType.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-              child: s.firstInstall ? IntroPage() : MainPage(),
+      builder:
+          (ctx, state) => switch (state) {
+            MainStateLoadingState() => const CircularProgressIndicator(),
+            MainStateLoadedState() => MaterialApp(
+              title: state.appTitle,
+              theme: state.accentColor.getThemeData(state.theme),
+              home: AnnotatedRegion(
+                value: state.theme == AppThemeType.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+                child: state.firstInstall ? IntroPage() : MainPage(),
+              ),
+              //Without this, the lang won't be reloaded
+              locale: Locale(state.language.code, state.language.countryCode),
+              localizationsDelegates: const <LocalizationsDelegate>[
+                S.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: S.delegate.supportedLocales,
+              scrollBehavior: MyCustomScrollBehavior(),
             ),
-            //Without this, the lang won't be reloaded
-            locale: locale,
-            localizationsDelegates: delegates,
-            supportedLocales: S.delegate.supportedLocales,
-            scrollBehavior: MyCustomScrollBehavior(),
-          );
-        },
-      ),
+          },
     );
   }
 }
@@ -52,9 +48,9 @@ class AppWidget extends StatelessWidget {
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }
