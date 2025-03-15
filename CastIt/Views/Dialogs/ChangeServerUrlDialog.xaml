@@ -84,10 +84,10 @@
                 Margin="10,5"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
-                materialDesign:HintAssist.Hint="URL"
+                materialDesign:HintAssist.Hint="URL (http://192.168.1.247:8080)"
                 Foreground="{DynamicResource FontColorBrush}"
                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                Text="{Binding NewServerIpAddress, Mode=TwoWay}">
+                Text="{Binding NewServerIpAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 <TextBox.InputBindings>
                     <KeyBinding
                         Key="Enter"

@@ -1,22 +1,18 @@
 ﻿using AutoMapper;
 using CastIt.Common;
-using CastIt.Domain.Models.Logging;
 using CastIt.Domain.Utils;
 using CastIt.Interfaces;
 using CastIt.Resources;
 using CastIt.Services;
-using CastIt.Shared.Extensions;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
 using CastIt.ViewModels;
-using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using CastIt.Youtube;
 using MvvmCross;
 using MvvmCross.IoC;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
-using System.Collections.Generic;
 
 namespace CastIt
 {
@@ -74,23 +70,24 @@ namespace CastIt
 
         private static void SetupLogging()
         {
-            var basePath = AppFileUtils.GetDesktopLogsPath();
-            var logs = new List<FileToLog>
-            {
-                //Services
-                new FileToLog(typeof(CastItHubClientService), "service_castithub"),
-                new FileToLog(typeof(DesktopAppSettingsService), "service_settings"),
-                //ViewModels
-                new FileToLog(typeof(MainViewModel), "vm_main"),
-                new FileToLog(typeof(DevicesViewModel), "vm_devices"),
-                new FileToLog(typeof(SettingsViewModel), "vm_settings"),
-                new FileToLog(typeof(PlayListItemViewModel), "vm_playlistitem"),
-                new FileToLog(typeof(FileItemViewModel), "vm_fileitem"),
-                new FileToLog(typeof(DeviceItemViewModel), "vm_deviceitem"),
-                new FileToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
-                new FileToLog(typeof(SplashViewModel), "vm_splash"),
-            };
-            logs.SetupLogging(basePath);
+            //todo: this
+            //var basePath = AppFileUtils.GetDesktopLogsPath();
+            //var logs = new List<ToLog>
+            //{
+            //    //Services
+            //    new ToLog(typeof(CastItHubClientService), "service_castithub"),
+            //    new ToLog(typeof(DesktopAppSettingsService), "service_settings"),
+            //    //ViewModels
+            //    new ToLog(typeof(MainViewModel), "vm_main"),
+            //    new ToLog(typeof(DevicesViewModel), "vm_devices"),
+            //    new ToLog(typeof(SettingsViewModel), "vm_settings"),
+            //    new ToLog(typeof(PlayListItemViewModel), "vm_playlistitem"),
+            //    new ToLog(typeof(FileItemViewModel), "vm_fileitem"),
+            //    new ToLog(typeof(DeviceItemViewModel), "vm_deviceitem"),
+            //    new ToLog(typeof(DownloadDialogViewModel), "vm_download_dialog"),
+            //    new ToLog(typeof(SplashViewModel), "vm_splash"),
+            //};
+            //logs.SetupLogging(basePath);
         }
     }
 }
