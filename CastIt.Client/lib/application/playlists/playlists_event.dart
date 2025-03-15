@@ -1,24 +1,16 @@
 part of 'playlists_bloc.dart';
 
 @freezed
-class PlayListsEvent with _$PlayListsEvent {
-  factory PlayListsEvent.load() = _Load;
+sealed class PlayListsEvent with _$PlayListsEvent {
+  const factory PlayListsEvent.load() = PlayListsEventLoad;
 
-  factory PlayListsEvent.loaded({
-    required List<GetAllPlayListResponseDto> playlists,
-  }) = _Loaded;
+  const factory PlayListsEvent.loaded({required List<GetAllPlayListResponseDto> playlists}) = PlayListsEventLoaded;
 
-  factory PlayListsEvent.added({
-    required GetAllPlayListResponseDto playList,
-  }) = _Added;
+  const factory PlayListsEvent.added({required GetAllPlayListResponseDto playList}) = PlayListsEventAdded;
 
-  factory PlayListsEvent.changed({
-    required GetAllPlayListResponseDto playList,
-  }) = _Changed;
+  const factory PlayListsEvent.changed({required GetAllPlayListResponseDto playList}) = PlayListsEventChanged;
 
-  factory PlayListsEvent.deleted({
-    required int id,
-  }) = _Deleted;
+  const factory PlayListsEvent.deleted({required int id}) = PlayListsEventDeleted;
 
-  factory PlayListsEvent.disconnected() = _Disconnected;
+  const factory PlayListsEvent.disconnected() = PlayListsEventDisconnected;
 }

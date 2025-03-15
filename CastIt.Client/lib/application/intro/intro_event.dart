@@ -1,18 +1,12 @@
 part of 'intro_bloc.dart';
 
 @freezed
-class IntroEvent with _$IntroEvent {
-  factory IntroEvent.load() = _Load;
+sealed class IntroEvent with _$IntroEvent {
+  const factory IntroEvent.load() = IntroEventLoad;
 
-  factory IntroEvent.changePage({
-    required int newPage,
-  }) = _ChangePage;
+  const factory IntroEvent.changePage({required int newPage}) = IntroEventChangePage;
 
-  factory IntroEvent.urlWasSet({
-    required String url,
-  }) = _UrlSet;
+  const factory IntroEvent.urlWasSet({required String url}) = IntroEventUrlSet;
 
-  factory IntroEvent.languageChanged({
-    required AppLanguageType newLang,
-  }) = _LanguageChanged;
+  const factory IntroEvent.languageChanged({required AppLanguageType newLang}) = IntroEventLanguageChanged;
 }

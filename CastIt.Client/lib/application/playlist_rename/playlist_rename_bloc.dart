@@ -6,15 +6,17 @@ part 'playlist_rename_bloc.freezed.dart';
 part 'playlist_rename_event.dart';
 part 'playlist_rename_state.dart';
 
-final _initialState = PlayListRenameState.loaded(currentName: '', isNameValid: false);
+const _initialState = PlayListRenameState.loaded(currentName: '', isNameValid: false);
 
 class PlayListRenameBloc extends Bloc<PlayListRenameEvent, PlayListRenameState> {
-  _LoadedState get currentState => state as _LoadedState;
+  PlayListRenameStateLoadedState get currentState => state as PlayListRenameStateLoadedState;
 
   PlayListRenameBloc() : super(_initialState) {
-    on<_Load>((event, emit) => emit(PlayListRenameState.loaded(currentName: event.name, isNameValid: _isNameValid(event.name))));
+    on<PlayListRenameEventLoad>(
+      (event, emit) => emit(PlayListRenameState.loaded(currentName: event.name, isNameValid: _isNameValid(event.name))),
+    );
 
-    on<_NameChanged>((event, emit) => emit(currentState.copyWith(isNameValid: _isNameValid(event.name))));
+    on<PlayListRenameEventNameChanged>((event, emit) => emit(currentState.copyWith(isNameValid: _isNameValid(event.name))));
   }
 
   bool _isNameValid(String name) => !name.isNullEmptyOrWhitespace && !name.isLengthValid(minLength: 1);

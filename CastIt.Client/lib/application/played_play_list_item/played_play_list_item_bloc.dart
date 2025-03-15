@@ -10,16 +10,18 @@ class PlayedPlayListItemBloc extends Bloc<PlayedPlayListItemEvent, PlayedPlayLis
   final CastItHubClientService _castItHub;
 
   PlayedPlayListItemBloc(this._castItHub) : super(const PlayedPlayListItemState.notPlaying()) {
-    on<_Playing>((event, emit) => emit(PlayedPlayListItemState.playing(id: event.id, totalDuration: event.totalDuration)));
+    on<PlayedPlayListItemEventPlaying>(
+      (event, emit) => emit(PlayedPlayListItemState.playing(id: event.id, totalDuration: event.totalDuration)),
+    );
 
-    on<_EndReached>((event, emit) => emit(const PlayedPlayListItemState.notPlaying()));
+    on<PlayedPlayListItemEventEndReached>((event, emit) => emit(const PlayedPlayListItemState.notPlaying()));
 
     _castItHub.fileLoaded.stream.listen((file) {
       add(PlayedPlayListItemEvent.playing(id: file.playListId, totalDuration: file.playListTotalDuration!));
     });
 
     _castItHub.fileEndReached.stream.listen((file) {
-      add(PlayedPlayListItemEvent.endReached());
+      add(const PlayedPlayListItemEvent.endReached());
     });
   }
 }

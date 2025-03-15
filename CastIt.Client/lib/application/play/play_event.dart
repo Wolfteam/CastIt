@@ -1,41 +1,29 @@
 part of 'play_bloc.dart';
 
 @freezed
-class PlayEvent with _$PlayEvent {
-  factory PlayEvent.connected() = _Connected;
+sealed class PlayEvent with _$PlayEvent {
+  const factory PlayEvent.connected() = PlayEventConnected;
 
-  factory PlayEvent.fileLoading() = _FileLoading;
+  const factory PlayEvent.fileLoading() = PlayEventFileLoading;
 
-  factory PlayEvent.fileLoadingError({required String msg}) = _FileLoadingError;
+  const factory PlayEvent.fileLoadingError({required String msg}) = PlayEventFileLoadingError;
 
-  factory PlayEvent.fileLoaded({
-    required PlayedFile file,
-  }) = _FileLoaded;
+  const factory PlayEvent.fileLoaded({required PlayedFile file}) = PlayEventFileLoaded;
 
-  factory PlayEvent.fileChanged({
-    required FileItemResponseDto file,
-  }) = _FileChanged;
+  const factory PlayEvent.fileChanged({required FileItemResponseDto file}) = PlayEventFileChanged;
 
-  factory PlayEvent.playListChanged({
-    required GetAllPlayListResponseDto playList,
-  }) = _PlayListChanged;
+  const factory PlayEvent.playListChanged({required GetAllPlayListResponseDto playList}) = PlayEventPlayListChanged;
 
-  factory PlayEvent.timeChanged({
-    required double seconds,
-  }) = _TimeChanged;
+  const factory PlayEvent.timeChanged({required double seconds}) = PlayEventTimeChanged;
 
-  factory PlayEvent.paused() = _Paused;
+  const factory PlayEvent.paused() = PlayEventPaused;
 
-  factory PlayEvent.stopped() = _Stopped;
+  const factory PlayEvent.stopped() = PlayEventStopped;
 
-  factory PlayEvent.disconnected() = _Disconnected;
+  const factory PlayEvent.disconnected() = PlayEventDisconnected;
 
-  factory PlayEvent.sliderDragChanged({
-    required bool isSliding,
-  }) = _SliderDragChanged;
+  const factory PlayEvent.sliderDragChanged({required bool isSliding}) = PlayEventSliderDragChanged;
 
-  factory PlayEvent.sliderValueChanged({
-    required double newValue,
-    @Default(false) bool triggerGoToSeconds,
-  }) = _SliderValueChanged;
+  const factory PlayEvent.sliderValueChanged({required double newValue, @Default(false) bool triggerGoToSeconds}) =
+      PlayEventSliderValueChanged;
 }

@@ -1,13 +1,11 @@
 part of 'playlists_bloc.dart';
 
 @freezed
-class PlayListsState with _$PlayListsState {
-  factory PlayListsState.loading() = _LoadingState;
+sealed class PlayListsState with _$PlayListsState {
+  const factory PlayListsState.loading() = PlayListsStateLoadingState;
 
-  factory PlayListsState.loaded({
-    required List<GetAllPlayListResponseDto> playlists,
-    required int reloads,
-  }) = _LoadedState;
+  const factory PlayListsState.loaded({required List<GetAllPlayListResponseDto> playlists, required int reloads}) =
+      PlayListsStateLoadedState;
 
-  factory PlayListsState.disconnected() = _DisconnectedState;
+  const factory PlayListsState.disconnected() = PlayListsStateDisconnectedState;
 }

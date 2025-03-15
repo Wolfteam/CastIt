@@ -1,18 +1,14 @@
 part of 'server_ws_bloc.dart';
 
 @freezed
-class ServerWsEvent with _$ServerWsEvent {
-  factory ServerWsEvent.connectToWs() = _Connect;
+sealed class ServerWsEvent with _$ServerWsEvent {
+  const factory ServerWsEvent.connectToWs() = ServerWsEventConnect;
 
-  factory ServerWsEvent.disconnectedFromWs() = _Disconnected;
+  const factory ServerWsEvent.disconnectedFromWs() = ServerWsEventDisconnected;
 
-  factory ServerWsEvent.disconnectFromWs() = _Disconnect;
+  const factory ServerWsEvent.disconnectFromWs() = ServerWsEventDisconnect;
 
-  factory ServerWsEvent.updateUrlAndConnectToWs({
-    required String castItUrl,
-  }) = _UpdateUrlAndConnect;
+  const factory ServerWsEvent.updateUrlAndConnectToWs({required String castItUrl}) = ServerWsEventUpdateUrlAndConnect;
 
-  factory ServerWsEvent.showMsg({
-    required AppMessageType type,
-  }) = _ShowMessage;
+  const factory ServerWsEvent.showMsg({required AppMessageType type}) = ServerWsEventShowMessage;
 }

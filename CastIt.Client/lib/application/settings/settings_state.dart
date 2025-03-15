@@ -1,10 +1,10 @@
 part of 'settings_bloc.dart';
 
 @freezed
-class SettingsState with _$SettingsState {
-  factory SettingsState.loading() = _LoadingState;
+sealed class SettingsState with _$SettingsState {
+  const factory SettingsState.loading() = SettingsStateLoadingState;
 
-  factory SettingsState.loaded({
+  const factory SettingsState.loaded({
     required AppThemeType appTheme,
     required bool useDarkAmoled,
     required AppAccentColorType accentColor,
@@ -30,5 +30,5 @@ class SettingsState with _$SettingsState {
     required double subtitleDelayInSeconds,
     required TextTrackFontGenericFamilyType currentSubtitleFontFamily,
     required TextTrackFontStyleType currentSubtitleFontStyle,
-  }) = _LoadedState;
+  }) = SettingsStateLoadedState;
 }

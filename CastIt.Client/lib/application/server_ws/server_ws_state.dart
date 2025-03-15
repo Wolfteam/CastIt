@@ -1,13 +1,13 @@
 part of 'server_ws_bloc.dart';
 
 @freezed
-class ServerWsState with _$ServerWsState {
-  factory ServerWsState.loading() = _LoadingState;
+sealed class ServerWsState with _$ServerWsState {
+  const factory ServerWsState.loading() = ServerWsStateLoadingState;
 
-  factory ServerWsState.loaded({
+  const factory ServerWsState.loaded({
     required String castItUrl,
     bool? isConnectedToWs,
     int? connectionRetries,
     AppMessageType? msgToShow,
-  }) = _LoadedState;
+  }) = ServerWsStateLoadedState;
 }

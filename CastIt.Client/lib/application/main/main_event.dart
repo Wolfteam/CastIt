@@ -1,20 +1,16 @@
 part of 'main_bloc.dart';
 
 @freezed
-class MainEvent with _$MainEvent {
-  factory MainEvent.init() = _Init;
+sealed class MainEvent with _$MainEvent {
+  const factory MainEvent.init() = MainEventInit;
 
-  factory MainEvent.themeChanged({
-    required AppThemeType theme,
-  }) = _ThemeChanged;
+  const factory MainEvent.themeChanged({required AppThemeType theme}) = MainEventThemeChanged;
 
-  factory MainEvent.accentColorChanged({
-    required AppAccentColorType accentColor,
-  }) = _AccentColorChanged;
+  const factory MainEvent.accentColorChanged({required AppAccentColorType accentColor}) = MainEventAccentColorChanged;
 
-  factory MainEvent.goToTab({required int index}) = _GoToTab;
+  const factory MainEvent.goToTab({required int index}) = MainEventGoToTab;
 
-  factory MainEvent.introCompleted() = _IntroCompleted;
+  const factory MainEvent.introCompleted() = MainEventIntroCompleted;
 
-  factory MainEvent.languageChanged() = _LanguageChanged;
+  const factory MainEvent.languageChanged() = MainEventLanguageChanged;
 }

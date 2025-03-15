@@ -16,14 +16,14 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   final CastItHubClientService _castItHub;
   final List<StreamSubscription> _subscriptions = [];
 
-  PlayListState get initialState => PlayListState.loading();
+  PlayListState get initialState => const PlayListState.loading();
 
-  _LoadedState get currentState => state as _LoadedState;
+  PlayListStateLoadedState get currentState => state as PlayListStateLoadedState;
 
-  PlayListBloc(this._castItHub) : super(PlayListState.loading()) {
-    on<_Disconnected>((event, emit) => PlayListState.disconnected(playListId: event.playListId));
+  PlayListBloc(this._castItHub) : super(const PlayListState.loading()) {
+    on<PlayListEventDisconnected>((event, emit) => PlayListState.disconnected(playListId: event.playListId));
 
-    on<_Load>((event, emit) async {
+    on<PlayListEventLoad>((event, emit) async {
       emit(initialState);
       final playList = await _castItHub.loadPlayList(event.id);
       final updatedState = PlayListState.loaded(
@@ -40,7 +40,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
       _clearPreviousScrolledFileIfNeeded(emit);
     });
 
-    on<_Loaded>((event, emit) {
+    on<PlayListEventLoaded>((event, emit) {
       emit(initialState);
       final updatedState = PlayListState.loaded(
         playlistId: event.playlist.id,
@@ -55,40 +55,45 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
       _clearPreviousScrolledFileIfNeeded(emit);
     });
 
-    on<_PlayListOptionsChanged>((event, emit) => emit(currentState.copyWith(loop: event.loop, shuffle: event.shuffle)));
+    on<PlayListEventPlayListOptionsChanged>(
+      (event, emit) => emit(currentState.copyWith(loop: event.loop, shuffle: event.shuffle)),
+    );
 
-    on<_ToggleSearchBoxVisibility>((event, emit) => emit(currentState.copyWith(searchBoxIsVisible: !currentState.searchBoxIsVisible)));
+    on<PlayListEventToggleSearchBoxVisibility>(
+      (event, emit) => emit(currentState.copyWith(searchBoxIsVisible: !currentState.searchBoxIsVisible)),
+    );
 
-    on<_SearchBoxTextChanged>((event, emit) {
+    on<PlayListEventSearchBoxTextChanged>((event, emit) {
       final isFiltering = !event.text.isNullEmptyOrWhitespace;
-      final filteredFiles = !isFiltering
-          ? <FileItemResponseDto>[]
-          : currentState.files.where((element) => element.filename.toLowerCase().contains(event.text.toLowerCase())).toList();
+      final filteredFiles =
+          !isFiltering
+              ? <FileItemResponseDto>[]
+              : currentState.files.where((element) => element.filename.toLowerCase().contains(event.text.toLowerCase())).toList();
 
       final updatedState = currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
       emit(updatedState);
     });
 
-    on<_ClosePage>((event, emit) => emit(PlayListState.close()));
+    on<PlayListEventClosePage>((event, emit) => emit(const PlayListState.close()));
 
-    on<_PlayListNotFound>((event, emit) => emit(PlayListState.notFound()));
+    on<PlayListEventPlayListNotFound>((event, emit) => emit(const PlayListState.notFound()));
 
-    on<_PlayListChanged>((event, emit) => emit(_handlePlayListChanged(event.playList)));
+    on<PlayListEventPlayListChanged>((event, emit) => emit(_handlePlayListChanged(event.playList)));
 
-    on<_PlayListDeleted>((event, emit) => emit(_handlePlayListDeleted(event.id)));
+    on<PlayListEventPlayListDeleted>((event, emit) => emit(_handlePlayListDeleted(event.id)));
 
-    on<_FileAdded>((event, emit) => emit(_handleFileAdded(event.file)));
+    on<PlayListEventFileAdded>((event, emit) => emit(_handleFileAdded(event.file)));
 
-    on<_FilesChanged>((event, emit) => emit(_handleFilesChanged(event.files)));
+    on<PlayListEventFilesChanged>((event, emit) => emit(_handleFilesChanged(event.files)));
 
-    on<_FileChanged>((event, emit) => emit(_handleFileChanged(event.file)));
+    on<PlayListEventFileChanged>((event, emit) => emit(_handleFileChanged(event.file)));
 
-    on<_FilesDeleted>((event, emit) => emit(_handleFileDeleted(event.playListId, event.id)));
+    on<PlayListEventFilesDeleted>((event, emit) => emit(_handleFileDeleted(event.playListId, event.id)));
   }
 
   void _clearPreviousScrolledFileIfNeeded(Emitter<PlayListState> emit) {
     //Clear any previous scrolled file
-    if (state is _LoadedState && currentState.scrollToFileId != null) {
+    if (state is PlayListStateLoadedState && currentState.scrollToFileId != null) {
       final updatedState = currentState.copyWith.call(scrollToFileId: null);
       emit(updatedState);
     }
@@ -117,70 +122,69 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   }
 
   PlayListState _handlePlayListChanged(GetAllPlayListResponseDto playList) {
-    return state.maybeMap(
-      loaded: (s) {
-        if (s.playlistId != playList.id) {
-          return s;
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        if (state.playlistId != playList.id) {
+          return state;
         }
-
-        return s.copyWith.call(
+        return state.copyWith.call(
           shuffle: playList.shuffle,
           name: playList.name,
           position: playList.position,
           loop: playList.loop,
         );
-      },
-      orElse: () => state,
-    );
+      default:
+        return state;
+    }
   }
 
   PlayListState _handlePlayListDeleted(int id) {
-    return state.maybeMap(
-      loaded: (s) {
-        if (s.playlistId != id) {
-          return s;
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        if (state.playlistId != id) {
+          return state;
         }
 
-        return PlayListState.close();
-      },
-      orElse: () => state,
-    );
+        return const PlayListState.close();
+      default:
+        return state;
+    }
   }
 
   PlayListState _handleFileAdded(FileItemResponseDto file) {
-    return state.maybeMap(
-      loaded: (s) {
-        if (s.playlistId != file.playListId) {
-          return s;
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        if (state.playlistId != file.playListId) {
+          return state;
         }
 
-        final files = [...s.files];
+        final files = [...state.files];
         files.insert(file.position - 1, file);
 
-        return s.copyWith.call(files: files);
-      },
-      orElse: () => state,
-    );
+        return state.copyWith.call(files: files);
+      default:
+        return state;
+    }
   }
 
   PlayListState _handleFilesChanged(List<FileItemResponseDto> files) {
-    return state.maybeMap(
-      loaded: (s) => s.copyWith.call(files: files),
-      orElse: () => state,
-    );
+    return switch (state) {
+      final PlayListStateLoadedState state => state.copyWith(files: files),
+      _ => state,
+    };
   }
 
   PlayListState _handleFileChanged(FileItemResponseDto file) {
-    return state.maybeMap(
-      loaded: (s) {
-        if (s.playlistId != file.playListId) {
-          return s;
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        if (state.playlistId != file.playListId) {
+          return state;
         }
 
-        final files = [...s.files];
+        final files = [...state.files];
         final current = files.firstWhereOrNull((el) => el.id == file.id);
         if (current == null || file == current) {
-          return s;
+          return state;
         }
         final updated = current.copyWith.call(
           loop: file.loop,
@@ -231,25 +235,25 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
           }
         }
 
-        return s.copyWith.call(files: files);
-      },
-      orElse: () => state,
-    );
+        return state.copyWith(files: files);
+      default:
+        return state;
+    }
   }
 
   PlayListState _handleFileDeleted(int playListId, int id) {
-    return state.maybeMap(
-      loaded: (s) {
-        if (s.playlistId != playListId) {
-          return s;
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        if (state.playlistId != playListId) {
+          return state;
         }
 
-        final files = [...s.files];
+        final files = [...state.files];
         files.removeWhere((el) => el.id == id);
-        return s.copyWith.call(files: files);
-      },
-      orElse: () => state,
-    );
+        return state.copyWith(files: files);
+      default:
+        return state;
+    }
   }
 
   void _onPlayListLoaded(PlayListItemResponseDto? event) {
@@ -259,32 +263,34 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
       return;
     }
 
-    if (state is! _LoadedState || currentState.playlistId == event.id) {
+    if (state is! PlayListStateLoadedState || currentState.playlistId == event.id) {
       add(PlayListEvent.loaded(playlist: event));
       return;
     }
   }
 
   void _onConnected() {
-    state.maybeMap(
-      disconnected: (state) {
+    switch (state) {
+      case final PlayListStateDisconnectedState state:
         if (state.playListId != null) {
           add(PlayListEvent.load(id: state.playListId!));
         }
-      },
-      orElse: () {},
-    );
+      default:
+        break;
+    }
   }
 
   void _onDisconnected() {
-    state.maybeMap(
-      loaded: (s) => add(PlayListEvent.disconnected(playListId: s.playlistId)),
-      orElse: () => add(const PlayListEvent.disconnected()),
-    );
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        add(PlayListEvent.disconnected(playListId: state.playlistId));
+      default:
+        break;
+    }
   }
 
   void _onRefresh(RefreshPlayListResponseDto event) {
-    if (state is! _LoadedState || currentState.playlistId != event.id) {
+    if (state is! PlayListStateLoadedState || currentState.playlistId != event.id) {
       return;
     }
     if (!event.wasDeleted) {
@@ -295,49 +301,53 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   }
 
   void _onPlayListsChanged(List<GetAllPlayListResponseDto> event) {
-    state.maybeMap(
-      loaded: (s) {
-        final playList = event.firstWhereOrNull((el) => el.id == s.playlistId);
+    switch (state) {
+      case final PlayListStateLoadedState state:
+        final playList = event.firstWhereOrNull((el) => el.id == state.playlistId);
         if (playList == null) {
           return;
         }
 
         add(PlayListEvent.playListChanged(playList: playList));
-      },
-      orElse: () {},
-    );
+      default:
+        break;
+    }
   }
 
   void _onPlayListChanged((bool, GetAllPlayListResponseDto) event) {
-    state.maybeMap(
-      loaded: (_) {
+    switch (state) {
+      case PlayListStateLoadedState():
         final changeComesFromPlayedFile = event.$1;
         final playList = event.$2;
         if (!changeComesFromPlayedFile) {
           add(PlayListEvent.playListChanged(playList: playList));
         }
-      },
-      orElse: () {},
-    );
+      default:
+        break;
+    }
   }
 
   void _onPlayListDeleted(int event) {
-    state.maybeMap(
-      loaded: (_) => add(PlayListEvent.playListDeleted(id: event)),
-      orElse: () {},
-    );
+    switch (state) {
+      case PlayListStateLoadedState():
+        add(PlayListEvent.playListDeleted(id: event));
+      default:
+        break;
+    }
   }
 
   void _onFileAdded(FileItemResponseDto event) {
-    state.maybeMap(
-      loaded: (_) => add(PlayListEvent.fileAdded(file: event)),
-      orElse: () {},
-    );
+    switch (state) {
+      case PlayListStateLoadedState():
+        add(PlayListEvent.fileAdded(file: event));
+      default:
+        break;
+    }
   }
 
   void _onFileChanged((bool, FileItemResponseDto) event) {
-    state.maybeMap(
-      loaded: (state) {
+    switch (state) {
+      case final PlayListStateLoadedState state:
         //The second part of the if is to make sure that we only trigger the change
         // if we had a previously played file
         final changeComesFromPlayedFile = event.$1;
@@ -346,22 +356,26 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
         if (!changeComesFromPlayedFile || currentPlayedFile?.id != file.id) {
           add(PlayListEvent.fileChanged(file: file));
         }
-      },
-      orElse: () {},
-    );
+      default:
+        break;
+    }
   }
 
   void _onFilesChanged(List<FileItemResponseDto> event) {
-    state.maybeMap(
-      loaded: (_) => add(PlayListEvent.filesChanged(files: event)),
-      orElse: () {},
-    );
+    switch (state) {
+      case PlayListStateLoadedState():
+        add(PlayListEvent.filesChanged(files: event));
+      default:
+        break;
+    }
   }
 
   void _onFileDeleted((int, int) event) {
-    state.maybeMap(
-      loaded: (_) => add(PlayListEvent.fileDeleted(playListId: event.$1, id: event.$2)),
-      orElse: () {},
-    );
+    switch (state) {
+      case PlayListStateLoadedState():
+        add(PlayListEvent.fileDeleted(playListId: event.$1, id: event.$2));
+      default:
+        break;
+    }
   }
 }
