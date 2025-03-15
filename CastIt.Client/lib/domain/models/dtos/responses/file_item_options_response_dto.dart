@@ -4,7 +4,7 @@ part 'file_item_options_response_dto.freezed.dart';
 part 'file_item_options_response_dto.g.dart';
 
 @freezed
-class FileItemOptionsResponseDto with _$FileItemOptionsResponseDto {
+sealed class FileItemOptionsResponseDto with _$FileItemOptionsResponseDto {
   factory FileItemOptionsResponseDto({
     required int id,
     required bool isVideo,

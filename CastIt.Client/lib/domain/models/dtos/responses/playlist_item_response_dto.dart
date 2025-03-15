@@ -5,7 +5,7 @@ part 'playlist_item_response_dto.freezed.dart';
 part 'playlist_item_response_dto.g.dart';
 
 @freezed
-class PlayListItemResponseDto with _$PlayListItemResponseDto {
+sealed class PlayListItemResponseDto with _$PlayListItemResponseDto {
   const factory PlayListItemResponseDto({
     required int id,
     required String name,
