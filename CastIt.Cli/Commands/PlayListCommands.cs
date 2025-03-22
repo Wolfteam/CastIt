@@ -2,6 +2,7 @@
 using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using System;
+using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands
 {
@@ -23,6 +24,12 @@ namespace CastIt.Cli.Commands
         public PlayListCommands(IConsole appConsole, ICastItApiService castItApi)
             : base(appConsole, castItApi)
         {
+        }
+
+        protected override Task<int> OnExecute(CommandLineApplication app)
+        {
+            app.ShowHelp();
+            return base.OnExecute(app);
         }
     }
 }

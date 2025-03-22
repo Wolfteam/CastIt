@@ -27,7 +27,6 @@ namespace CastIt.Cli.Commands.Files
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
             if (string.IsNullOrWhiteSpace(Filename) && (PlayListId <= 0 || FileId <= 0))
             {
                 AppConsole.WriteLine($"PlaylistId = {PlayListId}, FileId = {FileId} or Filename = {Filename} are not valid");

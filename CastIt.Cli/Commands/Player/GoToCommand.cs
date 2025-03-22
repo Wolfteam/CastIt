@@ -37,7 +37,6 @@ namespace CastIt.Cli.Commands.Player
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
             EmptyResponseDto response;
             if (Next)
             {

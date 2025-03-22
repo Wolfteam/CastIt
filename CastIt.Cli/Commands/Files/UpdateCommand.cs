@@ -27,7 +27,6 @@ namespace CastIt.Cli.Commands.Files
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
             if (Loop.HasValue)
             {
                 AppConsole.WriteLine($"Updating file to loop = {Loop}");

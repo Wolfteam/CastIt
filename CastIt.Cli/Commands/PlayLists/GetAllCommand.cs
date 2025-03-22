@@ -17,7 +17,6 @@ namespace CastIt.Cli.Commands.PlayLists
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             AppConsole.WriteLine("Retrieving play lists...");
-            CheckIfWebServerIsRunning();
 
             var response = await CastItApi.GetAllPlayLists();
             CheckServerResponse(response);
