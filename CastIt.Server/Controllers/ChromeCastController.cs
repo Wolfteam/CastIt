@@ -17,9 +17,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Controllers;
-#if !DEBUG
-    [ApiExplorerSettings(IgnoreApi = true)]
-#endif
+
 public class ChromeCastController : BaseController
 {
     private readonly IFileService _fileService;
