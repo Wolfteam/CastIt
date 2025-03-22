@@ -39,12 +39,6 @@ public class ConfigureCommand : BaseCommand
         _appSettings = appSettings;
     }
 
-    protected override Task<int> OnExecute(CommandLineApplication app)
-    {
-        app.ShowHelp();
-        return base.OnExecute(app);
-    }
-
     protected override async Task<int> Execute(CommandLineApplication app)
     {
         if (Show)

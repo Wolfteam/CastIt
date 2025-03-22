@@ -16,11 +16,5 @@ namespace CastIt.Cli.Commands
             : base(appConsole, castItApi)
         {
         }
-
-        protected override Task<int> OnExecute(CommandLineApplication app)
-        {
-            app.ShowHelp();
-            return base.OnExecute(app);
-        }
     }
 }
