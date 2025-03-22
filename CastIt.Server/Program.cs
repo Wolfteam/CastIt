@@ -160,18 +160,17 @@ try
         app.UseHttpsRedirection();
     }
 
-
-    app.UseStaticFiles();
-    app.UseSpaStaticFiles();
-    app.UseRouting();
-    //For some reason this one is required otherwise UseSpa will "eat" the maphub route
-    app.UseEndpoints(_ => { });
     //Cors is required for the subtitles to work
     app.UseCors(options =>
         options.AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader()
     );
+    app.UseStaticFiles();
+    app.UseSpaStaticFiles();
+    app.UseRouting();
+    //For some reason this one is required otherwise UseSpa will "eat" the maphub route
+    app.UseEndpoints(_ => { });
     app.UseHealthChecks("/healthcheck");
     app.UseMiddleware<ExceptionHandlerMiddleware>();
 
