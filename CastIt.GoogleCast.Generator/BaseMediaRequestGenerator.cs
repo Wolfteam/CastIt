@@ -78,7 +78,7 @@ namespace CastIt.GoogleCast.Generator
                 Type = TrackType.Text,
                 Name = "English",
                 Language = "en-US",
-                TrackContentId = Server.GetSubTitleUrl(),
+                TrackContentId = Server.GetSubTitleUrl()
             };
 
             request.MediaInfo.Tracks.RemoveAll(t => t.TrackId == SubTitleDefaultTrackId);

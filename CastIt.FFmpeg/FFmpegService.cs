@@ -872,7 +872,7 @@ public class FFmpegService : IFFmpegService
         CheckFfmpegExePaths();
         if (_checkTranscodeProcess)
         {
-            TokenSource.Cancel();
+            await TokenSource.CancelAsync();
             TokenSource = new CancellationTokenSource();
             await KillTranscodeProcess();
         }

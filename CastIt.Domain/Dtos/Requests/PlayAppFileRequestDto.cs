@@ -9,6 +9,7 @@ namespace CastIt.Domain.Dtos.Requests
         public int AudioStreamIndex { get; set; }
         public List<string> StreamUrls { get; set; } = new List<string>();
         public double Seconds { get; set; }
+        public double? Duration { get; set; }
 
         public bool VideoNeedsTranscode { get; set; }
         public bool AudioNeedsTranscode { get; set; }
