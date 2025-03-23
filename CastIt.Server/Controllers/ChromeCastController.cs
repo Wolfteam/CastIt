@@ -79,6 +79,7 @@ public class ChromeCastController : BaseController
                 Logger.LogInformation($"{nameof(Play)}: Handling request for music file with options = {{@Options}}", options);
                 stream = await _ffmpegService.TranscodeMusic(options);
             }
+
             return new FileStreamResult(stream, dto.ContentType);
         }
         catch (Exception e)

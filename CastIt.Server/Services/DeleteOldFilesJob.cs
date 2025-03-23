@@ -22,11 +22,10 @@ public class DeleteOldFilesJob : IJob
     public Task Execute(IJobExecutionContext context)
     {
         const int days = 7;
-        string path = AppFileUtils.GetServerLogsPath();
 
         _logger.LogInformation(
-            "Starting job = {Job} at = {At} and deleting old files whose last access date <= {Days} from {Path}...",
-            nameof(DeleteOldFilesJob), context.FireTimeUtc, days, path);
+            "Starting job = {Job} at = {At} and deleting old files whose last access date <= {Days}...",
+            nameof(DeleteOldFilesJob), context.FireTimeUtc, days);
 
         _fileService.DeleteServerLogsAndPreviews(days * 2, days);
 
