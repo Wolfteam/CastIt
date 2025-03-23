@@ -1,5 +1,6 @@
 import { Close } from '@mui/icons-material';
-import { DialogTitle, Grid, IconButton, Typography } from '@mui/material';
+import { DialogTitle, IconButton, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { JSX } from 'react';
 
 interface Props {

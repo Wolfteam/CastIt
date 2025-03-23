@@ -1,4 +1,5 @@
-import { Container, Grid, CircularProgress, Typography } from '@mui/material';
+import { Container, CircularProgress, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 
 interface Props {
     message?: string;
@@ -14,7 +15,7 @@ function Loading(props: Props) {
                 direction="column"
                 style={{ minHeight: '100vh', textAlign: 'center' }}
             >
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <CircularProgress />
                     {props.message ? <Typography>{props.message}</Typography> : null}
                 </Grid>

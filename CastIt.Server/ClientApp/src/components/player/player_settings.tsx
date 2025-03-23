@@ -6,7 +6,6 @@ import {
     FormControl,
     FormControlLabel,
     FormGroup,
-    Grid,
     IconButton,
     InputLabel,
     Select,
@@ -14,6 +13,7 @@ import {
     Switch,
     Typography,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { styled } from '@mui/material/styles';
 import { Settings } from '@mui/icons-material';
 import { useContext, useEffect, useState } from 'react';
@@ -218,8 +218,8 @@ function PlayerSettings() {
                 <AppDialogTitle icon={<Settings />} title={translations.settings} close={handleCloseDialog} />
                 <DialogContent>
                     <Grid container alignItems="flex-start" justifyContent="space-between">
-                        <Grid item xs={12} md={6}>
-                            <StyledGridItem item xs={12}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <StyledGridItem size={12}>
                                 <Typography color="textSecondary">{translations.general}</Typography>
                                 <StyledFormControl size="small">
                                     <InputLabel>{translations.theme}</InputLabel>
@@ -282,10 +282,10 @@ function PlayerSettings() {
                                     </Select>
                                 </StyledFormControl>
                             </StyledGridItem>
-                            <StyledGridItem item xs={12}>
+                            <StyledGridItem size={12}>
                                 <Typography color="textSecondary">{translations.options}</Typography>
                                 <StyledGeneralGrid container>
-                                    <Grid item xs={12} md={6}>
+                                    <Grid size={{ xs: 12, md: 6 }}>
                                         <FormGroup row>
                                             <FormControlLabel
                                                 control={<Switch color="primary" checked={true} />}
@@ -315,7 +315,7 @@ function PlayerSettings() {
                                             />
                                         </FormGroup>
                                     </Grid>
-                                    <Grid item xs={12} md={6}>
+                                    <Grid size={{ xs: 12, md: 6 }}>
                                         <FormGroup row>
                                             <FormControlLabel
                                                 control={
@@ -355,8 +355,8 @@ function PlayerSettings() {
                             </StyledGridItem>
                         </Grid>
                         <Divider orientation="vertical" flexItem />
-                        <Grid item xs={12} md={5}>
-                            <StyledGridItem item xs={12}>
+                        <Grid size={{ xs: 12, md: 5 }}>
+                            <StyledGridItem size={12}>
                                 <Typography color="textSecondary">{translations.subtitles}</Typography>
                                 <StyledFormControl size="small">
                                     <InputLabel>{translations.fontColor}</InputLabel>
@@ -434,7 +434,7 @@ function PlayerSettings() {
                                     </Select>
                                 </StyledFormControl>
                             </StyledGridItem>
-                            <StyledGeneralGrid item xs={12}>
+                            <StyledGeneralGrid size={12}>
                                 <Typography id="subtitle-delay-slider" gutterBottom color="textSecondary">
                                     {String.Format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
                                 </Typography>

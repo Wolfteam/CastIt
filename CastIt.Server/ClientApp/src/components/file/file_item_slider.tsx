@@ -1,4 +1,5 @@
-import { Grid, Typography, Slider, Theme, useMediaQuery } from '@mui/material';
+import { Typography, Slider, Theme, useMediaQuery } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 
 interface Props {
     playedTime: string;
@@ -26,13 +27,13 @@ function FileItemSlider(props: Props) {
     return (
         <>
             <Grid container justifyContent="space-between" alignItems="center">
-                <Grid item xs={6}>
+                <Grid size={6}>
                     <Typography variant="subtitle1" className={'text-overflow-elipsis'} align="left">
                         {props.playedTime}
                     </Typography>
                 </Grid>
 
-                <Grid item xs={6}>
+                <Grid size={6}>
                     <Typography variant="subtitle1" className={'text-overflow-elipsis'} align="right">
                         {props.duration}
                     </Typography>
