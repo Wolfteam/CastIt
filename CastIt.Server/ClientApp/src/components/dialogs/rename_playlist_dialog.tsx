@@ -68,10 +68,12 @@ function RenamePlayListDialog(props: Props) {
                         value={state.name}
                         error={showError}
                         helperText={showError ? translations.fieldIsNotValid : ''}
-                        InputProps={{
-                            inputProps: {
-                                maxLength: 50,
-                            },
+                        slotProps={{
+                            input: {
+                                inputProps: {
+                                    maxLength: 50,
+                                },
+                            }
                         }}
                     />
                 </DialogContent>

@@ -2,7 +2,6 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
-    Grid,
     DialogActions,
     Button,
     TextField,
@@ -10,6 +9,7 @@ import {
     Switch,
     FormControlLabel,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import React, { useState } from 'react';
 import translations from '../../services/translations';
 
