@@ -20,7 +20,7 @@
         x:Name="PlayListCard"
         Margin="8,10"
         materialDesign:ShadowAssist.Darken="True"
-        materialDesign:ShadowAssist.ShadowDepth="Depth5"
+        materialDesign:ElevationAssist.Elevation="Dp5"
         materialDesign:ShadowAssist.ShadowEdges="All"
         MouseDoubleClick="Control_OnMouseDoubleClick">
         <Grid>

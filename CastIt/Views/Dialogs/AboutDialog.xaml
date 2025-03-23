@@ -27,7 +27,7 @@
         </Grid.RowDefinitions>
         <materialDesign:ColorZone
             Padding="16"
-            materialDesign:ShadowAssist.ShadowDepth="Depth2"
+            materialDesign:ElevationAssist.Elevation="Dp2"
             Background="{DynamicResource PrimaryHueDarkBrush}"
             DockPanel.Dock="Top">
             <DockPanel>
