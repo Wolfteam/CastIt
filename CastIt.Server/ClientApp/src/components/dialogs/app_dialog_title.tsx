@@ -1,5 +1,6 @@
 import { Close } from '@mui/icons-material';
 import { DialogTitle, Grid, IconButton, Typography } from '@mui/material';
+import { JSX } from 'react';
 
 interface Props {
     icon: JSX.Element;

@@ -2,7 +2,7 @@ import { IconButton, Divider, ListItemText, Menu, MenuItem } from '@mui/material
 import { styled } from '@mui/material/styles';
 import { Audiotrack, HighQuality, Search, Subtitles, CheckTwoTone } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, JSX, useEffect, useState } from 'react';
 import PopupState, { bindTrigger, bindMenu, InjectedProps } from 'material-ui-popup-state';
 import { onPlayerStatusChanged } from '../../services/castithub.service';
 import { IFileItemOptionsResponseDto } from '../../models';

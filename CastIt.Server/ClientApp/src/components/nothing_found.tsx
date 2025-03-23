@@ -1,6 +1,7 @@
 import { Container, Grid, Typography } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import translations from '../services/translations';
+import { JSX } from 'react';
 
 interface Props {
     icon?: JSX.Element;
