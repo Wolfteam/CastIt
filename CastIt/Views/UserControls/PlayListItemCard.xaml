@@ -19,9 +19,8 @@
     <materialDesign:Card
         x:Name="PlayListCard"
         Margin="8,10"
-        materialDesign:ShadowAssist.Darken="True"
         materialDesign:ElevationAssist.Elevation="Dp5"
-        materialDesign:ShadowAssist.ShadowEdges="All"
+        materialDesign:ShadowAssist.Darken="True"
         MouseDoubleClick="Control_OnMouseDoubleClick">
         <Grid>
             <Grid.RowDefinitions>
@@ -45,7 +44,7 @@
                 Click="OnFabClick"
                 Content="{Binding NumberOfFiles}"
                 Foreground="White"
-                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" />
+                Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryButton}" />
             <StackPanel
                 Grid.Row="1"
                 Margin="0,20,0,0"

@@ -29,7 +29,7 @@
         <materialDesign:ColorZone
             Padding="16"
             materialDesign:ElevationAssist.Elevation="Dp2"
-            Background="{DynamicResource PrimaryHueDarkBrush}"
+            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
             DockPanel.Dock="Top">
             <DockPanel>
                 <Grid>

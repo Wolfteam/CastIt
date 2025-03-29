@@ -3,9 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:domain="clr-namespace:CastIt.Domain;assembly=CastIt.Domain"
     xmlns:local="clr-namespace:CastIt.Views.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:domain="clr-namespace:CastIt.Domain;assembly=CastIt.Domain"
     xmlns:utils="clr-namespace:CastIt.Common.Utils"
     xmlns:vms="clr-namespace:CastIt.ViewModels"
     d:DataContext="{d:DesignInstance Type=vms:MainViewModel}"
@@ -16,14 +16,14 @@
         <Slider
             x:Name="MainSlider"
             Focusable="True"
-            Foreground="{DynamicResource PrimaryHueDarkBrush}"
+            Foreground="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
             IsMoveToPointEnabled="True"
             Maximum="{Binding CurrentFileDuration, Mode=OneWay}"
             Minimum="0"
             MouseLeave="MainSlider_MouseLeave"
             MouseMove="MainSlider_MouseMove"
-            PreviewMouseUp="MainSlider_PreviewMouseUp"
             PreviewMouseDown="MainSlider_OnPreviewMouseDown"
+            PreviewMouseUp="MainSlider_PreviewMouseUp"
             Value="{Binding CurrentPlayedSeconds, Mode=OneWay}">
             <Slider.Style>
                 <Style BasedOn="{StaticResource CustomSliderStyle}" TargetType="{x:Type Slider}">

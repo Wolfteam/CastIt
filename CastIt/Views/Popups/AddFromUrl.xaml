@@ -30,7 +30,7 @@
             Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Background="{DynamicResource PrimaryHueDarkBrush}">
+            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}">
             <DockPanel>
                 <StackPanel
                     HorizontalAlignment="Stretch"

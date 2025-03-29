@@ -50,7 +50,7 @@
         <materialDesign:Chip
             Margin="0,0,10,0"
             VerticalAlignment="Center"
-            Background="{DynamicResource PrimaryHueDarkBrush}"
+            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
             Content="{Binding NumberOfFiles}"
             FontSize="10"
             Foreground="{StaticResource FontColorOnDarkBackgroundBrush}" />

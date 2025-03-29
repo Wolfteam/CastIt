@@ -78,7 +78,7 @@ namespace CastIt.Common.Utils
                     ? new System.Windows.Media.Pen(System.Windows.Media.Brushes.Black, 0.5)
                     : new System.Windows.Media.Pen(System.Windows.Media.Brushes.White, 0.5);
 
-                var accentColor = (System.Windows.Application.Current.Resources["PrimaryHueDarkBrush"] as System.Windows.Media.SolidColorBrush)!
+                var accentColor = (System.Windows.Application.Current.Resources["MaterialDesign.Brush.Primary.Dark"] as System.Windows.Media.SolidColorBrush)!
                     .Color.ToDrawingColor();
                 var fontColor = (System.Windows.Application.Current.Resources["FontColorBrush"] as System.Windows.Media.SolidColorBrush)!
                     .Color.ToDrawingColor();
