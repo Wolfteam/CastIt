@@ -4,8 +4,8 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Extensions;
 using CastIt.Interfaces;
-using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.Models.Results;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
 using CastIt.ViewModels.Dialogs;
@@ -15,6 +15,7 @@ using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using MvvmCross.ViewModels.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    public partial class MainViewModel : BaseViewModel
+    public partial class MainViewModel : BaseViewModelResultAwaiting<NavigationBoolResult>
     {
         #region Members
 
@@ -302,8 +303,9 @@ namespace CastIt.ViewModels
             ITelemetryService telemetryService,
             IMapper mapper,
             IFileService fileService,
-            ICastItHubClientService castItHub)
-            : base(textProvider, messenger, logger)
+            ICastItHubClientService castItHub,
+            IMvxResultViewModelManager resultViewModelManager)
+            : base(textProvider, messenger, logger, resultViewModelManager)
         {
             _settingsService = settingsService;
             _navigationService = navigationService;
@@ -801,10 +803,20 @@ namespace CastIt.ViewModels
             }
         }
 
-        private async Task ShowChangeServerUrlDialog()
+        private Task<bool> ShowChangeServerUrlDialog()
         {
-            var result = await _navigationService.Navigate<ChangeServerUrlDialogViewModel, NavigationBoolResult>();
-            ServerIsRunning = result!.Result;
+            return _navigationService.NavigateRegisteringToResult<ChangeServerUrlDialogViewModel, NavigationBoolResult>(this, ResultViewModelManager);
+        }
+
+        public override bool ResultSet(IMvxResultSettingViewModel<NavigationBoolResult> viewModel, NavigationBoolResult result)
+        {
+            if (viewModel is MainViewModel)
+            {
+                ServerIsRunning = result.Value;
+                return true;
+            }
+
+            return false;
         }
         #endregion
     }
