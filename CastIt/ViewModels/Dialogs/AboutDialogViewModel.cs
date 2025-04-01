@@ -9,21 +9,21 @@ namespace CastIt.ViewModels.Dialogs
     public class AboutDialogViewModel : BaseDialogViewModel
     {
         private readonly IMvxNavigationService _navigationService;
-        private readonly ICastItHubClientService _castItHubClientService;
+        private readonly IDesktopAppSettingsService _desktopAppSettings;
 
         public string CastItServerUrl
-            => GetText("ServerUrl", _castItHubClientService.IpAddress ?? "N/A");
+            => GetText("ServerUrl", _desktopAppSettings.ServerUrl ?? "N/A");
 
         public AboutDialogViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<AboutDialogViewModel> logger,
             IMvxNavigationService navigationService,
-            ICastItHubClientService castItHubClientService)
+            IDesktopAppSettingsService desktopAppSettings)
             : base(textProvider, messenger, logger)
         {
             _navigationService = navigationService;
-            _castItHubClientService = castItHubClientService;
+            _desktopAppSettings = desktopAppSettings;
         }
 
         public override void Prepare()

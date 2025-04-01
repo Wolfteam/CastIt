@@ -46,30 +46,9 @@ namespace CastIt.Services
         public event Action<FileItemResponseDto> OnFileLoaded;
         public event Action<FileItemResponseDto> OnFileEndReached;
 
-        public string IpAddress { get; set; }
-
         public CastItHubClientService(ILogger<CastItHubClientService> logger)
         {
             _logger = logger;
-        }
-
-        public async Task<bool> Init()
-        {
-            //Kinda hack...
-            bool serverStarted = await StartServerIfNotStarted();
-            if (!serverStarted)
-                return false;
-
-            bool connectionBuilt = await BuildConnection();
-            if (!connectionBuilt)
-                return false;
-
-            ListenForEvents();
-            var connected = await ConnectToHub();
-            if (connected)
-                OnClientConnected?.Invoke();
-
-            return connected;
         }
 
         public async Task<bool> Init(string serverIpAddress)
@@ -585,7 +564,6 @@ namespace CastIt.Services
 
                     _connection.Closed += ConnectionClosed;
                     _logger.LogInformation($"{nameof(BuildConnection)}: The server's hub address is = {url}");
-                    IpAddress = ipAddress;
                     return true;
                 }
 

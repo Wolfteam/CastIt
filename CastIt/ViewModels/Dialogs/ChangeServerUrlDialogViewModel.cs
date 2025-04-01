@@ -14,6 +14,7 @@ namespace CastIt.ViewModels.Dialogs
     {
         private readonly IMvxNavigationService _navigationService;
         private readonly ICastItHubClientService _castItHub;
+        private readonly IDesktopAppSettingsService _desktopAppSettings;
 
         private bool _isBusy;
         private string _newServerIpAddress;
@@ -38,7 +39,7 @@ namespace CastIt.ViewModels.Dialogs
         }
 
         public string CurrentServerIpAddress
-            => _castItHub.IpAddress;
+            => _desktopAppSettings.ServerUrl;
 
         public IMvxAsyncCommand<string> SaveUrlCommand { get; private set; }
 
@@ -48,11 +49,13 @@ namespace CastIt.ViewModels.Dialogs
             ILogger<ChangeServerUrlDialogViewModel> logger,
             IMvxNavigationService navigationService,
             ICastItHubClientService castItHub,
-            IMvxResultViewModelManager resultViewModelManager)
+            IMvxResultViewModelManager resultViewModelManager,
+            IDesktopAppSettingsService desktopAppSettings)
             : base(textProvider, messenger, logger, resultViewModelManager)
         {
             _castItHub = castItHub;
             _navigationService = navigationService;
+            _desktopAppSettings = desktopAppSettings;
         }
 
         public override Task Initialize()
@@ -89,6 +92,7 @@ namespace CastIt.ViewModels.Dialogs
                     return;
                 }
 
+                _desktopAppSettings.ServerUrl = url;
                 await _navigationService.CloseSettingResult(this, NavigationBoolResult.Succeed());
             }
             catch (Exception e)

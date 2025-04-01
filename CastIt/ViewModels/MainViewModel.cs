@@ -432,16 +432,18 @@ namespace CastIt.ViewModels
 
             _castItHub.OnFileEndReached += OnFileEndReached;
 
-            Logger.LogInformation($"{nameof(InitializeCastServer)}: Initializing cast service...");
-            bool initialized = await _castItHub.Init().ConfigureAwait(false);
-            if (!initialized)
+            if (Uri.TryCreate(_settingsService.ServerUrl, UriKind.Absolute, out _))
             {
-                Logger.LogInformation($"{nameof(Initialize)}: Couldn't connect to the hub");
-                IsBusy = false;
-                return;
+                Logger.LogInformation($"{nameof(InitializeCastServer)}: Initializing cast service...");
+                bool initialized = await _castItHub.Init(_settingsService.ServerUrl).ConfigureAwait(false);
+                if (!initialized)
+                {
+                    Logger.LogInformation($"{nameof(Initialize)}: Couldn't connect to the hub");
+                    IsBusy = false;
+                    return;
+                }
+                ServerIsRunning = true;
             }
-
-            ServerIsRunning = true;
             IsBusy = false;
             Logger.LogInformation($"{nameof(InitializeCastServer)}: Completed");
         }

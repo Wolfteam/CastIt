@@ -2,7 +2,7 @@
 using CastIt.Domain.Enums;
 using CastIt.Domain.Utils;
 using CastIt.Interfaces;
-using CastIt.Shared.Models;
+using CastIt.Models;
 using CastIt.Shared.Settings;
 using CastIt.Shared.Telemetry;
 using Microsoft.Extensions.Logging;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.Services
 {
-    internal class DesktopAppSettingsService : BaseAppSettingsService<DesktopAppSettings>, IDesktopAppSettingsService
+    internal class DesktopAppSettingsService : BaseAppSettingsService<AppSettings>, IDesktopAppSettingsService
     {
         protected override string BasePath
             => AppFileUtils.GetBaseAppFolder();
@@ -79,6 +79,12 @@ namespace CastIt.Services
             get => Settings.UseGridViewForPlayLists;
             set => Settings.UseGridViewForPlayLists = value;
         }
+
+        public string ServerUrl
+        {
+            get => Settings.ServerUrl;
+            set => Settings.ServerUrl = value;
+        }
         #endregion
 
         public DesktopAppSettingsService(ILogger<DesktopAppSettingsService> logger, ITelemetryService telemetryService)
@@ -86,14 +92,14 @@ namespace CastIt.Services
         {
         }
 
-        public override Task<DesktopAppSettings> UpdateSettings(DesktopAppSettings settings, bool saveToFileSystem = false)
+        public override Task<AppSettings> UpdateSettings(AppSettings settings, bool saveToFileSystem = false)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<DesktopAppSettings> GetDefaultAppSettings()
+        public override Task<AppSettings> GetDefaultAppSettings()
         {
-            var settings = new DesktopAppSettings
+            var settings = new AppSettings
             {
                 AppTheme = AppThemeType.Dark,
                 AccentColor = AppConstants.AccentColorVividRed,
