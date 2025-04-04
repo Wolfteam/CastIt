@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Principal;
 
@@ -42,6 +43,14 @@ namespace CastIt.Shared.Server
         {
             var existingProcess = Process.GetProcessesByName(ServerProcessName);
             return existingProcess.FirstOrDefault();
+        }
+
+        public static int GetOpenPort(int startPort = 9696)
+        {
+            var properties = IPGlobalProperties.GetIPGlobalProperties();
+            var tcpEndPoints = properties.GetActiveTcpListeners();
+            var usedPorts = tcpEndPoints.Select(p => p.Port).ToList();
+            return Enumerable.Range(startPort, 99).FirstOrDefault(port => !usedPorts.Contains(port));
         }
 
         public static bool IsServerAlive()

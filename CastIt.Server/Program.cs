@@ -18,7 +18,9 @@ using CastIt.Server.Shared;
 using CastIt.Shared;
 using CastIt.Shared.Extensions;
 using CastIt.Shared.Models;
+using CastIt.Shared.Server;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +39,13 @@ try
     Log.Information("Creating builder...");
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseWindowsService();
+    if (OperatingSystem.IsWindows() && builder.Environment.IsProduction())
+    {
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(WebServerUtils.GetOpenPort());
+        });
+    }
 
     Log.Information("Configuring logs...");
     var logs = ToLog.From<BaseController>()
