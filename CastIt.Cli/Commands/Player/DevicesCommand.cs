@@ -26,7 +26,6 @@ namespace CastIt.Cli.Commands.Player
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
             if (Refresh)
             {
                 AppConsole.WriteLine($"Refreshing devices with a refreshTimeout = {RefreshTimeout} ...");

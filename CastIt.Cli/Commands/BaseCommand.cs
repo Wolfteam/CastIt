@@ -40,14 +40,6 @@ namespace CastIt.Cli.Commands
             return Task.FromResult(SuccessCode);
         }
 
-        protected void CheckIfWebServerIsRunning()
-        {
-            if (!WebServerUtils.IsServerAlive())
-            {
-                throw new ServerNotRunningException();
-            }
-        }
-
         protected void CheckServerResponse<T>(T response) where T : EmptyResponseDto
         {
             if (!response.Succeed)

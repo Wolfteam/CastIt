@@ -6,6 +6,7 @@ using CastIt.Domain.Utils;
 using CastIt.Interfaces;
 using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.Models.Results;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
 using CastIt.ViewModels.Dialogs;
@@ -16,6 +17,7 @@ using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using MvvmCross.ViewModels.Result;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +25,7 @@ using System.Threading.Tasks;
 namespace CastIt.ViewModels.Items
 {
     //TODO: MOVE THE MAPPER DEPENDENCY TO INFRA PROJECT
-    public class PlayListItemViewModel : BaseViewModel
+    public class PlayListItemViewModel : BaseViewModelResultAwaiting<OnYoutubeUrlAddedResult>
     {
         #region Members
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
@@ -189,8 +191,9 @@ namespace CastIt.ViewModels.Items
             IDesktopAppSettingsService appSettings,
             IFileService fileService,
             ICastItHubClientService castItHub,
-            IMapper mapper)
-            : base(textProvider, messenger, logger)
+            IMapper mapper,
+            IMvxResultViewModelManager resultViewModelManager)
+            : base(textProvider, messenger, logger, resultViewModelManager)
         {
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _telemetryService = telemetryService;
@@ -373,25 +376,12 @@ namespace CastIt.ViewModels.Items
                 if (_youtubeUrlDecoder.IsPlayListAndVideo(url))
                 {
                     Logger.LogInformation($"{nameof(OnUrlAdded)}: Url is a playlist and a video, asking which one should we parse..");
-                    var result = await _navigationService
-                        .Navigate<ParseYoutubeVideoOrPlayListDialogViewModel, NavigationBoolResult>();
-
-                    //Only video
-                    if (result?.Result == true)
-                    {
-                        Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
-                        await _castItHub.AddUrlFile(Id, url, true);
-                        return;
-                    }
-                    //Cancel
-                    if (result == null)
-                    {
-                        Logger.LogInformation($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
-                        return;
-                    }
+                    await _navigationService.NavigateRegisteringToResult<ParseYoutubeVideoOrPlayListDialogViewModel, string, OnYoutubeUrlAddedResult>(
+                        this,
+                        ResultViewModelManager,
+                        url);
+                    return;
                 }
-                Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist...");
-                await _castItHub.AddUrlFile(Id, url, false);
             }
             catch (Exception e)
             {
@@ -456,6 +446,31 @@ namespace CastIt.ViewModels.Items
         private async void UpdatePlayListOptions()
         {
             await _castItHub.SetPlayListOptions(Id, Loop, Shuffle);
+        }
+
+        public override bool ResultSet(IMvxResultSettingViewModel<OnYoutubeUrlAddedResult> viewModel, OnYoutubeUrlAddedResult result)
+        {
+            if (viewModel is ParseYoutubeVideoOrPlayListDialogViewModel)
+            {
+                //Only video
+                if (result.OnlyVideo)
+                {
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing only the video...");
+                    _castItHub.AddUrlFile(Id, result.Url, true).GetAwaiter().GetResult();
+                    return true;
+                }
+
+                //Cancel
+                if (result.Cancel)
+                {
+                    Logger.LogInformation($"{nameof(OnUrlAdded)}: Cancel was selected, nothing will be parsed");
+                    return true;
+                }
+
+                Logger.LogInformation($"{nameof(OnUrlAdded)}: Parsing playlist...");
+                _castItHub.AddUrlFile(Id, result.Url, false).GetAwaiter().GetResult();
+            }
+            return false;
         }
         #endregion
     }

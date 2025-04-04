@@ -270,7 +270,6 @@ function FileItem(props: Props) {
                         </ListItemAvatar>
                         <ListItemText
                             primary={title}
-                            secondaryTypographyProps={{ component: 'span' }}
                             secondary={
                                 <FileItemSubtitle
                                     path={state.path}
@@ -280,6 +279,9 @@ function FileItem(props: Props) {
                                     playedTime={state.playedTime}
                                 />
                             }
+                            slotProps={{
+                                secondary: { component: 'span' }
+                            }}
                         />
                         <FileItemDuration fullTotalDuration={state.fullTotalDuration} loop={state.loop} />
                     </ListItemButton>

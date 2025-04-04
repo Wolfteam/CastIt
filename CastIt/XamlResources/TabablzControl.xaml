@@ -37,11 +37,11 @@
         <Setter Property="Height" Value="24" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Opacity" Value=".75" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary.Dark}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="true">
                 <Setter Property="Opacity" Value="1" />
-                <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Primary.Light}" />
                 <Setter Property="Foreground" Value="{DynamicResource FontColorBrush}" />
             </Trigger>
         </Style.Triggers>
@@ -111,7 +111,7 @@
                             x:Name="SelectionHighlightBorder"
                             Grid.Row="1"
                             Height="2"
-                            Background="{DynamicResource PrimaryHueDarkBrush}"
+                            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
                             Visibility="Hidden" />
                     </Grid>
                     <ControlTemplate.Triggers>

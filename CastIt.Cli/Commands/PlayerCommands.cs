@@ -3,6 +3,7 @@ using CastIt.Cli.Commands.Player;
 using CastIt.Cli.Interfaces.Api;
 using McMaster.Extensions.CommandLineUtils;
 using System;
+using System.Threading.Tasks;
 
 namespace CastIt.Cli.Commands
 {

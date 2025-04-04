@@ -81,7 +81,7 @@
                 <Ellipse
                     x:Name="grip"
                     Margin="-1,0"
-                    Effect="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RangeBase}, Path=(wpf:ShadowAssist.ShadowDepth), Converter={x:Static wpf:ShadowConverter.Instance}}"
+                    Effect="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=RangeBase}, Path=(wpf:ElevationAssist.Elevation), Converter={x:Static wpf:ShadowConverter.Instance}}"
                     Fill="{TemplateBinding Foreground}" />
             </AdornerDecorator>
         </Grid>
@@ -214,10 +214,10 @@
                     Grid.Row="1"
                     Height="20">
                     <Track.DecreaseRepeatButton>
-                        <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource MaterialDesignRepeatButton}" />
+                        <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource MaterialDesign3.MaterialDesignRepeatButton}" />
                     </Track.DecreaseRepeatButton>
                     <Track.IncreaseRepeatButton>
-                        <RepeatButton Command="{x:Static Slider.IncreaseLarge}" Style="{StaticResource MaterialDesignRepeatButton}" />
+                        <RepeatButton Command="{x:Static Slider.IncreaseLarge}" Style="{StaticResource MaterialDesign3.MaterialDesignRepeatButton}" />
                     </Track.IncreaseRepeatButton>
                     <!--  It's important that the Thumb gets added last in the XAML to make sure it is drawn on top of both repeat buttons  -->
                     <Track.Thumb>
@@ -254,7 +254,7 @@
         <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false" />
         <Setter Property="Background" Value="{x:Null}" />
         <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Primary}" />
         <Setter Property="Template" Value="{StaticResource MaterialDesignSliderHorizontal}" />
         <Style.Triggers>
             <!--<Trigger Property="Orientation" Value="Vertical">

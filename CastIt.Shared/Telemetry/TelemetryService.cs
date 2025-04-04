@@ -1,9 +1,4 @@
-﻿#if !DEBUG
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Crashes;
-using Microsoft.AppCenter.Analytics;
-#endif
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace CastIt.Shared.Telemetry

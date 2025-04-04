@@ -12,10 +12,7 @@ namespace CastIt.Domain
         public const string ChromeCastImagesPath = "Images";
         public const string ChromeCastSubTitlesPath = "Subtitles";
         public const string ThumbnailPreviewImagesPath = "Images/Previews";
-        public const int DefaultPort = 9696;
         public const string CastItHub = "CastItHub";
-
-        public const string PortArgument = "--port";
 
         //The number of images in a tile
         public const int ThumbnailsPerImage = 25;

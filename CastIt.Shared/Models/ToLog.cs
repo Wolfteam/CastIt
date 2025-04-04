@@ -15,7 +15,8 @@ public class ToLog
 
     private static readonly string[] ReservedSuffixes =
     {
-        "HostedService"
+        "HostedService",
+        "ViewModel"
     };
 
     private static readonly Type[] LoggerTypes =

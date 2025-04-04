@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, JSX, useCallback, useContext, useEffect, useState } from 'react';
 import { CastItHubService, onClientDisconnected, onPlayerStatusChanged } from '../services/castithub.service';
 import Loading from '../components/loading';
 import { useSnackbar } from 'notistack';

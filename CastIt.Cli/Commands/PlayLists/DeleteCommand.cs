@@ -18,7 +18,6 @@ namespace CastIt.Cli.Commands.PlayLists
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
             var response = await CastItApi.DeletePlayList(PlayListId);
             CheckServerResponse(response);
 

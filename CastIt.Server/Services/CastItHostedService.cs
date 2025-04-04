@@ -30,7 +30,6 @@ namespace CastIt.Server.Services
         private readonly IServerAppSettingsService _appSettings;
         private readonly IFileWatcherService _fileWatcherService;
         private readonly IServerService _serverService;
-        private readonly IFileService _fileService;
         private readonly ITelemetryService _telemetryService;
         private readonly IMapper _mapper;
         private readonly IFFmpegService _fFmpegService;
@@ -44,7 +43,6 @@ namespace CastIt.Server.Services
             IHubContext<CastItHub, ICastItHub> castItHub,
             IServerAppSettingsService appSettings,
             IFileWatcherService fileWatcherService,
-            IFileService fileService,
             IServerService serverService,
             ITelemetryService telemetryService,
             IMapper mapper,
@@ -56,7 +54,6 @@ namespace CastIt.Server.Services
             _castItHub = castItHub;
             _appSettings = appSettings;
             _fileWatcherService = fileWatcherService;
-            _fileService = fileService;
             _serverService = serverService;
             _telemetryService = telemetryService;
             _mapper = mapper;

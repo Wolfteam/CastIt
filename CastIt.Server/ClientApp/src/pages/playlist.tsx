@@ -5,7 +5,8 @@ import { Params, useParams } from 'react-router-dom';
 import { IFileItemResponseDto, IGetAllPlayListResponseDto, IPlayListItemResponseDto } from '../models';
 import { onPlayListsChanged, onPlayListChanged, onFileAdded, onFilesChanged, onFileDeleted } from '../services/castithub.service';
 import FileItem from '../components/file/file_item';
-import { Button, CircularProgress, Container, Grid, List } from '@mui/material';
+import { Button, CircularProgress, Container, List } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import PlayListAppBar from '../components/playlist/playlist_appbar';
 import translations from '../services/translations';
 import PageContent from './page_content';
@@ -187,7 +188,7 @@ function PlayList() {
     if (!state.playList) {
         return (
             <Grid container justifyContent="center" alignItems="center" className={classes.loadingPlayList}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <CircularProgress />
                 </Grid>
             </Grid>
@@ -223,7 +224,7 @@ function PlayList() {
         files.length > 0 ? (
             <Container style={{ flex: 'auto' }}>
                 <Grid container justifyContent="center" alignItems="center">
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <DragDropContext onDragEnd={onDragEnd}>
                             <Droppable droppableId="playlist-droppable" direction="vertical">
                                 {(provided) => (
@@ -240,7 +241,7 @@ function PlayList() {
         ) : (
             <NothingFound>
                 <Grid container justifyContent="center" alignItems="center">
-                    <Grid item>
+                    <Grid>
                         <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => setShowAddFilesDialog(true)}>
                             {translations.addFolder + '/' + translations.addFiles}
                         </Button>

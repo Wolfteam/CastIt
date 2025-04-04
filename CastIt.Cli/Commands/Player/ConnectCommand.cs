@@ -20,7 +20,6 @@ namespace CastIt.Cli.Commands.Player
         protected override async Task<int> Execute(CommandLineApplication app)
         {
             AppConsole.WriteLine($"Connecting to {IpAddress}...");
-            CheckIfWebServerIsRunning();
 
             if (string.IsNullOrWhiteSpace(IpAddress) || !IpAddress.Contains(":"))
             {

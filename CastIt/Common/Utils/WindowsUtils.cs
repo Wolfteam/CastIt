@@ -80,8 +80,8 @@ namespace CastIt.Common.Utils
 
         public static void ChangeTheme(AppThemeType appTheme, string hexAccentColor)
         {
-            var baseTheme = appTheme == AppThemeType.Dark ? Theme.Dark : Theme.Light;
-            ITheme theme = System.Windows.Application.Current.Resources.GetTheme();
+            var baseTheme = appTheme == AppThemeType.Dark ? BaseTheme.Dark : BaseTheme.Light;
+            Theme theme = System.Windows.Application.Current.Resources.GetTheme();
 
             float lightBy = appTheme == AppThemeType.Dark ? 0.2f : 0.5f;
             float midBy = appTheme == AppThemeType.Dark ? 0.15f : 0.2f;

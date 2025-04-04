@@ -310,6 +310,7 @@ namespace CastIt.Server.Services
                 if (differentFile)
                 {
                     GenerateThumbnailRanges(type, CurrentPlayedFile.TotalSeconds);
+                    _fFmpeg.GetThumbnail(CurrentPlayedFile.Id, CurrentPlayedFile.Path);
                 }
 
                 if (request.NeedsTinyCode)

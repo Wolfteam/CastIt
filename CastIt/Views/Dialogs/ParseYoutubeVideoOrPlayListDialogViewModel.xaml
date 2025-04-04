@@ -26,8 +26,8 @@
 
         <materialDesign:ColorZone
             Padding="16"
-            materialDesign:ShadowAssist.ShadowDepth="Depth2"
-            Background="{DynamicResource PrimaryHueDarkBrush}"
+            materialDesign:ElevationAssist.Elevation="Dp2"
+            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
             DockPanel.Dock="Top">
             <DockPanel>
                 <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">

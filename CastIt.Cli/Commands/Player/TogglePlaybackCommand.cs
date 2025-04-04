@@ -15,8 +15,6 @@ namespace CastIt.Cli.Commands.Player
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
-
             AppConsole.WriteLine("Toggling playback of current played file...");
             var response = await CastItApi.TogglePlayback();
             CheckServerResponse(response);

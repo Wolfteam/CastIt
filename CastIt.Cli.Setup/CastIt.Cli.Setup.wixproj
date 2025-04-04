@@ -13,8 +13,8 @@
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.Heat" Version="5.0.0" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Heat" Version="5.0.2" />
   </ItemGroup>
   <PropertyGroup>
     <!--This is the installer version, you should manually change it when creating a new installer-->

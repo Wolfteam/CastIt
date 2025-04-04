@@ -1,4 +1,5 @@
-import { Grid, IconButton, Typography } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { Tv, CastConnected, Cast } from '@mui/icons-material';
 import { useCastItHub } from '../../context/castit_hub.context';
 
@@ -20,16 +21,16 @@ function DeviceItem(props: Props) {
 
     return (
         <Grid container justifyContent="space-evenly" alignItems="center">
-            <Grid item xs={1}>
+            <Grid size={1}>
                 <Tv />
             </Grid>
-            <Grid item xs={10}>
+            <Grid size={10}>
                 <Grid container direction="column">
                     <Typography>{props.name}</Typography>
                     <Typography variant="subtitle1">{props.ipAddress}</Typography>
                 </Grid>
             </Grid>
-            <Grid item xs={1}>
+            <Grid size={1}>
                 <IconButton onClick={handleToggleConnect} size="large">
                     {connectedIcon}
                 </IconButton>

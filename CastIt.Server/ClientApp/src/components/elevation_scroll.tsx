@@ -2,7 +2,7 @@ import { useScrollTrigger } from '@mui/material';
 import React from 'react';
 
 interface Props {
-    children: React.ReactElement;
+    children: React.ReactElement<any>;
 }
 
 function ElevationScroll(props: Props) {

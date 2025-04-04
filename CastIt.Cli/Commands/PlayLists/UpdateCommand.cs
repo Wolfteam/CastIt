@@ -24,7 +24,6 @@ namespace CastIt.Cli.Commands.PlayLists
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
             if (!string.IsNullOrWhiteSpace(Name))
             {
                 var response = await CastItApi.UpdatePlayList(PlayListId, Name);

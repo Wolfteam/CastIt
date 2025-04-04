@@ -14,7 +14,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/ObsoleteConverters.xaml" />
                 <!--  Include the Dragablz Material Design style  -->
                 <ResourceDictionary Source="pack://application:,,,/Dragablz;component/Themes/materialdesign.xaml" />
                 <materialDesign:CustomColorTheme
@@ -47,6 +48,11 @@
 
             <SolidColorBrush x:Key="FontColorOnDarkBackgroundBrush" Color="White" />
             <BitmapImage x:Key="NoImgFound" UriSource="/Resources/NoImg.png" />
+
+            <materialDesign:BooleanToVisibilityConverter
+                x:Key="InverseBoolToVisConverter"
+                FalseValue="Visible"
+                TrueValue="Collapsed" />
         </ResourceDictionary>
     </Application.Resources>
 

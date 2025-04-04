@@ -1,9 +1,10 @@
 ﻿using CastIt.Interfaces;
-using CastIt.Models;
+using CastIt.Models.Results;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
+using MvvmCross.ViewModels.Result;
 using System;
 using System.Threading.Tasks;
 
@@ -13,6 +14,7 @@ namespace CastIt.ViewModels.Dialogs
     {
         private readonly IMvxNavigationService _navigationService;
         private readonly ICastItHubClientService _castItHub;
+        private readonly IDesktopAppSettingsService _desktopAppSettings;
 
         private bool _isBusy;
         private string _newServerIpAddress;
@@ -37,7 +39,7 @@ namespace CastIt.ViewModels.Dialogs
         }
 
         public string CurrentServerIpAddress
-            => _castItHub.IpAddress;
+            => _desktopAppSettings.ServerUrl;
 
         public IMvxAsyncCommand<string> SaveUrlCommand { get; private set; }
 
@@ -46,11 +48,14 @@ namespace CastIt.ViewModels.Dialogs
             IMvxMessenger messenger,
             ILogger<ChangeServerUrlDialogViewModel> logger,
             IMvxNavigationService navigationService,
-            ICastItHubClientService castItHub)
-            : base(textProvider, messenger, logger)
+            ICastItHubClientService castItHub,
+            IMvxResultViewModelManager resultViewModelManager,
+            IDesktopAppSettingsService desktopAppSettings)
+            : base(textProvider, messenger, logger, resultViewModelManager)
         {
             _castItHub = castItHub;
             _navigationService = navigationService;
+            _desktopAppSettings = desktopAppSettings;
         }
 
         public override Task Initialize()
@@ -66,7 +71,7 @@ namespace CastIt.ViewModels.Dialogs
 
             SaveUrlCommand = new MvxAsyncCommand<string>(ChangeServerUrl);
 
-            CloseCommand = new MvxAsyncCommand(async () => await _navigationService.Close(this, NavigationBoolResult.Fail()));
+            CloseCommand = new MvxAsyncCommand(async () => await _navigationService.CloseSettingResult(this, NavigationBoolResult.Fail()));
         }
 
         private async Task ChangeServerUrl(string url)
@@ -87,7 +92,8 @@ namespace CastIt.ViewModels.Dialogs
                     return;
                 }
 
-                await _navigationService.Close(this, NavigationBoolResult.Succeed());
+                _desktopAppSettings.ServerUrl = url;
+                await _navigationService.CloseSettingResult(this, NavigationBoolResult.Succeed());
             }
             catch (Exception e)
             {

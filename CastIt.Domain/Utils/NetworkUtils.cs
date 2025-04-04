@@ -17,7 +17,7 @@ namespace CastIt.Domain.Utils
                 var reply = ping.SendPingAsync(host, timeout).GetAwaiter().GetResult();
                 return reply?.Status == IPStatus.Success;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }

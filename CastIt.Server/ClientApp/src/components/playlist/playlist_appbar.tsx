@@ -1,4 +1,4 @@
-import { alpha, AppBar, IconButton, InputBase, Theme, Toolbar, Typography } from '@mui/material';
+import { alpha, AppBar, IconButton, InputBase, Toolbar, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import { Add, ArrowBack, ArrowUpward, Redo } from '@mui/icons-material';

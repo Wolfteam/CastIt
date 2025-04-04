@@ -1,4 +1,5 @@
-import { Typography, ListItemSecondaryAction, Grid, useMediaQuery, Theme } from '@mui/material';
+import { Typography, ListItemSecondaryAction, useMediaQuery, Theme } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { Loop } from '@mui/icons-material';
 
 interface Props {

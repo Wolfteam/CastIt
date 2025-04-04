@@ -49,7 +49,7 @@
             <StackPanel
                 Grid.Column="1"
                 HorizontalAlignment="Right"
-                Background="{DynamicResource PrimaryHueDarkBrush}"
+                Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
                 Orientation="Horizontal">
                 <Button
                     Click="Minimize_Clicked"

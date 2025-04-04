@@ -1,10 +1,10 @@
 ﻿using CastIt.Domain.Enums;
-using CastIt.Shared.Models;
+using CastIt.Models;
 using CastIt.Shared.Settings;
 
 namespace CastIt.Interfaces
 {
-    public interface IDesktopAppSettingsService : IBaseAppSettingsService<DesktopAppSettings>
+    public interface IDesktopAppSettingsService : IBaseAppSettingsService<AppSettings>
     {
         AppLanguageType Language { get; set; }
 
@@ -25,5 +25,7 @@ namespace CastIt.Interfaces
         bool ShowPlayListTotalDuration { get; set; }
 
         bool UseGridViewForPlayLists { get; set; }
+
+        string ServerUrl { get; set; }
     }
 }

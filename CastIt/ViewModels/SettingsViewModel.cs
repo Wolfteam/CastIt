@@ -552,12 +552,6 @@ namespace CastIt.ViewModels
             _fFmpegExePath = settings.FFmpegExePath;
             _ffprobeExePath = settings.FFprobeExePath;
             _updatingSettings = true;
-
-            //These lines must happen AFTER the _updatingSettings
-            if (string.IsNullOrWhiteSpace(_fFmpegExePath) || string.IsNullOrWhiteSpace(_ffprobeExePath))
-            {
-                Messenger.Publish(new ShowDownloadFFmpegDialogMessage(this));
-            }
         }
     }
 }

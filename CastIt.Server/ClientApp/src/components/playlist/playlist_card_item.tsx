@@ -13,7 +13,7 @@ import {
     Grid,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import React, { useEffect, useState } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
 import { Add, Delete, MoreVert, Edit, Sort } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { playListPath } from '../../routes';

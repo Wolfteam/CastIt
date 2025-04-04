@@ -12,14 +12,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CastIt.Server.Controllers;
-#if !DEBUG
-    [ApiExplorerSettings(IgnoreApi = true)]
-#endif
+
 public class ChromeCastController : BaseController
 {
     private readonly IFileService _fileService;
@@ -43,44 +43,49 @@ public class ChromeCastController : BaseController
     }
 
     [HttpGet(AppWebServerConstants.ChromeCastPlayPath + "/{code}")]
-    public async Task Play(string code)
+    public async Task<IActionResult> Play(string code)
     {
         try
         {
             var dto = await RetrievePlayFileRequest(code);
-            string stream = dto.StreamUrls.First();
-            var type = _fileService.GetFileType(stream);
+            string streamUrl = dto.StreamUrls.First();
+            var type = _fileService.GetFileType(streamUrl);
             if (type == AppFileType.Na)
             {
-                Response.StatusCode = StatusCodes.Status400BadRequest;
-                Logger.LogWarning($"{nameof(Play)}: File = {stream} is not a valid type.");
-                return;
+                Logger.LogWarning($"{nameof(Play)}: File = {streamUrl} is not a valid type.");
+                return BadRequest();
             }
 
             //HttpContext.Response.Headers.TransferEncoding = "chunked";
-            //HttpContext.Response.ContentType = dto.ContentType;
-            HttpContext.Response.ContentType = dto.ContentType;
+            if (dto.Duration.HasValue)
+            {
+                string durationString = dto.Duration.Value.ToString(CultureInfo.InvariantCulture);
+                HttpContext.Response.Headers.Append("Content-Duration", durationString);
+                HttpContext.Response.Headers.Append("X-Content-Duration", durationString);
+            }
+
             DisableCaching();
 
+            Stream stream;
             if (!type.IsLocalMusic())
             {
                 var options = GetVideoFileOptions(dto);
                 Logger.LogInformation($"{nameof(Play)}: Handling request for video file with options = {{@Options}}", options);
-                var fileStream = await _ffmpegService.TranscodeVideo(options).ConfigureAwait(false);
-                await fileStream.CopyToAsync(HttpContext.Response.Body, _ffmpegService.TokenSource.Token).ConfigureAwait(false);
+                stream = await _ffmpegService.TranscodeVideo(options);
             }
             else
             {
                 var options = GetMusicFileOptions(dto);
                 Logger.LogInformation($"{nameof(Play)}: Handling request for music file with options = {{@Options}}", options);
-                var memoryStream = await _ffmpegService.TranscodeMusic(options).ConfigureAwait(false);
-                await memoryStream.CopyToAsync(HttpContext.Response.Body, _ffmpegService.TokenSource.Token).ConfigureAwait(false);
+                stream = await _ffmpegService.TranscodeMusic(options);
             }
+
+            return new FileStreamResult(stream, dto.ContentType);
         }
         catch (Exception e)
         {
             Logger.LogError(e, $"{nameof(Play)}: Unknown error");
-            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 
@@ -95,12 +100,15 @@ public class ChromeCastController : BaseController
             Logger.LogWarning($"{nameof(GetImage)}: Path = {path} does not exist, returning default image");
             path = _imageProviderService.GetNoImagePath();
         }
-        return PhysicalFile(path, MediaTypeNames.Image.Jpeg);
+
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        return new FileStreamResult(stream, MediaTypeNames.Image.Jpeg);
     }
 
     [HttpGet(AppWebServerConstants.ChromeCastSubTitlesPath)]
     public IActionResult GetSubtitleForPlayedFile()
     {
+        DisableCaching();
         Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: Retrieving subs for currentPlayedFile = {CastService.CurrentPlayedFile?.Filename}");
         var path = _fileService.GetSubTitleFilePath();
         if (!_fileService.IsLocalFile(path))
@@ -109,7 +117,8 @@ public class ChromeCastController : BaseController
             return NotFound();
         }
         Logger.LogInformation($"{nameof(GetSubtitleForPlayedFile)}: SubsPath = {path}");
-        return PhysicalFile(path, "text/vtt");
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        return new FileStreamResult(stream, "text/vtt");
     }
 
     private static TranscodeVideoFile GetVideoFileOptions(PlayAppFileRequestDto dto)

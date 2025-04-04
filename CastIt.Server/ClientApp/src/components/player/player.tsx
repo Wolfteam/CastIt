@@ -1,4 +1,5 @@
-import { Box, Button, Grid, IconButton } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import PlayerProgressIndicator from './player_progress_indicator';
 import PlayerControls from './player_controls';
 import PlayerVolume from './player_volume';
@@ -58,20 +59,20 @@ function Player() {
 
     return (
         <Grid container justifyContent="center" alignItems="center" sx={(theme) => ({ backgroundColor: theme.palette.primary.dark })}>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
                 <PlayerCurrentFile />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container direction="column">
-                    <Grid item>
+                    <Grid>
                         <PlayerControls />
                     </Grid>
-                    <Grid item>
+                    <Grid>
                         <PlayerProgressIndicator />
                     </Grid>
                 </Grid>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
                 <Grid container alignItems="center" justifyContent="center">
                     <PlayerVolume />
                     <PlayerSettings />
