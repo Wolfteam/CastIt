@@ -1,18 +1,16 @@
 part of 'play_bloc.dart';
 
 @freezed
-class PlayState with _$PlayState {
-  factory PlayState.connecting() = _ConnectingState;
+sealed class PlayState with _$PlayState {
+  const factory PlayState.connecting() = PlayStateConnectingState;
 
-  factory PlayState.connected() = _ConnectedState;
+  const factory PlayState.connected() = PlayStateConnectedState;
 
-  factory PlayState.fileLoading() = _FileLoadingState;
+  const factory PlayState.fileLoading() = PlayStateFileLoadingState;
 
-  factory PlayState.fileLoadingFailed({
-    required String msg,
-  }) = _FileLoadingFailedState;
+  const factory PlayState.fileLoadingFailed({required String msg}) = PlayStateFileLoadingFailedState;
 
-  factory PlayState.playing({
+  const factory PlayState.playing({
     int? id,
     int? playListId,
     String? filename,
@@ -27,5 +25,5 @@ class PlayState with _$PlayState {
     bool? isDraggingSlider,
     String? playListPlayedTime,
     String? playListTotalDuration,
-  }) = _PlayingState;
+  }) = PlayStatePlayingState;
 }

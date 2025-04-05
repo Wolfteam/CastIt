@@ -23,31 +23,26 @@ class ThemeSettingsCard extends StatelessWidget {
               const Icon(Icons.color_lens),
               Container(
                 margin: const EdgeInsets.only(left: 5),
-                child: Text(
-                  i18n.theme,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                child: Text(i18n.theme, style: Theme.of(context).textTheme.titleLarge),
               ),
             ],
           ),
           Padding(
             padding: const EdgeInsets.only(top: 5),
-            child: Text(
-              i18n.chooseBaseAppColor,
-              style: const TextStyle(color: Colors.grey),
-            ),
+            child: Text(i18n.chooseBaseAppColor, style: const TextStyle(color: Colors.grey)),
           ),
           BlocBuilder<SettingsBloc, SettingsState>(
-            builder: (context, state) => state.maybeMap(
-              loaded: (state) => CommonDropdownButton<AppThemeType>(
-                hint: i18n.chooseBaseAppColor,
-                showSubTitle: false,
-                values: AppThemeType.values.map((e) => TranslatedEnum(e, i18n.translateAppThemeType(e))).toList(),
-                currentValue: state.appTheme,
-                onChanged: (newValue, _) => _appThemeChanged(context, newValue),
-              ),
-              orElse: () => const CircularProgressIndicator(),
-            ),
+            builder:
+                (context, state) => switch (state) {
+                  SettingsStateLoadingState() => const CircularProgressIndicator(),
+                  SettingsStateLoadedState() => CommonDropdownButton<AppThemeType>(
+                    hint: i18n.chooseBaseAppColor,
+                    showSubTitle: false,
+                    values: AppThemeType.values.map((e) => TranslatedEnum(e, i18n.translateAppThemeType(e))).toList(),
+                    currentValue: state.appTheme,
+                    onChanged: (newValue, _) => _appThemeChanged(context, newValue),
+                  ),
+                },
           ),
         ],
       ),

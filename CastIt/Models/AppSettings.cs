@@ -1,8 +1,8 @@
 ﻿using CastIt.Domain.Enums;
 
-namespace CastIt.Shared.Models
+namespace CastIt.Models
 {
-    public class DesktopAppSettings
+    public class AppSettings
     {
         public AppLanguageType Language { get; set; }
         public AppThemeType AppTheme { get; set; }
@@ -15,5 +15,6 @@ namespace CastIt.Shared.Models
         public bool MinimizeToTray { get; set; }
         public bool ShowPlayListTotalDuration { get; set; }
         public bool UseGridViewForPlayLists { get; set; }
+        public string ServerUrl { get; set; }
     }
 }

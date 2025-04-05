@@ -11,7 +11,7 @@ import {
 } from '../services/castithub.service';
 import PlayListCardItem from '../components/playlist/playlist_card_item';
 import PageContent from './page_content';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import ReOrderPlayListDialog from '../components/dialogs/reorder_playlist_dialog';
 import { useCastItHub } from '../context/castit_hub.context';
 
@@ -109,12 +109,7 @@ function PlayLists() {
     const items = state.playLists.map((pl, index) => (
         <Grid
             key={pl.id}
-            item
-            xs={12}
-            sm={4}
-            md={3}
-            lg={3}
-            xl={2}
+            size={{ xs: 12, sm: 4, md: 3, lg: 3, xl: 2 }}
             onMouseOver={(_) => toggleRaised(pl.id, true)}
             onMouseOut={(_) => toggleRaised(pl.id, false)}
         >
@@ -123,7 +118,7 @@ function PlayLists() {
     ));
 
     const addNew = (
-        <Grid key="AddNewItem" item xs={12} sm={4} md={3} lg={3} xl={2} style={{ alignSelf: 'center' }}>
+        <Grid key="AddNewItem" size={{ xs: 12, sm: 4, md: 3, lg: 3, xl: 2 }} style={{ alignSelf: 'center' }}>
             <PlayListCardItem
                 playList={{
                     id: 0,

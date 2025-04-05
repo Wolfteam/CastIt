@@ -31,22 +31,16 @@ class PlayListItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: ListTile(
         leading: const Icon(Icons.list, size: 36),
-        title: Text(
-          name,
-          style: theme.textTheme.titleLarge,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(name, style: theme.textTheme.titleLarge, overflow: TextOverflow.ellipsis),
         subtitle: Row(
           children: [
             const Icon(Icons.hourglass_empty, size: 18),
             BlocBuilder<PlayedPlayListItemBloc, PlayedPlayListItemState>(
-              builder: (ctx, state) => Text(
-                state.maybeMap(
-                  playing: (state) => state.id == id ? state.totalDuration : totalDuration,
-                  orElse: () => totalDuration,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+              builder:
+                  (ctx, state) => Text(switch (state) {
+                    PlayedPlayListItemStateNotPlayingState() => totalDuration,
+                    PlayedPlayListItemStateLoadedState() => state.id == id ? state.totalDuration : totalDuration,
+                  }, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),

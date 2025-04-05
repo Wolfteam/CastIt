@@ -1,11 +1,9 @@
 part of 'played_play_list_item_bloc.dart';
 
 @freezed
-class PlayedPlayListItemEvent with _$PlayedPlayListItemEvent {
-  factory PlayedPlayListItemEvent.playing({
-    required int id,
-    required String totalDuration,
-  }) = _Playing;
+sealed class PlayedPlayListItemEvent with _$PlayedPlayListItemEvent {
+  const factory PlayedPlayListItemEvent.playing({required int id, required String totalDuration}) =
+      PlayedPlayListItemEventPlaying;
 
-  factory PlayedPlayListItemEvent.endReached() = _EndReached;
+  const factory PlayedPlayListItemEvent.endReached() = PlayedPlayListItemEventEndReached;
 }

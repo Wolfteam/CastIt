@@ -20,11 +20,7 @@ class _DesktopTabletScaffoldState extends State<DesktopTabletScaffold> with Sing
 
   @override
   void initState() {
-    _tabController = TabController(
-      initialIndex: _index,
-      length: 2,
-      vsync: this,
-    );
+    _tabController = TabController(initialIndex: _index, length: 2, vsync: this);
 
     super.initState();
   }
@@ -44,49 +40,43 @@ class _DesktopTabletScaffoldState extends State<DesktopTabletScaffold> with Sing
   Widget build(BuildContext context) {
     final i18n = S.of(context);
     return BlocConsumer<MainBloc, MainState>(
-      listener: (ctx, state) async {
-        state.maybeMap(
-          loaded: (s) => _changeCurrentTab(s.currentSelectedTab),
-          orElse: () {},
-        );
+      listener: (ctx, state) {
+        switch (state) {
+          case MainStateLoadedState():
+            _changeCurrentTab(state.currentSelectedTab);
+          default:
+            break;
+        }
       },
-      builder: (context, state) => Scaffold(
-        body: SafeArea(
-          child: TabBarView(
-            controller: _tabController,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+      builder:
+          (context, state) => Scaffold(
+            body: SafeArea(
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Expanded(child: PlayPage()),
-                  Expanded(child: PlayListsPage()),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [Expanded(child: PlayPage()), Expanded(child: PlayListsPage())],
+                  ),
+                  const SettingsPage(),
                 ],
               ),
-              const SettingsPage(),
-            ],
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: _index,
+              type: BottomNavigationBarType.fixed,
+              showUnselectedLabels: true,
+              showSelectedLabels: true,
+              iconSize: 40,
+              items: [
+                BottomNavigationBarItem(label: i18n.playing, icon: const Icon(Icons.play_arrow)),
+                BottomNavigationBarItem(label: i18n.settings, icon: const Icon(Icons.settings)),
+              ],
+              onTap: (newIndex) => context.read<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
+            ),
           ),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _index,
-          type: BottomNavigationBarType.fixed,
-          showUnselectedLabels: true,
-          showSelectedLabels: true,
-          iconSize: 40,
-          items: [
-            BottomNavigationBarItem(
-              label: i18n.playing,
-              icon: const Icon(Icons.play_arrow),
-            ),
-            BottomNavigationBarItem(
-              label: i18n.settings,
-              icon: const Icon(Icons.settings),
-            ),
-          ],
-          onTap: (newIndex) => context.read<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
-        ),
-      ),
     );
   }
 

@@ -14,22 +14,11 @@ class PlayButtons extends StatelessWidget {
   final bool isPaused;
   final bool areDisabled;
 
-  const PlayButtons.loading()
-      : isLoading = true,
-        isPlaying = false,
-        isPaused = false,
-        areDisabled = true;
+  const PlayButtons.loading() : isLoading = true, isPlaying = false, isPaused = false, areDisabled = true;
 
-  const PlayButtons.playing({required this.isPaused})
-      : isLoading = false,
-        isPlaying = true,
-        areDisabled = false;
+  const PlayButtons.playing({required this.isPaused}) : isLoading = false, isPlaying = true, areDisabled = false;
 
-  const PlayButtons.disabled()
-      : isLoading = false,
-        isPlaying = false,
-        isPaused = false,
-        areDisabled = true;
+  const PlayButtons.disabled() : isLoading = false, isPlaying = false, isPaused = false, areDisabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +26,7 @@ class PlayButtons extends StatelessWidget {
     final isDarkTheme = theme.brightness == Brightness.dark;
     Color iconColor = isDarkTheme ? Colors.white : Colors.black;
     if (areDisabled) {
-      iconColor = iconColor.withOpacity(0.5);
+      iconColor = iconColor.withValues(alpha: 0.5);
     }
     return ResponsiveBuilder(
       builder: (ctx, sizing) {
@@ -62,13 +51,11 @@ class PlayButtons extends StatelessWidget {
                 icon: Icon(Icons.skip_previous, color: iconColor),
               ),
               DecoratedBox(
-                decoration: BoxDecoration(
-                  color: isPlaying ? theme.colorScheme.primary : iconColor,
-                  borderRadius: BorderRadius.circular(50.0),
-                ),
-                child: isLoading
-                    ? _PlayBackButton.loading(iconSize: playBackIconSize)
-                    : isPlaying || isPaused
+                decoration: BoxDecoration(color: isPlaying ? theme.colorScheme.primary : iconColor, borderRadius: BorderRadius.circular(50.0)),
+                child:
+                    isLoading
+                        ? _PlayBackButton.loading(iconSize: playBackIconSize)
+                        : isPlaying || isPaused
                         ? _PlayBackButton.playing(iconSize: playBackIconSize, isPaused: isPaused)
                         : _PlayBackButton.disabled(iconSize: playBackIconSize),
               ),
@@ -109,19 +96,11 @@ class _PlayBackButton extends StatelessWidget {
   final bool isPaused;
   final bool isLoading;
 
-  const _PlayBackButton.disabled({required this.iconSize})
-      : isDisabled = true,
-        isPaused = false,
-        isLoading = false;
+  const _PlayBackButton.disabled({required this.iconSize}) : isDisabled = true, isPaused = false, isLoading = false;
 
-  const _PlayBackButton.loading({required this.iconSize})
-      : isDisabled = false,
-        isPaused = false,
-        isLoading = true;
+  const _PlayBackButton.loading({required this.iconSize}) : isDisabled = false, isPaused = false, isLoading = true;
 
-  const _PlayBackButton.playing({required this.iconSize, required this.isPaused})
-      : isDisabled = false,
-        isLoading = false;
+  const _PlayBackButton.playing({required this.iconSize, required this.isPaused}) : isDisabled = false, isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -131,24 +110,14 @@ class _PlayBackButton extends StatelessWidget {
         onPressed: null,
         icon: Stack(
           alignment: Alignment.center,
-          children: [
-            const Icon(Icons.play_arrow),
-            SizedBox(
-              height: iconSize,
-              width: iconSize,
-              child: const CircularProgressIndicator(),
-            ),
-          ],
+          children: [const Icon(Icons.play_arrow), SizedBox(height: iconSize, width: iconSize, child: const CircularProgressIndicator())],
         ),
       );
     }
     return IconButton(
       iconSize: iconSize,
       onPressed: isDisabled ? null : () => _togglePlayBack(context),
-      icon: Icon(
-        !isPaused && !isDisabled ? Icons.pause : Icons.play_arrow,
-        color: Colors.white,
-      ),
+      icon: Icon(!isPaused && !isDisabled ? Icons.pause : Icons.play_arrow, color: Colors.white),
     );
   }
 

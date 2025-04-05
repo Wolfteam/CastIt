@@ -1,5 +1,5 @@
 import { useSnackbar } from 'notistack';
-import { useEffect } from 'react';
+import { JSX, useEffect } from 'react';
 import { onServerMessage } from '../services/castithub.service';
 import { getErrorCodeTranslation } from '../services/translations';
 

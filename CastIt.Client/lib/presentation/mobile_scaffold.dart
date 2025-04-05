@@ -20,11 +20,7 @@ class _MobileScaffoldState extends State<MobileScaffold> with SingleTickerProvid
 
   @override
   void initState() {
-    _tabController = TabController(
-      initialIndex: _index,
-      length: 3,
-      vsync: this,
-    );
+    _tabController = TabController(initialIndex: _index, length: 3, vsync: this);
     super.initState();
   }
 
@@ -43,43 +39,35 @@ class _MobileScaffoldState extends State<MobileScaffold> with SingleTickerProvid
   Widget build(BuildContext context) {
     final i18n = S.of(context);
     return BlocConsumer<MainBloc, MainState>(
-      listener: (ctx, state) async {
-        state.maybeMap(
-          loaded: (s) => _changeCurrentTab(s.currentSelectedTab),
-          orElse: () {},
-        );
+      listener: (ctx, state) {
+        switch (state) {
+          case MainStateLoadedState():
+            _changeCurrentTab(state.currentSelectedTab);
+          default:
+            break;
+        }
       },
-      builder: (context, state) {
-        return Scaffold(
-          body: SafeArea(
-            child: TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [PlayPage(), PlayListsPage(), const SettingsPage()],
+      builder:
+          (context, state) => Scaffold(
+            body: SafeArea(
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [PlayPage(), PlayListsPage(), const SettingsPage()],
+              ),
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: _index,
+              type: BottomNavigationBarType.fixed,
+              showUnselectedLabels: true,
+              items: [
+                BottomNavigationBarItem(label: i18n.playing, icon: const Icon(Icons.play_arrow)),
+                BottomNavigationBarItem(label: i18n.playlists, icon: const Icon(Icons.playlist_play)),
+                BottomNavigationBarItem(label: i18n.settings, icon: const Icon(Icons.settings)),
+              ],
+              onTap: (newIndex) => context.read<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
             ),
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _index,
-            type: BottomNavigationBarType.fixed,
-            showUnselectedLabels: true,
-            items: [
-              BottomNavigationBarItem(
-                label: i18n.playing,
-                icon: const Icon(Icons.play_arrow),
-              ),
-              BottomNavigationBarItem(
-                label: i18n.playlists,
-                icon: const Icon(Icons.playlist_play),
-              ),
-              BottomNavigationBarItem(
-                label: i18n.settings,
-                icon: const Icon(Icons.settings),
-              ),
-            ],
-            onTap: (newIndex) => context.read<MainBloc>().add(MainEvent.goToTab(index: newIndex)),
-          ),
-        );
-      },
     );
   }
 

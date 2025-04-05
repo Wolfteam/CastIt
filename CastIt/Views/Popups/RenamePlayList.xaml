@@ -32,7 +32,7 @@
             Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Background="{DynamicResource PrimaryHueDarkBrush}">
+            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}">
             <TextBlock Foreground="{DynamicResource FontColorOnDarkBackgroundBrush}" Text="{Binding [PlayList]}" />
         </materialDesign:ColorZone>
         <TextBox

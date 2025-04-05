@@ -36,9 +36,6 @@ namespace CastIt.Interfaces
         event Action<FileItemResponseDto> OnFileLoaded;
         event Action<FileItemResponseDto> OnFileEndReached;
 
-        string IpAddress { get; set; }
-
-        Task<bool> Init();
         Task<bool> Init(string serverIpAddress);
         Task DisposeAsync();
 

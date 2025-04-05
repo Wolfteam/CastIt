@@ -13,14 +13,13 @@ interface Props {
 interface State {
     x: number;
     y: number;
-    url: string;
+    url?: string;
     useTransform: boolean;
 }
 
 const initialState: State = {
     x: 0,
     y: 0,
-    url: '',
     useTransform: true,
 };
 

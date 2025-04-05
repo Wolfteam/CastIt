@@ -8,8 +8,6 @@ extension I18nExtensions on S {
         return dark;
       case AppThemeType.light:
         return light;
-      default:
-        throw Exception('The provided app theme = $theme is not valid');
     }
   }
 
@@ -19,8 +17,6 @@ extension I18nExtensions on S {
         return english;
       case AppLanguageType.spanish:
         return spanish;
-      default:
-        throw Exception('The provided app lang = $lang is not valid');
     }
   }
 
@@ -32,8 +28,6 @@ extension I18nExtensions on S {
         return hd;
       case VideoScaleType.original:
         return original;
-      default:
-        throw Exception('The provided video scale = $scale is not valid');
     }
   }
 

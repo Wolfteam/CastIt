@@ -32,7 +32,7 @@
             Padding="16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
-            Background="{DynamicResource PrimaryHueDarkBrush}">
+            Background="{DynamicResource MaterialDesign.Brush.Primary.Dark}">
             <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                 <materialDesign:PackIcon Kind="Cog" Style="{StaticResource ColorZoneIconStyle}" />
                 <TextBlock Style="{StaticResource ColorZoneTextBlockWithIconStyle}" Text="{Binding [Settings]}" />
@@ -285,7 +285,7 @@
                             TextWrapping="NoWrap"
                             ToolTip="{Binding SubtitleDelayText}" />
                         <Slider
-                            Foreground="{DynamicResource PrimaryHueDarkBrush}"
+                            Foreground="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
                             IsSelectionRangeEnabled="True"
                             Maximum="10"
                             Minimum="-10"

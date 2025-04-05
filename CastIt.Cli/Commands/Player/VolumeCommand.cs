@@ -21,8 +21,6 @@ namespace CastIt.Cli.Commands.Player
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
-
             AppConsole.WriteLine($"Setting volume to = {Volume} and muted = {IsMuted}...");
             var response = await CastItApi.SetVolume(Volume, IsMuted);
             CheckServerResponse(response);

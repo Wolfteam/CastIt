@@ -16,51 +16,50 @@ class PlayedFileOptionsBottomSheetDialog extends StatelessWidget {
       showOkButton: false,
       showCancelButton: false,
       child: BlocConsumer<PlayedFileOptionsBloc, PlayedFileOptionsState>(
-        listener: (ctx, state) => state.maybeWhen(
-          closed: () {
-            if (ModalRoute.of(context)!.isCurrent) {
-              Navigator.of(ctx).pop();
-            }
-            return null;
-          },
-          orElse: () => {},
-        ),
-        builder: (ctx, state) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: state.map(
-            loaded: (state) => <Widget>[
-              PlayedFileDropdownOption(
-                title: s.audio,
-                hint: s.audio,
-                icon: Icons.audiotrack,
-                options: state.options.where((element) => element.isAudio).toList(),
-              ),
-              PlayedFileDropdownOption(
-                title: s.subtitles,
-                hint: s.subtitles,
-                icon: Icons.subtitles,
-                options: state.options.where((element) => element.isSubTitle).toList(),
-              ),
-              PlayedFileDropdownOption(
-                title: s.quality,
-                hint: s.quality,
-                icon: Icons.high_quality,
-                options: state.options.where((element) => element.isQuality).toList(),
-              ),
-              PlayedFileVolumeOption(
-                volumeLevel: state.volumeLvl,
-                isMuted: state.isMuted,
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _stopPlayback(context),
-                icon: const Icon(Icons.stop),
-                label: Text(s.stopPlayback),
-              ),
-            ],
-            closed: (_) => [],
-          ),
-        ),
+        listener: (ctx, state) {
+          switch (state) {
+            case PlayedFileOptionsStateClosedState():
+              if (ModalRoute.of(context)!.isCurrent) {
+                Navigator.of(ctx).pop();
+              }
+            default:
+              break;
+          }
+        },
+        builder:
+            (ctx, state) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: switch (state) {
+                final PlayedFileOptionsStateLoadedState state => <Widget>[
+                  PlayedFileDropdownOption(
+                    title: s.audio,
+                    hint: s.audio,
+                    icon: Icons.audiotrack,
+                    options: state.options.where((element) => element.isAudio).toList(),
+                  ),
+                  PlayedFileDropdownOption(
+                    title: s.subtitles,
+                    hint: s.subtitles,
+                    icon: Icons.subtitles,
+                    options: state.options.where((element) => element.isSubTitle).toList(),
+                  ),
+                  PlayedFileDropdownOption(
+                    title: s.quality,
+                    hint: s.quality,
+                    icon: Icons.high_quality,
+                    options: state.options.where((element) => element.isQuality).toList(),
+                  ),
+                  PlayedFileVolumeOption(volumeLevel: state.volumeLvl, isMuted: state.isMuted),
+                  OutlinedButton.icon(
+                    onPressed: () => _stopPlayback(context),
+                    icon: const Icon(Icons.stop),
+                    label: Text(s.stopPlayback),
+                  ),
+                ],
+                PlayedFileOptionsStateClosedState() => [],
+              },
+            ),
       ),
     );
   }

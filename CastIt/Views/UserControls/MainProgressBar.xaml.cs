@@ -55,7 +55,7 @@ namespace CastIt.Views.UserControls
 
             if (seconds >= 0)
             {
-                SliderPopupText.Text = TimeSpan.FromSeconds(seconds).ToString(FileFormatConstants.FullElapsedTimeFormat);
+                SliderPopupText.Text = FileFormatConstants.FormatDuration(seconds);
                 SliderPopup.HorizontalOffset = mousePosition.X - (SliderPopup.Child as FrameworkElement)?.ActualWidth / 2 ?? 0;
                 if (!(ImageThumbnail.Transform is TransformGroup))
                 {

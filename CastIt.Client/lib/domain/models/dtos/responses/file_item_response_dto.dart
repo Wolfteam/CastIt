@@ -5,8 +5,9 @@ part 'file_item_response_dto.freezed.dart';
 part 'file_item_response_dto.g.dart';
 
 @freezed
-class FileItemResponseDto with _$FileItemResponseDto {
-  List<FileItemOptionsResponseDto> get streams => currentFileVideos + currentFileAudios + currentFileSubTitles + currentFileQualities;
+sealed class FileItemResponseDto with _$FileItemResponseDto {
+  List<FileItemOptionsResponseDto> get streams =>
+      currentFileVideos + currentFileAudios + currentFileSubTitles + currentFileQualities;
 
   factory FileItemResponseDto({
     required int id,

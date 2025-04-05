@@ -336,7 +336,6 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         break;
       default:
         _logger.warning(runtimeType, '_handleSocketMsg: Msg = $msgType is not being handled');
-        break;
     }
   }
 

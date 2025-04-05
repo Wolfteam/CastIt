@@ -8,11 +8,7 @@ class PlayedFileVolumeOption extends StatelessWidget {
   final double volumeLevel;
   final bool isMuted;
 
-  const PlayedFileVolumeOption({
-    super.key,
-    required this.volumeLevel,
-    required this.isMuted,
-  });
+  const PlayedFileVolumeOption({super.key, required this.volumeLevel, required this.isMuted});
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +24,7 @@ class PlayedFileVolumeOption extends StatelessWidget {
               const Icon(Icons.volume_up),
               Container(
                 margin: const EdgeInsets.only(left: 10),
-                child: Text(
-                  i18n.volume,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium,
-                ),
+                child: Text(i18n.volume, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
               ),
             ],
           ),
@@ -45,7 +37,9 @@ class PlayedFileVolumeOption extends StatelessWidget {
                   label: '${volumeLevel.round()}',
                   divisions: AppConstants.maxVolumeLevel.round(),
                   onChanged: (newValue) => _setVolume(context, newValue, isMuted, false),
-                  onChangeStart: (startValue) => context.read<PlayedFileOptionsBloc>().add(PlayedFileOptionsEvent.volumeSliderDragStarted()),
+                  onChangeStart:
+                      (startValue) =>
+                          context.read<PlayedFileOptionsBloc>().add(const PlayedFileOptionsEvent.volumeSliderDragStarted()),
                   onChangeEnd: (finalValue) => _setVolume(context, finalValue, isMuted, true),
                 ),
               ),

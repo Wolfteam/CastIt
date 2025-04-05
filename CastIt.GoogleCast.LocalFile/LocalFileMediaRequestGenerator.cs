@@ -79,7 +79,6 @@ public class LocalFileMediaRequestGenerator : BaseMediaRequestGenerator, IPlayMe
         HwAccelDeviceType hwAccelToUse = file.Type.IsLocalVideo()
             ? FFmpeg.GetHwAccelToUse(file.CurrentFileVideoStreamIndex, file.FileInfo, settings.EnableHardwareAcceleration)
             : HwAccelDeviceType.None;
-        string thumbnail = FFmpeg.GetThumbnail(file.Id, file.Path);
         string thumbnailUrl = Server.GetChromeCastPreviewUrl(file.Id);
         var options = new LocalFileGeneratePlayMediaRequest
         {
@@ -124,16 +123,13 @@ public class LocalFileMediaRequestGenerator : BaseMediaRequestGenerator, IPlayMe
             {
                 Title = title,
             },
-            //You have to set the content type before hand, with that, the album art of a music file will be shown
+            //You have to set the content type beforehand, with that, the album art of a music file will be shown
             ContentType = Server.GetOutputMimeType(options.Mrl),
-            Duration = options.FileInfo.Format.Duration
+            Duration = options.FileInfo.Format.Duration,
+            StreamType = StreamType.Live
         };
 
-        if (options.FileType.IsLocalVideo())
-        {
-            media.StreamType = StreamType.Live;
-        }
-        else if (options.FileType.IsLocalMusic())
+        if (options.FileType.IsLocalMusic())
         {
             media.Metadata = new MusicTrackMediaMetadata
             {
@@ -146,7 +142,7 @@ public class LocalFileMediaRequestGenerator : BaseMediaRequestGenerator, IPlayMe
         Logger.LogInformation($"{nameof(BuildRequest)}: Retrieving img url to use...");
         if (!string.IsNullOrEmpty(options.ThumbnailUrl))
         {
-            media.Metadata.Images.Add(new GoogleCast.Models.Image
+            media.Metadata.Images.Add(new Models.Image
             {
                 Url = options.ThumbnailUrl
             });
@@ -154,13 +150,14 @@ public class LocalFileMediaRequestGenerator : BaseMediaRequestGenerator, IPlayMe
 
         var playRequest = new PlayAppFileRequestDto
         {
-            StreamUrls = new List<string>
-            {
-                options.Mrl,
-            },
+            StreamUrls =
+            [
+                options.Mrl
+            ],
             VideoStreamIndex = options.VideoStreamIndex,
             AudioStreamIndex = options.AudioStreamIndex,
             Seconds = options.Seconds,
+            Duration = media.Duration,
             VideoNeedsTranscode = options.VideoNeedsTranscode,
             AudioNeedsTranscode = options.AudioNeedsTranscode,
             HwAccelToUse = options.HwAccel,

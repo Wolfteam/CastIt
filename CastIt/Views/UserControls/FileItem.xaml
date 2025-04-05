@@ -202,7 +202,7 @@
             Text="{Binding Filename}">
             <TextBlock.Style>
                 <Style BasedOn="{StaticResource FileItemTextStyleWithTriggers}" TargetType="{x:Type TextBlock}">
-                    <Setter Property="Grid.Row" Value="1"/>
+                    <Setter Property="Grid.Row" Value="1" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding ShowFileDetails}" Value="False">
                             <Setter Property="Grid.Row" Value="0" />

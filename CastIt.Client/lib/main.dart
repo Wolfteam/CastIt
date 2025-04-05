@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
             final settings = getIt<SettingsService>();
             final deviceInfo = getIt<DeviceInfoService>();
             final localeService = getIt<LocaleService>();
-            return MainBloc(logger, settings, deviceInfo, localeService)..add(MainEvent.init());
+            return MainBloc(logger, settings, deviceInfo, localeService)..add(const MainEvent.init());
           },
         ),
         BlocProvider(

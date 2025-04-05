@@ -286,8 +286,8 @@ public class PlayerController : BaseController
             $"{nameof(GetPreviewImageForPlayedFile)}: Checking if we can retrieve an image for " +
             $"file = {CastService.CurrentPlayedFile?.Filename} on second = {tentativeSecond}...");
         DisableCaching();
-        var bytes = await CastService.GetClosestPreviewThumbnail(tentativeSecond);
-        return File(new MemoryStream(bytes), MediaTypeNames.Image.Jpeg);
+        byte[] bytes = await CastService.GetClosestPreviewThumbnail(tentativeSecond);
+        return new FileContentResult(bytes, MediaTypeNames.Image.Jpeg);
     }
 
     /// <summary>

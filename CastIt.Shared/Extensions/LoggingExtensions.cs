@@ -97,6 +97,17 @@ public static class LoggingExtensions
         bool useJsonFormatOnConsole = false,
         params ToLog[] logs)
     {
+        LoggerConfiguration config = CreateLoggerConfiguration(logsPath, useJsonFormatOnFiles, useJsonFormatOnConsole, logs);
+        loggingBuilder.AddSerilog(config.CreateLogger());
+        return loggingBuilder;
+    }
+
+    public static LoggerConfiguration CreateLoggerConfiguration(
+        string? logsPath = null,
+        bool useJsonFormatOnFiles = false,
+        bool useJsonFormatOnConsole = false,
+        params ToLog[] logs)
+    {
         bool logToFile = !string.IsNullOrWhiteSpace(logsPath);
         if (logToFile)
         {
@@ -111,8 +122,7 @@ public static class LoggingExtensions
             .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information);
 
         ConfigureLogs(config, useJsonFormatOnFiles, useJsonFormatOnConsole, logToFile, logsPath, logs);
-        loggingBuilder.AddSerilog(config.CreateLogger());
-        return loggingBuilder;
+        return config;
     }
 
     private static void ConfigureLogs(

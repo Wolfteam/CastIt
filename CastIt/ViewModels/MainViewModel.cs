@@ -4,8 +4,8 @@ using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Extensions;
 using CastIt.Interfaces;
-using CastIt.Models;
 using CastIt.Models.Messages;
+using CastIt.Models.Results;
 using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
 using CastIt.ViewModels.Dialogs;
@@ -15,6 +15,7 @@ using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
+using MvvmCross.ViewModels.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace CastIt.ViewModels
 {
-    public partial class MainViewModel : BaseViewModel
+    public partial class MainViewModel : BaseViewModelResultAwaiting<NavigationBoolResult>
     {
         #region Members
 
@@ -270,7 +271,6 @@ namespace CastIt.ViewModels
         public IMvxCommand OpenDevicesCommand { get; private set; }
         public IMvxCommand SnackbarActionCommand { get; private set; }
         public IMvxAsyncCommand<long> GoToSecondsCommand { get; private set; }
-        public IMvxAsyncCommand ShowDownloadDialogCommand { get; private set; }
         public IMvxAsyncCommand<FileItemOptionsViewModel> FileOptionsChangedCommand { get; private set; }
         public IMvxCommand OpenSubTitleFileDialogCommand { get; private set; }
         public IMvxAsyncCommand<string> SetSubTitlesCommand { get; private set; }
@@ -303,8 +303,9 @@ namespace CastIt.ViewModels
             ITelemetryService telemetryService,
             IMapper mapper,
             IFileService fileService,
-            ICastItHubClientService castItHub)
-            : base(textProvider, messenger, logger)
+            ICastItHubClientService castItHub,
+            IMvxResultViewModelManager resultViewModelManager)
+            : base(textProvider, messenger, logger, resultViewModelManager)
         {
             _settingsService = settingsService;
             _navigationService = navigationService;
@@ -361,8 +362,6 @@ namespace CastIt.ViewModels
 
             GoToSecondsCommand = new MvxAsyncCommand<long>(GoToSeconds);
 
-            ShowDownloadDialogCommand = new MvxAsyncCommand(ShowDownloadFfmpegDialog);
-
             FileOptionsChangedCommand = new MvxAsyncCommand<FileItemOptionsViewModel>(FileOptionsChanged);
 
             OpenSubTitleFileDialogCommand = new MvxCommand(() => _openSubTitleFileDialog.Raise());
@@ -388,7 +387,6 @@ namespace CastIt.ViewModels
                 Messenger.Subscribe<SnackbarMessage>(async msg => await ShowSnackbarMsg(msg.Message)),
                 Messenger.Subscribe<IsBusyMessage>(msg => IsBusy = msg.IsBusy),
                 Messenger.Subscribe<UseGridViewMessage>(async (_) => await GoToPlayLists()),
-                Messenger.Subscribe<ShowDownloadFFmpegDialogMessage>(async _ => await ShowDownloadDialogCommand.ExecuteAsync()),
             });
         }
 
@@ -434,16 +432,18 @@ namespace CastIt.ViewModels
 
             _castItHub.OnFileEndReached += OnFileEndReached;
 
-            Logger.LogInformation($"{nameof(InitializeCastServer)}: Initializing cast service...");
-            bool initialized = await _castItHub.Init().ConfigureAwait(false);
-            if (!initialized)
+            if (Uri.TryCreate(_settingsService.ServerUrl, UriKind.Absolute, out _))
             {
-                Logger.LogInformation($"{nameof(Initialize)}: Couldn't connect to the hub");
-                IsBusy = false;
-                return;
+                Logger.LogInformation($"{nameof(InitializeCastServer)}: Initializing cast service...");
+                bool initialized = await _castItHub.Init(_settingsService.ServerUrl).ConfigureAwait(false);
+                if (!initialized)
+                {
+                    Logger.LogInformation($"{nameof(Initialize)}: Couldn't connect to the hub");
+                    IsBusy = false;
+                    return;
+                }
+                ServerIsRunning = true;
             }
-
-            ServerIsRunning = true;
             IsBusy = false;
             Logger.LogInformation($"{nameof(InitializeCastServer)}: Completed");
         }
@@ -805,23 +805,20 @@ namespace CastIt.ViewModels
             }
         }
 
-        private async Task ShowChangeServerUrlDialog()
+        private Task<bool> ShowChangeServerUrlDialog()
         {
-            var result = await _navigationService.Navigate<ChangeServerUrlDialogViewModel, NavigationBoolResult>();
-            ServerIsRunning = result!.Result;
+            return _navigationService.NavigateRegisteringToResult<ChangeServerUrlDialogViewModel, NavigationBoolResult>(this, ResultViewModelManager);
         }
 
-        private async Task ShowDownloadFfmpegDialog()
+        public override bool ResultSet(IMvxResultSettingViewModel<NavigationBoolResult> viewModel, NavigationBoolResult result)
         {
-            var result = await _navigationService.Navigate<DownloadDialogViewModel, NavigationBoolResult>();
-            if (!result!.Result)
+            if (viewModel is MainViewModel)
             {
-                CloseAppCommand.Execute();
+                ServerIsRunning = result.Value;
+                return true;
             }
-            else
-            {
-                await ShowSnackbarMsg(GetText("AppIsRdyToUse"));
-            }
+
+            return false;
         }
         #endregion
     }

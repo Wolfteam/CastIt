@@ -10,27 +10,27 @@ part 'play_state.dart';
 class PlayBloc extends Bloc<PlayEvent, PlayState> {
   final CastItHubClientService _castItHub;
 
-  bool get isPlaying => state is _PlayingState;
+  bool get isPlaying => state is PlayStatePlayingState;
 
-  _PlayingState get currentState => state as _PlayingState;
+  PlayStatePlayingState get currentState => state as PlayStatePlayingState;
 
-  PlayBloc(this._castItHub) : super(PlayState.connected()) {
-    on<_Connected>((event, emit) {
-      final updatedState = PlayState.connected();
+  PlayBloc(this._castItHub) : super(const PlayState.connected()) {
+    on<PlayEventConnected>((event, emit) {
+      const updatedState = PlayState.connected();
       emit(updatedState);
     });
 
-    on<_FileLoading>((event, emit) {
-      final updatedState = PlayState.fileLoading();
+    on<PlayEventFileLoading>((event, emit) {
+      const updatedState = PlayState.fileLoading();
       emit(updatedState);
     });
 
-    on<_FileLoadingError>((event, emit) {
+    on<PlayEventFileLoadingError>((event, emit) {
       final updatedState = PlayState.fileLoadingFailed(msg: event.msg);
       emit(updatedState);
     });
 
-    on<_FileLoaded>((event, emit) {
+    on<PlayEventFileLoaded>((event, emit) {
       final updatedState = PlayState.playing(
         id: event.file.id,
         playListId: event.file.playListId,
@@ -50,37 +50,39 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       emit(updatedState);
     });
 
-    on<_FileChanged>((event, emit) {
-      final updatedState = state.maybeMap(
-        playing: (state) => state.copyWith(
+    on<PlayEventFileChanged>((event, emit) {
+      final updatedState = switch (state) {
+        final PlayStatePlayingState state => state.copyWith(
           id: event.file.id,
           playListId: event.file.playListId,
           filename: event.file.filename,
           thumbPath: event.file.thumbnailUrl,
           loopFile: event.file.loop,
         ),
-        orElse: () => state,
-      );
+        _ => state,
+      };
+
       emit(updatedState);
     });
 
-    on<_PlayListChanged>((event, emit) {
-      final updatedState = state.maybeMap(
-        playing: (state) => state.copyWith(
+    on<PlayEventPlayListChanged>((event, emit) {
+      final updatedState = switch (state) {
+        final PlayStatePlayingState state => state.copyWith(
           playlistName: event.playList.name,
           playListTotalDuration: event.playList.totalDuration,
           playListPlayedTime: event.playList.playedTime,
           shufflePlayList: event.playList.shuffle,
           loopPlayList: event.playList.loop,
         ),
-        orElse: () => state,
-      );
+        _ => state,
+      };
+
       emit(updatedState);
     });
 
-    on<_TimeChanged>(_handleTimeChanged);
+    on<PlayEventTimeChanged>(_handleTimeChanged);
 
-    on<_Paused>((event, emit) {
+    on<PlayEventPaused>((event, emit) {
       if (!isPlaying) {
         _emitDefaultState(emit);
         return;
@@ -89,17 +91,17 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       emit(updatedState);
     });
 
-    on<_Stopped>((event, emit) {
+    on<PlayEventStopped>((event, emit) {
       if (!isPlaying) {
         _emitDefaultState(emit);
         return;
       }
-      emit(PlayState.connected());
+      emit(const PlayState.connected());
     });
 
-    on<_Disconnected>((event, emit) => emit(PlayState.connected()));
+    on<PlayEventDisconnected>((event, emit) => emit(const PlayState.connected()));
 
-    on<_SliderDragChanged>((event, emit) {
+    on<PlayEventSliderDragChanged>((event, emit) {
       if (!isPlaying) {
         _emitDefaultState(emit);
         return;
@@ -108,7 +110,7 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       emit(updatedState);
     });
 
-    on<_SliderValueChanged>((event, emit) {
+    on<PlayEventSliderValueChanged>((event, emit) {
       if (!isPlaying) {
         _emitDefaultState(emit);
         return;
@@ -118,13 +120,16 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
         _castItHub.gotoSeconds(event.newValue);
       }
 
-      final updatedState = currentState.copyWith.call(currentSeconds: event.newValue, isDraggingSlider: !event.triggerGoToSeconds);
+      final updatedState = currentState.copyWith.call(
+        currentSeconds: event.newValue,
+        isDraggingSlider: !event.triggerGoToSeconds,
+      );
       emit(updatedState);
     });
 
-    _castItHub.connected.stream.listen((_) => add(PlayEvent.connected()));
+    _castItHub.connected.stream.listen((_) => add(const PlayEvent.connected()));
 
-    _castItHub.fileLoading.stream.listen((_) => add(PlayEvent.fileLoading()));
+    _castItHub.fileLoading.stream.listen((_) => add(const PlayEvent.fileLoading()));
 
     _castItHub.fileLoadingError.stream.listen((msg) => add(PlayEvent.fileLoadingError(msg: msg)));
 
@@ -137,12 +142,12 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
 
     _castItHub.filePaused.stream.listen((_) {
       if (isPlaying && !currentState.isPaused!) {
-        add(PlayEvent.paused());
+        add(const PlayEvent.paused());
       }
     });
 
     _castItHub.fileEndReached.stream.listen((_) {
-      add(PlayEvent.stopped());
+      add(const PlayEvent.stopped());
     });
 
     _castItHub.fileChanged.stream.listen((tuple) {
@@ -167,10 +172,10 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
       }
     });
 
-    _castItHub.disconnected.stream.listen((_) => add(PlayEvent.disconnected()));
+    _castItHub.disconnected.stream.listen((_) => add(const PlayEvent.disconnected()));
   }
 
-  void _handleTimeChanged(_TimeChanged event, Emitter<PlayState> emit) {
+  void _handleTimeChanged(PlayEventTimeChanged event, Emitter<PlayState> emit) {
     if (!isPlaying) {
       _emitDefaultState(emit);
       return;
@@ -193,6 +198,6 @@ class PlayBloc extends Bloc<PlayEvent, PlayState> {
   }
 
   void _emitDefaultState(Emitter<PlayState> emit) {
-    emit(PlayState.connected());
+    emit(const PlayState.connected());
   }
 }

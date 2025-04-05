@@ -15,49 +15,60 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
   final CastItHubClientService _castItHub;
 
   PlayedFileOptionsBloc(this._castItHub) : super(_initialState) {
-    on<_Loaded>((event, emit) {
-      final updatedState = state.map(
-        loaded: (state) => state.copyWith.call(options: event.options),
-        closed: (_) => PlayedFileOptionsState.loaded(options: event.options),
-      );
+    on<PlayedFileOptionsEventLoaded>((event, emit) {
+      final updatedState = switch (state) {
+        final PlayedFileOptionsStateLoadedState state => state.copyWith.call(options: event.options),
+        PlayedFileOptionsStateClosedState() => PlayedFileOptionsState.loaded(options: event.options),
+      };
 
       emit(updatedState);
     });
 
-    on<_SetFileOption>((event, emit) async {
-      await _castItHub.setFileOptions(event.streamIndex, isAudio: event.isAudio, isQuality: event.isQuality, isSubtitle: event.isSubtitle);
+    on<PlayedFileOptionsEventSetFileOption>((event, emit) async {
+      await _castItHub.setFileOptions(
+        event.streamIndex,
+        isAudio: event.isAudio,
+        isQuality: event.isQuality,
+        isSubtitle: event.isSubtitle,
+      );
     });
 
-    on<_VolumeChanged>((event, emit) {
-      final updatedState = state.map(
-        loaded: (state) =>
-            state.isDraggingVolumeSlider ? state : state.copyWith(volumeLvl: event.volumeLvl * AppConstants.maxVolumeLevel, isMuted: event.isMuted),
-        closed: (s) => s,
-      );
+    on<PlayedFileOptionsEventVolumeChanged>((event, emit) {
+      final updatedState = switch (state) {
+        final PlayedFileOptionsStateLoadedState state =>
+          state.isDraggingVolumeSlider
+              ? state
+              : state.copyWith(volumeLvl: event.volumeLvl * AppConstants.maxVolumeLevel, isMuted: event.isMuted),
+        PlayedFileOptionsStateClosedState() => state,
+      };
 
       emit(updatedState);
     });
 
-    on<_SetVolume>((event, emit) async {
+    on<PlayedFileOptionsEventSetVolume>((event, emit) async {
       if (event.triggerChange) {
         await _castItHub.setVolume(event.volumeLvl, isMuted: event.isMuted);
       }
 
-      final updatedState = state.map(
-        loaded: (state) => state.copyWith(volumeLvl: event.volumeLvl, isMuted: event.isMuted, isDraggingVolumeSlider: !event.triggerChange),
-        closed: (s) => s,
-      );
+      final updatedState = switch (state) {
+        final PlayedFileOptionsStateLoadedState state => state.copyWith(
+          volumeLvl: event.volumeLvl,
+          isMuted: event.isMuted,
+          isDraggingVolumeSlider: !event.triggerChange,
+        ),
+        PlayedFileOptionsStateClosedState() => state,
+      };
 
       emit(updatedState);
     });
 
-    on<_CloseModal>((event, emit) => emit(const PlayedFileOptionsState.closed()));
+    on<PlayedFileOptionsEventCloseModal>((event, emit) => emit(const PlayedFileOptionsState.closed()));
 
-    on<_VolumeSliderDragStarted>((event, emit) {
-      final updatedState = state.map(
-        loaded: (state) => state.copyWith.call(isDraggingVolumeSlider: true),
-        closed: (state) => state,
-      );
+    on<PlayedFileOptionsEventVolumeSliderDragStarted>((event, emit) {
+      final updatedState = switch (state) {
+        final PlayedFileOptionsStateLoadedState state => state.copyWith.call(isDraggingVolumeSlider: true),
+        PlayedFileOptionsStateClosedState() => state,
+      };
       emit(updatedState);
     });
 
@@ -69,36 +80,36 @@ class PlayedFileOptionsBloc extends Bloc<PlayedFileOptionsEvent, PlayedFileOptio
     });
 
     _castItHub.volumeLevelChanged.stream.listen((event) {
-      state.map(
-        loaded: (s) {
-          final volumeChanged = (s.volumeLvl - event.volumeLevel).abs() >= 1 || s.isMuted != event.isMuted;
+      switch (state) {
+        case final PlayedFileOptionsStateLoadedState state:
+          final volumeChanged = (state.volumeLvl - event.volumeLevel).abs() >= 1 || state.isMuted != event.isMuted;
           if (volumeChanged) {
             add(PlayedFileOptionsEvent.volumeChanged(volumeLvl: event.volumeLevel, isMuted: event.isMuted));
           }
-        },
-        closed: (_) {},
-      );
+        default:
+          break;
+      }
     });
 
     _castItHub.fileLoading.stream.listen((event) {
-      add(PlayedFileOptionsEvent.closeModal());
+      add(const PlayedFileOptionsEvent.closeModal());
     });
   }
 
-  bool _hasFileOptionsChanged(List<FileItemOptionsResponseDto> updated) => state.map(
-        loaded: (state) {
-          final currentOptions = state.options;
-          for (final option in updated) {
-            final existing = currentOptions.firstWhereOrNull((el) => el.id == option.id);
-            if (option == existing) {
-              continue;
-            }
-
-            return true;
+  bool _hasFileOptionsChanged(List<FileItemOptionsResponseDto> updated) {
+    switch (state) {
+      case final PlayedFileOptionsStateLoadedState state:
+        final List<FileItemOptionsResponseDto> currentOptions = state.options;
+        for (final FileItemOptionsResponseDto option in updated) {
+          final FileItemOptionsResponseDto? existing = currentOptions.firstWhereOrNull((el) => el.id == option.id);
+          if (option == existing) {
+            continue;
           }
-
-          return false;
-        },
-        closed: (_) => true,
-      );
+          return true;
+        }
+        return false;
+      case PlayedFileOptionsStateClosedState():
+        return true;
+    }
+  }
 }

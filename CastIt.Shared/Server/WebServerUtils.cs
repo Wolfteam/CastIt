@@ -1,7 +1,5 @@
-﻿using CastIt.Domain;
-using System;
+﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -41,18 +39,18 @@ namespace CastIt.Shared.Server
             return localIp;
         }
 
-        public static int GetOpenPort(int startPort = AppWebServerConstants.DefaultPort)
+        public static Process GetServerProcess()
+        {
+            var existingProcess = Process.GetProcessesByName(ServerProcessName);
+            return existingProcess.FirstOrDefault();
+        }
+
+        public static int GetOpenPort(int startPort = 9696)
         {
             var properties = IPGlobalProperties.GetIPGlobalProperties();
             var tcpEndPoints = properties.GetActiveTcpListeners();
             var usedPorts = tcpEndPoints.Select(p => p.Port).ToList();
             return Enumerable.Range(startPort, 99).FirstOrDefault(port => !usedPorts.Contains(port));
-        }
-
-        public static Process GetServerProcess()
-        {
-            var existingProcess = Process.GetProcessesByName(ServerProcessName);
-            return existingProcess.FirstOrDefault();
         }
 
         public static bool IsServerAlive()
@@ -71,60 +69,6 @@ namespace CastIt.Shared.Server
         {
             var process = ProcessPorts.ProcessPortMap.Find(f => f.ProcessName == ServerProcessName);
             return process?.PortNumber;
-        }
-
-        private static bool StartServer(string escapedArgs, string exePath)
-        {
-            var process = new Process
-            {
-                EnableRaisingEvents = true,
-                StartInfo = new ProcessStartInfo
-                {
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    FileName = exePath,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Arguments = escapedArgs,
-                },
-            };
-
-            try
-            {
-                return process.Start();
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        private static bool StartServer()
-        {
-            string path = GetServerPhysicalPath();
-            return StartServer(path);
-        }
-
-        private static bool StartServer(string exePath)
-        {
-            string args = $"{AppWebServerConstants.PortArgument} {GetOpenPort()}";
-            return StartServer(args, exePath);
-        }
-
-        public static string GetServerPhysicalPath()
-        {
-            string dir = Directory.GetCurrentDirectory();
-            return GetServerPhysicalPath(dir);
-        }
-
-        public static string GetServerPhysicalPath(string from)
-        {
-            //C:\Program Files\CastIt
-            string parentDir = Directory.GetParent(from)!.ToString();
-            string path = Path.Combine(parentDir, ServerFolderName, FullServerProcessName);
-            //#if DEBUG
-            //            path = "D:\\Proyectos\\CastIt\\CastIt.Server\\bin\\Debug\\net5.0\\CastIt.Server.exe";
-            //#endif
-            return path;
         }
 
         public static bool IsElevated()

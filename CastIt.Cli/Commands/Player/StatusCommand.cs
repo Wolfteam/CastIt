@@ -15,11 +15,9 @@ namespace CastIt.Cli.Commands.Player
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
-
             var response = await CastItApi.GetStatus();
             CheckServerResponse(response);
-            //just to avoid printing a lot of stuff..
+            //just to avoid printing a lot of stuff...
             response.Result.ThumbnailRanges.Clear();
             PrettyPrintAsJson(response.Result);
 

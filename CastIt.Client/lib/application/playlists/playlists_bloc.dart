@@ -12,41 +12,40 @@ part 'playlists_state.dart';
 class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
   final CastItHubClientService _castItHub;
 
-  PlayListsState get initialState => PlayListsState.loading();
+  PlayListsState get initialState => const PlayListsState.loading();
 
-  _LoadedState get currentState => state as _LoadedState;
+  PlayListsStateLoadedState get currentState => state as PlayListsStateLoadedState;
 
-  PlayListsBloc(this._castItHub) : super(PlayListsState.disconnected()) {
-    on<_Load>((event, emit) async {
+  PlayListsBloc(this._castItHub) : super(const PlayListsState.disconnected()) {
+    on<PlayListsEventLoad>((event, emit) async {
       emit(initialState);
       await _castItHub.loadPlayLists();
-      emit(initialState);
     });
 
-    on<_Loaded>((event, emit) {
+    on<PlayListsEventLoaded>((event, emit) {
       final updatedState = PlayListsState.loaded(
-        reloads: state is _LoadedState ? currentState.reloads + 1 : 1,
+        reloads: state is PlayListsStateLoadedState ? currentState.reloads + 1 : 1,
         playlists: event.playlists,
       );
       emit(updatedState);
     });
 
-    on<_Added>((event, emit) => emit(_handlePlayListAdded(event.playList)));
+    on<PlayListsEventAdded>((event, emit) => emit(_handlePlayListAdded(event.playList)));
 
-    on<_Changed>((event, emit) => emit(_handlePlayListChanged(event.playList)));
+    on<PlayListsEventChanged>((event, emit) => emit(_handlePlayListChanged(event.playList)));
 
-    on<_Deleted>((event, emit) => emit(_handlePlayListDeleted(event.id)));
+    on<PlayListsEventDeleted>((event, emit) => emit(_handlePlayListDeleted(event.id)));
 
-    on<_Disconnected>((event, emit) => emit(PlayListsState.disconnected()));
+    on<PlayListsEventDisconnected>((event, emit) => emit(const PlayListsState.disconnected()));
   }
 
   void listenHubEvents() {
     _castItHub.connected.stream.listen((event) {
-      add(PlayListsEvent.load());
+      add(const PlayListsEvent.load());
     });
 
     _castItHub.disconnected.stream.listen((event) {
-      add(PlayListsEvent.disconnected());
+      add(const PlayListsEvent.disconnected());
     });
 
     _castItHub.playListsChanged.stream.listen((event) {
@@ -54,53 +53,54 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
     });
 
     _castItHub.playListAdded.stream.listen((e) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListsEvent.added(playList: e)),
-        orElse: () {},
-      );
+      switch (state) {
+        case PlayListsStateLoadedState():
+          add(PlayListsEvent.added(playList: e));
+        default:
+          break;
+      }
     });
 
     _castItHub.playListChanged.stream.listen((e) {
-      state.maybeMap(
-        loaded: (state) {
+      switch (state) {
+        case PlayListsStateLoadedState():
           final changeComesFromPlayedFile = e.$1;
           final playList = e.$2;
           if (!changeComesFromPlayedFile) {
             add(PlayListsEvent.changed(playList: playList));
           }
-        },
-        orElse: () {},
-      );
+        default:
+          break;
+      }
     });
 
     _castItHub.playListDeleted.stream.listen((e) {
-      state.maybeMap(
-        loaded: (_) => add(PlayListsEvent.deleted(id: e)),
-        orElse: () {},
-      );
+      switch (state) {
+        case PlayListsStateLoadedState():
+          add(PlayListsEvent.deleted(id: e));
+        default:
+          break;
+      }
     });
   }
 
   PlayListsState _handlePlayListAdded(GetAllPlayListResponseDto playList) {
-    return state.map(
-      loading: (s) => s,
-      loaded: (s) {
-        final playLists = [...s.playlists];
+    switch (state) {
+      case final PlayListsStateLoadedState state:
+        final playLists = [...state.playlists];
         playLists.insert(playList.position - 1, playList);
-
-        return s.copyWith.call(playlists: playLists);
-      },
-      disconnected: (s) => s,
-    );
+        return state.copyWith(playlists: playLists);
+      default:
+        return state;
+    }
   }
 
   PlayListsState _handlePlayListChanged(GetAllPlayListResponseDto playList) {
-    return state.map(
-      loading: (s) => s,
-      loaded: (s) {
-        final current = s.playlists.firstWhereOrNull((el) => el.id == playList.id);
+    switch (state) {
+      case final PlayListsStateLoadedState state:
+        final current = state.playlists.firstWhereOrNull((el) => el.id == playList.id);
         if (current == null || current == playList) {
-          return s;
+          return state;
         }
         final updated = current.copyWith.call(
           imageUrl: playList.imageUrl,
@@ -113,26 +113,25 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
           totalDuration: playList.totalDuration,
         );
 
-        final currentIndex = s.playlists.indexOf(current);
-        final playLists = [...s.playlists];
+        final currentIndex = state.playlists.indexOf(current);
+        final playLists = [...state.playlists];
         playLists.removeAt(currentIndex);
         playLists.insert(currentIndex, updated);
 
-        return s.copyWith.call(playlists: playLists);
-      },
-      disconnected: (s) => s,
-    );
+        return state.copyWith(playlists: playLists);
+      default:
+        return state;
+    }
   }
 
   PlayListsState _handlePlayListDeleted(int id) {
-    return state.map(
-      loading: (s) => s,
-      loaded: (s) {
-        final playLists = [...s.playlists];
+    switch (state) {
+      case final PlayListsStateLoadedState state:
+        final playLists = [...state.playlists];
         playLists.removeWhere((el) => el.id == id);
-        return s.copyWith.call(playlists: playLists);
-      },
-      disconnected: (s) => s,
-    );
+        return state.copyWith(playlists: playLists);
+      default:
+        return state;
+    }
   }
 }

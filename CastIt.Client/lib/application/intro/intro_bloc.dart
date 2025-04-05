@@ -18,19 +18,22 @@ class IntroBloc extends Bloc<IntroEvent, IntroState> {
   final SettingsBloc _settingsBloc;
   late StreamSubscription _settingSubscription;
 
-  _LoadedState get currentState => state as _LoadedState;
+  IntroStateLoadedState get currentState => state as IntroStateLoadedState;
 
   IntroBloc(this._settings, this._settingsBloc) : super(const IntroState.loading()) {
-    on<_Load>((event, emit) => emit(IntroState.loaded(currentCastItUrl: _settings.castItUrl, currentLang: _settings.language)));
+    on<IntroEventLoad>(
+      (event, emit) => emit(IntroState.loaded(currentCastItUrl: _settings.castItUrl, currentLang: _settings.language)),
+    );
 
-    on<_ChangePage>((event, emit) {
-      final updatedState = !currentState.urlWasSet
-          ? currentState.copyWith.call(page: event.newPage)
-          : currentState.copyWith.call(page: event.newPage, urlWasSet: false);
+    on<IntroEventChangePage>((event, emit) {
+      final updatedState =
+          !currentState.urlWasSet
+              ? currentState.copyWith.call(page: event.newPage)
+              : currentState.copyWith.call(page: event.newPage, urlWasSet: false);
       emit(updatedState);
     });
 
-    on<_UrlSet>((event, emit) {
+    on<IntroEventUrlSet>((event, emit) {
       //This can happen when the user press the skip button
       if (event.url.isNullEmptyOrWhitespace) {
         _settings.castItUrl = AppConstants.baseCastItUrl;
@@ -40,19 +43,19 @@ class IntroBloc extends Bloc<IntroEvent, IntroState> {
       emit(updatedState);
     });
 
-    on<_LanguageChanged>((event, emit) => emit(currentState.copyWith.call(currentLang: event.newLang)));
+    on<IntroEventLanguageChanged>((event, emit) => emit(currentState.copyWith.call(currentLang: event.newLang)));
 
     _settingSubscription = _settingsBloc.stream.listen((e) {
-      e.maybeMap(
-        loaded: (s) {
-          if (state is _LoadedState) {
-            add(IntroEvent.languageChanged(newLang: s.appLanguage));
+      switch (e) {
+        case SettingsStateLoadedState(:final appLanguage):
+          if (state is IntroStateLoadedState) {
+            add(IntroEvent.languageChanged(newLang: appLanguage));
           } else {
-            add(IntroEvent.load());
+            add(const IntroEvent.load());
           }
-        },
-        orElse: () {},
-      );
+        default:
+          break;
+      }
     });
   }
 

@@ -77,7 +77,7 @@ namespace CastIt.Domain.Models.FFmpeg.Args
             => AddArg("b:a", $"{bitrate}k");
 
         public FFmpegOutputArgs SetMovFlagToTheStart()
-            => AddArg("movflags", "frag_keyframe+faststart");
+            => AddArg("movflags", "frag_keyframe+empty_moov+faststart");
 
         public FFmpegOutputArgs SetFilters(string filters)
             => AddArg("vf", filters);

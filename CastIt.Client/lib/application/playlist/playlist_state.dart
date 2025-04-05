@@ -1,10 +1,10 @@
 part of 'playlist_bloc.dart';
 
 @freezed
-class PlayListState with _$PlayListState {
-  factory PlayListState.loading() = _LoadingState;
+sealed class PlayListState with _$PlayListState {
+  const factory PlayListState.loading() = PlayListStateLoadingState;
 
-  factory PlayListState.loaded({
+  const factory PlayListState.loaded({
     required int playlistId,
     required String name,
     required int position,
@@ -16,11 +16,11 @@ class PlayListState with _$PlayListState {
     @Default(false) bool searchBoxIsVisible,
     @Default(false) bool isFiltering,
     int? scrollToFileId,
-  }) = _LoadedState;
+  }) = PlayListStateLoadedState;
 
-  factory PlayListState.disconnected({int? playListId}) = _DisconnectedState;
+  const factory PlayListState.disconnected({int? playListId}) = PlayListStateDisconnectedState;
 
-  factory PlayListState.close() = _CloseState;
+  const factory PlayListState.close() = PlayListStateCloseState;
 
-  factory PlayListState.notFound() = _NotFoundState;
+  const factory PlayListState.notFound() = PlayListStateNotFoundState;
 }

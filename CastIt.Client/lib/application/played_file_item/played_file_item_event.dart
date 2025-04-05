@@ -1,13 +1,13 @@
 part of 'played_file_item_bloc.dart';
 
 @freezed
-class PlayedFileItemEvent with _$PlayedFileItemEvent {
-  factory PlayedFileItemEvent.playing({
+sealed class PlayedFileItemEvent with _$PlayedFileItemEvent {
+  const factory PlayedFileItemEvent.playing({
     required int id,
     required int playListId,
     required double playedPercentage,
     required String fullTotalDuration,
-  }) = _Playing;
+  }) = PlayedFileItemEventPlaying;
 
-  factory PlayedFileItemEvent.endReached() = _EndReached;
+  const factory PlayedFileItemEvent.endReached() = PlayedFileItemEventEndReached;
 }

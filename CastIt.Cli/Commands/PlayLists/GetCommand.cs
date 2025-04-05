@@ -22,8 +22,6 @@ namespace CastIt.Cli.Commands.PlayLists
 
         protected override async Task<int> Execute(CommandLineApplication app)
         {
-            CheckIfWebServerIsRunning();
-
             if (PlayListId <= 0 && string.IsNullOrWhiteSpace(Name))
             {
                 AppConsole.WriteLine($"Either PlayListId = {PlayListId} or the Name = {Name} is not valid");

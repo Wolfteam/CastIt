@@ -19,7 +19,7 @@ class SkipIntroBottomSheet extends StatelessWidget {
 
   void _onCancel(BuildContext context, {bool skipped = false}) {
     if (skipped) {
-      context.read<IntroBloc>().add(IntroEvent.urlWasSet(url: ''));
+      context.read<IntroBloc>().add(const IntroEvent.urlWasSet(url: ''));
     }
     Navigator.of(context).pop();
   }

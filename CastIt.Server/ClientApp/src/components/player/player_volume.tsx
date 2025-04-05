@@ -1,4 +1,5 @@
-import { Grid, IconButton, Popover, Slider } from '@mui/material';
+import { IconButton, Popover, Slider } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useEffect, useState } from 'react';
 import { Fragment } from 'react';
 import { VolumeOff, VolumeUp } from '@mui/icons-material';
@@ -100,12 +101,12 @@ function PlayerVolume() {
                         paddingRight: 10,
                     }}
                 >
-                    <Grid item xs={2}>
+                    <Grid size={2}>
                         <IconButton onClick={() => handleVolumeChange(state.volume, !state.isMuted, true)} size="large">
                             {state.isMuted ? <VolumeOff fontSize="medium" /> : <VolumeUp fontSize="medium" />}
                         </IconButton>
                     </Grid>
-                    <Grid item xs={10} style={{ paddingRight: 10 }}>
+                    <Grid size={10} style={{ paddingRight: 10 }}>
                         <Slider
                             step={0.1}
                             min={0}

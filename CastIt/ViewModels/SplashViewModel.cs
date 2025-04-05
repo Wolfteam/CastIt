@@ -47,7 +47,7 @@ namespace CastIt.ViewModels
             _settingsService = settingsService;
             _fileService = fileService;
 
-            _timer = new Timer(800)
+            _timer = new Timer(350)
             {
                 AutoReset = false
             };

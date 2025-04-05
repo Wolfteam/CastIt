@@ -17,13 +17,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final MainBloc _mainBloc;
   final CastItHubClientService _castItHub;
 
-  SettingsState get initialState => SettingsState.loading();
+  SettingsState get initialState => const SettingsState.loading();
 
-  _LoadedState get currentState => state as _LoadedState;
+  SettingsStateLoadedState get currentState => state as SettingsStateLoadedState;
 
-  SettingsBloc(this._settings, this._mainBloc, this._castItHub) : super(SettingsState.loading()) {
-    on<_Load>((event, emit) async {
-      if (state is _LoadedState) {
+  SettingsBloc(this._settings, this._mainBloc, this._castItHub) : super(const SettingsState.loading()) {
+    on<SettingsEventLoad>((event, emit) async {
+      if (state is SettingsStateLoadedState) {
         return;
       }
       await _settings.init();
@@ -60,7 +60,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       emit(updatedState);
     });
 
-    on<_Connected>((event, emit) {
+    on<SettingsEventConnected>((event, emit) {
       final updatedState = currentState.copyWith(
         isConnected: true,
         fFmpegExePath: event.settings.fFmpegExePath,
@@ -85,31 +85,31 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       emit(updatedState);
     });
 
-    on<_Disconnected>((event, emit) => emit(currentState.copyWith(isConnected: false)));
+    on<SettingsEventDisconnected>((event, emit) => emit(currentState.copyWith(isConnected: false)));
 
-    on<_ThemeChanged>((event, emit) {
+    on<SettingsEventThemeChanged>((event, emit) {
       _settings.appTheme = event.theme;
       final updatedState = currentState.copyWith(appTheme: event.theme);
       emit(updatedState);
     });
 
-    on<_AccentColorChanged>((event, emit) {
+    on<SettingsEventAccentColorChanged>((event, emit) {
       _settings.accentColor = event.accentColor;
       final updatedState = currentState.copyWith(accentColor: event.accentColor);
       emit(updatedState);
     });
 
-    on<_LanguageChanged>((event, emit) {
+    on<SettingsEventLanguageChanged>((event, emit) {
       if (event.lang == _settings.language) {
         return;
       }
       _settings.language = event.lang;
-      _mainBloc.add(MainEvent.languageChanged());
+      _mainBloc.add(const MainEvent.languageChanged());
       final updatedState = currentState.copyWith(appLanguage: event.lang);
       emit(updatedState);
     });
 
-    on<_CastItUrlChanged>((event, emit) {
+    on<SettingsEventCastItUrlChanged>((event, emit) {
       final isValid = _isCastItUrlValid(event.castItUrl);
       if (isValid) {
         _settings.castItUrl = event.castItUrl;
@@ -121,7 +121,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   void listenHubEvents() {
     _castItHub.connected.stream.listen((event) {
-      add(SettingsEvent.load());
+      add(const SettingsEvent.load());
     });
 
     _castItHub.settingsChanged.stream.listen((settings) {
@@ -129,7 +129,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     });
 
     _castItHub.disconnected.stream.listen((_) {
-      add(SettingsEvent.disconnected());
+      add(const SettingsEvent.disconnected());
     });
   }
 

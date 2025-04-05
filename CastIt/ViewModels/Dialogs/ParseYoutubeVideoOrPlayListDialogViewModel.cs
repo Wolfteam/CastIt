@@ -1,16 +1,19 @@
 ﻿using CastIt.Interfaces;
-using CastIt.Models;
+using CastIt.Models.Results;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
+using MvvmCross.ViewModels.Result;
 using System.Threading.Tasks;
 
 namespace CastIt.ViewModels.Dialogs
 {
-    public class ParseYoutubeVideoOrPlayListDialogViewModel : BaseDialogViewModelResult<NavigationBoolResult>
+    public class ParseYoutubeVideoOrPlayListDialogViewModel : BaseDialogViewModelResult<string, OnYoutubeUrlAddedResult>
     {
         private readonly IMvxNavigationService _navigationService;
+        private string _parameter;
+
         private string _secondaryOkText;
 
         public string SecondaryOKText
@@ -25,15 +28,16 @@ namespace CastIt.ViewModels.Dialogs
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<ParseYoutubeVideoOrPlayListDialogViewModel> logger,
-            IMvxNavigationService navigationService)
-            : base(textProvider, messenger, logger)
+            IMvxNavigationService navigationService,
+            IMvxResultViewModelManager resultViewModelManager)
+            : base(textProvider, messenger, logger, resultViewModelManager)
         {
             _navigationService = navigationService;
         }
 
-        public override void Prepare()
+        public override void Prepare(string parameter)
         {
-            base.Prepare();
+            _parameter = parameter;
             Title = GetText("Confirmation");
             OkText = GetText("Video");
             SecondaryOKText = GetText("PlayList");
@@ -48,7 +52,10 @@ namespace CastIt.ViewModels.Dialogs
             CloseCommand = new MvxAsyncCommand(async () => await CloseDialog(null));
         }
 
-        private Task CloseDialog(bool? parseVideo)
-            => _navigationService.Close(this, !parseVideo.HasValue ? null : new NavigationBoolResult(parseVideo.Value));
+        private Task<bool> CloseDialog(bool? parseVideo)
+        {
+            OnYoutubeUrlAddedResult result = new OnYoutubeUrlAddedResult(parseVideo ?? false, !parseVideo.HasValue, _parameter);
+            return _navigationService.CloseSettingResult(this, result);
+        }
     }
 }

@@ -1,4 +1,5 @@
-import { Grid, LinearProgress, Tooltip, Typography } from '@mui/material';
+import { LinearProgress, Tooltip, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useEffect, useState } from 'react';
 import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
 import { defaultImg } from '../../utils/app_constants';
@@ -55,11 +56,11 @@ function PlayerCurrentFile() {
     const image = state.imageUrl ?? defaultImg;
 
     return (
-        <Grid container wrap="nowrap" alignItems="center">
-            <Grid item style={{ display: 'flex' }}>
-                <img style={{ height: 100, objectFit: 'contain' }} src={image} alt="Current file" />
+        <Grid container wrap="nowrap" alignItems="center" spacing={1}>
+            <Grid>
+                <img style={{ height: 100, width: '100%', objectFit: 'contain' }} src={image} alt="Current file" />
             </Grid>
-            <Grid item className="text-overflow-elipsis" style={{ paddingLeft: '10px' }}>
+            <Grid className="text-overflow-elipsis">
                 <Tooltip title={state.title}>
                     <Typography variant="h5" className="text-overflow-elipsis">
                         {state.title}

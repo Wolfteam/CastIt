@@ -57,7 +57,7 @@ class PlayCoverImg extends StatelessWidget {
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.5)],
+              colors: [Colors.black.withValues(alpha: 0.1), Colors.black.withValues(alpha: 0.5)],
               begin: Alignment.center,
               end: Alignment.topCenter,
             ),
@@ -67,7 +67,7 @@ class PlayCoverImg extends StatelessWidget {
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.8)],
+              colors: [Colors.black.withValues(alpha: 0.1), Colors.black.withValues(alpha: 0.8)],
               begin: Alignment.center,
               end: Alignment.bottomCenter,
             ),
@@ -114,13 +114,7 @@ class _Top extends StatelessWidget {
   final bool fileIdIsValid;
   final bool playListIsValid;
 
-  const _Top({
-    this.fileId,
-    this.playListId,
-    this.playListName,
-    required this.fileIdIsValid,
-    required this.playListIsValid,
-  });
+  const _Top({this.fileId, this.playListId, this.playListName, required this.fileIdIsValid, required this.playListIsValid});
 
   @override
   Widget build(BuildContext context) {
@@ -129,20 +123,13 @@ class _Top extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         IconButton(
-          icon: const Icon(
-            Icons.playlist_play,
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.playlist_play, color: Colors.white),
           onPressed: !fileIdIsValid && !playListIsValid ? null : () => _goToPlayList(context),
         ),
         Expanded(
           child: Column(
             children: <Widget>[
-              Text(
-                i18n.playlist,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.white.withOpacity(0.6)),
-              ),
+              Text(i18n.playlist, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
               Text(
                 playListName.isNullEmptyOrWhitespace ? '' : playListName!,
                 textAlign: TextAlign.center,
@@ -151,13 +138,7 @@ class _Top extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          icon: const Icon(
-            Icons.settings,
-            color: Colors.white,
-          ),
-          onPressed: !fileIdIsValid ? null : () => _showFileOptionsModal(context),
-        ),
+        IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: !fileIdIsValid ? null : () => _showFileOptionsModal(context)),
       ],
     );
   }
@@ -234,7 +215,8 @@ class _Bottom extends StatelessWidget {
     );
   }
 
-  Future<void> _togglePlayListShuffle(BuildContext context) => context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
+  Future<void> _togglePlayListShuffle(BuildContext context) =>
+      context.read<ServerWsBloc>().setPlayListOptions(playListId!, loop: loopPlayList, shuffle: !shufflePlayList);
 
   Future<void> _toggleFileLoop(BuildContext context) => context.read<ServerWsBloc>().loopFile(fileId!, playListId!, loop: !loopFile);
 }

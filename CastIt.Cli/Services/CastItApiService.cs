@@ -1,5 +1,10 @@
-﻿using CastIt.Cli.Common.Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using CastIt.Cli.Interfaces.Api;
+using CastIt.Cli.Models;
 using CastIt.Domain.Dtos;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
@@ -10,23 +15,37 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Refit;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CastIt.Cli.Services
 {
     public class CastItApiService : BaseApiService, ICastItApiService
     {
+        private readonly AppSettings _appSettings;
         private ICastItApi _api;
 
-        public ICastItApi Api
-            => _api ??= RestService.For<ICastItApi>(ServerUtils.StartServerIfNotStarted());
-
-        public CastItApiService(ILogger<CastItApiService> logger) : base(logger)
+        private ICastItApi Api
         {
+            get
+            {
+                if (_api != null)
+                {
+                    return _api;
+                }
+
+                if (string.IsNullOrWhiteSpace(_appSettings.ServerUrl))
+                {
+                    throw new InvalidOperationException("Server url has not been set");
+                }
+
+                _api = RestService.For<ICastItApi>(_appSettings.ServerUrl);
+
+                return _api;
+            }
+        }
+
+        public CastItApiService(ILogger<CastItApiService> logger, AppSettings appSettings) : base(logger)
+        {
+            _appSettings = appSettings;
         }
 
         #region Player

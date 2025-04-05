@@ -7,10 +7,7 @@ class PlayProgressBar extends StatelessWidget {
   final double? duration;
   final double? currentSeconds;
 
-  const PlayProgressBar({
-    this.duration,
-    this.currentSeconds,
-  });
+  const PlayProgressBar({this.duration, this.currentSeconds});
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +24,12 @@ class PlayProgressBar extends StatelessWidget {
       max: duration!,
       label: _generateLabel(currentSeconds ?? 0),
       divisions: duration!.round(),
-      onChangeStart: (value) => context.read<PlayBloc>().add(PlayEvent.sliderDragChanged(isSliding: true)),
+      onChangeStart: (value) => context.read<PlayBloc>().add(const PlayEvent.sliderDragChanged(isSliding: true)),
       onChanged: (value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value)),
-      onChangeEnd: (value) => context.read<PlayBloc>().add(PlayEvent.sliderValueChanged(newValue: value.roundToDouble(), triggerGoToSeconds: true)),
+      onChangeEnd:
+          (value) => context.read<PlayBloc>().add(
+            PlayEvent.sliderValueChanged(newValue: value.roundToDouble(), triggerGoToSeconds: true),
+          ),
     );
   }
 
