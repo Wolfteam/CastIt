@@ -20,7 +20,6 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
     on<PlayListsEventLoad>((event, emit) async {
       emit(initialState);
       await _castItHub.loadPlayLists();
-      emit(initialState);
     });
 
     on<PlayListsEventLoaded>((event, emit) {
