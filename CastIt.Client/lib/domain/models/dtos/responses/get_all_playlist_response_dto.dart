@@ -4,7 +4,7 @@ part 'get_all_playlist_response_dto.freezed.dart';
 part 'get_all_playlist_response_dto.g.dart';
 
 @freezed
-class GetAllPlayListResponseDto with _$GetAllPlayListResponseDto {
+sealed class GetAllPlayListResponseDto with _$GetAllPlayListResponseDto {
   const factory GetAllPlayListResponseDto({
     required int id,
     required String name,

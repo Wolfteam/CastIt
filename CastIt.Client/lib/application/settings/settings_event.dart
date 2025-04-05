@@ -1,28 +1,18 @@
 part of 'settings_bloc.dart';
 
 @freezed
-class SettingsEvent with _$SettingsEvent {
-  factory SettingsEvent.load() = _Load;
+sealed class SettingsEvent with _$SettingsEvent {
+  const factory SettingsEvent.load() = SettingsEventLoad;
 
-  factory SettingsEvent.connected({
-    required ServerAppSettings settings,
-  }) = _Connected;
+  const factory SettingsEvent.connected({required ServerAppSettings settings}) = SettingsEventConnected;
 
-  factory SettingsEvent.disconnected() = _Disconnected;
+  const factory SettingsEvent.disconnected() = SettingsEventDisconnected;
 
-  factory SettingsEvent.themeChanged({
-    required AppThemeType theme,
-  }) = _ThemeChanged;
+  const factory SettingsEvent.themeChanged({required AppThemeType theme}) = SettingsEventThemeChanged;
 
-  factory SettingsEvent.castItUrlChanged({
-    required String castItUrl,
-  }) = _CastItUrlChanged;
+  const factory SettingsEvent.castItUrlChanged({required String castItUrl}) = SettingsEventCastItUrlChanged;
 
-  factory SettingsEvent.accentColorChanged({
-    required AppAccentColorType accentColor,
-  }) = _AccentColorChanged;
+  const factory SettingsEvent.accentColorChanged({required AppAccentColorType accentColor}) = SettingsEventAccentColorChanged;
 
-  factory SettingsEvent.languageChanged({
-    required AppLanguageType lang,
-  }) = _LanguageChanged;
+  const factory SettingsEvent.languageChanged({required AppLanguageType lang}) = SettingsEventLanguageChanged;
 }

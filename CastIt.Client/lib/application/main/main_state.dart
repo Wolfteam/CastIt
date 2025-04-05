@@ -1,10 +1,10 @@
 part of 'main_bloc.dart';
 
 @freezed
-class MainState with _$MainState {
-  factory MainState.loading() = _LoadingState;
+sealed class MainState with _$MainState {
+  const factory MainState.loading() = MainStateLoadingState;
 
-  factory MainState.loaded({
+  const factory MainState.loaded({
     required String appTitle,
     required AppThemeType theme,
     required AppAccentColorType accentColor,
@@ -12,5 +12,5 @@ class MainState with _$MainState {
     required bool firstInstall,
     required LanguageModel language,
     @Default(0) int currentSelectedTab,
-  }) = _LoadedState;
+  }) = MainStateLoadedState;
 }

@@ -20,41 +20,40 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   final DeviceInfoService _deviceInfoService;
   final LocaleService _localeService;
 
-  _LoadedState get currentState => state as _LoadedState;
+  MainStateLoadedState get currentState => state as MainStateLoadedState;
 
-  MainBloc(this._logger, this._settings, this._deviceInfoService, this._localeService) : super(MainState.loading()) {
-    on<_Init>((event, emit) async {
+  MainBloc(this._logger, this._settings, this._deviceInfoService, this._localeService) : super(const MainState.loading()) {
+    on<MainEventInit>((event, emit) async {
       final updatedState = await _init();
       emit(updatedState);
     });
 
-    on<_ThemeChanged>((event, emit) {
+    on<MainEventThemeChanged>((event, emit) {
       final updatedState = _loadThemeData(currentState.appTitle, event.theme, _settings.accentColor, _settings.language);
       emit(updatedState);
     });
 
-    on<_AccentColorChanged>((event, emit) {
+    on<MainEventAccentColorChanged>((event, emit) {
       final updatedState = _loadThemeData(currentState.appTitle, _settings.appTheme, event.accentColor, _settings.language);
       emit(updatedState);
     });
 
-    on<_GoToTab>((event, emit) {
+    on<MainEventGoToTab>((event, emit) {
       final updatedState = currentState.copyWith(currentSelectedTab: event.index);
       emit(updatedState);
     });
 
-    on<_IntroCompleted>((event, emit) {
+    on<MainEventIntroCompleted>((event, emit) {
       _settings.isFirstInstall = false;
       final updatedState = currentState.copyWith.call(firstInstall: false);
       emit(updatedState);
     });
 
-    on<_LanguageChanged>((event, emit) {
-      final updatedState = state.map(
-        loading: (s) => s,
-        loaded: (s) => s.copyWith.call(language: _localeService.getCurrentLocale()),
-      );
-
+    on<MainEventLanguageChanged>((event, emit) {
+      final updatedState = switch (state) {
+        final MainStateLoadedState state => state.copyWith.call(language: _localeService.getCurrentLocale()),
+        _ => state,
+      };
       emit(updatedState);
     });
   }

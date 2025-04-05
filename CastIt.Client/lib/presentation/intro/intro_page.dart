@@ -9,13 +9,14 @@ import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+const int _maxNumberOfPages = 3;
+
 class IntroPage extends StatefulWidget {
   @override
   _IntroPageState createState() => _IntroPageState();
 }
 
 class _IntroPageState extends State<IntroPage> {
-  final int _maxNumberOfPages = 3;
   late PageController _pageController;
 
   @override
@@ -27,7 +28,7 @@ class _IntroPageState extends State<IntroPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    context.read<SettingsBloc>().add(SettingsEvent.load());
+    context.read<SettingsBloc>().add(const SettingsEvent.load());
   }
 
   @override
@@ -37,87 +38,73 @@ class _IntroPageState extends State<IntroPage> {
 
     return BlocConsumer<IntroBloc, IntroState>(
       listener: (ctx, state) {
-        state.maybeMap(
-          loaded: (s) {
-            if (s.urlWasSet) {
+        switch (state) {
+          case IntroStateLoadedState():
+            if (state.urlWasSet) {
               _animateToIndex(_maxNumberOfPages - 1);
             }
-          },
-          orElse: () {},
-        );
+          default:
+            break;
+        }
       },
-      builder: (ctx, state) => Scaffold(
-        body: state.map(
-          loading: (_) => PageView(),
-          loaded: (s) => PageView(
-            controller: _pageController,
-            onPageChanged: (index) => context.read<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
-            children: [
-              IntroPageItem(
-                mainTitle: i18n.welcome(i18n.appName),
-                subTitle: i18n.aboutSummary,
-                content: i18n.welcomeSummary,
-                extraContent: _LanguageSettings(currentLang: s.currentLang),
+      builder:
+          (context, state) => Scaffold(
+            body: switch (state) {
+              IntroStateLoadingState() => PageView(),
+              IntroStateLoadedState() => PageView(
+                controller: _pageController,
+                onPageChanged: (index) => context.read<IntroBloc>().add(IntroEvent.changePage(newPage: index)),
+                children: [
+                  IntroPageItem(
+                    mainTitle: i18n.welcome(i18n.appName),
+                    subTitle: i18n.aboutSummary,
+                    content: i18n.welcomeSummary,
+                    extraContent: _LanguageSettings(currentLang: state.currentLang),
+                  ),
+                  IntroPageItem(mainTitle: i18n.webServerUrl, subTitle: state.currentCastItUrl, content: i18n.youCanSkip),
+                  IntroPageItem(mainTitle: i18n.welcome(i18n.appName), subTitle: i18n.aboutSummary, content: i18n.enjoyTheApp),
+                ],
               ),
-              IntroPageItem(
-                mainTitle: i18n.webServerUrl,
-                subTitle: s.currentCastItUrl,
-                content: i18n.youCanSkip,
-              ),
-              IntroPageItem(
-                mainTitle: i18n.welcome(i18n.appName),
-                subTitle: i18n.aboutSummary,
-                content: i18n.enjoyTheApp,
-              ),
-            ],
-          ),
-        ),
-        bottomSheet: state.map(
-          loading: (_) => null,
-          loaded: (s) {
-            if (s.page == _maxNumberOfPages - 1) {
-              return InkWell(
+            },
+            bottomSheet: switch (state) {
+              IntroStateLoadingState() => null,
+              final IntroStateLoadedState state when state.page == _maxNumberOfPages - 1 => InkWell(
                 onTap: _onStart,
                 child: Container(
                   height: 60,
                   color: theme.colorScheme.primary,
                   alignment: Alignment.center,
-                  child: Text(
-                    i18n.start.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
+                  child: Text(i18n.start.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                 ),
-              );
-            }
-
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  TextButton(
-                    onPressed: () => _showSkipDialog(),
-                    child: Text(
-                      i18n.skip.toUpperCase(),
-                      style: TextStyle(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  Row(
-                    children: Iterable.generate(_maxNumberOfPages, (i) => _PageIndicator(isCurrentPage: i == s.page)).toList(),
-                  ),
-                  TextButton(
-                    onPressed: () => _onNext(s.page, s.currentCastItUrl),
-                    child: Text(
-                      i18n.next.toUpperCase(),
-                      style: TextStyle(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
               ),
-            );
-          },
-        ),
-      ),
+              IntroStateLoadedState() => Container(
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    TextButton(
+                      onPressed: () => _showSkipDialog(),
+                      child: Text(
+                        i18n.skip.toUpperCase(),
+                        style: TextStyle(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Row(
+                      children:
+                          Iterable.generate(_maxNumberOfPages, (i) => _PageIndicator(isCurrentPage: i == state.page)).toList(),
+                    ),
+                    TextButton(
+                      onPressed: () => _onNext(state.page, state.currentCastItUrl),
+                      child: Text(
+                        i18n.next.toUpperCase(),
+                        style: TextStyle(color: theme.colorScheme.secondary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            },
+          ),
     );
   }
 
@@ -135,14 +122,15 @@ class _IntroPageState extends State<IntroPage> {
       isDismissible: false,
       enableDrag: false,
       isScrollControlled: true,
-      builder: (_) => ChangeConnectionBottomSheetDialog(
-        icon: Icons.info_outline,
-        title: i18n.webServerUrl,
-        currentUrl: castItUrl,
-        showRefreshButton: false,
-        showOkButton: true,
-        onOk: _onUrlSet,
-      ),
+      builder:
+          (_) => ChangeConnectionBottomSheetDialog(
+            icon: Icons.info_outline,
+            title: i18n.webServerUrl,
+            currentUrl: castItUrl,
+            showRefreshButton: false,
+            showOkButton: true,
+            onOk: _onUrlSet,
+          ),
     );
   }
 
@@ -173,7 +161,7 @@ class _IntroPageState extends State<IntroPage> {
     _pageController.animateToPage(newPage, duration: const Duration(milliseconds: 300), curve: Curves.linear);
   }
 
-  void _onStart() => context.read<MainBloc>().add(MainEvent.introCompleted());
+  void _onStart() => context.read<MainBloc>().add(const MainEvent.introCompleted());
 }
 
 class _PageIndicator extends StatelessWidget {
@@ -225,14 +213,12 @@ class _LanguageSettings extends StatelessWidget {
             value: currentLang,
             underline: Container(height: 0, color: Colors.transparent),
             onChanged: (newValue) => context.read<SettingsBloc>().add(SettingsEvent.languageChanged(lang: newValue!)),
-            items: AppLanguageType.values
-                .map<DropdownMenuItem<AppLanguageType>>(
-                  (lang) => DropdownMenuItem<AppLanguageType>(
-                    value: lang,
-                    child: Text(i18n.translateAppLanguageType(lang)),
-                  ),
-                )
-                .toList(),
+            items:
+                AppLanguageType.values
+                    .map<DropdownMenuItem<AppLanguageType>>(
+                      (lang) => DropdownMenuItem<AppLanguageType>(value: lang, child: Text(i18n.translateAppLanguageType(lang))),
+                    )
+                    .toList(),
           ),
         ),
       ],

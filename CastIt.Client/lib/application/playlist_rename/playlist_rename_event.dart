@@ -1,12 +1,8 @@
 part of 'playlist_rename_bloc.dart';
 
 @freezed
-class PlayListRenameEvent with _$PlayListRenameEvent {
-  factory PlayListRenameEvent.load({
-    required String name,
-  }) = _Load;
+sealed class PlayListRenameEvent with _$PlayListRenameEvent {
+  const factory PlayListRenameEvent.load({required String name}) = PlayListRenameEventLoad;
 
-  factory PlayListRenameEvent.nameChanged({
-    required String name,
-  }) = _NameChanged;
+  const factory PlayListRenameEvent.nameChanged({required String name}) = PlayListRenameEventNameChanged;
 }

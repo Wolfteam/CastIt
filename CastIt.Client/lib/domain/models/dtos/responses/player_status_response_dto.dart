@@ -4,7 +4,7 @@ part 'player_status_response_dto.freezed.dart';
 part 'player_status_response_dto.g.dart';
 
 @freezed
-class PlayerStatusResponseDto with _$PlayerStatusResponseDto {
+sealed class PlayerStatusResponseDto with _$PlayerStatusResponseDto {
   factory PlayerStatusResponseDto({
     String? playFromTheStart,
     required bool isPlaying,

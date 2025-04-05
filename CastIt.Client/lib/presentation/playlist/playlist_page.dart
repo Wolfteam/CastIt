@@ -17,10 +17,7 @@ class PlayListPage extends StatefulWidget {
   final int id;
   final int? scrollToFileId;
 
-  const PlayListPage({
-    required this.id,
-    this.scrollToFileId,
-  });
+  const PlayListPage({required this.id, this.scrollToFileId});
 
   static Future<void> forDetails(int playListId, int? scrollToFileId, BuildContext context) async {
     final route = MaterialPageRoute(builder: (_) => PlayListPage(id: playListId, scrollToFileId: scrollToFileId));
@@ -56,51 +53,56 @@ class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderSt
       child: Scaffold(
         body: SafeArea(
           child: BlocConsumer<PlayListBloc, PlayListState>(
-            listener: (ctx, state) => state.maybeMap(
-              loaded: (state) {
-                _refreshController.refreshCompleted();
-                if (state.scrollToFileId != null) {
-                  final index = state.files.indexWhere((el) => el.id == state.scrollToFileId!);
-                  if (index >= 0) {
-                    SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(index));
+            listener: (ctx, state) {
+              switch (state) {
+                case PlayListStateLoadedState():
+                  _refreshController.refreshCompleted();
+                  if (state.scrollToFileId != null) {
+                    final index = state.files.indexWhere((el) => el.id == state.scrollToFileId!);
+                    if (index >= 0) {
+                      SchedulerBinding.instance.addPostFrameCallback((_) => _animateToIndex(index));
+                    }
                   }
-                }
-                return null;
-              },
-              disconnected: (_) => _refreshController.refreshCompleted(),
-              close: (_) => Navigator.of(ctx).pop(),
-              orElse: () => {},
-            ),
-            builder: (ctx, state) => state.map(
-              loading: (_) => const PlayListContentLoading(),
-              loaded: (state) => PlayListContentLoaded(
-                playListId: state.playlistId,
-                isLoaded: state.loaded,
-                files: state.isFiltering ? state.filteredFiles : state.files,
-                searchBoxIsVisible: state.searchBoxIsVisible,
-                itemHeight: _itemHeight,
-                refreshController: _refreshController,
-                listViewScrollController: _listViewScrollController,
-              ),
-              disconnected: (_) => const PlayListContentDisconnected(),
-              close: (_) => Container(),
-              notFound: (_) => const PlayListContentNotFound(),
-            ),
+                case PlayListStateDisconnectedState():
+                  _refreshController.refreshCompleted();
+                case PlayListStateCloseState():
+                  Navigator.of(ctx).pop();
+                default:
+                  break;
+              }
+            },
+            builder:
+                (ctx, state) => switch (state) {
+                  PlayListStateLoadingState() => const PlayListContentLoading(),
+                  PlayListStateLoadedState() => PlayListContentLoaded(
+                    playListId: state.playlistId,
+                    isLoaded: state.loaded,
+                    files: state.isFiltering ? state.filteredFiles : state.files,
+                    searchBoxIsVisible: state.searchBoxIsVisible,
+                    itemHeight: _itemHeight,
+                    refreshController: _refreshController,
+                    listViewScrollController: _listViewScrollController,
+                  ),
+                  PlayListStateDisconnectedState() => const PlayListContentDisconnected(),
+                  PlayListStateCloseState() => Container(),
+                  PlayListStateNotFoundState() => const PlayListContentNotFound(),
+                },
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: BlocBuilder<PlayListBloc, PlayListState>(
-          builder: (ctx, state) => state.maybeMap(
-            loaded: (state) => PlayListFab(
-              id: state.playlistId,
-              name: state.name,
-              loop: state.loop,
-              shuffle: state.shuffle,
-              isVisible: state.files.isNotEmpty && isFabVisible,
-              onArrowTopTap: () => _animateToIndex(0),
-            ),
-            orElse: () => nil,
-          ),
+          builder:
+              (ctx, state) => switch (state) {
+                PlayListStateLoadedState() => PlayListFab(
+                  id: state.playlistId,
+                  name: state.name,
+                  loop: state.loop,
+                  shuffle: state.shuffle,
+                  isVisible: state.files.isNotEmpty && isFabVisible,
+                  onArrowTopTap: () => _animateToIndex(0),
+                ),
+                _ => nil,
+              },
         ),
       ),
     );

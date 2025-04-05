@@ -41,7 +41,12 @@ class _DesktopTabletScaffoldState extends State<DesktopTabletScaffold> with Sing
     final i18n = S.of(context);
     return BlocConsumer<MainBloc, MainState>(
       listener: (ctx, state) {
-        state.maybeMap(loaded: (s) => _changeCurrentTab(s.currentSelectedTab), orElse: () {});
+        switch (state) {
+          case MainStateLoadedState():
+            _changeCurrentTab(state.currentSelectedTab);
+          default:
+            break;
+        }
       },
       builder:
           (context, state) => Scaffold(

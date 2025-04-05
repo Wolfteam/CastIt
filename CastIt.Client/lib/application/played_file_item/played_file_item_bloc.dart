@@ -10,7 +10,7 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
   final CastItHubClientService _castItHub;
 
   PlayedFileItemBloc(this._castItHub) : super(const PlayedFileItemState.notPlaying()) {
-    on<_Playing>((event, emit) {
+    on<PlayedFileItemEventPlaying>((event, emit) {
       final updatedState = PlayedFileItemState.playing(
         id: event.id,
         playListId: event.playListId,
@@ -20,7 +20,7 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
       emit(updatedState);
     });
 
-    on<_EndReached>((event, emit) => emit(const PlayedFileItemState.notPlaying()));
+    on<PlayedFileItemEventEndReached>((event, emit) => emit(const PlayedFileItemState.notPlaying()));
 
     _castItHub.fileChanged.stream.listen((event) {
       final file = event.$2;

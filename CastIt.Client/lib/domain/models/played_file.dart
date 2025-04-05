@@ -4,7 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'played_file.freezed.dart';
 
 @freezed
-class PlayedFile with _$PlayedFile {
+sealed class PlayedFile with _$PlayedFile {
   factory PlayedFile({
     required int id,
     required String filename,
