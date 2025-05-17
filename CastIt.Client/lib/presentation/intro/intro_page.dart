@@ -80,7 +80,7 @@ class _IntroPageState extends State<IntroPage> {
               IntroStateLoadedState() => Container(
                 margin: const EdgeInsets.symmetric(vertical: 5),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: <Widget>[
                     TextButton(
                       onPressed: () => _showSkipDialog(),
