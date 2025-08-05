@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="protobuf-net" Version="3.2.46" />
+    <PackageReference Include="protobuf-net" Version="3.2.56" />
     <PackageReference Include="Zeroconf" Version="3.7.16" />
   </ItemGroup>
 
