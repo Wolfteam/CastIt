@@ -95,6 +95,8 @@ interface ITranslations {
     copyPath: string;
     copiedToClipboard: string;
     webVideoQuality: string;
+    lastPlayedDate: string;
+    na: string;
     errorCodes: IAppMessageTranslations;
 }
 
@@ -172,6 +174,8 @@ const enTrans: ITranslations = {
     copyPath: 'Copy path',
     webVideoQuality: 'Web video quality',
     copiedToClipboard: 'Copied to clipboard',
+    lastPlayedDate: 'Last played: {0}',
+    na: 'N/A',
     errorCodes: {
         unknownErrorOccurred: 'Unknown error occurred',
         invalidRequest: 'Invalid request',
@@ -267,6 +271,8 @@ const esTrans: ITranslations = {
     copyPath: 'Copiar ruta',
     webVideoQuality: 'Calidad de video web',
     copiedToClipboard: 'Copiado al portapapeles',
+    lastPlayedDate: 'Última reproducción: {0}',
+    na: 'N/A',
     errorCodes: {
         unknownErrorOccurred: 'Un error inesperado ha ocurrido',
         invalidRequest: 'Petición no válida',

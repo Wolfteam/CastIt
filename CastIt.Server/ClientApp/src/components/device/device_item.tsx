@@ -1,5 +1,5 @@
 import { IconButton, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { Tv, CastConnected, Cast } from '@mui/icons-material';
 import { useCastItHub } from '../../context/castit_hub.context';
 

@@ -13,7 +13,7 @@ import {
     Switch,
     Typography,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
 import { Settings } from '@mui/icons-material';
 import { useContext, useEffect, useState } from 'react';
@@ -436,7 +436,7 @@ function PlayerSettings() {
                             </StyledGridItem>
                             <StyledGeneralGrid size={12}>
                                 <Typography id="subtitle-delay-slider" gutterBottom color="textSecondary">
-                                    {String.Format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
+                                    {String.format(translations.subtitleDelayXSeconds, state.settings.subtitleDelayInSeconds)}
                                 </Typography>
                                 <Slider
                                     min={-10}

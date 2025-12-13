@@ -22,6 +22,8 @@ import FileItemSubtitle from './file_item_subtitle';
 import FileItemDuration from './file_item_duration';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { useSnackbar } from 'notistack';
+import { formatLasytPlayedDate } from '../../utils/date_utils';
+import { String } from 'typescript-string-operations';
 
 const StyledListItemText = styled(ListItemText)({
     marginLeft: 10,
@@ -45,6 +47,7 @@ interface State {
     fullTotalDuration: string;
     isBeingPlayed: boolean;
     loop: boolean;
+    lastPlayedDate?: string;
 }
 
 interface ContextMenuState {
@@ -94,6 +97,7 @@ function FileItem(props: Props) {
             loop: props.file.loop,
             playedTime: props.file.playedTime,
             duration: props.file.duration,
+            lastPlayedDate: props.file.lastPlayedDate,
         });
     }, [props.file]);
 
@@ -118,6 +122,7 @@ function FileItem(props: Props) {
                 fullTotalDuration: file.fullTotalDuration,
                 isBeingPlayed: file.isBeingPlayed,
                 loop: file.loop,
+                lastPlayedDate: file.lastPlayedDate,
             }));
         });
 
@@ -147,6 +152,7 @@ function FileItem(props: Props) {
                 loop: status.playedFile!.loop,
                 playedTime: status.playedFile!.playedTime,
                 duration: status.playedFile!.duration,
+                lastPlayedDate: status.playedFile!.lastPlayedDate,
             }));
         });
 
@@ -227,6 +233,11 @@ function FileItem(props: Props) {
         enqueueSnackbar(translations.copiedToClipboard, { variant: 'success' });
     };
 
+    const formattedLastPlayedDate = String.format(
+        translations.lastPlayedDate,
+        state.lastPlayedDate ? formatLasytPlayedDate(state.lastPlayedDate) : translations.na
+    );
+
     const title = (
         <Tooltip title={state.filename}>
             <Typography className={'text-overflow-elipsis'}>{state.filename}</Typography>
@@ -262,7 +273,7 @@ function FileItem(props: Props) {
                             <Avatar
                                 sx={(theme) => ({
                                     color: theme.palette.getContrastText(theme.palette.primary.main),
-                                    backgroundColor: theme.palette.primary.main
+                                    backgroundColor: theme.palette.primary.main,
                                 })}
                             >
                                 {state.position}
@@ -277,10 +288,11 @@ function FileItem(props: Props) {
                                     subTitle={state.subTitle}
                                     duration={state.duration}
                                     playedTime={state.playedTime}
+                                    lastPlayedDate={formattedLastPlayedDate}
                                 />
                             }
                             slotProps={{
-                                secondary: { component: 'span' }
+                                secondary: { component: 'span' },
                             }}
                         />
                         <FileItemDuration fullTotalDuration={state.fullTotalDuration} loop={state.loop} />
@@ -327,7 +339,6 @@ function FileItem(props: Props) {
                             </MenuItem>
                         </Menu>
                     )}
-                    <Divider variant="middle" />
                     <AddFilesDialog isOpen={showAddFilesDialog} onClose={handleAddFiles} />
                 </div>
             )}

@@ -1,8 +1,12 @@
 import { LinearProgress, Tooltip, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useEffect, useState } from 'react';
 import { onPlayerStatusChanged, onFileEndReached, onFileLoading, onFileLoaded, onStoppedPlayback } from '../../services/castithub.service';
 import { defaultImg } from '../../utils/app_constants';
+
+interface Props {
+    imageHeight: string;
+}
 
 interface State {
     title: string;
@@ -16,7 +20,7 @@ const initialState: State = {
     subtitle: '',
 };
 
-function PlayerCurrentFile() {
+function PlayerCurrentFile(props: Props) {
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
@@ -56,13 +60,13 @@ function PlayerCurrentFile() {
     const image = state.imageUrl ?? defaultImg;
 
     return (
-        <Grid container wrap="nowrap" alignItems="center" spacing={1}>
+        <Grid container alignItems="center">
             <Grid>
-                <img style={{ height: 100, width: '100%', objectFit: 'contain' }} src={image} alt="Current file" />
+                <img style={{ height: props.imageHeight, width: '100%', objectFit: 'fill' }} src={image} alt="Current file" />
             </Grid>
-            <Grid className="text-overflow-elipsis">
+            <Grid direction="column" size="grow" className="text-overflow-elipsis" paddingX={1}>
                 <Tooltip title={state.title}>
-                    <Typography variant="h5" className="text-overflow-elipsis">
+                    <Typography variant="h6" className="text-overflow-elipsis">
                         {state.title}
                     </Typography>
                 </Tooltip>
