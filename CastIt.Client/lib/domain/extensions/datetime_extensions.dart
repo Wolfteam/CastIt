@@ -5,7 +5,7 @@ extension DatetimeExtensions on DateTime? {
     if (this == null) {
       return null;
     }
-    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    final DateFormat formatter = DateFormat('yyyy/MM/dd');
     return formatter.format(this!);
   }
 }

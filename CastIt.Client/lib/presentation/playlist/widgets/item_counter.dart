@@ -13,7 +13,7 @@ class ItemCounter extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.inversePrimary,
         borderRadius: BorderRadius.circular(20.0),
       ),
       child: Center(
@@ -21,7 +21,7 @@ class ItemCounter extends StatelessWidget {
           '$_items',
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 20),
+          style: const TextStyle(fontSize: 20),
         ),
       ),
     );

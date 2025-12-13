@@ -53,28 +53,32 @@ class _FileItemState extends State<FileItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      color: widget.isBeingPlayed ? theme.colorScheme.secondaryContainer : null,
-      height: widget.itemHeight,
-      child: ListTile(
-        isThreeLine: true,
-        selected: widget.isBeingPlayed,
-        titleAlignment: ListTileTitleAlignment.titleHeight,
-        leading: ItemCounter(widget.position),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        title: _Title(name: widget.name, loop: widget.loop),
-        subtitle: _Content(
-          id: widget.id,
-          playListId: widget.playListId,
-          path: widget.path,
-          subtitle: widget.subtitle,
-          playedPercentage: widget.playedPercentage,
-          fullTotalDuration: widget.fullTotalDuration,
-          lastPlayedDate: widget.lastPlayedDate,
+    const horizontalPadding = EdgeInsets.symmetric(horizontal: 16);
+    return InkWell(
+      onTap: () => _playFile(),
+      onLongPress: () => _showFileOptionsModal(),
+      child: Container(
+        color: widget.isBeingPlayed ? theme.colorScheme.secondaryContainer : null,
+        height: widget.itemHeight,
+        padding: horizontalPadding,
+        child: Row(
+          children: [
+            ItemCounter(widget.position),
+            Expanded(
+              child: _Content(
+                id: widget.id,
+                playListId: widget.playListId,
+                fullTotalDuration: widget.fullTotalDuration,
+                name: widget.name,
+                loop: widget.loop,
+                path: widget.path,
+                subtitle: widget.subtitle,
+                playedPercentage: widget.playedPercentage,
+                lastPlayedDate: widget.lastPlayedDate,
+              ),
+            ),
+          ],
         ),
-        dense: true,
-        onTap: () => _playFile(),
-        onLongPress: () => _showFileOptionsModal(),
       ),
     );
   }
@@ -117,15 +121,77 @@ class _Title extends StatelessWidget {
       return Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge);
     }
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        Flexible(
-          flex: 90,
-          fit: FlexFit.tight,
-          child: Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge),
-        ),
-        const Flexible(flex: 10, child: Icon(Icons.loop, size: 20)),
+        Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge),
+        const Icon(Icons.loop, size: 20),
       ],
+    );
+  }
+}
+
+class _PlayedSlider extends StatelessWidget {
+  final int id;
+  final int playListId;
+  final double playedPercentage;
+
+  const _PlayedSlider({
+    required this.id,
+    required this.playListId,
+    required this.playedPercentage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final s = S.of(context);
+    return SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        trackHeight: 1,
+        minThumbSeparation: 0,
+        disabledActiveTrackColor: theme.colorScheme.secondary,
+        overlayShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
+        thumbColor: Colors.transparent,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
+      ),
+      child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
+        builder: (ctx, state) => Slider(
+          value: switch (state) {
+            PlayedFileItemStateNotPlayingState() => playedPercentage,
+            PlayedFileItemStateLoadedState() =>
+              state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
+          },
+          max: 100,
+          activeColor: Colors.black,
+          inactiveColor: Colors.grey,
+          onChanged: null,
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayedTime extends StatelessWidget {
+  final int id;
+  final int playListId;
+  final String fullTotalDuration;
+
+  const _PlayedTime({
+    required this.id,
+    required this.playListId,
+    required this.fullTotalDuration,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
+      builder: (ctx, state) => Text(
+        switch (state) {
+          PlayedFileItemStateNotPlayingState() => fullTotalDuration,
+          PlayedFileItemStateLoadedState() =>
+            state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
+        },
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
@@ -133,19 +199,23 @@ class _Title extends StatelessWidget {
 class _Content extends StatelessWidget {
   final int id;
   final int playListId;
-  final String path;
-  final double playedPercentage;
-  final String subtitle;
   final String fullTotalDuration;
+  final String name;
+  final bool loop;
+  final String path;
+  final String subtitle;
+  final double playedPercentage;
   final DateTime? lastPlayedDate;
 
   const _Content({
     required this.id,
     required this.playListId,
-    required this.path,
-    required this.playedPercentage,
-    required this.subtitle,
     required this.fullTotalDuration,
+    required this.name,
+    required this.loop,
+    required this.path,
+    required this.subtitle,
+    required this.playedPercentage,
     this.lastPlayedDate,
   });
 
@@ -153,57 +223,56 @@ class _Content extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final s = S.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(path, overflow: TextOverflow.ellipsis),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text(subtitle, overflow: TextOverflow.ellipsis),
-            BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-              builder: (ctx, state) => Text(switch (state) {
-                PlayedFileItemStateNotPlayingState() => fullTotalDuration,
-                PlayedFileItemStateLoadedState() =>
-                  state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
-              }, overflow: TextOverflow.ellipsis),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            const Icon(Icons.date_range, size: 12),
-            Text(
-              s.lastPlayedDate(lastPlayedDate != null ? lastPlayedDate.formatLastPlayedDate()! : s.na),
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.normal),
-            ),
-          ],
-        ),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 1,
-            minThumbSeparation: 0,
-            disabledActiveTrackColor: theme.colorScheme.secondary,
-            overlayShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
-            thumbColor: Colors.transparent,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
+    const horizontalPadding = EdgeInsets.symmetric(horizontal: 8);
+    return Padding(
+      padding: horizontalPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _Title(name: name, loop: loop),
+                    Text(
+                      path,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
+                    ),
+                    Text(
+                      subtitle,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
+                    ),
+                    Text(
+                      s.lastPlayedDate(lastPlayedDate != null ? lastPlayedDate.formatLastPlayedDate()! : s.na),
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 16),
+                child: _PlayedTime(
+                  id: id,
+                  playListId: playListId,
+                  fullTotalDuration: fullTotalDuration,
+                ),
+              ),
+            ],
           ),
-          child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-            builder: (ctx, state) => Slider(
-              value: switch (state) {
-                PlayedFileItemStateNotPlayingState() => playedPercentage,
-                PlayedFileItemStateLoadedState() =>
-                  state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
-              },
-              max: 100,
-              activeColor: Colors.black,
-              inactiveColor: Colors.grey,
-              onChanged: null,
-            ),
+          _PlayedSlider(
+            id: id,
+            playListId: playListId,
+            playedPercentage: playedPercentage,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
