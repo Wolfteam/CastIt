@@ -1,10 +1,15 @@
 include: package:lint/strict.yaml
 
+formatter:
+  page_width: 130
+  trailing_commas: preserve
+
 linter:
   rules:
     prefer_single_quotes: true
     avoid_classes_with_only_static_members: false
     depend_on_referenced_packages: false
+    avoid_positional_boolean_parameters: false
 
 analyzer:
   exclude:
