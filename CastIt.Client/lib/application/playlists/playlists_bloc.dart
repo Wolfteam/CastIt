@@ -111,6 +111,7 @@ class PlayListsBloc extends Bloc<PlayListsEvent, PlayListsState> {
           position: playList.position,
           shuffle: playList.shuffle,
           totalDuration: playList.totalDuration,
+          lastPlayedDate: playList.lastPlayedDate,
         );
 
         final currentIndex = state.playlists.indexOf(current);

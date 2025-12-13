@@ -16,6 +16,7 @@ sealed class PlayListItemResponseDto with _$PlayListItemResponseDto {
     required String playedTime,
     required String totalDuration,
     required String imageUrl,
+    DateTime? lastPlayedDate,
     required List<FileItemResponseDto> files,
   }) = _PlayListItemResponseDto;
 

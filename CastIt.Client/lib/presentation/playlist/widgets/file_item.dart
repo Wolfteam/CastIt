@@ -1,5 +1,7 @@
 import 'package:castit/application/bloc.dart';
+import 'package:castit/domain/extensions/datetime_extensions.dart';
 import 'package:castit/domain/models/models.dart';
+import 'package:castit/generated/l10n.dart';
 import 'package:castit/presentation/playlist/widgets/file_options_bottom_sheet_dialog.dart';
 import 'package:castit/presentation/playlist/widgets/item_counter.dart';
 import 'package:castit/presentation/shared/extensions/styles.dart';
@@ -23,6 +25,7 @@ class FileItem extends StatefulWidget {
   final String subtitle;
   final double playedSeconds;
   final String fullTotalDuration;
+  final DateTime? lastPlayedDate;
 
   FileItem.fromItem({super.key, required this.itemHeight, required FileItemResponseDto file})
     : id = file.id,
@@ -39,7 +42,8 @@ class FileItem extends StatefulWidget {
       loop = file.loop,
       subtitle = file.subTitle,
       playedSeconds = file.playedSeconds,
-      fullTotalDuration = file.fullTotalDuration;
+      fullTotalDuration = file.fullTotalDuration,
+      lastPlayedDate = file.lastPlayedDate;
 
   @override
   State<FileItem> createState() => _FileItemState();
@@ -66,6 +70,7 @@ class _FileItemState extends State<FileItem> {
           subtitle: widget.subtitle,
           playedPercentage: widget.playedPercentage,
           fullTotalDuration: widget.fullTotalDuration,
+          lastPlayedDate: widget.lastPlayedDate,
         ),
         dense: true,
         onTap: () => _playFile(),
@@ -132,6 +137,7 @@ class _Content extends StatelessWidget {
   final double playedPercentage;
   final String subtitle;
   final String fullTotalDuration;
+  final DateTime? lastPlayedDate;
 
   const _Content({
     required this.id,
@@ -140,11 +146,13 @@ class _Content extends StatelessWidget {
     required this.playedPercentage,
     required this.subtitle,
     required this.fullTotalDuration,
+    this.lastPlayedDate,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = S.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -154,12 +162,21 @@ class _Content extends StatelessWidget {
           children: <Widget>[
             Text(subtitle, overflow: TextOverflow.ellipsis),
             BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-              builder:
-                  (ctx, state) => Text(switch (state) {
-                    PlayedFileItemStateNotPlayingState() => fullTotalDuration,
-                    PlayedFileItemStateLoadedState() =>
-                      state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
-                  }, overflow: TextOverflow.ellipsis),
+              builder: (ctx, state) => Text(switch (state) {
+                PlayedFileItemStateNotPlayingState() => fullTotalDuration,
+                PlayedFileItemStateLoadedState() =>
+                  state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
+              }, overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            const Icon(Icons.date_range, size: 12),
+            Text(
+              s.lastPlayedDate(lastPlayedDate != null ? lastPlayedDate.formatLastPlayedDate()! : s.na),
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.normal),
             ),
           ],
         ),
@@ -173,18 +190,17 @@ class _Content extends StatelessWidget {
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
           ),
           child: BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-            builder:
-                (ctx, state) => Slider(
-                  value: switch (state) {
-                    PlayedFileItemStateNotPlayingState() => playedPercentage,
-                    PlayedFileItemStateLoadedState() =>
-                      state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
-                  },
-                  max: 100,
-                  activeColor: Colors.black,
-                  inactiveColor: Colors.grey,
-                  onChanged: null,
-                ),
+            builder: (ctx, state) => Slider(
+              value: switch (state) {
+                PlayedFileItemStateNotPlayingState() => playedPercentage,
+                PlayedFileItemStateLoadedState() =>
+                  state.id == id && state.playListId == playListId ? state.playedPercentage : playedPercentage,
+              },
+              max: 100,
+              activeColor: Colors.black,
+              inactiveColor: Colors.grey,
+              onChanged: null,
+            ),
           ),
         ),
       ],
