@@ -60,7 +60,7 @@ android {
 
     defaultConfig {
         applicationId = "com.miraisoft.castit"
-        minSdkVersion 23
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
