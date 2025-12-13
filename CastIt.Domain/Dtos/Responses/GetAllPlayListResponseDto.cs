@@ -1,4 +1,6 @@
-﻿namespace CastIt.Domain.Dtos.Responses
+﻿using System;
+
+namespace CastIt.Domain.Dtos.Responses
 {
     public class GetAllPlayListResponseDto
     {
@@ -16,5 +18,6 @@
         public string PlayedTime { get; set; }
         public string TotalDuration { get; set; }
         public string ImageUrl { get; set; }
+        public DateTime? LastPlayedDate { get; set; }
     }
 }

@@ -183,6 +183,7 @@ namespace CastIt.Server.Services
             var tasks = files.Select(file => _db.Update<FileItem>(file.Id)
                 .Set(f => f.PlayedPercentage, file.PlayedPercentage)
                 .Set(f => f.Position, file.Position)
+                .Set(f => f.LastPlayedDate, file.LastPlayedDate)
                 .ExecuteAffrowsAsync()
             );
 

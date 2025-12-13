@@ -16,6 +16,7 @@ namespace CastIt.Domain.Dtos.Responses
         public long PlayListId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public DateTime? LastPlayedDate { get; set; }
         public bool Loop { get; set; }
 
         public bool IsBeingPlayed { get; set; }
