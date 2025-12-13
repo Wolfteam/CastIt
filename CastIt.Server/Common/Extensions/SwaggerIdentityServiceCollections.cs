@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
-using System;
+﻿using System;
 using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
 
 namespace CastIt.Server.Common.Extensions
 {
