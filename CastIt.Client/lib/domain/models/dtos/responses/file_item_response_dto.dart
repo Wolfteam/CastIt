@@ -34,6 +34,7 @@ sealed class FileItemResponseDto with _$FileItemResponseDto {
     required String size,
     required String extension,
     required String subTitle,
+    required String duration,
     required String playedTime,
     required String totalDuration,
     required String fullTotalDuration,

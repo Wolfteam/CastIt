@@ -24,6 +24,8 @@ class FileItem extends StatefulWidget {
   final double itemHeight;
   final String subtitle;
   final double playedSeconds;
+  final String playedTime;
+  final String duration;
   final String fullTotalDuration;
   final DateTime? lastPlayedDate;
 
@@ -42,6 +44,8 @@ class FileItem extends StatefulWidget {
       loop = file.loop,
       subtitle = file.subTitle,
       playedSeconds = file.playedSeconds,
+      playedTime = file.playedTime,
+      duration = file.duration,
       fullTotalDuration = file.fullTotalDuration,
       lastPlayedDate = file.lastPlayedDate;
 
@@ -53,14 +57,13 @@ class _FileItemState extends State<FileItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const horizontalPadding = EdgeInsets.symmetric(horizontal: 16);
     return InkWell(
       onTap: () => _playFile(),
       onLongPress: () => _showFileOptionsModal(),
       child: Container(
         color: widget.isBeingPlayed ? theme.colorScheme.secondaryContainer : null,
         height: widget.itemHeight,
-        padding: horizontalPadding,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
           children: [
             ItemCounter(widget.position),
@@ -74,6 +77,8 @@ class _FileItemState extends State<FileItem> {
                 path: widget.path,
                 subtitle: widget.subtitle,
                 playedPercentage: widget.playedPercentage,
+                playedTime: widget.playedTime,
+                duration: widget.duration,
                 lastPlayedDate: widget.lastPlayedDate,
               ),
             ),
@@ -173,25 +178,51 @@ class _PlayedSlider extends StatelessWidget {
 class _PlayedTime extends StatelessWidget {
   final int id;
   final int playListId;
+  final String playedTime;
+  final String duration;
   final String fullTotalDuration;
+  final bool split;
 
   const _PlayedTime({
     required this.id,
     required this.playListId,
+    required this.playedTime,
+    required this.duration,
     required this.fullTotalDuration,
+    this.split = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
-      builder: (ctx, state) => Text(
-        switch (state) {
-          PlayedFileItemStateNotPlayingState() => fullTotalDuration,
-          PlayedFileItemStateLoadedState() =>
-            state.id == id && state.playListId == playListId ? state.fullTotalDuration : fullTotalDuration,
-        },
-        overflow: TextOverflow.ellipsis,
-      ),
+      builder: (ctx, state) {
+        final List<String> parts = switch (state) {
+          PlayedFileItemStateNotPlayingState() => [fullTotalDuration],
+          final PlayedFileItemStateLoadedState state when state.id != id || state.playListId != playListId =>
+            !split ? [fullTotalDuration] : [playedTime, duration],
+          PlayedFileItemStateLoadedState() => !split ? [state.fullTotalDuration] : [state.playedTime, state.duration],
+        };
+        if (split && parts.length == 2) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                parts.first,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                parts.last,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          );
+        }
+
+        return Text(
+          parts.first,
+          overflow: TextOverflow.ellipsis,
+        );
+      },
     );
   }
 }
@@ -199,23 +230,27 @@ class _PlayedTime extends StatelessWidget {
 class _Content extends StatelessWidget {
   final int id;
   final int playListId;
-  final String fullTotalDuration;
   final String name;
   final bool loop;
   final String path;
   final String subtitle;
+  final String playedTime;
+  final String duration;
   final double playedPercentage;
+  final String fullTotalDuration;
   final DateTime? lastPlayedDate;
 
   const _Content({
     required this.id,
     required this.playListId,
-    required this.fullTotalDuration,
     required this.name,
     required this.loop,
     required this.path,
     required this.subtitle,
+    required this.playedTime,
+    required this.duration,
     required this.playedPercentage,
+    required this.fullTotalDuration,
     this.lastPlayedDate,
   });
 
@@ -223,12 +258,13 @@ class _Content extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final s = S.of(context);
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     const horizontalPadding = EdgeInsets.symmetric(horizontal: 8);
     return Padding(
       padding: horizontalPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Row(
             children: [
@@ -256,16 +292,28 @@ class _Content extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.only(left: 16),
-                child: _PlayedTime(
-                  id: id,
-                  playListId: playListId,
-                  fullTotalDuration: fullTotalDuration,
+              if (!isPortrait)
+                Container(
+                  margin: const EdgeInsets.only(left: 16),
+                  child: _PlayedTime(
+                    id: id,
+                    playListId: playListId,
+                    duration: duration,
+                    playedTime: playedTime,
+                    fullTotalDuration: fullTotalDuration,
+                  ),
                 ),
-              ),
             ],
           ),
+          if (isPortrait)
+            _PlayedTime(
+              id: id,
+              playListId: playListId,
+              duration: duration,
+              playedTime: playedTime,
+              fullTotalDuration: fullTotalDuration,
+              split: true,
+            ),
           _PlayedSlider(
             id: id,
             playListId: playListId,
