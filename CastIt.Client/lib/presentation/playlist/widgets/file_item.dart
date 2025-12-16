@@ -8,7 +8,7 @@ import 'package:castit/presentation/shared/extensions/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class FileItem extends StatefulWidget {
+class FileItem extends StatelessWidget {
   final int position;
   final int id;
   final int playListId;
@@ -50,36 +50,31 @@ class FileItem extends StatefulWidget {
       lastPlayedDate = file.lastPlayedDate;
 
   @override
-  State<FileItem> createState() => _FileItemState();
-}
-
-class _FileItemState extends State<FileItem> {
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return InkWell(
-      onTap: () => _playFile(),
-      onLongPress: () => _showFileOptionsModal(),
+      onTap: () => _playFile(context),
+      onLongPress: () => _showFileOptionsModal(context),
       child: Container(
-        color: widget.isBeingPlayed ? theme.colorScheme.secondaryContainer : null,
-        height: widget.itemHeight,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        color: isBeingPlayed ? theme.colorScheme.secondaryContainer : null,
+        height: itemHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
           children: [
-            ItemCounter(widget.position),
+            ItemCounter(position),
             Expanded(
               child: _Content(
-                id: widget.id,
-                playListId: widget.playListId,
-                fullTotalDuration: widget.fullTotalDuration,
-                name: widget.name,
-                loop: widget.loop,
-                path: widget.path,
-                subtitle: widget.subtitle,
-                playedPercentage: widget.playedPercentage,
-                playedTime: widget.playedTime,
-                duration: widget.duration,
-                lastPlayedDate: widget.lastPlayedDate,
+                id: id,
+                playListId: playListId,
+                fullTotalDuration: fullTotalDuration,
+                name: name,
+                loop: loop,
+                path: path,
+                subtitle: subtitle,
+                playedPercentage: playedPercentage,
+                playedTime: playedTime,
+                duration: duration,
+                lastPlayedDate: lastPlayedDate,
               ),
             ),
           ],
@@ -88,27 +83,27 @@ class _FileItemState extends State<FileItem> {
     );
   }
 
-  void _playFile() {
+  void _playFile(BuildContext context) {
     final bloc = context.read<ServerWsBloc>();
-    bloc.playFile(widget.id, widget.playListId);
-    _goToMainPage();
+    bloc.playFile(id, playListId);
+    _goToMainPage(context);
   }
 
-  void _goToMainPage() {
+  void _goToMainPage(BuildContext context) {
     context.read<MainBloc>().add(const MainEvent.goToTab(index: 0));
     Navigator.of(context).pop();
   }
 
-  Future<void> _showFileOptionsModal() async {
+  Future<void> _showFileOptionsModal(BuildContext context) async {
     final closePage = await showModalBottomSheet<bool>(
       context: context,
       shape: Styles.modalBottomSheetShape,
       isScrollControlled: true,
-      builder: (_) => FileOptionsBottomSheetDialog(id: widget.id, playListId: widget.playListId, fileName: widget.name),
+      builder: (_) => FileOptionsBottomSheetDialog(id: id, playListId: playListId, fileName: name),
     );
 
-    if (closePage == true) {
-      _goToMainPage();
+    if (closePage == true && context.mounted) {
+      _goToMainPage(context);
     }
   }
 }
@@ -123,11 +118,11 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (!loop) {
-      return Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge);
+      return Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall);
     }
     return Row(
       children: <Widget>[
-        Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge),
+        Text(name, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall),
         const Icon(Icons.loop, size: 20),
       ],
     );
@@ -151,7 +146,7 @@ class _PlayedSlider extends StatelessWidget {
     final s = S.of(context);
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
-        trackHeight: 1,
+        trackHeight: 0.5,
         minThumbSeparation: 0,
         disabledActiveTrackColor: theme.colorScheme.secondary,
         overlayShape: const RoundSliderThumbShape(enabledThumbRadius: .1, disabledThumbRadius: .1),
@@ -194,25 +189,31 @@ class _PlayedTime extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.normal);
     return BlocBuilder<PlayedFileItemBloc, PlayedFileItemState>(
       builder: (ctx, state) {
         final List<String> parts = switch (state) {
-          PlayedFileItemStateNotPlayingState() => [fullTotalDuration],
+          PlayedFileItemStateNotPlayingState() => !split ? [fullTotalDuration] : [playedTime, duration],
           final PlayedFileItemStateLoadedState state when state.id != id || state.playListId != playListId =>
             !split ? [fullTotalDuration] : [playedTime, duration],
           PlayedFileItemStateLoadedState() => !split ? [state.fullTotalDuration] : [state.playedTime, state.duration],
         };
+
         if (split && parts.length == 2) {
           return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 parts.first,
                 overflow: TextOverflow.ellipsis,
+                style: textStyle,
               ),
               Text(
                 parts.last,
                 overflow: TextOverflow.ellipsis,
+                style: textStyle,
               ),
             ],
           );
@@ -221,6 +222,7 @@ class _PlayedTime extends StatelessWidget {
         return Text(
           parts.first,
           overflow: TextOverflow.ellipsis,
+          style: textStyle,
         );
       },
     );
@@ -260,11 +262,12 @@ class _Content extends StatelessWidget {
     final s = S.of(context);
     final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     const horizontalPadding = EdgeInsets.symmetric(horizontal: 8);
+    final textStyle = theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.normal);
     return Padding(
       padding: horizontalPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
             children: [
@@ -277,17 +280,17 @@ class _Content extends StatelessWidget {
                     Text(
                       path,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
+                      style: textStyle,
                     ),
                     Text(
                       subtitle,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
+                      style: textStyle,
                     ),
                     Text(
                       s.lastPlayedDate(lastPlayedDate != null ? lastPlayedDate.formatLastPlayedDate()! : s.na),
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.normal),
+                      style: textStyle,
                     ),
                   ],
                 ),

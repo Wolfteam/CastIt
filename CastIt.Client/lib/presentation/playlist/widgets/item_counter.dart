@@ -21,7 +21,7 @@ class ItemCounter extends StatelessWidget {
           '$_items',
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20),
+          style: theme.textTheme.titleMedium,
         ),
       ),
     );

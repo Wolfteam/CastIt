@@ -34,7 +34,7 @@ class PlayListPage extends StatefulWidget {
 class _PlayListPageState extends State<PlayListPage> with SingleTickerProviderStateMixin {
   final _refreshController = RefreshController();
   final _listViewScrollController = ScrollController();
-  final _itemHeight = 120.0;
+  final _itemHeight = 110.0;
   bool isFabVisible = true;
 
   @override
