@@ -61,7 +61,7 @@ function Player() {
 
     return (
         <Grid container justifyContent="center" alignItems="center" sx={(theme) => ({ backgroundColor: theme.palette.primary.dark })}>
-            <Grid size={{ xs: 12, md: 'grow' }} alignItems="center" justifyContent="center" style={{ height: imageHeight }}>
+            <Grid size={{ xs: 12, md: 'grow' }} alignItems="center" justifyContent="center">
                 <PlayerCurrentFile imageHeight={imageHeight} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }} alignItems="center" justifyContent="center" direction="column">

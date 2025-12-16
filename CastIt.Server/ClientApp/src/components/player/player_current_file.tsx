@@ -60,11 +60,11 @@ function PlayerCurrentFile(props: Props) {
     const image = state.imageUrl ?? defaultImg;
 
     return (
-        <Grid container alignItems="center">
-            <Grid>
-                <img style={{ height: props.imageHeight, width: '100%', objectFit: 'fill' }} src={image} alt="Current file" />
+        <Grid container alignItems="stretch" justifyContent="stretch">
+            <Grid size="auto">
+                <img style={{ height: '100%', width: props.imageHeight, objectFit: 'fill' }} src={image} alt="Current file" />
             </Grid>
-            <Grid direction="column" size="grow" className="text-overflow-elipsis" paddingX={1}>
+            <Grid size="grow" alignContent="center" direction="column" className="text-overflow-elipsis" paddingX={1}>
                 <Tooltip title={state.title}>
                     <Typography variant="h6" className="text-overflow-elipsis">
                         {state.title}
