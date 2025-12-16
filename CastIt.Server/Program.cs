@@ -188,12 +188,14 @@ try
     app.MapHub<CastItHub>("/CastItHub");
     app.UseSpa(spa =>
     {
+        const int port = 3000;
         spa.Options.SourcePath = "ClientApp";
-        spa.Options.DevServerPort = 3000;
+        spa.Options.DevServerPort = port;
 
         if (app.Environment.IsDevelopment())
         {
             spa.UseReactDevelopmentServer("start");
+            spa.UseReactDevelopmentServer($"http://localhost:{port}");
         }
     });
 
