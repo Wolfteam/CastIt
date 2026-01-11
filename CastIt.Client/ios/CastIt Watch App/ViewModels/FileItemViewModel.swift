@@ -5,8 +5,6 @@ import Observation
 @Observable
 class FileItemViewModel {
     var id: Int
-    var name: String
-    var description: String
     var totalSeconds: Double
     var path: String
     var position: Int
@@ -54,8 +52,6 @@ class FileItemViewModel {
         self.signalRService = signalRService
         
         self.id = file.id
-        self.name = file.name
-        self.description = file.description
         self.totalSeconds = file.totalSeconds
         self.path = file.path
         self.position = file.position
@@ -136,8 +132,6 @@ class FileItemViewModel {
 
     private func update(from file: FileItemResponseDto) {
         self.id = file.id
-        self.name = file.name
-        self.description = file.description
         self.totalSeconds = file.totalSeconds
         self.path = file.path
         self.position = file.position
@@ -186,6 +180,6 @@ class FileItemViewModel {
     }
 
     deinit {
-        debugPrint("FileItemViewModel deinit: \(id) - \(name)")
+        debugPrint("FileItemViewModel deinit: \(id) - \(filename)")
     }
 }

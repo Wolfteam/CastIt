@@ -33,8 +33,8 @@ struct PlayerView: View {
                                 .lineLimit(1)
                         }
                         
-                        if (viewModel.playedFile?.name != nil) {
-                            Text(viewModel.playedFile?.name ?? "")
+                        if (viewModel.playedFile?.filename != nil) {
+                            Text(viewModel.playedFile!.filename)
                                 .font(.caption)
                                 .fontWeight(.ultraLight)
                                 .lineLimit(1)

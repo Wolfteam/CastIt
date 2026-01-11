@@ -19,7 +19,7 @@ struct FileItemView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(viewModel.name)
+            Text(viewModel.filename)
                 .font(.caption2)
                 .fontWeight(.bold)
                 .lineLimit(2)
@@ -92,7 +92,7 @@ struct FileItemView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Are you sure you want to delete '\(viewModel.name)'?")
+            Text("Are you sure you want to delete '\(viewModel.filename)'?")
         }
     }
 }

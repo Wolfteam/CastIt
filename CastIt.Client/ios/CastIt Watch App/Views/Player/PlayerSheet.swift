@@ -12,10 +12,21 @@ struct PlayerSheet: View {
                     Label("Player", systemImage: "play")
                         .font(.caption2)
                     
-                    
-                    Text(viewModel.playedFile?.name ?? "")
-                        .font(.caption2)
-                    
+                    if (viewModel.playedFile != nil) {
+                        Text(viewModel.playedFile!.filename)
+                            .font(.caption2)
+                        
+                        HStack(alignment: .center) {
+                            Text(viewModel.playedFile!.playedTime)
+                                .font(.footnote)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(viewModel.playedFile!.duration)
+                                .font(.footnote)
+                                .lineLimit(1)
+                        }
+                    }
+               
                     HStack {
                         // Loop Button
                         Button(action: {
@@ -153,4 +164,9 @@ struct PlayerSheet: View {
             .padding(.horizontal)
         }
     }
+}
+
+
+#Preview {
+    PlayerSheet(viewModel: AppContainer().playerViewModel)
 }

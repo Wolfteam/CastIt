@@ -3,8 +3,6 @@ import Foundation
 // Mirrors ClientApp IFileItemResponseDto
 struct FileItemResponseDto: Codable, Identifiable {
     let id: Int
-    let name: String
-    let description: String
     let totalSeconds: Double
     let path: String
     let position: Int
