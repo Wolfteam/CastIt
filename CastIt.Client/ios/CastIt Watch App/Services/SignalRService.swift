@@ -41,9 +41,9 @@ class SignalRService: HubConnectionDelegate {
     private var connection: HubConnection
     
     init() {
-        let url = URL(string: "http://192.168.1.247:8080/castithub")!
+        let url = URL(string: "http://castit.home.internal/castithub")!
         self.connection = HubConnectionBuilder(url: url)
-            .withLogging(minLogLevel: .error)
+            .withLogging(minLogLevel: .debug)
             .withAutoReconnect()
             .build()
         self.connection.delegate = self
