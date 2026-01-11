@@ -17,12 +17,14 @@ protocol DependencyContainer {
 
     // Low-level services (exposed only if strictly necessary)
     var signalRService: SignalRService { get }
+    var apiService: ApiService { get }
 }
 
 @MainActor
 final class AppContainer: DependencyContainer {
     // Services
     let signalRService: SignalRService
+    let apiService: ApiService
     let router: AppRouter
 
     // Shared VMs
@@ -36,12 +38,13 @@ final class AppContainer: DependencyContainer {
     init(serverUrl: String? = nil) {
         // In the future we can pass serverUrl to SignalRService
         self.signalRService = SignalRService()
+        self.apiService = ApiService()
         self.router = AppRouter()
 
         // Create shared VMs
-        self.playerViewModel = PlayerViewModel(signalRService: signalRService)
-        self.settingsViewModel = SettingsViewModel(signalRService: signalRService)
-        self.playlistsViewModel = PlaylistsViewModel(signalRService: signalRService)
+        self.playerViewModel = PlayerViewModel(signalRService: signalRService, apiService: apiService)
+        self.settingsViewModel = SettingsViewModel(signalRService: signalRService, apiService: apiService)
+        self.playlistsViewModel = PlaylistsViewModel(signalRService: signalRService, apiService: apiService)
 
         // Wire SignalR → shared VMs
         self.viewModelService = ViewModelService(
@@ -56,10 +59,10 @@ final class AppContainer: DependencyContainer {
     }
 
     func makePlaylistViewModel() -> PlaylistViewModel {
-        PlaylistViewModel(signalRService: signalRService)
+        PlaylistViewModel(signalRService: signalRService, apiService: apiService)
     }
 
     func makeFileItemViewModel(file: FileItemResponseDto) -> FileItemViewModel {
-        FileItemViewModel(signalRService: signalRService, file: file)
+        FileItemViewModel(signalRService: signalRService, apiService: apiService, file: file)
     }
 }
