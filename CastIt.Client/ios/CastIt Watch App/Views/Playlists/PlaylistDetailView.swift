@@ -2,25 +2,37 @@ import SwiftUI
 
 struct PlaylistDetailView: View {
     private let container: DependencyContainer
-    let playlist: GetAllPlayListResponseDto
+    private let id: Int
+    private let name: String
     @State private var viewModel: PlaylistViewModel
 
-    init(container: DependencyContainer, playlist: GetAllPlayListResponseDto) {
+    init(container: DependencyContainer, id: Int, name: String) {
         self.container = container
-        self.playlist = playlist
-        _viewModel = State(initialValue: container.makePlaylistViewModel())
+        self.id = id
+        self.name = name
+        _viewModel = State(initialValue: container.makePlaylistViewModel(id: id, name: name))
     }
 
     var body: some View {
-        List {
-            ForEach(viewModel.files) { item in
-                FileItemView(container: container, item: item)
+        Group {
+            if !container.settingsViewModel.isConnected {
+                NotConnectedView()
+            } else if viewModel.isLoading {
+                ProgressView()
+            } else {
+                List {
+                    ForEach(viewModel.files) { item in
+                        FileItemView(container: container, item: item)
+                    }
+                }
             }
         }
-        .navigationTitle(playlist.name)
+        .navigationTitle(name)
         .onAppear {
             Task {
-                await viewModel.loadPlaylist(id: playlist.id)
+                debugPrint("loading playlist")
+                await viewModel.loadPlaylist(id: id)
+                debugPrint("loaded")
             }
         }
     }
@@ -32,18 +44,7 @@ struct PlaylistDetailView: View {
 #Preview {
     PlaylistDetailView(
         container: AppContainer(),
-        playlist: GetAllPlayListResponseDto(
-            id: 1,
-            name: "Anime Favorites",
-            position: 1,
-            loop: false,
-            shuffle: false,
-            numberOfFiles: 10,
-            playedTime: "03:29:51",
-            totalDuration: "03:29:51 / 05:49:13",
-            imageUrl: "http://localhost/img.png",
-            lastPlayedDate: "2025/12/14",
-            //iles: []
-        )
+        id: 1,
+        name: "Anime Favorites"
     )
 }
