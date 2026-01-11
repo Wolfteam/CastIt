@@ -33,6 +33,7 @@ struct ContentView: View {
                 }
                 .tag(AppRouter.Tab.settings)
         }
+        .tabViewStyle(.verticalPage)
         .onAppear {
             if container.settingsViewModel.serverUrl.isEmpty {
                 router.selectedTab = .settings
