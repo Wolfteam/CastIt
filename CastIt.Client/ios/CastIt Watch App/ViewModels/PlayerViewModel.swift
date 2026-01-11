@@ -22,6 +22,9 @@ class PlayerViewModel {
     var showServerAlert: Bool = false
     var serverAlertText: String = ""
     var backgroundColors: [Color] = []
+    
+    // Volume debouncing
+    private let volumeSubject = PassthroughSubject<Double, Never>()
 
     // Derived state
     var isPlayingOrPaused: Bool { player?.isPlayingOrPaused ?? false }
@@ -34,6 +37,54 @@ class PlayerViewModel {
     init(signalRService: SignalRService) {
         self.signalRService = signalRService
         bind()
+        setupVolumeDebounce()
+    }
+
+    private func setupVolumeDebounce() {
+        volumeSubject
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .sink { [weak self] level in
+                guard let self else { return }
+                self.signalRService.setVolume(level: level, isMuted: self.player?.isMuted ?? false)
+            }
+            .store(in: &cancellables)
+    }
+
+    func setVolume(_ level: Double) {
+        // Update local state immediately for responsiveness if possible, 
+        // though it will be overwritten by server status later.
+        if var p = player {
+            player = PlayerStatusResponseDto(
+                mrl: p.mrl,
+                isPlaying: p.isPlaying,
+                isPaused: p.isPaused,
+                isPlayingOrPaused: p.isPlayingOrPaused,
+                currentMediaDuration: p.currentMediaDuration,
+                elapsedSeconds: p.elapsedSeconds,
+                playedPercentage: p.playedPercentage,
+                volumeLevel: level,
+                isMuted: p.isMuted
+            )
+        }
+        volumeSubject.send(level)
+    }
+
+    func toggleLoop() {
+        guard let file = playedFile else { return }
+        signalRService.loopFile(playListId: file.playListId, id: file.id, loop: !file.loop)
+    }
+
+    func setFileOptions(option: FileItemOptionsResponseDto) {
+        signalRService.setFileOptions(
+            streamIndex: option.id,
+            isAudio: option.isAudio,
+            isSubTitle: option.isSubTitle,
+            isQuality: option.isQuality
+        )
+    }
+
+    func skipSeconds(_ seconds: Double) {
+        signalRService.skipSeconds(seconds)
     }
 
     func togglePlayBack() {
