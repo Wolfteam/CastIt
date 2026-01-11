@@ -11,18 +11,11 @@ class ViewModelService {
         settingsViewModel: SettingsViewModel
     ) {
         // Player
-        signalRService.onPlayerStatusChanged
-            .receive(on: DispatchQueue.main)
-            .sink { playerViewModel.status = $0 }
-            .store(in: &cancellables)
-
-        signalRService.onPlayerSettingsChanged
-            .receive(on: DispatchQueue.main)
-            .sink {
-                playerViewModel.settings = $0
-                settingsViewModel.settings = $0
-            }
-            .store(in: &cancellables)
+        // Redundant with ViewModel self-binding but kept for shared state if needed. 
+        // Actually, PlayerViewModel and SettingsViewModel now bind themselves in their init.
+        // We can either remove these or keep them if we want ViewModelService to be the central authority.
+        // Given the requirement to flat the view models and the fact they already have bind(), 
+        // let's see if we can simplify this.
 
         signalRService.onCastDeviceSet
             .receive(on: DispatchQueue.main)
@@ -38,18 +31,6 @@ class ViewModelService {
             .receive(on: DispatchQueue.main)
             .sink {
                 playerViewModel.selectedDevice = nil
-                if var status = playerViewModel.status {
-                    playerViewModel.status = status
-                }
-            }
-            .store(in: &cancellables)
-
-        signalRService.onStoppedPlayBack
-            .receive(on: DispatchQueue.main)
-            .sink {
-                if var status = playerViewModel.status {
-                    playerViewModel.status = status
-                }
             }
             .store(in: &cancellables)
 

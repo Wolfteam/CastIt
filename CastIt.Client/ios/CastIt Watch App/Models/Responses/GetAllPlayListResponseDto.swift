@@ -1,7 +1,7 @@
 import Foundation
 
 // Mirrors ClientApp IGetAllPlayListResponseDto
-struct GetAllPlayListResponseDto: Codable, Identifiable {
+struct GetAllPlayListResponseDto: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     let position: Int

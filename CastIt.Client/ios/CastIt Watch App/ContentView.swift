@@ -33,6 +33,11 @@ struct ContentView: View {
                 }
                 .tag(AppRouter.Tab.settings)
         }
+        .onAppear {
+            if container.settingsViewModel.serverUrl.isEmpty {
+                router.selectedTab = .settings
+            }
+        }
     }
 }
 

@@ -12,7 +12,8 @@ protocol DependencyContainer {
     var router: AppRouter { get }
 
     // Factories (non-shared)
-    func makePlaylistViewModel() -> PlaylistViewModel
+    func makePlaylistViewModel(id: Int, name: String) -> PlaylistViewModel
+    func makePlaylistItemViewModel(playlist: GetAllPlayListResponseDto) -> PlaylistItemViewModel
     func makeFileItemViewModel(file: FileItemResponseDto) -> FileItemViewModel
 
     // Low-level services (exposed only if strictly necessary)
@@ -35,16 +36,15 @@ final class AppContainer: DependencyContainer {
     // Internal wiring helper
     private let viewModelService: ViewModelService
 
-    init(serverUrl: String? = nil) {
-        // In the future we can pass serverUrl to SignalRService
+    init() {
         self.signalRService = SignalRService()
         self.apiService = ApiService()
         self.router = AppRouter()
 
         // Create shared VMs
-        self.playerViewModel = PlayerViewModel(signalRService: signalRService, apiService: apiService)
-        self.settingsViewModel = SettingsViewModel(signalRService: signalRService, apiService: apiService)
-        self.playlistsViewModel = PlaylistsViewModel(signalRService: signalRService, apiService: apiService)
+        self.playerViewModel = PlayerViewModel(signalRService: signalRService)
+        self.settingsViewModel = SettingsViewModel(signalRService: signalRService)
+        self.playlistsViewModel = PlaylistsViewModel(signalRService: signalRService)
 
         // Wire SignalR → shared VMs
         self.viewModelService = ViewModelService(
@@ -54,15 +54,22 @@ final class AppContainer: DependencyContainer {
             settingsViewModel: settingsViewModel
         )
 
-        // Start connection by default
-        self.signalRService.connect()
+        // Start connection if URL is set
+        if !settingsViewModel.serverUrl.isEmpty {
+            self.signalRService.updateUrl(settingsViewModel.serverUrl)
+            self.signalRService.connect()
+        }
     }
 
-    func makePlaylistViewModel() -> PlaylistViewModel {
-        PlaylistViewModel(signalRService: signalRService, apiService: apiService)
+    func makePlaylistViewModel(id: Int, name: String) -> PlaylistViewModel {
+        PlaylistViewModel(signalRService: signalRService, id: id, name: name)
+    }
+
+    func makePlaylistItemViewModel(playlist: GetAllPlayListResponseDto) -> PlaylistItemViewModel {
+        PlaylistItemViewModel(signalRService: signalRService, playlist: playlist)
     }
 
     func makeFileItemViewModel(file: FileItemResponseDto) -> FileItemViewModel {
-        FileItemViewModel(signalRService: signalRService, apiService: apiService, file: file)
+        FileItemViewModel(signalRService: signalRService, file: file)
     }
 }

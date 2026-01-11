@@ -38,116 +38,131 @@ class SignalRService: HubConnectionDelegate {
     // General
     let onServerMessage = PassthroughSubject<AppMessage, Never>()
 
-    private var connection: HubConnection
-    
+    private var connection: HubConnection?
+    private var url: URL?
+
     init() {
-        let url = URL(string: "http://castit.home.internal/castithub")!
-        self.connection = HubConnectionBuilder(url: url)
-            .withLogging(minLogLevel: .debug)
+    }
+
+    func updateUrl(_ urlString: String) {
+        guard let url = URL(string: urlString)?.appendingPathComponent("castithub") else {
+            return
+        }
+        self.url = url
+        
+        if connection != nil {
+            disconnect()
+        }
+        
+        let newConnection = HubConnectionBuilder(url: url)
+            .withLogging(minLogLevel: .error)
+            .withPermittedTransportTypes(.longPolling)
             .withAutoReconnect()
             .build()
-        self.connection.delegate = self
+        newConnection.delegate = self
         
         // Player related event handlers
-        connection.on(method: "PlayerStatusChanged", callback: { (serverPlayerStatus: ServerPlayerStatusResponseDto) in
+        newConnection.on(method: "PlayerStatusChanged", callback: { (serverPlayerStatus: ServerPlayerStatusResponseDto) in
             self.onPlayerStatusChanged.send(serverPlayerStatus)
         })
 
-        connection.on(method: "PlayerSettingsChanged", callback: { (settings: ServerAppSettings) in
+        newConnection.on(method: "PlayerSettingsChanged", callback: { (settings: ServerAppSettings) in
             self.onPlayerSettingsChanged.send(settings)
         })
 
-        connection.on(method: "CastDeviceSet", callback: { (device: Receiver) in
+        newConnection.on(method: "CastDeviceSet", callback: { (device: Receiver) in
             self.onCastDeviceSet.send(device)
         })
 
-        connection.on(method: "CastDevicesChanged", callback: { (devices: [Receiver]) in
+        newConnection.on(method: "CastDevicesChanged", callback: { (devices: [Receiver]) in
             self.onCastDevicesChanged.send(devices)
         })
 
-        connection.on(method: "CastDeviceDisconnected", callback: {
+        newConnection.on(method: "CastDeviceDisconnected", callback: {
             self.onCastDeviceDisconnected.send()
         })
 
-        connection.on(method: "StoppedPlayBack", callback: {
+        newConnection.on(method: "StoppedPlayBack", callback: {
             self.onStoppedPlayBack.send()
         })
         
         // Playlists related event handlers
-        connection.on(method: "SendPlayLists", callback: { (playLists: [GetAllPlayListResponseDto]) in
+        newConnection.on(method: "SendPlayLists", callback: { (playLists: [GetAllPlayListResponseDto]) in
             self.onPlayListsLoaded.send(playLists)
         })
 
-        connection.on(method: "PlayListsChanged", callback: { (playLists: [GetAllPlayListResponseDto]) in
+        newConnection.on(method: "PlayListsChanged", callback: { (playLists: [GetAllPlayListResponseDto]) in
             self.onPlayListsChanged.send(playLists)
         })
 
-        connection.on(method: "PlayListAdded", callback: { (newPlayList: GetAllPlayListResponseDto) in
+        newConnection.on(method: "PlayListAdded", callback: { (newPlayList: GetAllPlayListResponseDto) in
             self.onPlayListAdded.send(newPlayList)
         })
 
-        connection.on(method: "PlayListChanged", callback: { (updatedPlayList: GetAllPlayListResponseDto) in
+        newConnection.on(method: "PlayListChanged", callback: { (updatedPlayList: GetAllPlayListResponseDto) in
             self.onPlayListChanged.send(updatedPlayList)
         })
 
-        connection.on(method: "PlayListDeleted", callback: { (deletedPlayListId: Int) in
+        newConnection.on(method: "PlayListDeleted", callback: { (deletedPlayListId: Int) in
             self.onPlayListDeleted.send(deletedPlayListId)
         })
         
-        connection.on(method: "PlayListIsBusy", callback: { (playListBusy: PlayListBusy) in
+        newConnection.on(method: "PlayListIsBusy", callback: { (playListBusy: PlayListBusy) in
             self.onPlayListBusy.send(playListBusy)
         })
 
         // File related event handlers
-        connection.on(method: "FileAdded", callback: { (file: FileItemResponseDto) in
+        newConnection.on(method: "FileAdded", callback: { (file: FileItemResponseDto) in
             self.onFileAdded.send(file)
         })
 
-        connection.on(method: "FileChanged", callback: { (file: FileItemResponseDto) in
+        newConnection.on(method: "FileChanged", callback: { (file: FileItemResponseDto) in
             self.onFileChanged.send(file)
         })
         
-        connection.on(method: "FilesChanged", callback: { (files: [FileItemResponseDto]) in
+        newConnection.on(method: "FilesChanged", callback: { (files: [FileItemResponseDto]) in
             self.onFilesChanged.send(files)
         })
 
-        connection.on(method: "FileDeleted", callback: { (fileDeleted: FileDeleted) in
+        newConnection.on(method: "FileDeleted", callback: { (fileDeleted: FileDeleted) in
             self.onFileDeleted.send(fileDeleted)
         })
 
-        connection.on(method: "FileLoading", callback: { (file: FileItemResponseDto) in
+        newConnection.on(method: "FileLoading", callback: { (file: FileItemResponseDto) in
             self.onFileLoading.send(file)
         })
 
-        connection.on(method: "FileLoaded", callback: { (file: FileItemResponseDto) in
+        newConnection.on(method: "FileLoaded", callback: { (file: FileItemResponseDto) in
             self.onFileLoaded.send(file)
         })
 
-        connection.on(method: "FileEndReached", callback: { (file: FileItemResponseDto) in
+        newConnection.on(method: "FileEndReached", callback: { (file: FileItemResponseDto) in
             self.onFileEndReached.send(file)
         })
 
         // General server messages
-        connection.on(method: "ServerMessage", callback: { (message: AppMessage) in
+        newConnection.on(method: "ServerMessage", callback: { (message: AppMessage) in
             self.onServerMessage.send(message)
         })
+        
+        self.connection = newConnection
     }
 
     func connect() {
-        connection.start()
+        connection?.start()
     }
 
     func disconnect() {
-        connection.stop()
+        connection?.stop()
     }
 
     // Player methods
     func togglePlayBack() {
-        connection.invoke(method: "TogglePlayBack") { error in }
+        connection?.invoke(method: "TogglePlayBack") { error in }
     }
 
     func stopPlayBack() {
-        connection.invoke(method: "StopPlayBack") { error in
+        connection?.invoke(method: "StopPlayBack") { error in
             if let error = error {
                 print("Error stopping playback: \(error)")
             }
@@ -155,17 +170,17 @@ class SignalRService: HubConnectionDelegate {
     }
     
     func goTo(next: Bool, previous: Bool) {
-        connection.invoke(method: "GoTo", next, previous) { error in }
+        connection?.invoke(method: "GoTo", next, previous) { error in }
     }
     
     func play(playListId: Int, fileId: Int, force: Bool, fileOptionsChanged: Bool = false) {
         let request = PlayFileRequestDto(id: fileId, playListId: playListId, force: force, fileOptionsChanged: fileOptionsChanged)
-        connection.invoke(method: "Play", request) { error in }
+        connection?.invoke(method: "Play", request) { error in }
     }
 
     // Playlist methods
     func getPlaylists() {
-        connection.invoke(method: "GetAllPlayLists", resultType: [GetAllPlayListResponseDto].self) { result, error in
+        connection?.invoke(method: "GetAllPlayLists", resultType: [GetAllPlayListResponseDto].self) { result, error in
             if let playlists = result {
                 DispatchQueue.main.async {
                     self.onPlayListsLoaded.send(playlists)
@@ -177,6 +192,7 @@ class SignalRService: HubConnectionDelegate {
     }
     
     func getPlayList(playlistId: Int) async throws -> PlayListItemResponseDto {
+        guard let connection = connection else { throw SignalRError.unknown }
         return try await withCheckedThrowingContinuation { continuation in
             connection.invoke(method: "GetPlayList", playlistId, resultType: PlayListItemResponseDto.self) { result, error in
                 if let playlist = result {
@@ -191,6 +207,7 @@ class SignalRService: HubConnectionDelegate {
     }
 
     func addNewPlayList() async throws -> PlayListItemResponseDto {
+        guard let connection = connection else { throw SignalRError.unknown }
         return try await withCheckedThrowingContinuation { continuation in
             connection.invoke(method: "AddNewPlayList", resultType: PlayListItemResponseDto.self) { result, error in
                 if let newPlaylist = result {
@@ -205,7 +222,7 @@ class SignalRService: HubConnectionDelegate {
     }
 
     func deletePlayList(id: Int) {
-        connection.invoke(method: "DeletePlayList", id) { error in
+        connection?.invoke(method: "DeletePlayList", id) { error in
             if let error = error {
                 print("Error deleting playlist \(id): \(error)")
             }
@@ -214,112 +231,112 @@ class SignalRService: HubConnectionDelegate {
 
     // MARK: - Player extended methods (parity with ClientApp)
     func gotoSeconds(_ seconds: Double) {
-        connection.invoke(method: "GoToSeconds", seconds) { _ in }
+        connection?.invoke(method: "GoToSeconds", seconds) { _ in }
     }
 
     func gotoPosition(_ position: Double) {
-        connection.invoke(method: "GoToPosition", position) { _ in }
+        connection?.invoke(method: "GoToPosition", position) { _ in }
     }
 
     func skipSeconds(_ seconds: Double) {
-        connection.invoke(method: "SkipSeconds", seconds) { _ in }
+        connection?.invoke(method: "SkipSeconds", seconds) { _ in }
     }
 
     func setVolume(level: Double, isMuted: Bool) {
         let request = SetVolumeRequestDto(isMuted: isMuted, volumeLevel: level)
-        connection.invoke(method: "SetVolume", request) { _ in }
+        connection?.invoke(method: "SetVolume", request) { _ in }
     }
 
     func updateSettings(_ settings: ServerAppSettings) {
-        connection.invoke(method: "UpdateSettings", settings) { _ in }
+        connection?.invoke(method: "UpdateSettings", settings) { _ in }
     }
 
     func connectToCastDevice(id: String) {
-        connection.invoke(method: "ConnectToCastDevice", id) { _ in }
+        connection?.invoke(method: "ConnectToCastDevice", id) { _ in }
     }
 
     func refreshCastDevices() {
-        connection.invoke(method: "RefreshCastDevices") { _ in }
+        connection?.invoke(method: "RefreshCastDevices") { _ in }
     }
 
     func setFileSubtitlesFromPath(_ path: String) {
-        connection.invoke(method: "SetFileSubtitlesFromPath", path) { _ in }
+        connection?.invoke(method: "SetFileSubtitlesFromPath", path) { _ in }
     }
 
     // MARK: - Playlist methods (parity with ClientApp)
     func updatePlayList(id: Int, name: String) {
         let request = UpdatePlayListRequestDto(name: name)
-        connection.invoke(method: "UpdatePlayList", id, request) { _ in }
+        connection?.invoke(method: "UpdatePlayList", id, request) { _ in }
     }
 
     func updatePlayListPosition(playListId: Int, newIndex: Int) {
-        connection.invoke(method: "UpdatePlayListPosition", playListId, newIndex) { _ in }
+        connection?.invoke(method: "UpdatePlayListPosition", playListId, newIndex) { _ in }
     }
 
     func setPlayListOptions(playListId: Int, loop: Bool, shuffle: Bool) {
         let request = SetPlayListOptionsRequestDto(loop: loop, shuffle: shuffle)
-        connection.invoke(method: "SetPlayListOptions", playListId, request) { _ in }
+        connection?.invoke(method: "SetPlayListOptions", playListId, request) { _ in }
     }
 
     func deleteAllPlayLists(exceptId: Int) {
-        connection.invoke(method: "DeleteAllPlayLists", exceptId) { _ in }
+        connection?.invoke(method: "DeleteAllPlayLists", exceptId) { _ in }
     }
 
     func removeFiles(playListId: Int, ids: [Int]) {
-        connection.invoke(method: "RemoveFiles", playListId, ids) { _ in }
+        connection?.invoke(method: "RemoveFiles", playListId, ids) { _ in }
     }
 
     func removeFilesThatStartsWith(playListId: Int, path: String) {
-        connection.invoke(method: "RemoveFilesThatStartsWith", playListId, path) { _ in }
+        connection?.invoke(method: "RemoveFilesThatStartsWith", playListId, path) { _ in }
     }
 
     func removeAllMissingFiles(playListId: Int) {
-        connection.invoke(method: "RemoveAllMissingFiles", playListId) { _ in }
+        connection?.invoke(method: "RemoveAllMissingFiles", playListId) { _ in }
     }
 
     func addFolders(playListId: Int, includeSubFolders: Bool, folders: [String]) {
         let request = AddFolderOrFilesToPlayListRequestDto(folders: folders, files: [], includeSubFolders: includeSubFolders)
-        connection.invoke(method: "AddFolders", playListId, request) { _ in }
+        connection?.invoke(method: "AddFolders", playListId, request) { _ in }
     }
 
     func addFiles(playListId: Int, files: [String]) {
         let request = AddFolderOrFilesToPlayListRequestDto(folders: [], files: files, includeSubFolders: false)
-        connection.invoke(method: "AddFiles", playListId, request) { _ in }
+        connection?.invoke(method: "AddFiles", playListId, request) { _ in }
     }
 
     func addUrlFile(playListId: Int, url: String, onlyVideo: Bool) {
         let request = AddUrlToPlayListRequestDto(url: url, onlyVideo: onlyVideo)
-        connection.invoke(method: "AddUrlFile", playListId, request) { _ in }
+        connection?.invoke(method: "AddUrlFile", playListId, request) { _ in }
     }
 
     func addFolderOrFileOrUrl(playListId: Int, path: String, includeSubFolders: Bool, onlyVideo: Bool) {
         // Use same DTO shape as client (union modeled by fields)
         struct AddFolderOrFileOrUrlToPlayListRequestDto: Codable { let path: String; let includeSubFolders: Bool; let onlyVideo: Bool }
         let request = AddFolderOrFileOrUrlToPlayListRequestDto(path: path, includeSubFolders: includeSubFolders, onlyVideo: onlyVideo)
-        connection.invoke(method: "AddFolderOrFileOrUrl", playListId, request) { _ in }
+        connection?.invoke(method: "AddFolderOrFileOrUrl", playListId, request) { _ in }
     }
 
     func sortFiles(playListId: Int, sortMode: Int) {
         // SortMode mirrors TS enum; pass rawValue/int from UI
-        connection.invoke(method: "SortFiles", playListId, sortMode) { _ in }
+        connection?.invoke(method: "SortFiles", playListId, sortMode) { _ in }
     }
 
     // MARK: - File methods (parity with ClientApp)
     func loopFile(playListId: Int, id: Int, loop: Bool) {
-        connection.invoke(method: "LoopFile", playListId, id, loop) { _ in }
+        connection?.invoke(method: "LoopFile", playListId, id, loop) { _ in }
     }
 
     func deleteFile(playListId: Int, id: Int) {
-        connection.invoke(method: "DeleteFile", playListId, id) { _ in }
+        connection?.invoke(method: "DeleteFile", playListId, id) { _ in }
     }
 
     func setFileOptions(streamIndex: Int, isAudio: Bool, isSubTitle: Bool, isQuality: Bool) {
         let request = SetFileOptionsRequestDto(streamIndex: streamIndex, isAudio: isAudio, isSubTitle: isSubTitle, isQuality: isQuality)
-        connection.invoke(method: "SetFileOptions", request) { _ in }
+        connection?.invoke(method: "SetFileOptions", request) { _ in }
     }
 
     func updateFilePosition(playListId: Int, id: Int, newIndex: Int) {
-        connection.invoke(method: "UpdateFilePosition", playListId, id, newIndex) { _ in }
+        connection?.invoke(method: "UpdateFilePosition", playListId, id, newIndex) { _ in }
     }
 }
 
