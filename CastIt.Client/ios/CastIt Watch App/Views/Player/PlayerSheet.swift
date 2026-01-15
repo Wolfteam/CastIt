@@ -3,11 +3,11 @@ import SwiftUI
 struct PlayerSheet: View {
     @Bindable var viewModel: PlayerViewModel
     @State private var volume: Double = 0
-    @State private var skipValue: Double = 30
 
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
+                // Played file, loop and stop buttons
                 VStack (alignment: .leading) {
                     Label("Player", systemImage: "play")
                         .font(.caption2)
@@ -49,20 +49,19 @@ struct PlayerSheet: View {
                         .disabled(!viewModel.isPlayingOrPaused)
                     }
                 }
-                
-                
+                                
                 // Skip Seconds Picker
                 VStack(alignment: .leading) {
                     Label("Skip seconds", systemImage: "timer")
                         .font(.caption2)
                     HStack {
                         Button(action: {
-                            viewModel.skipSeconds(-skipValue)
+                            viewModel.skipSeconds(-viewModel.skipValue)
                         }) {
                             Image(systemName: "backward")
                         }
                         
-                        Picker(selection: $skipValue, label: EmptyView()) {
+                        Picker(selection: $viewModel.skipValue, label: EmptyView()) {
                             Text("30").tag(30.0)
                             Text("60").tag(60.0)
                             Text("90").tag(90.0)
@@ -70,7 +69,7 @@ struct PlayerSheet: View {
                         .pickerStyle(.navigationLink)
                         
                         Button(action: {
-                            viewModel.skipSeconds(skipValue)
+                            viewModel.skipSeconds(viewModel.skipValue)
                         }) {
                             Image(systemName: "forward")
                         }
@@ -91,74 +90,35 @@ struct PlayerSheet: View {
                 .onAppear {
                     volume = viewModel.player?.volumeLevel ?? 0
                 }
-
+                
                 // Audio Picker
                 if let audios = viewModel.playedFile?.currentFileAudios, !audios.isEmpty {
-                    VStack(alignment: .leading) {
-                        Label("Audio", systemImage: "headphones")
-                            .font(.caption2)
-                        Picker(selection: Binding(
-                            get: { audios.first(where: { $0.isSelected })?.id ?? -1 },
-                            set: { id in
-                                if let option = audios.first(where: { $0.id == id }) {
-                                    viewModel.setFileOptions(option: option)
-                                }
-                            }
-                        ), label: EmptyView()) {
-                            ForEach(audios) { option in
-                                Text(option.text)
-                                    .tag(option.id)
-                                    .disabled(!option.isEnabled)
-                            }
-                        }
-                        .pickerStyle(.navigationLink)
-                    }
+                    PlayerOptionPicker(
+                        title: "Audio",
+                        systemImage: "headphones",
+                        options: audios,
+                        onOptionSelected: { viewModel.setFileOptions(option: $0) }
+                    )
                 }
 
                 // Quality Picker
                 if let qualities = viewModel.playedFile?.currentFileQualities, !qualities.isEmpty {
-                    VStack(alignment: .leading) {
-                        Label("Quality", systemImage: "video")
-                            .font(.caption2)
-                        Picker(selection: Binding(
-                            get: { qualities.first(where: { $0.isSelected })?.id ?? -1 },
-                            set: { id in
-                                if let option = qualities.first(where: { $0.id == id }) {
-                                    viewModel.setFileOptions(option: option)
-                                }
-                            }
-                        ), label: EmptyView()) {
-                            ForEach(qualities) { option in
-                                Text(option.text)
-                                    .tag(option.id)
-                                    .disabled(!option.isEnabled)
-                            }
-                        }
-                        .pickerStyle(.navigationLink)
-                    }
+                    PlayerOptionPicker(
+                        title: "Quality",
+                        systemImage: "video",
+                        options: qualities,
+                        onOptionSelected: { viewModel.setFileOptions(option: $0) }
+                    )
                 }
 
                 // Subtitles Picker
                 if let subtitles = viewModel.playedFile?.currentFileSubTitles, !subtitles.isEmpty {
-                    VStack(alignment: .leading) {
-                        Label("Subtitles", systemImage: "text.document")
-                            .font(.caption2)
-                        Picker(selection: Binding(
-                            get: { subtitles.first(where: { $0.isSelected })?.id ?? -1 },
-                            set: { id in
-                                if let option = subtitles.first(where: { $0.id == id }) {
-                                    viewModel.setFileOptions(option: option)
-                                }
-                            }
-                        ), label: EmptyView()) {
-                            ForEach(subtitles) { option in
-                                Text(option.text)
-                                    .tag(option.id)
-                                    .disabled(!option.isEnabled)
-                            }
-                        }
-                        .pickerStyle(.navigationLink)
-                    }
+                    PlayerOptionPicker(
+                        title: "Subtitles",
+                        systemImage: "text.document",
+                        options: subtitles,
+                        onOptionSelected: { viewModel.setFileOptions(option: $0) }
+                    )
                 }
             }
             .padding(.horizontal)
