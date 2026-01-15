@@ -23,6 +23,15 @@ class PlayerViewModel {
     var serverAlertText: String = ""
     var backgroundColors: [Color] = []
     
+    var skipValue: Double {
+        get {
+            AppSettings.shared.playerSkipSeconds
+        }
+        set {
+            AppSettings.shared.playerSkipSeconds = newValue
+        }
+    }
+    
     // Volume debouncing
     private let volumeSubject = PassthroughSubject<Double, Never>()
 
@@ -53,7 +62,7 @@ class PlayerViewModel {
     func setVolume(_ level: Double) {
         // Update local state immediately for responsiveness if possible, 
         // though it will be overwritten by server status later.
-        if var p = player {
+        if let p = player {
             player = PlayerStatusResponseDto(
                 mrl: p.mrl,
                 isPlaying: p.isPlaying,
@@ -169,7 +178,7 @@ class PlayerViewModel {
                 guard let self, let current = self.playedFile, current.id == file.id else { return }
                 // Force an update by touching status; actual percentage will come from server soon
                 // Since we flattened it, we might need to manually update player percentage if we want immediate UI feedback
-                if var p = self.player {
+                if let p = self.player {
                     self.player = PlayerStatusResponseDto(
                         mrl: p.mrl,
                         isPlaying: p.isPlaying,

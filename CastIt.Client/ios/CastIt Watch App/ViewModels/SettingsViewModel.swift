@@ -7,7 +7,7 @@ import SwiftUI
 class SettingsViewModel {
     var serverUrl: String = "" {
         didSet {
-            UserDefaults.standard.set(serverUrl, forKey: "serverUrl")
+            AppSettings.shared.serverUrl = serverUrl
         }
     }
     var isConnected: Bool = false
@@ -34,7 +34,7 @@ class SettingsViewModel {
 
     init(signalRService: SignalRService) {
         self.signalRService = signalRService
-        self.serverUrl = UserDefaults.standard.string(forKey: "serverUrl") ?? ""
+        self.serverUrl = AppSettings.shared.serverUrl
         bind()
     }
 
