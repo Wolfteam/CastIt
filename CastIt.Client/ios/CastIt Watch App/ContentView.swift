@@ -10,7 +10,10 @@ import Observation
 
 struct ContentView: View {
     private let container: DependencyContainer
+    
+    @Environment(\.scenePhase) private var scenePhase
     @Bindable private var router: AppRouter
+    
     init(container: DependencyContainer) {
         self.container = container
         self._router = Bindable(wrappedValue: container.router)
@@ -37,6 +40,19 @@ struct ContentView: View {
         .onAppear {
             if container.settingsViewModel.serverUrl.isEmpty {
                 router.selectedTab = .settings
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            debugPrint("Changing to phase \(phase)")
+            switch phase {
+            case .active:
+                if !container.settingsViewModel.isConnected {
+                    container.signalRService.connect()
+                }
+            case .background, .inactive:
+                container.signalRService.disconnect()
+            @unknown default:
+                break
             }
         }
     }

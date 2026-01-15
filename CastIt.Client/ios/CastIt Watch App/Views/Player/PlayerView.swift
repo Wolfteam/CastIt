@@ -27,13 +27,13 @@ struct PlayerView: View {
                                 PlayerSheet(viewModel: viewModel)
                             }
 
-                        if (viewModel.playList?.name != nil) {
+                        if (!viewModel.isLoading && viewModel.playList?.name != nil) {
                             Text(viewModel.playList?.name ?? "")
                                 .font(.headline)
                                 .lineLimit(1)
                         }
                         
-                        if (viewModel.playedFile?.filename != nil) {
+                        if (!viewModel.isLoading && viewModel.playedFile?.filename != nil) {
                             Text(viewModel.playedFile!.filename)
                                 .font(.caption)
                                 .fontWeight(.ultraLight)
@@ -47,6 +47,7 @@ struct PlayerView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
                     Spacer()
                     
                     if viewModel.isPlayingOrPaused {
