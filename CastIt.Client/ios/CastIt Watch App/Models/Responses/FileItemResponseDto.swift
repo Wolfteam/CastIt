@@ -12,7 +12,6 @@ struct FileItemResponseDto: Codable, Identifiable {
     let lastPlayedDate: String?
 
     let isBeingPlayed: Bool
-    //let type: AppFile
     let isLocalFile: Bool
     let isUrlFile: Bool
     let playedSeconds: Double

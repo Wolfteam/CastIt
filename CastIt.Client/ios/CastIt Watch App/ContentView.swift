@@ -42,19 +42,6 @@ struct ContentView: View {
                 router.selectedTab = .settings
             }
         }
-        .onChange(of: scenePhase) { _, phase in
-            debugPrint("Changing to phase \(phase)")
-            switch phase {
-            case .active:
-                if !container.settingsViewModel.isConnected {
-                    container.signalRService.connect()
-                }
-            case .background, .inactive:
-                container.signalRService.disconnect()
-            @unknown default:
-                break
-            }
-        }
     }
 }
 

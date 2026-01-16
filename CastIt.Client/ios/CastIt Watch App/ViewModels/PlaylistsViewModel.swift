@@ -19,7 +19,7 @@ class PlaylistsViewModel {
     @MainActor
     func addNewPlayList() async {
         do {
-            let newPlaylist = try await signalRService.addNewPlayList()
+            _ = try await signalRService.addNewPlayList()
             // We rely on hub event PlayListAdded to update the summary list
         } catch {
             print("Error adding new playlist: \(error)")
