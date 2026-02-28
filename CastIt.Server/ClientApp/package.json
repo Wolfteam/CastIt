@@ -16,7 +16,7 @@
     "react": "^19.2.3",
     "react-device-detect": "^2.2.3",
     "react-dom": "^19.2.3",
-    "react-router-dom": "^7.10.1",
+    "react-router-dom": "^7.13.1",
     "react-localization": "^2.0.6",
     "rxjs": "^7.8.2",
     "typescript": "^5.9.3",
