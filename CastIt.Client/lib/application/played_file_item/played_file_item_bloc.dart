@@ -15,6 +15,8 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
         id: event.id,
         playListId: event.playListId,
         playedPercentage: event.playedPercentage,
+        playedTime: event.playedTime,
+        duration: event.duration,
         fullTotalDuration: event.fullTotalDuration,
       );
       emit(updatedState);
@@ -29,6 +31,8 @@ class PlayedFileItemBloc extends Bloc<PlayedFileItemEvent, PlayedFileItemState> 
           id: file.id,
           playListId: file.playListId,
           playedPercentage: file.playedPercentage,
+          playedTime: file.playedTime,
+          duration: file.duration,
           fullTotalDuration: file.fullTotalDuration,
         ),
       );

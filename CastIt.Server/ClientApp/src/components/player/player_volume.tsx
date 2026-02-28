@@ -1,5 +1,5 @@
 import { IconButton, Popover, Slider } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useEffect, useState } from 'react';
 import { Fragment } from 'react';
 import { VolumeOff, VolumeUp } from '@mui/icons-material';

@@ -29,6 +29,7 @@ namespace CastIt.Shared.Models
         public long PlayListId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public DateTime? LastPlayedDate { get; set; }
 
         public string Duration { get; private set; }
         public bool PositionChanged { get; set; }
@@ -164,7 +165,10 @@ namespace CastIt.Shared.Models
         {
             IsBeingPlayed = played;
             if (IsBeingPlayed)
+            {
                 WasPlayed = true;
+                LastPlayedDate = DateTime.Now;
+            }
             return this;
         }
 

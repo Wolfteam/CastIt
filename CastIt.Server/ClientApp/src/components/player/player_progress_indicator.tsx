@@ -72,14 +72,18 @@ function PlayerProgressIndicator() {
         }));
     };
 
+    const isPlaying = state.duration && state.duration != '';
+
     return (
-        <Grid container spacing={2} style={{ paddingRight: 10, paddingLeft: 10 }} alignItems="center" justifyContent="center">
-            {state.playedTime && state.playedTime != '' && (
-                <Grid item>
-                    <Typography color="textSecondary">{state.playedTime}</Typography>
+        <Grid container spacing={1} style={{ paddingRight: 10, paddingLeft: 10 }} alignItems="center" justifyContent="center">
+            {isPlaying && (
+                <Grid size="grow">
+                    <Typography color="textSecondary" textAlign={'center'} textOverflow={'ellipsis'}>
+                        {state.playedTime}
+                    </Typography>
                 </Grid>
             )}
-            <Grid item xs>
+            <Grid size={isPlaying ? 9 : 12}>
                 <Slider
                     min={0}
                     max={state.mediaDuration}
@@ -91,12 +95,14 @@ function PlayerProgressIndicator() {
                     value={state.elapsedSeconds}
                     onChange={(e, val) => handleValueChanged(val as number)}
                     onChangeCommitted={(e, val) => handleValueChanged(val as number, true)}
-                    slots={{valueLabel:PlayerProgressIndicatorValue}}
+                    slots={{ valueLabel: PlayerProgressIndicatorValue }}
                 />
             </Grid>
-            {state.duration && state.duration != '' && (
-                <Grid item>
-                    <Typography color="textSecondary">{state.duration}</Typography>
+            {isPlaying && (
+                <Grid size="grow">
+                    <Typography color="textSecondary" textAlign={'center'} textOverflow={'ellipsis'}>
+                        {state.duration}
+                    </Typography>
                 </Grid>
             )}
         </Grid>

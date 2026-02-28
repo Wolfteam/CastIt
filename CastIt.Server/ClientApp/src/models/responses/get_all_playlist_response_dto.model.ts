@@ -8,4 +8,5 @@ export interface IGetAllPlayListResponseDto {
     playedTime: string;
     totalDuration: string;
     imageUrl: string;
+    lastPlayedDate?: string;
 }

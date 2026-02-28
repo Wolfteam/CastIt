@@ -39,33 +39,33 @@ class _PlayListsPageState extends State<PlayListsPage> with AutomaticKeepAliveCl
                   break;
               }
             },
-            builder:
-                (ctx, state) => SmartRefresher(
-                  header: const MaterialClassicHeader(),
-                  controller: _refreshController,
-                  onRefresh: () => context.read<PlayListsBloc>().add(const PlayListsEvent.load()),
-                  child: switch (state) {
-                    PlayListsStateLoadingState() => const Center(child: CircularProgressIndicator()),
-                    //TODO: CREATE A WAY TO FORCE A RECONNECT
-                    // context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
-                    PlayListsStateLoadedState() => ListView.builder(
-                      itemCount: state.playlists.length,
-                      itemBuilder: (ctx, i) {
-                        final playlist = state.playlists[i];
-                        return PlayListItem(
-                          key: Key('playlist_$i'),
-                          id: playlist.id,
-                          name: playlist.name,
-                          numberOfFiles: playlist.numberOfFiles,
-                          loop: playlist.loop,
-                          shuffle: playlist.shuffle,
-                          totalDuration: playlist.totalDuration,
-                        );
-                      },
-                    ),
-                    PlayListsStateDisconnectedState() => const SomethingWentWrong(),
+            builder: (ctx, state) => SmartRefresher(
+              header: const MaterialClassicHeader(),
+              controller: _refreshController,
+              onRefresh: () => context.read<PlayListsBloc>().add(const PlayListsEvent.load()),
+              child: switch (state) {
+                PlayListsStateLoadingState() => const Center(child: CircularProgressIndicator()),
+                //TODO: CREATE A WAY TO FORCE A RECONNECT
+                // context.read<ServerWsBloc>().add(ServerWsEvent.connectToWs());
+                PlayListsStateLoadedState() => ListView.builder(
+                  itemCount: state.playlists.length,
+                  itemBuilder: (ctx, i) {
+                    final playlist = state.playlists[i];
+                    return PlayListItem(
+                      key: Key('playlist_$i'),
+                      id: playlist.id,
+                      name: playlist.name,
+                      numberOfFiles: playlist.numberOfFiles,
+                      loop: playlist.loop,
+                      shuffle: playlist.shuffle,
+                      totalDuration: playlist.totalDuration,
+                      lastPlayedDate: playlist.lastPlayedDate,
+                    );
                   },
                 ),
+                PlayListsStateDisconnectedState() => const SomethingWentWrong(),
+              },
+            ),
           ),
         ),
       ],

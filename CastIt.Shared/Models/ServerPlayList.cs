@@ -1,4 +1,5 @@
-﻿using CastIt.Domain;
+﻿using System;
+using CastIt.Domain;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,6 +30,19 @@ namespace CastIt.Shared.Models
                 var totalSeconds = Files.Where(i => i.TotalSeconds >= 0).Sum(i => i.TotalSeconds);
                 var formatted = FileFormatConstants.FormatDuration(totalSeconds);
                 return $"{PlayedTime} / {formatted}";
+            }
+        }
+
+        public DateTime? LastPlayedDate
+        {
+            get
+            {
+                ServerFileItem lastPlayedFile = Files
+                    .Where(f => f.LastPlayedDate.HasValue)
+                    .OrderByDescending(f => f.LastPlayedDate)
+                    .FirstOrDefault();
+
+                return lastPlayedFile?.LastPlayedDate;
             }
         }
     }

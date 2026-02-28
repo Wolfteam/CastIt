@@ -1,5 +1,5 @@
 import { IconButton } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useEffect, useState } from 'react';
 import { SkipPrevious, SkipNext, FastForward, FastRewind, PlayArrow, Stop, Pause } from '@mui/icons-material';
 import { onPlayerStatusChanged } from '../../services/castithub.service';

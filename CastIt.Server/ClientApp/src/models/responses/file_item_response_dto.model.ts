@@ -11,6 +11,7 @@ export interface IFileItemResponseDto {
     playedPercentage: number;
     playListId: number;
     loop: boolean;
+    lastPlayedDate?: string;
 
     isBeingPlayed: boolean;
     type: AppFile;

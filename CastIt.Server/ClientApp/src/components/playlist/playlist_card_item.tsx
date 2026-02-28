@@ -25,9 +25,11 @@ import AddFilesDialog from '../dialogs/add_files_dialog';
 import { IGetAllPlayListResponseDto } from '../../models';
 import { useCastItHub } from '../../context/castit_hub.context';
 import { defaultImg } from '../../utils/app_constants';
+import { String } from 'typescript-string-operations';
+import { formatLasytPlayedDate } from '../../utils/date_utils';
 
 const StyledRootCard = styled(Card)({
-    minWidth: 175
+    minWidth: 175,
 });
 
 const StyledTypography = styled(Typography)({
@@ -59,6 +61,7 @@ interface State {
     position: number;
     imageUrl: string;
     loaded: boolean;
+    lastPlayedDate?: string;
 }
 
 const initialState: State = {
@@ -171,6 +174,10 @@ function PlayListCardItem(props: Props): JSX.Element {
     }
 
     const image = state.imageUrl ?? defaultImg;
+    const formattedLastPlayedDate = String.format(
+        translations.lastPlayedDate,
+        state.lastPlayedDate ? formatLasytPlayedDate(state.lastPlayedDate) : translations.na
+    );
     return (
         <StyledRootCard raised={props.raised}>
             <CardActionArea onClick={handleClick}>
@@ -183,12 +190,15 @@ function PlayListCardItem(props: Props): JSX.Element {
                         {translations.playList}
                     </Typography>
                     <Tooltip title={state.name}>
-                        <StyledTypography variant="h5">
-                            {state.name}
-                        </StyledTypography>
+                        <StyledTypography variant="h5">{state.name}</StyledTypography>
                     </Tooltip>
                     <Tooltip title={state.totalDuration}>
                         <StyledTypography color="textSecondary">{state.totalDuration}</StyledTypography>
+                    </Tooltip>
+                    <Tooltip title={formattedLastPlayedDate}>
+                        <Typography variant="caption" sx={{ display: 'block' }} className={'text-overflow-elipsis'}>
+                            {formattedLastPlayedDate}
+                        </Typography>
                     </Tooltip>
                 </CardContent>
             </CardActionArea>
@@ -197,7 +207,7 @@ function PlayListCardItem(props: Props): JSX.Element {
                 sx={{
                     justifyContent: 'flex-end',
                     '& button': {
-                        padding: 1
+                        padding: 1,
                     },
                 }}
             >

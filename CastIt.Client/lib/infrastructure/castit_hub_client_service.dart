@@ -295,7 +295,9 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         final updatedPl = GetAllPlayListResponseDto.fromJson(message as Map<String, dynamic>);
         playListChanged.add((false, updatedPl));
       case _playListsChanged:
-        final playLists = (message as List<dynamic>).map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>)).toList();
+        final playLists = (message as List<dynamic>)
+            .map((e) => GetAllPlayListResponseDto.fromJson(e as Map<String, dynamic>))
+            .toList();
         playListsChanged.add(playLists);
       case _playListDeleted:
         final id = message as int;
@@ -354,7 +356,10 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
     try {
       _logger.info(runtimeType, '_invokeHubMethod: Trying to call method  = $methodName');
       if (_connection == null) {
-        _logger.info(runtimeType, '_invokeHubMethod: Connection is null, trying to establish connection before calling method = $methodName');
+        _logger.info(
+          runtimeType,
+          '_invokeHubMethod: Connection is null, trying to establish connection before calling method = $methodName',
+        );
         await connectToHub();
       }
 
@@ -426,7 +431,12 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
 
   @override
   Future<void> setFileOptions(int streamIndex, {bool isAudio = false, bool isSubtitle = false, bool isQuality = false}) async {
-    final dto = SetFileOptionsRequestDto(streamIndex: streamIndex, isAudio: isAudio, isQuality: isQuality, isSubTitle: isSubtitle);
+    final dto = SetFileOptionsRequestDto(
+      streamIndex: streamIndex,
+      isAudio: isAudio,
+      isQuality: isQuality,
+      isSubTitle: isSubtitle,
+    );
     await _invokeHubMethod('SetFileOptions', [dto]);
   }
 

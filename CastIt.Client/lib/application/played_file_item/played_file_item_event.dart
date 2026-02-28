@@ -6,6 +6,8 @@ sealed class PlayedFileItemEvent with _$PlayedFileItemEvent {
     required int id,
     required int playListId,
     required double playedPercentage,
+    required String playedTime,
+    required String duration,
     required String fullTotalDuration,
   }) = PlayedFileItemEventPlaying;
 
