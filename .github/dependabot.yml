@@ -1,8 +1,20 @@
 version: 2
 updates:
-- package-ecosystem: nuget
-  directory: "/"
-  schedule:
-    interval: "weekly"
-  open-pull-requests-limit: 10
-  target-branch: develop
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: develop
+  - package-ecosystem: "pub"
+    directory: "/CastIt.Client"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: develop
+  - package-ecosystem: "docker"
+    directory: "/CastIt.Server"
+    target-branch: develop
+    open-pull-requests-limit: 10
+    schedule:
+      interval: "weekly"     
