@@ -108,7 +108,7 @@ class SettingsViewModel {
         
         isLoading = true
         isConnected = false
-        signalRService.updateUrl(serverUrl)
+        signalRService.connectWithUrl(serverUrl)
         signalRService.disconnect()
         signalRService.connect()
         

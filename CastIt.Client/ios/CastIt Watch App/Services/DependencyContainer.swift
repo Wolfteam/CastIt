@@ -56,8 +56,7 @@ final class AppContainer: DependencyContainer {
 
         // Start connection if URL is set
         if !settingsViewModel.serverUrl.isEmpty {
-            self.signalRService.updateUrl(settingsViewModel.serverUrl)
-            self.signalRService.connect()
+            self.signalRService.connectWithUrl(settingsViewModel.serverUrl)
         }
     }
 

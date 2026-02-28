@@ -44,119 +44,11 @@ class SignalRService: HubConnectionDelegate {
     init() {
     }
 
-    func updateUrl(_ urlString: String) {
+    func connectWithUrl(_ urlString: String) {
         connectInternal(urlString: urlString)
     }
     
-    private func connectInternal(urlString: String) {
-        debugPrint("Connecting to \(urlString)...")
-        
-        guard let url = URL(string: urlString)?.appendingPathComponent("castithub") else {
-            return
-        }
-        self.url = url
-        
-        disconnect()
-        
-        let newConnection = HubConnectionBuilder(url: url)
-            .withLogging(minLogLevel: .error)
-            .withPermittedTransportTypes(.longPolling)
-            .withAutoReconnect()
-            .build()
-        newConnection.delegate = self
-        
-        // Player related event handlers
-        newConnection.on(method: "PlayerStatusChanged", callback: { (serverPlayerStatus: ServerPlayerStatusResponseDto) in
-            self.onPlayerStatusChanged.send(serverPlayerStatus)
-        })
-
-        newConnection.on(method: "PlayerSettingsChanged", callback: { (settings: ServerAppSettings) in
-            self.onPlayerSettingsChanged.send(settings)
-        })
-
-        newConnection.on(method: "CastDeviceSet", callback: { (device: Receiver) in
-            self.onCastDeviceSet.send(device)
-        })
-
-        newConnection.on(method: "CastDevicesChanged", callback: { (devices: [Receiver]) in
-            self.onCastDevicesChanged.send(devices)
-        })
-
-        newConnection.on(method: "CastDeviceDisconnected", callback: {
-            self.onCastDeviceDisconnected.send()
-        })
-
-        newConnection.on(method: "StoppedPlayBack", callback: {
-            self.onStoppedPlayBack.send()
-        })
-        
-        // Playlists related event handlers
-        newConnection.on(method: "SendPlayLists", callback: { (playLists: [GetAllPlayListResponseDto]) in
-            self.onPlayListsLoaded.send(playLists)
-        })
-
-        newConnection.on(method: "PlayListsChanged", callback: { (playLists: [GetAllPlayListResponseDto]) in
-            self.onPlayListsChanged.send(playLists)
-        })
-
-        newConnection.on(method: "PlayListAdded", callback: { (newPlayList: GetAllPlayListResponseDto) in
-            self.onPlayListAdded.send(newPlayList)
-        })
-
-        newConnection.on(method: "PlayListChanged", callback: { (updatedPlayList: GetAllPlayListResponseDto) in
-            self.onPlayListChanged.send(updatedPlayList)
-        })
-
-        newConnection.on(method: "PlayListDeleted", callback: { (deletedPlayListId: Int) in
-            self.onPlayListDeleted.send(deletedPlayListId)
-        })
-        
-        newConnection.on(method: "PlayListIsBusy", callback: { (playListBusy: PlayListBusy) in
-            self.onPlayListBusy.send(playListBusy)
-        })
-
-        // File related event handlers
-        newConnection.on(method: "FileAdded", callback: { (file: FileItemResponseDto) in
-            self.onFileAdded.send(file)
-        })
-
-        newConnection.on(method: "FileChanged", callback: { (file: FileItemResponseDto) in
-            self.onFileChanged.send(file)
-        })
-        
-        newConnection.on(method: "FilesChanged", callback: { (files: [FileItemResponseDto]) in
-            self.onFilesChanged.send(files)
-        })
-
-        newConnection.on(method: "FileDeleted", callback: { (fileDeleted: FileDeleted) in
-            self.onFileDeleted.send(fileDeleted)
-        })
-
-        newConnection.on(method: "FileLoading", callback: { (file: FileItemResponseDto) in
-            self.onFileLoading.send(file)
-        })
-
-        newConnection.on(method: "FileLoaded", callback: { (file: FileItemResponseDto) in
-            self.onFileLoaded.send(file)
-        })
-
-        newConnection.on(method: "FileEndReached", callback: { (file: FileItemResponseDto) in
-            self.onFileEndReached.send(file)
-        })
-
-        // General server messages
-        newConnection.on(method: "ServerMessage", callback: { (message: AppMessage) in
-            self.onServerMessage.send(message)
-        })
-        
-        self.connection = newConnection
-    }
-
     func connect() {
-        if (connection != nil) {
-            connection?.start()
-            return;
-        }
         connectInternal(urlString: AppSettings.shared.serverUrl)
     }
 
@@ -351,11 +243,117 @@ class SignalRService: HubConnectionDelegate {
     func updateFilePosition(playListId: Int, id: Int, newIndex: Int) {
         invokeWithLogging(method: "UpdateFilePosition", playListId, id, newIndex)
     }
+    
+    private func connectInternal(urlString: String) {
+        debugPrint("Connecting to \(urlString)...")
+        
+        guard let url = URL(string: urlString)?.appendingPathComponent("castithub") else {
+            return
+        }
+        self.url = url
+        
+        disconnect()
+        
+        let newConnection = HubConnectionBuilder(url: url)
+            .withLogging(minLogLevel: .error)
+            .withPermittedTransportTypes(.longPolling)
+            .withHubConnectionDelegate(delegate: self)
+            .build()
+        
+        // Player related event handlers
+        newConnection.on(method: "PlayerStatusChanged", callback: { (serverPlayerStatus: ServerPlayerStatusResponseDto) in
+            self.onPlayerStatusChanged.send(serverPlayerStatus)
+        })
+
+        newConnection.on(method: "PlayerSettingsChanged", callback: { (settings: ServerAppSettings) in
+            self.onPlayerSettingsChanged.send(settings)
+        })
+
+        newConnection.on(method: "CastDeviceSet", callback: { (device: Receiver) in
+            self.onCastDeviceSet.send(device)
+        })
+
+        newConnection.on(method: "CastDevicesChanged", callback: { (devices: [Receiver]) in
+            self.onCastDevicesChanged.send(devices)
+        })
+
+        newConnection.on(method: "CastDeviceDisconnected", callback: {
+            self.onCastDeviceDisconnected.send()
+        })
+
+        newConnection.on(method: "StoppedPlayBack", callback: {
+            self.onStoppedPlayBack.send()
+        })
+        
+        // Playlists related event handlers
+        newConnection.on(method: "SendPlayLists", callback: { (playLists: [GetAllPlayListResponseDto]) in
+            self.onPlayListsLoaded.send(playLists)
+        })
+
+        newConnection.on(method: "PlayListsChanged", callback: { (playLists: [GetAllPlayListResponseDto]) in
+            self.onPlayListsChanged.send(playLists)
+        })
+
+        newConnection.on(method: "PlayListAdded", callback: { (newPlayList: GetAllPlayListResponseDto) in
+            self.onPlayListAdded.send(newPlayList)
+        })
+
+        newConnection.on(method: "PlayListChanged", callback: { (updatedPlayList: GetAllPlayListResponseDto) in
+            self.onPlayListChanged.send(updatedPlayList)
+        })
+
+        newConnection.on(method: "PlayListDeleted", callback: { (deletedPlayListId: Int) in
+            self.onPlayListDeleted.send(deletedPlayListId)
+        })
+        
+        newConnection.on(method: "PlayListIsBusy", callback: { (playListBusy: PlayListBusy) in
+            self.onPlayListBusy.send(playListBusy)
+        })
+
+        // File related event handlers
+        newConnection.on(method: "FileAdded", callback: { (file: FileItemResponseDto) in
+            self.onFileAdded.send(file)
+        })
+
+        newConnection.on(method: "FileChanged", callback: { (file: FileItemResponseDto) in
+            self.onFileChanged.send(file)
+        })
+        
+        newConnection.on(method: "FilesChanged", callback: { (files: [FileItemResponseDto]) in
+            self.onFilesChanged.send(files)
+        })
+
+        newConnection.on(method: "FileDeleted", callback: { (fileDeleted: FileDeleted) in
+            self.onFileDeleted.send(fileDeleted)
+        })
+
+        newConnection.on(method: "FileLoading", callback: { (file: FileItemResponseDto) in
+            self.onFileLoading.send(file)
+        })
+
+        newConnection.on(method: "FileLoaded", callback: { (file: FileItemResponseDto) in
+            self.onFileLoaded.send(file)
+        })
+
+        newConnection.on(method: "FileEndReached", callback: { (file: FileItemResponseDto) in
+            self.onFileEndReached.send(file)
+        })
+
+        // General server messages
+        newConnection.on(method: "ServerMessage", callback: { (message: AppMessage) in
+            self.onServerMessage.send(message)
+        })
+        
+        self.connection = newConnection
+        
+        connection?.start()
+    }
 }
 
 // MARK: - HubConnectionDelegate
 extension SignalRService {
     func connectionDidOpen(hubConnection: HubConnection) {
+        debugPrint("SignalR connection did open")
         DispatchQueue.main.async { self.onClientConnected.send(()) }
     }
 
@@ -378,6 +376,7 @@ extension SignalRService {
     }
 
     func connectionDidReconnect() {
+        debugPrint("SignalR connection did reconnect")
         DispatchQueue.main.async { self.onClientConnected.send(()) }
     }
 }

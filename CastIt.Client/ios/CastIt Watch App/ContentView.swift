@@ -42,6 +42,18 @@ struct ContentView: View {
                 router.selectedTab = .settings
             }
         }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .inactive, .background:
+                container.signalRService.disconnect()
+            case .active:
+                if !container.settingsViewModel.serverUrl.isEmpty {
+                    container.signalRService.connect()
+                }
+            @unknown default:
+                break
+            }
+        }
     }
 }
 
