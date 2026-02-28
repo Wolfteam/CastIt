@@ -3,31 +3,6 @@ updates:
 - package-ecosystem: nuget
   directory: "/"
   schedule:
-    interval: daily
+    interval: "weekly"
   open-pull-requests-limit: 10
   target-branch: develop
-  ignore:
-  - dependency-name: HtmlAgilityPack
-    versions:
-    - 1.11.30
-    - 1.11.31
-    - 1.11.32
-  - dependency-name: FreeSql.Provider.Sqlite
-    versions:
-    - 2.3.100
-    - 2.3.105
-    - 2.3.108
-  - dependency-name: Serilog.Extensions.Hosting
-    versions:
-    - 4.0.0
-    - 4.1.0
-    - 4.1.1
-  - dependency-name: Refit.HttpClientFactory
-    versions:
-    - 6.0.1
-    - 6.0.15
-    - 6.0.24
-    - 6.0.8
-  - dependency-name: MaterialDesignThemes
-    versions:
-    - 3.2.0
