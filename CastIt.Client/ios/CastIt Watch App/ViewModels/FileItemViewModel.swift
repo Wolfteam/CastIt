@@ -107,15 +107,13 @@ class FileItemViewModel {
             .sink { [weak self] status in
                 guard let self else { return }
                 guard let played = status.playedFile else {
-                    if self.isBeingPlayed {
-                        self.isBeingPlayed = false
-                    }
+                    disableIsBeingPlayedIfNeeded()
                     return
                 }
                 if played.id == self.id {
                     self.update(from: played)
-                } else if self.isBeingPlayed {
-                    self.isBeingPlayed = false
+                } else {
+                    disableIsBeingPlayedIfNeeded()
                 }
             }
             .store(in: &cancellables)
@@ -126,6 +124,7 @@ class FileItemViewModel {
             .sink { [weak self] ended in
                 guard let self, ended.id == self.id else { return }
                 self.playedPercentage = 100
+                disableIsBeingPlayedIfNeeded()
             }
             .store(in: &cancellables)
     }
@@ -177,6 +176,12 @@ class FileItemViewModel {
 
     func delete() {
         signalRService.deleteFile(playListId: playListId, id: id)
+    }
+    
+    private func disableIsBeingPlayedIfNeeded() {
+        if self.isBeingPlayed {
+            self.isBeingPlayed = false
+        }
     }
 
     deinit {

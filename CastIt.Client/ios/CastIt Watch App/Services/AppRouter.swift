@@ -10,4 +10,5 @@ final class AppRouter {
     }
 
     var selectedTab: Tab = .player
+    var selectedPlaylist: GetAllPlayListResponseDto? = nil
 }

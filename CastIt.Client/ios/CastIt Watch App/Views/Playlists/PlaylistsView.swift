@@ -3,30 +3,30 @@ import SwiftUI
 struct PlaylistsView: View {
     @State private var viewModel: PlaylistsViewModel
     private let container: DependencyContainer
+    @Bindable private var router: AppRouter
 
     init(container: DependencyContainer) {
         self.container = container
         _viewModel = State(initialValue: container.playlistsViewModel)
+        _router = Bindable(wrappedValue: container.router)
     }
 
     var body: some View {
-        NavigationStack {
-            if !container.settingsViewModel.isConnected {
-                NotConnectedView()
-                    .navigationTitle("Playlists")
-            } else {
-                List(viewModel.playlists) { playlist in
-                    NavigationLink(value: playlist) {
-                        PlaylistItemView(viewModel: container.makePlaylistItemViewModel(playlist: playlist))
-                    }
-                }
+        if !container.settingsViewModel.isConnected {
+            NotConnectedView()
                 .navigationTitle("Playlists")
-                .navigationDestination(for: GetAllPlayListResponseDto.self) { playlist in
-                    PlaylistDetailView(container: container, id: playlist.id, name: playlist.name)
+        } else {
+            List(viewModel.playlists) { playlist in
+                Button {
+                    router.selectedPlaylist = playlist
+                } label: {
+                    PlaylistItemView(viewModel: container.makePlaylistItemViewModel(playlist: playlist))
                 }
-                .onAppear {
-                    viewModel.getPlaylists()
-                }
+                .buttonStyle(.plain)
+            }
+            .navigationTitle("Playlists")
+            .onAppear {
+                viewModel.getPlaylists()
             }
         }
     }
