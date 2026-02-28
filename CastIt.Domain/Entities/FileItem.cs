@@ -21,6 +21,7 @@ namespace CastIt.Domain.Entities
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public DateTime? LastPlayedDate { get; set; }
 
         public long PlayListId { get; set; }
     }

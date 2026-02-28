@@ -15,6 +15,7 @@ sealed class GetAllPlayListResponseDto with _$GetAllPlayListResponseDto {
     required String playedTime,
     required String totalDuration,
     String? imageUrl,
+    DateTime? lastPlayedDate,
   }) = _GetAllPlayListResponseDto;
 
   factory GetAllPlayListResponseDto.fromJson(Map<String, dynamic> json) => _$GetAllPlayListResponseDtoFromJson(json);

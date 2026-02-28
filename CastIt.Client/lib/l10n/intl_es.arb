@@ -98,5 +98,6 @@
   "serverIsClosing": "El servidor está cerrando",
   "ffmpegExecutableNotFound": "El ejecutable de Ffmpeg no es válido o no pudo ser encontrado",
   "nothingToShow": "Nada para mostrar",
-  "webVideoQuality": "Calidad de video web"
+  "webVideoQuality": "Calidad de video web",
+  "lastPlayedDate": "Última reproducción: {date}"
 }

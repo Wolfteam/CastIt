@@ -65,10 +65,9 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
 
     on<PlayListEventSearchBoxTextChanged>((event, emit) {
       final isFiltering = !event.text.isNullEmptyOrWhitespace;
-      final filteredFiles =
-          !isFiltering
-              ? <FileItemResponseDto>[]
-              : currentState.files.where((element) => element.filename.toLowerCase().contains(event.text.toLowerCase())).toList();
+      final filteredFiles = !isFiltering
+          ? <FileItemResponseDto>[]
+          : currentState.files.where((element) => element.filename.toLowerCase().contains(event.text.toLowerCase())).toList();
 
       final updatedState = currentState.copyWith(filteredFiles: filteredFiles, isFiltering: isFiltering);
       emit(updatedState);
@@ -207,6 +206,9 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
           playedPercentage: file.playedPercentage,
           playedSeconds: file.playedSeconds,
           playListId: file.playListId,
+          createdAt: file.createdAt,
+          updatedAt: file.updatedAt,
+          lastPlayedDate: file.lastPlayedDate,
           subTitle: file.subTitle,
           thumbnailUrl: file.thumbnailUrl,
           totalSeconds: file.totalSeconds,

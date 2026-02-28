@@ -8,19 +8,25 @@ interface Props {
     playedPercentage: number;
     playedTime: string;
     duration: string;
+    lastPlayedDate: string;
 }
 
 function FileItemSubtitle(props: Props) {
     return (
         <Fragment>
             <Tooltip title={props.subTitle}>
-                <Typography variant="subtitle1" className={'text-overflow-elipsis'}>
+                <Typography variant="caption" sx={{ display: 'block' }} className={'text-overflow-elipsis'}>
                     {props.subTitle}
                 </Typography>
             </Tooltip>
             <Tooltip title={props.path}>
-                <Typography variant="subtitle2" className={'text-overflow-elipsis'}>
+                <Typography variant="caption" sx={{ display: 'block' }} className={'text-overflow-elipsis'}>
                     {props.path}
+                </Typography>
+            </Tooltip>
+            <Tooltip title={props.lastPlayedDate}>
+                <Typography variant="caption" sx={{ display: 'block' }} className={'text-overflow-elipsis'}>
+                    {props.lastPlayedDate}
                 </Typography>
             </Tooltip>
             <FileItemSlider {...props} />
