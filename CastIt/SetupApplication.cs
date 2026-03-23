@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using CastIt.Common;
 using CastIt.Domain.Utils;
 using CastIt.Interfaces;
@@ -26,7 +26,7 @@ namespace CastIt
                 .EndingWith("Service")
                 .AsInterfaces()
                 .RegisterAsLazySingleton();
-            SetupMapper();
+            TypeAdapterConfig.GlobalConfig.RegisterMappings();
 
             //NPI WHY I NEED TO MANUALLY REGISTER THIS ONE
             Mvx.IoCProvider.RegisterSingleton<IMvxMessenger>(new MvxMessengerHub());
@@ -44,26 +44,12 @@ namespace CastIt
             var textProvider = new ResxTextProvider(Resource.ResourceManager, messenger);
             Mvx.IoCProvider.RegisterSingleton<ITextProvider>(textProvider);
 
-            //since im using automapper to resolve this one, i need to explicit register it
             Mvx.IoCProvider.RegisterType<PlayListItemViewModel>();
             Mvx.IoCProvider.RegisterType<FileItemViewModel>();
             Mvx.IoCProvider.RegisterType<DeviceItemViewModel>();
             Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(SettingsViewModel));
             Mvx.IoCProvider.ConstructAndRegisterSingleton(typeof(DevicesViewModel));
             RegisterAppStart<SplashViewModel>();
-        }
-
-        private static void SetupMapper()
-        {
-            var config = new MapperConfiguration(cfg =>
-            {
-                // Add all profiles in current assembly
-                cfg.AddProfile<MappingProfile>();
-                cfg.ConstructServicesUsing(Mvx.IoCProvider.Resolve);
-            });
-            //config.AssertConfigurationIsValid();
-            var mapper = config.CreateMapper();
-            Mvx.IoCProvider.RegisterSingleton(mapper);
         }
     }
 }

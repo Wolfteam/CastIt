@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
@@ -154,11 +154,11 @@ namespace CastIt.ViewModels.Items
             _castItHub = castItHub;
         }
 
-        public static FileItemViewModel From(FileItemResponseDto file, IMapper mapper)
+        public static FileItemViewModel From(FileItemResponseDto file)
         {
             var vm = Mvx.IoCProvider.Resolve<FileItemViewModel>();
             vm.Loading = true;
-            mapper.Map(file, vm);
+            file.Adapt(vm);
             vm.Loading = false;
             return vm;
         }

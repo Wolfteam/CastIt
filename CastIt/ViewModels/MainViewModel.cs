@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using CastIt.Domain;
+﻿using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Extensions;
@@ -10,6 +9,7 @@ using CastIt.Shared.FilePaths;
 using CastIt.Shared.Telemetry;
 using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Commands;
 using MvvmCross.Navigation;
@@ -30,7 +30,6 @@ namespace CastIt.ViewModels
         private readonly IDesktopAppSettingsService _settingsService;
         private readonly IMvxNavigationService _navigationService;
         private readonly ITelemetryService _telemetryService;
-        private readonly IMapper _mapper;
         private readonly IFileService _fileService;
         private readonly ICastItHubClientService _castItHub;
 
@@ -301,7 +300,6 @@ namespace CastIt.ViewModels
             IDesktopAppSettingsService settingsService,
             IMvxNavigationService navigationService,
             ITelemetryService telemetryService,
-            IMapper mapper,
             IFileService fileService,
             ICastItHubClientService castItHub,
             IMvxResultViewModelManager resultViewModelManager)
@@ -310,7 +308,6 @@ namespace CastIt.ViewModels
             _settingsService = settingsService;
             _navigationService = navigationService;
             _telemetryService = telemetryService;
-            _mapper = mapper;
             _fileService = fileService;
             _castItHub = castItHub;
         }
@@ -784,7 +781,7 @@ namespace CastIt.ViewModels
         {
             if (!current.Any())
             {
-                var vms = updated.Select(o => _mapper.Map<FileItemOptionsViewModel>(o));
+                var vms = updated.Select(o => o.Adapt<FileItemOptionsViewModel>());
                 current.ReplaceWith(vms);
                 return;
             }
@@ -794,7 +791,7 @@ namespace CastIt.ViewModels
                 var existing = current.FirstOrDefault(o => o.Id == file.Id);
                 if (existing == null)
                 {
-                    current.Add(_mapper.Map<FileItemOptionsViewModel>(file));
+                    current.Add(file.Adapt<FileItemOptionsViewModel>());
                 }
                 else
                 {
