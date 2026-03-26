@@ -56,7 +56,7 @@ dev_dependencies:
   freezed: ^3.2.5
   icons_launcher: ^3.0.3
   intl_utils: ^2.8.14
-  json_serializable: ^6.13.0
+  json_serializable: ^6.13.1
   lint: ^2.8.0
 
 icons_launcher:
