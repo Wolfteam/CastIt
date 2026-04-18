@@ -1,5 +1,6 @@
 ﻿using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
+using Mapster;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
@@ -20,7 +21,7 @@ namespace CastIt.Server.Services
         public Task<List<GetAllPlayListResponseDto>> GetAllPlayLists()
         {
             RefreshPlayListImages();
-            var mapped = _mapper.Map<List<GetAllPlayListResponseDto>>(PlayLists.OrderBy(pl => pl.Position));
+            var mapped = PlayLists.OrderBy(pl => pl.Position).Adapt<List<GetAllPlayListResponseDto>>();
             return Task.FromResult(mapped);
         }
 
@@ -28,7 +29,7 @@ namespace CastIt.Server.Services
         {
             var playList = GetPlayListInternal(playListId);
             RefreshPlayListImage(playList);
-            var mapped = _mapper.Map<PlayListItemResponseDto>(playList);
+            var mapped = playList.Adapt<PlayListItemResponseDto>();
             return mapped;
         }
 
@@ -42,7 +43,7 @@ namespace CastIt.Server.Services
                 throw new PlayListNotFoundException($"A playlist with name = {name} does not exist");
             }
             RefreshPlayListImage(playList);
-            var mapped = _mapper.Map<PlayListItemResponseDto>(playList);
+            var mapped = playList.Adapt<PlayListItemResponseDto>();
             return mapped;
         }
 
@@ -52,13 +53,13 @@ namespace CastIt.Server.Services
                 ? PlayLists.Max(pl => pl.Position) + 1
                 : 1;
             var playList = await _appDataService.AddNewPlayList($"New PlayList {PlayLists.Count}", position);
-            var serverPlayList = _mapper.Map<ServerPlayList>(playList);
+            var serverPlayList = playList.Adapt<ServerPlayList>();
             serverPlayList.ImageUrl = _imageProviderService.GetPlayListImageUrl(serverPlayList, CurrentPlayedFile);
 
             PlayLists.Add(serverPlayList);
 
-            SendPlayListAdded(_mapper.Map<GetAllPlayListResponseDto>(serverPlayList));
-            return _mapper.Map<PlayListItemResponseDto>(serverPlayList);
+            SendPlayListAdded(serverPlayList.Adapt<GetAllPlayListResponseDto>());
+            return serverPlayList.Adapt<PlayListItemResponseDto>();
         }
 
         public async Task DeletePlayList(long playListId)
@@ -105,7 +106,7 @@ namespace CastIt.Server.Services
             playList.Name = newName;
 
             await _appDataService.UpdatePlayList(playListId, newName, playList.Position);
-            SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
+            SendPlayListChanged(playList.Adapt<GetAllPlayListResponseDto>());
         }
 
         public void UpdatePlayListPosition(long playListId, int newIndex)
@@ -127,7 +128,7 @@ namespace CastIt.Server.Services
                 var item = PlayLists[i];
                 item.Position = i;
             }
-            SendPlayListsChanged(_mapper.Map<List<GetAllPlayListResponseDto>>(PlayLists));
+            SendPlayListsChanged(PlayLists.Adapt<List<GetAllPlayListResponseDto>>());
         }
 
         public Task AddFolder(long playListId, bool includeSubFolders, string[] folders)
@@ -206,8 +207,8 @@ namespace CastIt.Server.Services
             var serverFileItem = ServerFileItem.From(_fileService, file);
             await UpdateFileItem(serverFileItem);
             playList.Files.Add(serverFileItem);
-            SendFileAdded(_mapper.Map<FileItemResponseDto>(serverFileItem));
-            SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
+            SendFileAdded(serverFileItem.Adapt<FileItemResponseDto>());
+            SendPlayListChanged(playList.Adapt<GetAllPlayListResponseDto>());
         }
 
         public async Task AddUrl(long playListId, string url, bool onlyVideo)
@@ -298,8 +299,8 @@ namespace CastIt.Server.Services
             var serverFileItem = ServerFileItem.From(_fileService, createdFile);
             await UpdateFileItem(serverFileItem);
             playList.Files.Add(serverFileItem);
-            SendFileAdded(_mapper.Map<FileItemResponseDto>(serverFileItem));
-            SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
+            SendFileAdded(serverFileItem.Adapt<FileItemResponseDto>());
+            SendPlayListChanged(playList.Adapt<GetAllPlayListResponseDto>());
         }
 
         public void SetPlayListOptions(long id, bool loop, bool shuffle)
@@ -311,7 +312,7 @@ namespace CastIt.Server.Services
             }
             playlist.Loop = loop;
             playlist.Shuffle = shuffle;
-            SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playlist));
+            SendPlayListChanged(playlist.Adapt<GetAllPlayListResponseDto>());
         }
 
         public void RefreshPlayListImages()
@@ -328,7 +329,7 @@ namespace CastIt.Server.Services
             bool changed = playList.ImageUrl != imageUrl;
             playList.ImageUrl = imageUrl;
             if (changed)
-                SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
+                SendPlayListChanged(playList.Adapt<GetAllPlayListResponseDto>());
         }
 
         public void ExchangeLastFilePosition(long playListId, long toFileId)

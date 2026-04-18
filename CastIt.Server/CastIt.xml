@@ -269,5 +269,10 @@
             <param name="modeType">The sorting mode</param>
             <returns>Returns the result of the operation</returns>
         </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
     </members>
 </doc>

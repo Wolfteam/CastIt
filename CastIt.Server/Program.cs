@@ -19,6 +19,7 @@ using CastIt.Shared;
 using CastIt.Shared.Extensions;
 using CastIt.Shared.Models;
 using CastIt.Shared.Server;
+using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -123,7 +124,8 @@ try
         .AddGoogleCast(useDummyPlayer)
         .AddGoogleCastYoutube()
         .AddGoogleCastLocalFiles();
-    services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
+    // Configure Mapster type mappings (global static, not DI-registered)
+    TypeAdapterConfig.GlobalSettings.RegisterMappings();
 
     services.AddSingleton<IBaseServerService>(provider => provider.GetRequiredService<IServerService>());
     services.AddSingleton<IMediaRequestGeneratorFactory>(provider =>

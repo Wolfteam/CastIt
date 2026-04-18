@@ -34,6 +34,7 @@ class PlayerViewModel {
     
     // Volume debouncing
     private let volumeSubject = PassthroughSubject<Double, Never>()
+    private var lastThumbnailUrl: String?
 
     // Derived state
     var isPlayingOrPaused: Bool { player?.isPlayingOrPaused ?? false }
@@ -126,6 +127,7 @@ class PlayerViewModel {
         thumbnailRanges = []
         isLoading = false
         backgroundColors = []
+        lastThumbnailUrl = nil
     }
 
     private func isPlayerStatusDifferent(current: PlayerStatusResponseDto?, new: PlayerStatusResponseDto) -> Bool {
@@ -257,9 +259,13 @@ class PlayerViewModel {
 
     private func updateBackgroundColors() {
         guard let thumbnailUrl = playedFile?.thumbnailUrl, let url = URL(string: thumbnailUrl) else {
+            self.lastThumbnailUrl = nil
             self.backgroundColors = []
             return
         }
+
+        guard thumbnailUrl != lastThumbnailUrl else { return }
+        lastThumbnailUrl = thumbnailUrl
 
         Task {
             do {

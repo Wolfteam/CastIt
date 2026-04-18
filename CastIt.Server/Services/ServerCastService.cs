@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using CastIt.Domain;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
@@ -42,7 +42,6 @@ namespace CastIt.Server.Services
         private readonly IPlayer _player;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly IAppDataService _appDataService;
-        private readonly IMapper _mapper;
         private readonly IImageProviderService _imageProviderService;
         private readonly IMediaRequestGeneratorFactory _mediaRequestGeneratorFactory;
         private readonly List<ThumbnailRange> _previewThumbnails = new List<ThumbnailRange>();
@@ -79,7 +78,6 @@ namespace CastIt.Server.Services
             IFileService fileService,
             IPlayer player,
             IAppDataService appDataService,
-            IMapper mapper,
             IImageProviderService imageProviderService,
             IMediaRequestGeneratorFactory mediaRequestGeneratorFactory)
         {
@@ -92,7 +90,6 @@ namespace CastIt.Server.Services
             _player = player;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _appDataService = appDataService;
-            _mapper = mapper;
             _imageProviderService = imageProviderService;
             _mediaRequestGeneratorFactory = mediaRequestGeneratorFactory;
         }
@@ -109,7 +106,7 @@ namespace CastIt.Server.Services
                 var mappedPlayLists = new List<ServerPlayList>();
                 foreach (var pl in playLists)
                 {
-                    var mapped = _mapper.Map<ServerPlayList>(pl);
+                    var mapped = pl.Adapt<ServerPlayList>();
                     mapped.Files = files
                         .Where(f => f.PlayListId == pl.Id)
                         .Select(f => ServerFileItem.From(_fileService, f))
@@ -899,7 +896,7 @@ namespace CastIt.Server.Services
         {
             if (CurrentPlayedFile == null)
                 return null;
-            var file = _mapper.Map<FileItemResponseDto>(CurrentPlayedFile);
+            var file = CurrentPlayedFile.Adapt<FileItemResponseDto>();
             file.ThumbnailUrl = CurrentRequest?.ThumbnailUrl;
             return file;
         }
@@ -908,7 +905,7 @@ namespace CastIt.Server.Services
         public ServerPlayerStatusResponseDto GetPlayerStatus()
         {
             var currentPlayedFile = GetCurrentPlayedFile();
-            var currentPlayList = CurrentPlayList != null ? _mapper.Map<GetAllPlayListResponseDto>(CurrentPlayList) : null;
+            var currentPlayList = CurrentPlayList?.Adapt<GetAllPlayListResponseDto>();
             if (currentPlayList != null && !string.IsNullOrWhiteSpace(currentPlayedFile?.ThumbnailUrl))
             {
                 currentPlayList.ImageUrl = currentPlayedFile.ThumbnailUrl;
@@ -916,7 +913,7 @@ namespace CastIt.Server.Services
 
             return new ServerPlayerStatusResponseDto
             {
-                Player = _mapper.Map<PlayerStatusResponseDto>(_player.State),
+                Player = _player.State.Adapt<PlayerStatusResponseDto>(),
                 PlayList = currentPlayList,
                 PlayedFile = currentPlayedFile,
                 ThumbnailRanges = _thumbnailRanges
@@ -964,7 +961,7 @@ namespace CastIt.Server.Services
             {
                 _logger.LogInformation($"{nameof(UpdateFileItem)}: FileId = {file.Id} will be updated...");
                 await _appDataService.UpdateFile(file.Id, file.Filename, file.SubTitle, file.TotalSeconds);
-                SendFileChanged(_mapper.Map<FileItemResponseDto>(file));
+                SendFileChanged(file.Adapt<FileItemResponseDto>());
             }
 
             _logger.LogTrace($"{nameof(UpdateFileItem)}: FileId = {file.Id} was successfully processed");

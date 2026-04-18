@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using CastIt.Domain;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
@@ -34,7 +34,6 @@ namespace CastIt.ViewModels.Items
         private readonly IDesktopAppSettingsService _appSettings;
         private readonly IFileService _fileService;
         private readonly ICastItHubClientService _castItHub;
-        private readonly IMapper _mapper;
 
         private string _name;
         private bool _showEditPopUp;
@@ -191,7 +190,6 @@ namespace CastIt.ViewModels.Items
             IDesktopAppSettingsService appSettings,
             IFileService fileService,
             ICastItHubClientService castItHub,
-            IMapper mapper,
             IMvxResultViewModelManager resultViewModelManager)
             : base(textProvider, messenger, logger, resultViewModelManager)
         {
@@ -201,15 +199,14 @@ namespace CastIt.ViewModels.Items
             _appSettings = appSettings;
             _fileService = fileService;
             _castItHub = castItHub;
-            _mapper = mapper;
         }
 
         #region Methods
-        public static PlayListItemViewModel From(GetAllPlayListResponseDto playList, IMapper mapper)
+        public static PlayListItemViewModel From(GetAllPlayListResponseDto playList)
         {
             var vm = Mvx.IoCProvider.Resolve<PlayListItemViewModel>();
             vm.Loading = true;
-            mapper.Map(playList, vm);
+            playList.Adapt(vm);
             vm.Loading = false;
             return vm;
         }
@@ -221,7 +218,7 @@ namespace CastIt.ViewModels.Items
                 IsBusy = true;
                 Loading = true;
                 var playList = await _castItHub.GetPlayList(Id).ConfigureAwait(false);
-                var mapped = playList.Files.ConvertAll(f => FileItemViewModel.From(f, _mapper));
+                var mapped = playList.Files.ConvertAll(f => FileItemViewModel.From(f));
                 ClosePlayList();
                 Items.ReplaceWith(mapped);
             }
