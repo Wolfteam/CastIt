@@ -37,7 +37,7 @@ dependencies:
   nil: ^1.1.1
   package_info_plus: ^10.0.0
   path: ^1.9.1
-  path_provider: ^2.1.5
+  path_provider: ^2.1.6
   pull_to_refresh: ^2.0.0
   responsive_builder: ^0.7.1
   shared_preferences: ^2.5.5
