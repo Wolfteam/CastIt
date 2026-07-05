@@ -62,6 +62,8 @@
   "deleteFileConfirm": "¿ Borrar el archivo {file} ?",
   "clear": "Limpiar",
   "invalidName": "Nombre inválido",
+  "invalidHost": "Host inválido",
+  "invalidPort": "Puerto inválido",
   "name": "Nombre",
   "welcome": "Bienvenido a {appName}",
   "welcomeSummary": "En la siguiente sección, se te pedirá la url del servidor de la aplicación de escritorio, por lo que por favor instalala y tenla a mano",
@@ -99,5 +101,16 @@
   "ffmpegExecutableNotFound": "El ejecutable de Ffmpeg no es válido o no pudo ser encontrado",
   "nothingToShow": "Nada para mostrar",
   "webVideoQuality": "Calidad de video web",
-  "lastPlayedDate": "Última reproducción: {date}"
+  "lastPlayedDate": "Última reproducción: {date}",
+  "devices": "Dispositivos",
+  "manageDevices": "Selecciona, agrega o edita los dispositivos",
+  "addDevice": "Agregar dispositivo",
+  "editDevice": "Editar dispositivo",
+  "deviceName": "Nombre",
+  "host": "Host",
+  "port": "Puerto",
+  "connect": "Conectar",
+  "disconnect": "Desconectar",
+  "refreshDevices": "Actualizar dispositivos",
+  "save": "Guardar"
 }

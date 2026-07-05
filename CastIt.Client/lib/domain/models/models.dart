@@ -16,4 +16,5 @@ export 'dtos/responses/server_player_status_response_dto.dart';
 export 'dtos/responses/volume_level_changed_response_dto.dart';
 export 'language_model.dart';
 export 'played_file.dart';
+export 'receiver.dart';
 export 'server_app_settings.dart';

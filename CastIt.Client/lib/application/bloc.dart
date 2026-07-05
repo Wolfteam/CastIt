@@ -1,3 +1,4 @@
+export 'devices/devices_bloc.dart';
 export 'intro/intro_bloc.dart';
 export 'main/main_bloc.dart';
 export 'play/play_bloc.dart';

@@ -50,6 +50,12 @@ abstract class CastItHubClientService {
 
   StreamController<(int, int)> get fileDeleted;
 
+  StreamController<List<Receiver>> get castDevicesChanged;
+
+  StreamController<Receiver> get castDeviceSet;
+
+  StreamController<void> get castDeviceDisconnected;
+
   bool get isConnected;
 
   Future<void> connectToHub();
@@ -89,4 +95,14 @@ abstract class CastItHubClientService {
   Future<void> setVolume(double volumeLvl, {bool isMuted = false});
 
   Future<void> updatePlayList(int id, String name);
+
+  Future<void> connectToCastDevice(String? id);
+
+  Future<void> refreshCastDevices();
+
+  Future<void> addCustomEndpoint(String name, String host, int port);
+
+  Future<void> updateCustomEndpoint(int id, String name, String host, int port);
+
+  Future<void> deleteCustomEndpoint(int id);
 }

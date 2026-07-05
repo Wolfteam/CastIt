@@ -60,6 +60,12 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (ctx) {
+            final castItHub = getIt<CastItHubClientService>();
+            return DevicesBloc(castItHub);
+          },
+        ),
+        BlocProvider(
+          create: (ctx) {
             final settings = getIt<SettingsService>();
             final castItHub = getIt<CastItHubClientService>();
             return SettingsBloc(settings, ctx.read<MainBloc>(), castItHub);
