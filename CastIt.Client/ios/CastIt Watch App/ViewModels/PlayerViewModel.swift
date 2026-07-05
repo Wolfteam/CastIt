@@ -109,6 +109,27 @@ class PlayerViewModel {
         signalRService.stopPlayBack()
     }
 
+    func connectToDevice(_ device: Receiver) {
+        // Empty string disconnects on the server
+        signalRService.connectToCastDevice(id: device.isConnected ? "" : device.id)
+    }
+
+    func refreshDevices() {
+        signalRService.refreshCastDevices()
+    }
+
+    func addCustomEndpoint(name: String, host: String, port: Int) {
+        signalRService.addCustomEndpoint(name: name, host: host, port: port)
+    }
+
+    func updateCustomEndpoint(id: Int, name: String, host: String, port: Int) {
+        signalRService.updateCustomEndpoint(id: id, name: name, host: host, port: port)
+    }
+
+    func deleteCustomEndpoint(id: Int) {
+        signalRService.deleteCustomEndpoint(id: id)
+    }
+
     private func resetState() {
         resetPlaybackState()
         settings = nil
