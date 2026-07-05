@@ -2,6 +2,8 @@ part of 'devices_bloc.dart';
 
 @freezed
 sealed class DevicesEvent with _$DevicesEvent {
+  const factory DevicesEvent.fetch() = DevicesEventFetch;
+
   const factory DevicesEvent.loaded({required List<Receiver> devices}) = DevicesEventLoaded;
 
   const factory DevicesEvent.deviceSet({required Receiver device}) = DevicesEventDeviceSet;

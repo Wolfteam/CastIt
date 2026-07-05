@@ -483,6 +483,13 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
   }
 
   @override
+  Future<void> loadDevices() async {
+    //Asks the server to re-send the current device list to this client (no network scan).
+    //Needed because the initial list is pushed on connect, before the devices bloc subscribes.
+    await _invokeHubMethod('SendCastDevicesChanged', [false]);
+  }
+
+  @override
   Future<void> connectToCastDevice(String? id) async {
     await _invokeHubMethod('ConnectToCastDevice', [id]);
   }

@@ -96,6 +96,8 @@ abstract class CastItHubClientService {
 
   Future<void> updatePlayList(int id, String name);
 
+  Future<void> loadDevices();
+
   Future<void> connectToCastDevice(String? id);
 
   Future<void> refreshCastDevices();
