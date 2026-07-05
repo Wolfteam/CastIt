@@ -143,9 +143,9 @@ rows stay Connect-only. Add/Edit form = **Name**, **Host**, **Port** (default
 
 ## Testing
 
-- Backend unit tests for `AppDataService` custom-endpoint CRUD and the
-  `AvailableDevices` merge/dedup logic (the only piece with real logic).
-- Frontend verification is manual (per project test-file preference).
+- No unit tests: the project has little test coverage, so verification is manual
+  by running each app (add → appears via `CastDevicesChanged` → connect → edit →
+  delete → survives server restart).
 
 ## Notes / decisions
 
