@@ -70,9 +70,10 @@ namespace CastIt.GoogleCast
         private SemaphoreSlim ListenMediaChangesSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
         #endregion
 
-        public void ListenForDevices()
+        public Task CheckForDevices()
         {
             DeviceAdded?.Invoke(this, new DeviceAddedArgs(_devices.First()));
+            return Task.CompletedTask;
         }
 
         public Task ConnectAsync()

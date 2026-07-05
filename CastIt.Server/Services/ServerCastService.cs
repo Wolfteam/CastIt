@@ -129,7 +129,7 @@ namespace CastIt.Server.Services
             _player.VolumeLevelChanged += VolumeLevelChanged;
             _player.IsMutedChanged += IsMutedChanged;
             _player.LoadFailed += LoadFailed;
-            _player.ListenForDevices();
+            await _player.CheckForDevices();
 
             await _imageProviderService.Init();
 
