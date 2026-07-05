@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Zeroconf;
 
@@ -16,7 +17,7 @@ namespace CastIt.GoogleCast
         {
             string key = host.Services.Keys.FirstOrDefault(k => k == Protocol || k.EndsWith(Protocol));
             var service = host.Services[key];
-            var properties = service.Properties.First();
+            var properties = service.Properties[0];
             return new Receiver()
             {
                 Id = properties.ContainsKey("id") ? properties["id"] : string.Empty,
@@ -29,9 +30,20 @@ namespace CastIt.GoogleCast
 
         public static async Task<List<IReceiver>> FindReceiversAsync(TimeSpan scanTime)
         {
-            var devices = await ZeroconfResolver
-                .ResolveAsync(Protocol, scanTime, 1, 100)
-                .ConfigureAwait(false);
+            IReadOnlyList<IZeroconfHost> devices = [];
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(scanTime.Seconds * 2));
+            try
+            {
+
+                devices = await ZeroconfResolver
+                    .ResolveAsync(Protocol, scanTime, 1, 100, cancellationToken: cts.Token)
+                    .ConfigureAwait(false);
+            }
+            catch
+            {
+                //Nothing to do here
+            }
+
             return devices.Select(CreateReceiver).ToList();
         }
 
