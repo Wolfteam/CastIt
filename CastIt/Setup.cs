@@ -1,7 +1,6 @@
 ﻿using CastIt.Common.Miscellaneous;
 using CastIt.Domain.Utils;
 using CastIt.Shared.Extensions;
-using CastIt.Shared.Models;
 using Microsoft.Extensions.Logging;
 using MvvmCross.Platforms.Wpf.Core;
 using MvvmCross.Platforms.Wpf.Presenters;
@@ -23,9 +22,8 @@ namespace CastIt
 
         protected override ILoggerFactory CreateLogFactory()
         {
-            var logs = ToLog.From<Setup>();
             string basePath = AppFileUtils.GetDesktopLogsPath();
-            var config = LoggingExtensions.CreateLoggerConfiguration(basePath, logs: [.. logs]);
+            var config = LoggingExtensions.CreateLoggerConfiguration("CastIt", logsPath: basePath);
             Log.Logger = config.CreateLogger();
             return new SerilogLoggerFactory();
         }
