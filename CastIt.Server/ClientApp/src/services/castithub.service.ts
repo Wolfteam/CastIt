@@ -132,6 +132,18 @@ export class CastItHubService {
         await this.send('RefreshCastDevices', null);
     };
 
+    addCustomEndpoint = async (name: string, host: string, port: number): Promise<void> => {
+        await this.send('AddCustomEndpoint', name, host, port);
+    };
+
+    updateCustomEndpoint = async (id: number, name: string, host: string, port: number): Promise<void> => {
+        await this.send('UpdateCustomEndpoint', id, name, host, port);
+    };
+
+    deleteCustomEndpoint = async (id: number): Promise<void> => {
+        await this.send('DeleteCustomEndpoint', id);
+    };
+
     setFileSubtitlesFromPath = async (path: string): Promise<void> => {
         await this.send('SetFileSubtitlesFromPath', path);
     };

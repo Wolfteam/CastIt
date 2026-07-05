@@ -82,6 +82,11 @@ interface ITranslations {
     normal: string;
     fieldIsNotValid: string;
     devices: string;
+    addDevice: string;
+    editDevice: string;
+    deviceName: string;
+    host: string;
+    port: string;
     general: string;
     includeSubFolders: string;
     onlyVideo: string;
@@ -161,6 +166,11 @@ const enTrans: ITranslations = {
     normal: 'Normal',
     fieldIsNotValid: 'Field is not valid',
     devices: 'Devices',
+    addDevice: 'Add device',
+    editDevice: 'Edit device',
+    deviceName: 'Name',
+    host: 'Host',
+    port: 'Port',
     general: 'General',
     includeSubFolders: 'Include subfolders',
     onlyVideo: 'Only video',
@@ -258,6 +268,11 @@ const esTrans: ITranslations = {
     normal: 'Normal',
     fieldIsNotValid: 'El campo no es válido',
     devices: 'Dispositivos',
+    addDevice: 'Agregar dispositivo',
+    editDevice: 'Editar dispositivo',
+    deviceName: 'Nombre',
+    host: 'Host',
+    port: 'Puerto',
     general: 'General',
     includeSubFolders: 'Incluir subcarpetas',
     onlyVideo: 'Solo video',

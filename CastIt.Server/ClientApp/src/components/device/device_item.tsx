@@ -1,6 +1,6 @@
 import { IconButton, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { Tv, CastConnected, Cast } from '@mui/icons-material';
+import { Tv, CastConnected, Cast, Edit, Delete } from '@mui/icons-material';
 import { useCastItHub } from '../../context/castit_hub.context';
 
 interface Props {
@@ -8,6 +8,9 @@ interface Props {
     name: string;
     ipAddress: string;
     isConnected?: boolean;
+    isCustom?: boolean;
+    onEdit?: () => void;
+    onDelete?: () => void;
 }
 
 function DeviceItem(props: Props) {
@@ -24,16 +27,28 @@ function DeviceItem(props: Props) {
             <Grid size={1}>
                 <Tv />
             </Grid>
-            <Grid size={10}>
+            <Grid size={props.isCustom ? 8 : 10}>
                 <Grid container direction="column">
                     <Typography>{props.name}</Typography>
                     <Typography variant="subtitle1">{props.ipAddress}</Typography>
                 </Grid>
             </Grid>
-            <Grid size={1}>
-                <IconButton onClick={handleToggleConnect} size="large">
-                    {connectedIcon}
-                </IconButton>
+            <Grid size={props.isCustom ? 3 : 1}>
+                <Grid container justifyContent="flex-end" alignItems="center" wrap="nowrap">
+                    <IconButton onClick={handleToggleConnect} size="large">
+                        {connectedIcon}
+                    </IconButton>
+                    {props.isCustom && (
+                        <>
+                            <IconButton onClick={props.onEdit} size="large">
+                                <Edit />
+                            </IconButton>
+                            <IconButton onClick={props.onDelete} size="large">
+                                <Delete />
+                            </IconButton>
+                        </>
+                    )}
+                </Grid>
             </Grid>
         </Grid>
     );
