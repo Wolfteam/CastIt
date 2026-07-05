@@ -489,7 +489,9 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
 
   @override
   Future<void> refreshCastDevices() async {
-    await _invokeHubMethod('RefreshCastDevices', []);
+    //The server expects a nullable TimeSpan argument; passing null uses the default scan time.
+    //SignalR requires the argument to be present, otherwise the invoke fails and disconnects the hub.
+    await _invokeHubMethod('RefreshCastDevices', [null]);
   }
 
   @override
