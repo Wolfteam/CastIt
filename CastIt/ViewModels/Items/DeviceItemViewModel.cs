@@ -12,6 +12,7 @@ namespace CastIt.ViewModels.Items
         public string Host { get; set; }
         public int Port { get; set; }
         public string FriendlyName { get; set; }
+        public bool IsCustom { get; set; }
         public string IpAddress
             => $"{Host}:{Port}";
 

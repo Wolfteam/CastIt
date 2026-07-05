@@ -1,10 +1,12 @@
 ﻿using CastIt.GoogleCast.Shared.Device;
 using CastIt.Interfaces;
 using CastIt.Models.Messages;
+using CastIt.ViewModels.Dialogs;
 using CastIt.ViewModels.Items;
 using Microsoft.Extensions.Logging;
 using MvvmCross;
 using MvvmCross.Commands;
+using MvvmCross.Navigation;
 using MvvmCross.Plugin.Messenger;
 using MvvmCross.ViewModels;
 using System;
@@ -17,6 +19,7 @@ namespace CastIt.ViewModels
     public class DevicesViewModel : BasePopupViewModel
     {
         private readonly ICastItHubClientService _castItHub;
+        private readonly IMvxNavigationService _navigationService;
 
         private bool _isConnecting;
         private bool _isRefreshing;
@@ -39,15 +42,20 @@ namespace CastIt.ViewModels
         public IMvxAsyncCommand<DeviceItemViewModel> ConnectCommand { get; private set; }
         public IMvxAsyncCommand<DeviceItemViewModel> DisconnectCommand { get; private set; }
         public IMvxAsyncCommand RefreshDevicesCommand { get; private set; }
+        public IMvxAsyncCommand AddEndpointCommand { get; private set; }
+        public IMvxAsyncCommand<DeviceItemViewModel> EditEndpointCommand { get; private set; }
+        public IMvxAsyncCommand<DeviceItemViewModel> DeleteEndpointCommand { get; private set; }
 
         public DevicesViewModel(
             ITextProvider textProvider,
             IMvxMessenger messenger,
             ILogger<DevicesViewModel> logger,
-            ICastItHubClientService castItHub)
+            ICastItHubClientService castItHub,
+            IMvxNavigationService navigationService)
             : base(textProvider, messenger, logger)
         {
             _castItHub = castItHub;
+            _navigationService = navigationService;
             _castItHub.OnCastDeviceSet += OnCastDeviceSet;
             _castItHub.OnCastDevicesChanged += OnCastDevicesChanged;
             _castItHub.OnCastDeviceDisconnected += DeSelectAllDevices;
@@ -63,6 +71,12 @@ namespace CastIt.ViewModels
                 (_) => ToggleConnectedDevice(null));
 
             RefreshDevicesCommand = new MvxAsyncCommand(RefreshDevices);
+
+            AddEndpointCommand = new MvxAsyncCommand(() => ShowAddEditEndpointDialog(null));
+
+            EditEndpointCommand = new MvxAsyncCommand<DeviceItemViewModel>(ShowAddEditEndpointDialog);
+
+            DeleteEndpointCommand = new MvxAsyncCommand<DeviceItemViewModel>(DeleteEndpoint);
         }
 
         public void CleanUp()
@@ -120,6 +134,7 @@ namespace CastIt.ViewModels
                 existing.Host = device.Host;
                 existing.Port = device.Port;
                 existing.IsConnected = device.IsConnected;
+                existing.IsCustom = device.IsCustom;
                 return;
             }
 
@@ -129,6 +144,7 @@ namespace CastIt.ViewModels
             vm.Host = device.Host;
             vm.Port = device.Port;
             vm.IsConnected = device.IsConnected;
+            vm.IsCustom = device.IsCustom;
             Devices.Add(vm);
         }
 
@@ -159,6 +175,39 @@ namespace CastIt.ViewModels
             await _castItHub.RefreshCastDevices(TimeSpan.FromSeconds(5));
             IsRefreshing = false;
         }
+
+        private async Task ShowAddEditEndpointDialog(DeviceItemViewModel device)
+        {
+            var parameter = new AddEditEndpointParameter();
+            if (device != null && device.IsCustom)
+            {
+                parameter.Id = GetNumericEndpointId(device.Id);
+                parameter.Name = device.FriendlyName;
+                parameter.Host = device.Host;
+                parameter.Port = device.Port;
+            }
+
+            await _navigationService.Navigate<AddEditEndpointDialogViewModel, AddEditEndpointParameter>(parameter);
+        }
+
+        private async Task DeleteEndpoint(DeviceItemViewModel device)
+        {
+            if (device == null || !device.IsCustom)
+                return;
+
+            try
+            {
+                long id = GetNumericEndpointId(device.Id);
+                await _castItHub.DeleteCustomEndpoint(id);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(DeleteEndpoint)}: Couldn't delete endpoint = {device.FriendlyName}");
+            }
+        }
+
+        private static long GetNumericEndpointId(string id)
+            => long.TryParse(id, out long result) ? result : -1;
 
         private void CastItHubOnOnClientDisconnected()
         {
