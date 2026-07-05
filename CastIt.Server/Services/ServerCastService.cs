@@ -761,7 +761,7 @@ namespace CastIt.Server.Services
 
         private static IReceiver ToReceiver(CustomEndpoint endpoint) => new Receiver
         {
-            Id = $"endpoint:{endpoint.Id}",
+            Id = endpoint.Id.ToString(),
             FriendlyName = endpoint.Name,
             Type = "Custom",
             Host = endpoint.Host,

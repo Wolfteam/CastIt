@@ -89,8 +89,7 @@ namespace CastIt.Cli.Commands.Player
 
             foreach (var endpoint in endpoints)
             {
-                var id = endpoint.Id?.Replace("endpoint:", string.Empty);
-                table.AddRow(id, endpoint.FriendlyName, $"{endpoint.Host}:{endpoint.Port}");
+                table.AddRow(endpoint.Id, endpoint.FriendlyName, $"{endpoint.Host}:{endpoint.Port}");
             }
 
             AppConsole.WriteLine(table.ToString());
