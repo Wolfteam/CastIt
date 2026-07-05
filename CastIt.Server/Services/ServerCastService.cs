@@ -816,12 +816,26 @@ namespace CastIt.Server.Services
 
         public async Task AddCustomEndpoint(string name, string host, int port)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidRequestException("The endpoint name is required");
+            if (string.IsNullOrWhiteSpace(host))
+                throw new InvalidRequestException("The endpoint host is required");
+            if (port is < 1 or > 65535)
+                throw new InvalidRequestException($"The endpoint port = {port} is invalid");
+
             await _appDataService.AddCustomEndpoint(name, host, port);
             await ReloadCustomEndpoints();
         }
 
         public async Task UpdateCustomEndpoint(long id, string name, string host, int port)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidRequestException("The endpoint name is required");
+            if (string.IsNullOrWhiteSpace(host))
+                throw new InvalidRequestException("The endpoint host is required");
+            if (port is < 1 or > 65535)
+                throw new InvalidRequestException($"The endpoint port = {port} is invalid");
+
             await _appDataService.UpdateCustomEndpoint(id, name, host, port);
             await ReloadCustomEndpoints();
         }

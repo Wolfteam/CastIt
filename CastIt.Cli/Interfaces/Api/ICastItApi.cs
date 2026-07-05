@@ -18,6 +18,18 @@ namespace CastIt.Cli.Interfaces.Api
         [Get("/Player/Devices")]
         Task<AppListResponseDto<Receiver>> GetAllDevices();
 
+        [Get("/Player/Devices/Custom")]
+        Task<AppListResponseDto<Receiver>> GetCustomEndpoints();
+
+        [Post("/Player/Devices/Custom")]
+        Task<EmptyResponseDto> AddCustomEndpoint([Body] SaveCustomEndpointRequestDto dto);
+
+        [Put("/Player/Devices/Custom/{id}")]
+        Task<EmptyResponseDto> UpdateCustomEndpoint(long id, [Body] SaveCustomEndpointRequestDto dto);
+
+        [Delete("/Player/Devices/Custom/{id}")]
+        Task<EmptyResponseDto> DeleteCustomEndpoint(long id);
+
         [Post("/Player/Devices/Refresh/{seconds}")]
         Task<EmptyResponseDto> RefreshDevices(double seconds);
 

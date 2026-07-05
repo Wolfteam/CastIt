@@ -16,6 +16,34 @@
             </summary>
             <returns>A list of devices</returns>
         </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.GetCustomEndpoints">
+            <summary>
+            Returns a list of all the custom endpoint devices
+            </summary>
+            <returns>A list of custom endpoint devices</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.AddCustomEndpoint(CastIt.Domain.Dtos.Requests.SaveCustomEndpointRequestDto)">
+            <summary>
+            Adds a new custom endpoint device
+            </summary>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.UpdateCustomEndpoint(System.Int64,CastIt.Domain.Dtos.Requests.SaveCustomEndpointRequestDto)">
+            <summary>
+            Updates an existing custom endpoint device
+            </summary>
+            <param name="id">The custom endpoint id</param>
+            <param name="dto">The request</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
+        <member name="M:CastIt.Server.Controllers.PlayerController.DeleteCustomEndpoint(System.Int64)">
+            <summary>
+            Deletes an existing custom endpoint device
+            </summary>
+            <param name="id">The custom endpoint id</param>
+            <returns>Returns the result of the operation</returns>
+        </member>
         <member name="M:CastIt.Server.Controllers.PlayerController.RefreshDevices(System.Double)">
             <summary>
             Refreshes the devices for the provided amount of <paramref name="seconds"/>

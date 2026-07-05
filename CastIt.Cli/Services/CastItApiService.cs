@@ -69,6 +69,96 @@ namespace CastIt.Cli.Services
             return response;
         }
 
+        public async Task<AppListResponseDto<Receiver>> GetCustomEndpoints()
+        {
+            var response = new AppListResponseDto<Receiver>();
+            try
+            {
+                response = await Api.GetCustomEndpoints();
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(GetCustomEndpoints)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(GetCustomEndpoints)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> AddCustomEndpoint(string name, string host, int port)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await Api.AddCustomEndpoint(new SaveCustomEndpointRequestDto
+                {
+                    Name = name,
+                    Host = host,
+                    Port = port
+                });
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(AddCustomEndpoint)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(AddCustomEndpoint)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> UpdateCustomEndpoint(long id, string name, string host, int port)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await Api.UpdateCustomEndpoint(id, new SaveCustomEndpointRequestDto
+                {
+                    Name = name,
+                    Host = host,
+                    Port = port
+                });
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(UpdateCustomEndpoint)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(UpdateCustomEndpoint)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
+        public async Task<EmptyResponseDto> DeleteCustomEndpoint(long id)
+        {
+            var response = new EmptyResponseDto();
+            try
+            {
+                response = await Api.DeleteCustomEndpoint(id);
+            }
+            catch (ApiException apiEx)
+            {
+                Logger.LogError(apiEx, $"{nameof(DeleteCustomEndpoint)}: Api exception occurred");
+                await HandleApiException(apiEx, response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"{nameof(DeleteCustomEndpoint)}: Unknown error occurred");
+                HandleUnknownException(response);
+            }
+            return response;
+        }
+
         public async Task<EmptyResponseDto> RefreshDevices(double seconds)
         {
             var response = new EmptyResponseDto();
