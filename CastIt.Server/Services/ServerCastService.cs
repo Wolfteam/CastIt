@@ -2,6 +2,7 @@
 using CastIt.Domain;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
@@ -130,6 +131,9 @@ namespace CastIt.Server.Services
             _player.IsMutedChanged += IsMutedChanged;
             _player.LoadFailed += LoadFailed;
             await _player.CheckForDevices();
+
+            var savedEndpoints = await _appDataService.GetAllCustomEndpoints();
+            MergeCustomEndpoints(savedEndpoints);
 
             await _imageProviderService.Init();
 
@@ -745,12 +749,87 @@ namespace CastIt.Server.Services
             var connectedTo = AvailableDevices.Find(t => t.IsConnected);
             AvailableDevices.Clear();
             AvailableDevices.AddRange(devices.OrderBy(a => a.FriendlyName));
+            var savedEndpoints = await _appDataService.GetAllCustomEndpoints();
+            MergeCustomEndpoints(savedEndpoints);
             if (connectedTo != null && AvailableDevices.Any(d => d.Id == connectedTo.Id))
             {
                 var connectedToDevice = AvailableDevices.First(d => d.Id == connectedTo.Id);
                 connectedToDevice.IsConnected = true;
             }
             SendDevicesChanged();
+        }
+
+        private static IReceiver ToReceiver(CustomEndpoint endpoint) => new Receiver
+        {
+            Id = $"endpoint:{endpoint.Id}",
+            FriendlyName = endpoint.Name,
+            Type = "Custom",
+            Host = endpoint.Host,
+            Port = endpoint.Port,
+            IsCustom = true,
+        };
+
+        // Re-materializes all saved custom endpoints into AvailableDevices.
+        // Removes any previously-materialized custom entries first, then adds the current
+        // saved set. If a discovered device shares a custom endpoint's host:port, the custom
+        // entry wins (keeps edit/delete) and inherits the discovered connection state.
+        // Preserves the IsConnected flag of a custom endpoint that is currently connected,
+        // so re-materializing (on refresh or CRUD) does not drop an active connection.
+        // Does NOT push CastDevicesChanged; callers decide when to notify.
+        private void MergeCustomEndpoints(List<CustomEndpoint> saved)
+        {
+            var connectedCustomIds = AvailableDevices
+                .Where(d => d.IsCustom && d.IsConnected)
+                .Select(d => d.Id)
+                .ToHashSet();
+            AvailableDevices.RemoveAll(d => d.IsCustom);
+            foreach (var endpoint in saved)
+            {
+                var receiver = ToReceiver(endpoint);
+                var discovered = AvailableDevices.Find(
+                    d => !d.IsCustom && d.Host == receiver.Host && d.Port == receiver.Port);
+                if (discovered != null)
+                {
+                    receiver.IsConnected = discovered.IsConnected;
+                    AvailableDevices.Remove(discovered);
+                }
+                if (connectedCustomIds.Contains(receiver.Id))
+                {
+                    receiver.IsConnected = true;
+                }
+                AvailableDevices.Add(receiver);
+            }
+        }
+
+        private async Task ReloadCustomEndpoints()
+        {
+            var saved = await _appDataService.GetAllCustomEndpoints();
+            MergeCustomEndpoints(saved);
+            SendDevicesChanged();
+        }
+
+        public async Task<List<IReceiver>> GetCustomEndpoints()
+        {
+            var saved = await _appDataService.GetAllCustomEndpoints();
+            return saved.Select(ToReceiver).ToList();
+        }
+
+        public async Task AddCustomEndpoint(string name, string host, int port)
+        {
+            await _appDataService.AddCustomEndpoint(name, host, port);
+            await ReloadCustomEndpoints();
+        }
+
+        public async Task UpdateCustomEndpoint(long id, string name, string host, int port)
+        {
+            await _appDataService.UpdateCustomEndpoint(id, name, host, port);
+            await ReloadCustomEndpoints();
+        }
+
+        public async Task DeleteCustomEndpoint(long id)
+        {
+            await _appDataService.DeleteCustomEndpoint(id);
+            await ReloadCustomEndpoints();
         }
 
         public async Task GoTo(bool nextTrack, bool isAnAutomaticCall = false)

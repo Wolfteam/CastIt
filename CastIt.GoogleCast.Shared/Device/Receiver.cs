@@ -12,6 +12,7 @@
 
         public int Port { get; set; }
         public bool IsConnected { get; set; }
+        public bool IsCustom { get; set; }
 
         public static Receiver Default(string host, int port)
         {

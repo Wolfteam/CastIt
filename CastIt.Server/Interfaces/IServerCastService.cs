@@ -1,6 +1,7 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
+using CastIt.GoogleCast.Shared.Device;
 using CastIt.Shared.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -63,5 +64,10 @@ namespace CastIt.Server.Interfaces
         Task<byte[]> GetClosestPreviewThumbnail(long tentativeSecond);
 
         void ExchangeLastFilePosition(ServerPlayList playList, long toFileId);
+
+        Task<List<IReceiver>> GetCustomEndpoints();
+        Task AddCustomEndpoint(string name, string host, int port);
+        Task UpdateCustomEndpoint(long id, string name, string host, int port);
+        Task DeleteCustomEndpoint(long id);
     }
 }
