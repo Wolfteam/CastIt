@@ -103,9 +103,13 @@ namespace CastIt.GoogleCast.Zeroconf
 
                         if (socket.IsBound) continue;
 
+                        // Select the multicast interface by its local IPv4 address, not by index.
+                        // On macOS/Linux/BSD IP_MULTICAST_IF / IP_ADD_MEMBERSHIP use the interface's
+                        // in_addr, not an index, so the index form silently lands on the default
+                        // interface and the device on a secondary NIC is never received.
                         socket.SetSocketOption(SocketOptionLevel.IP,
                                                      SocketOptionName.MulticastInterface,
-                                                     IPAddress.HostToNetworkOrder(ifaceIndex));
+                                                     ipv4Address.GetAddressBytes());
 
 
 
@@ -126,7 +130,7 @@ namespace CastIt.GoogleCast.Zeroconf
                         Debug.WriteLine($"Bound to {localEp}");
 
                         var multicastAddress = IPAddress.Parse("224.0.0.251");
-                        var multOpt = new MulticastOption(multicastAddress, ifaceIndex);
+                        var multOpt = new MulticastOption(multicastAddress, ipv4Address);
                         socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, multOpt);
 
 
@@ -230,9 +234,11 @@ namespace CastIt.GoogleCast.Zeroconf
                 using (var client = new UdpClient())
                 {
                     var socket = client.Client;
+                    // Select interface by its local IPv4 address, not the index (macOS/Linux/BSD-correct).
+                    // See comment in NetworkRequestAsync() for details.
                     socket.SetSocketOption(SocketOptionLevel.IP,
                                            SocketOptionName.MulticastInterface,
-                                           IPAddress.HostToNetworkOrder(ifaceIndex.Value));
+                                           ipv4Address.GetAddressBytes());
 
                     socket.SetSocketOption(SocketOptionLevel.Socket,
                                            SocketOptionName.ReuseAddress,
@@ -244,7 +250,7 @@ namespace CastIt.GoogleCast.Zeroconf
                     socket.Bind(localEp);
 
                     var multicastAddress = IPAddress.Parse("224.0.0.251");
-                    var multOpt = new MulticastOption(multicastAddress, ifaceIndex.Value);
+                    var multOpt = new MulticastOption(multicastAddress, ipv4Address);
                     socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, multOpt);
 
 
