@@ -40,5 +40,13 @@ namespace CastIt.Server.Interfaces
         Task<string> GenerateTinyCode(string base64);
 
         Task DeleteOldTinyCodes();
+
+        Task<List<CustomEndpoint>> GetAllCustomEndpoints();
+
+        Task<CustomEndpoint> AddCustomEndpoint(string name, string host, int port);
+
+        Task UpdateCustomEndpoint(long id, string name, string host, int port);
+
+        Task DeleteCustomEndpoint(long id);
     }
 }

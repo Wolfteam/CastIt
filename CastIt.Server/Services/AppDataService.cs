@@ -30,6 +30,7 @@ namespace CastIt.Server.Services
             _db.CodeFirst.ConfigEntity<PlayList>(pl => pl.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
             _db.CodeFirst.ConfigEntity<FileItem>(f => f.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
             _db.CodeFirst.ConfigEntity<TinyUrl>(f => f.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
+            _db.CodeFirst.ConfigEntity<CustomEndpoint>(f => f.Property(x => x.Id).IsPrimary(true).IsIdentity(true));
             ApplyMigrations();
         }
 
@@ -243,6 +244,39 @@ namespace CastIt.Server.Services
             return _db.Delete<TinyUrl>()
                 .Where(t => t.CreatedAt < validUntil)
                 .ExecuteAffrowsAsync();
+        }
+
+        public Task<List<CustomEndpoint>> GetAllCustomEndpoints()
+        {
+            return _db.Select<CustomEndpoint>().ToListAsync();
+        }
+
+        public async Task<CustomEndpoint> AddCustomEndpoint(string name, string host, int port)
+        {
+            var endpoint = new CustomEndpoint
+            {
+                CreatedAt = DateTime.Now,
+                Name = name,
+                Host = host,
+                Port = port,
+            };
+            endpoint.Id = await _db.Insert(endpoint).ExecuteIdentityAsync();
+            return endpoint;
+        }
+
+        public Task UpdateCustomEndpoint(long id, string name, string host, int port)
+        {
+            return _db.Update<CustomEndpoint>(id)
+                .Set(e => e.Name, name)
+                .Set(e => e.Host, host)
+                .Set(e => e.Port, port)
+                .Set(e => e.UpdatedAt, DateTime.Now)
+                .ExecuteAffrowsAsync();
+        }
+
+        public Task DeleteCustomEndpoint(long id)
+        {
+            return _db.Delete<CustomEndpoint>().Where(e => e.Id == id).ExecuteAffrowsAsync();
         }
 
         private void ApplyMigrations()
