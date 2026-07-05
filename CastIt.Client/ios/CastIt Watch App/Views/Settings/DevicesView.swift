@@ -1,9 +1,21 @@
 import SwiftUI
 
 struct DevicesView: View {
+    //A single item-driven sheet: stacking two `.sheet` modifiers on one view is unreliable.
+    private enum EndpointForm: Identifiable {
+        case add
+        case edit(Receiver)
+
+        var id: String {
+            switch self {
+            case .add: return "add"
+            case .edit(let device): return device.id
+            }
+        }
+    }
+
     @Bindable private var viewModel: PlayerViewModel
-    @State private var endpointToEdit: Receiver?
-    @State private var showAddForm = false
+    @State private var activeForm: EndpointForm?
 
     init(container: DependencyContainer) {
         _viewModel = Bindable(container.playerViewModel)
@@ -49,7 +61,7 @@ struct DevicesView: View {
                             .tint(.red)
 
                             Button {
-                                endpointToEdit = device
+                                activeForm = .edit(device)
                             } label: {
                                 Label("Edit", systemImage: "pencil")
                             }
@@ -63,7 +75,7 @@ struct DevicesView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    showAddForm = true
+                    activeForm = .add
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -76,11 +88,13 @@ struct DevicesView: View {
                 }
             }
         }
-        .sheet(isPresented: $showAddForm) {
-            AddEditEndpointView(viewModel: viewModel, endpoint: nil)
-        }
-        .sheet(item: $endpointToEdit) { endpoint in
-            AddEditEndpointView(viewModel: viewModel, endpoint: endpoint)
+        .sheet(item: $activeForm) { form in
+            switch form {
+            case .add:
+                AddEditEndpointView(viewModel: viewModel, endpoint: nil)
+            case .edit(let device):
+                AddEditEndpointView(viewModel: viewModel, endpoint: device)
+            }
         }
     }
 }
