@@ -22,13 +22,16 @@ struct DevicesView: View {
     }
 
     var body: some View {
-        Group {
+        //Note: do NOT put a toolbar item at `.topBarLeading` — on watchOS that replaces the
+        //automatic back button, which strands the user on this pushed view. Refresh lives in
+        //the list content instead.
+        List {
             if viewModel.devices.isEmpty {
                 Text("No devices found")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                List(viewModel.devices) { device in
+                ForEach(viewModel.devices) { device in
                     Button {
                         viewModel.connectToDevice(device)
                     } label: {
@@ -70,6 +73,12 @@ struct DevicesView: View {
                     }
                 }
             }
+
+            Button {
+                viewModel.refreshDevices()
+            } label: {
+                Label("Refresh", systemImage: "arrow.clockwise")
+            }
         }
         .navigationTitle("Devices")
         .toolbar {
@@ -78,13 +87,6 @@ struct DevicesView: View {
                     activeForm = .add
                 } label: {
                     Image(systemName: "plus")
-                }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    viewModel.refreshDevices()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
                 }
             }
         }

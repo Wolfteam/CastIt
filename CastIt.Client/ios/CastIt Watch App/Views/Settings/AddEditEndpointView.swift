@@ -34,17 +34,21 @@ struct AddEditEndpointView: View {
                     .autocorrectionDisabled()
                 TextField("Port", text: $port)
                     .autocorrectionDisabled()
-
-                Button("Save") {
-                    save()
-                }
-                .disabled(!isValid)
-
-                Button("Cancel", role: .cancel) {
-                    dismiss()
-                }
             }
             .navigationTitle(endpoint == nil ? "Add device" : "Edit device")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        save()
+                    }
+                    .disabled(!isValid)
+                }
+            }
         }
     }
 
