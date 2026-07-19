@@ -50,29 +50,48 @@
             Text="{Binding IpAddress}"
             TextTrimming="CharacterEllipsis"
             TextWrapping="Wrap" />
-        <Button
+        <StackPanel
             Grid.Row="0"
             Grid.RowSpan="2"
             Grid.Column="2"
             VerticalAlignment="Center"
-            Command="{Binding Tag.ConnectCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
-            CommandParameter="{Binding}"
-            Style="{StaticResource MainButtonStyle}"
-            ToolTip="{Binding [Connect]}"
-            Visibility="{Binding IsConnected, Converter={StaticResource InverseBoolToVisConverter}}">
-            <materialDesign:PackIcon Kind="CastConnected" />
-        </Button>
-        <Button
-            Grid.Row="0"
-            Grid.RowSpan="2"
-            Grid.Column="2"
-            VerticalAlignment="Center"
-            Command="{Binding Tag.DisconnectCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
-            CommandParameter="{Binding}"
-            Style="{StaticResource MainButtonStyle}"
-            ToolTip="{Binding [Disconnect]}"
-            Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <materialDesign:PackIcon Kind="CastOff" />
-        </Button>
+            Orientation="Horizontal">
+            <Button
+                VerticalAlignment="Center"
+                Command="{Binding Tag.ConnectCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                CommandParameter="{Binding}"
+                Style="{StaticResource MainButtonStyle}"
+                ToolTip="{Binding [Connect]}"
+                Visibility="{Binding IsConnected, Converter={StaticResource InverseBoolToVisConverter}}">
+                <materialDesign:PackIcon Kind="CastConnected" />
+            </Button>
+            <Button
+                VerticalAlignment="Center"
+                Command="{Binding Tag.DisconnectCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                CommandParameter="{Binding}"
+                Style="{StaticResource MainButtonStyle}"
+                ToolTip="{Binding [Disconnect]}"
+                Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <materialDesign:PackIcon Kind="CastOff" />
+            </Button>
+            <Button
+                VerticalAlignment="Center"
+                Command="{Binding Tag.EditEndpointCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                CommandParameter="{Binding}"
+                Style="{StaticResource MainButtonStyle}"
+                ToolTip="{Binding [Edit]}"
+                Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <materialDesign:PackIcon Kind="Pencil" />
+            </Button>
+            <Button
+                VerticalAlignment="Center"
+                Command="{Binding Tag.DeleteEndpointCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                CommandParameter="{Binding}"
+                Style="{StaticResource MainButtonStyle}"
+                ToolTip="{Binding [Delete]}"
+                Visibility="{Binding IsCustom, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <materialDesign:PackIcon Kind="Delete" />
+            </Button>
+        </StackPanel>
     </Grid>
 </views:MvxWpfView>

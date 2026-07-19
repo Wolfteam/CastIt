@@ -122,6 +122,15 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
   @override
   final StreamController<(int, int)> fileDeleted = StreamController.broadcast();
 
+  @override
+  final StreamController<List<Receiver>> castDevicesChanged = StreamController.broadcast();
+
+  @override
+  final StreamController<Receiver> castDeviceSet = StreamController.broadcast();
+
+  @override
+  final StreamController<void> castDeviceDisconnected = StreamController.broadcast();
+
   final LoggingService _logger;
   final SettingsService _settings;
   HubConnection? _connection;
@@ -190,6 +199,9 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
       volumeLevelChanged.close(),
       refreshPlayList.close(),
       serverMessageReceived.close(),
+      castDevicesChanged.close(),
+      castDeviceSet.close(),
+      castDeviceDisconnected.close(),
     ]);
   }
 
@@ -329,11 +341,13 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
         _logger.info(runtimeType, '_handleSocketMsg: File end reached');
         fileEndReached.add(null);
       case _castDevicesChanged:
-        break;
+        final devices = (message as List<dynamic>).map((e) => Receiver.fromJson(e as Map<String, dynamic>)).toList();
+        castDevicesChanged.add(devices);
       case _castDeviceSet:
-        break;
+        final device = Receiver.fromJson(message as Map<String, dynamic>);
+        castDeviceSet.add(device);
       case _castDeviceDisconnected:
-        break;
+        castDeviceDisconnected.add(null);
       case _fileLoaded:
         break;
       default:
@@ -466,5 +480,39 @@ class CastItHubClientServiceImpl implements CastItHubClientService {
   Future<void> updatePlayList(int id, String name) async {
     final dto = UpdatePlayListRequestDto(name: name);
     await _invokeHubMethod('UpdatePlayList', [id, dto]);
+  }
+
+  @override
+  Future<void> loadDevices() async {
+    //Asks the server to re-send the current device list to this client (no network scan).
+    //Needed because the initial list is pushed on connect, before the devices bloc subscribes.
+    await _invokeHubMethod('SendCastDevicesChanged', [false]);
+  }
+
+  @override
+  Future<void> connectToCastDevice(String? id) async {
+    await _invokeHubMethod('ConnectToCastDevice', [id]);
+  }
+
+  @override
+  Future<void> refreshCastDevices() async {
+    //The server expects a nullable TimeSpan argument; passing null uses the default scan time.
+    //SignalR requires the argument to be present, otherwise the invoke fails and disconnects the hub.
+    await _invokeHubMethod('RefreshCastDevices', [null]);
+  }
+
+  @override
+  Future<void> addCustomEndpoint(String name, String host, int port) async {
+    await _invokeHubMethod('AddCustomEndpoint', [name, host, port]);
+  }
+
+  @override
+  Future<void> updateCustomEndpoint(int id, String name, String host, int port) async {
+    await _invokeHubMethod('UpdateCustomEndpoint', [id, name, host, port]);
+  }
+
+  @override
+  Future<void> deleteCustomEndpoint(int id) async {
+    await _invokeHubMethod('DeleteCustomEndpoint', [id]);
   }
 }

@@ -7,4 +7,5 @@ struct Receiver: Codable, Identifiable {
     let host: String
     let port: Int
     let isConnected: Bool
+    let isCustom: Bool
 }

@@ -5,4 +5,5 @@ export interface IReceiver {
     host: string;
     port: number;
     isConnected: boolean;
+    isCustom: boolean;
 }

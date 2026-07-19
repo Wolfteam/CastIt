@@ -62,6 +62,80 @@ public class PlayerController : BaseController
     }
 
     /// <summary>
+    /// Returns a list of all the custom endpoint devices
+    /// </summary>
+    /// <returns>A list of custom endpoint devices</returns>
+    [HttpGet("Devices/Custom")]
+    [ProducesResponseType(typeof(AppListResponseDto<IReceiver>), StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<IActionResult> GetCustomEndpoints()
+    {
+        var response = new AppListResponseDto<IReceiver>
+        {
+            Succeed = true,
+            Result = await CastService.GetCustomEndpoints()
+        };
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Adds a new custom endpoint device
+    /// </summary>
+    /// <param name="dto">The request</param>
+    /// <returns>Returns the result of the operation</returns>
+    [HttpPost("Devices/Custom")]
+    [ProducesResponseType(typeof(EmptyResponseDto), StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<IActionResult> AddCustomEndpoint(SaveCustomEndpointRequestDto dto)
+    {
+        Logger.LogInformation(
+            $"{nameof(AddCustomEndpoint)}: Adding custom endpoint with name = {dto.Name}, " +
+            $"host = {dto.Host} and port = {dto.Port}");
+        await CastService.AddCustomEndpoint(dto.Name, dto.Host, dto.Port);
+
+        Logger.LogInformation($"{nameof(AddCustomEndpoint)}: Custom endpoint was successfully added");
+        return Ok(new EmptyResponseDto(true));
+    }
+
+    /// <summary>
+    /// Updates an existing custom endpoint device
+    /// </summary>
+    /// <param name="id">The custom endpoint id</param>
+    /// <param name="dto">The request</param>
+    /// <returns>Returns the result of the operation</returns>
+    [HttpPut("Devices/Custom/{id}")]
+    [ProducesResponseType(typeof(EmptyResponseDto), StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<IActionResult> UpdateCustomEndpoint(long id, SaveCustomEndpointRequestDto dto)
+    {
+        Logger.LogInformation(
+            $"{nameof(UpdateCustomEndpoint)}: Updating custom endpoint id = {id} with name = {dto.Name}, " +
+            $"host = {dto.Host} and port = {dto.Port}");
+        await CastService.UpdateCustomEndpoint(id, dto.Name, dto.Host, dto.Port);
+
+        Logger.LogInformation($"{nameof(UpdateCustomEndpoint)}: Custom endpoint was successfully updated");
+        return Ok(new EmptyResponseDto(true));
+    }
+
+    /// <summary>
+    /// Deletes an existing custom endpoint device
+    /// </summary>
+    /// <param name="id">The custom endpoint id</param>
+    /// <returns>Returns the result of the operation</returns>
+    [HttpDelete("Devices/Custom/{id}")]
+    [ProducesResponseType(typeof(EmptyResponseDto), StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<IActionResult> DeleteCustomEndpoint(long id)
+    {
+        Logger.LogInformation($"{nameof(DeleteCustomEndpoint)}: Deleting custom endpoint id = {id}");
+        await CastService.DeleteCustomEndpoint(id);
+
+        Logger.LogInformation($"{nameof(DeleteCustomEndpoint)}: Custom endpoint was successfully deleted");
+        return Ok(new EmptyResponseDto(true));
+    }
+
+    /// <summary>
     /// Refreshes the devices for the provided amount of <paramref name="seconds"/>
     /// </summary>
     /// <param name="seconds">The seconds to scan the network</param>

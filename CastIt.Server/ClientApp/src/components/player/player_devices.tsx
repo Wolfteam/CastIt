@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, IconButton, LinearProgress, List } from '@mui/material';
-import { Tv } from '@mui/icons-material';
+import { Tv, Add } from '@mui/icons-material';
 import DeviceItem from '../device/device_item';
 import { onCastDevicesChanged, onCastDeviceSet } from '../../services/castithub.service';
 import translations from '../../services/translations';
 import { IReceiver } from '../../models';
 import AppDialogTitle from '../dialogs/app_dialog_title';
+import AddEditEndpointDialog from '../dialogs/add_edit_endpoint_dialog';
 import { useCastItHub } from '../../context/castit_hub.context';
 
 function PlayerDevices() {
     const [devices, setDevices] = useState<IReceiver[]>([]);
     const [open, setOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [formOpen, setFormOpen] = useState(false);
+    const [editingEndpoint, setEditingEndpoint] = useState<IReceiver | null>(null);
     const castItHub = useCastItHub();
 
     useEffect(() => {
@@ -51,8 +54,36 @@ function PlayerDevices() {
         await castItHub.connection.refreshCastDevices();
     };
 
+    const handleAdd = (): void => {
+        setEditingEndpoint(null);
+        setFormOpen(true);
+    };
+
+    const handleEdit = (device: IReceiver): void => {
+        setEditingEndpoint(device);
+        setFormOpen(true);
+    };
+
+    const handleDeleteEndpoint = async (device: IReceiver): Promise<void> => {
+        await castItHub.connection.deleteCustomEndpoint(Number(device.id));
+    };
+
+    const handleFormClose = (): void => {
+        setFormOpen(false);
+        setEditingEndpoint(null);
+    };
+
     const deviceItems = devices.map((d) => (
-        <DeviceItem key={d.id} id={d.id} name={d.friendlyName} ipAddress={`${d.host}:${d.port}`} isConnected={d.isConnected} />
+        <DeviceItem
+            key={d.id}
+            id={d.id}
+            name={d.friendlyName}
+            ipAddress={`${d.host}:${d.port}`}
+            isConnected={d.isConnected}
+            isCustom={d.isCustom}
+            onEdit={() => handleEdit(d)}
+            onDelete={() => handleDeleteEndpoint(d)}
+        />
     ));
 
     return (
@@ -70,14 +101,24 @@ function PlayerDevices() {
                     <Button
                         color="primary"
                         variant="outlined"
+                        startIcon={<Add />}
+                        sx={{ flex: 1 }}
+                        onClick={handleAdd}
+                    >
+                        {translations.addDevice}
+                    </Button>
+                    <Button
+                        color="primary"
+                        variant="outlined"
                         disabled={isRefreshing}
-                        sx={{ width: '100%', marginLeft: 20, marginRight: 20 }}
+                        sx={{ flex: 1 }}
                         onClick={handleRefreshDevices}
                     >
                         {isRefreshing ? translations.refreshing : translations.refresh}
                     </Button>
                 </DialogActions>
             </Dialog>
+            <AddEditEndpointDialog isOpen={formOpen} endpoint={editingEndpoint} onClose={handleFormClose} />
         </>
     );
 }

@@ -13,5 +13,7 @@
         int Port { get; }
 
         bool IsConnected { get; set; }
+
+        bool IsCustom { get; set; }
     }
 }

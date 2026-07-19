@@ -232,6 +232,42 @@ namespace CastIt.Services
             }
         }
 
+        public async Task AddCustomEndpoint(string name, string host, int port)
+        {
+            try
+            {
+                await _connection.InvokeAsync(nameof(AddCustomEndpoint), name, host, port);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(AddCustomEndpoint)}: Unknown error occurred");
+            }
+        }
+
+        public async Task UpdateCustomEndpoint(long id, string name, string host, int port)
+        {
+            try
+            {
+                await _connection.InvokeAsync(nameof(UpdateCustomEndpoint), id, name, host, port);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(UpdateCustomEndpoint)}: Unknown error occurred");
+            }
+        }
+
+        public async Task DeleteCustomEndpoint(long id)
+        {
+            try
+            {
+                await _connection.InvokeAsync(nameof(DeleteCustomEndpoint), id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"{nameof(DeleteCustomEndpoint)}: Unknown error occurred");
+            }
+        }
+
         public async Task SetFileSubtitlesFromPath(string path)
         {
             try
