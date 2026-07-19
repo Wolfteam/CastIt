@@ -33,7 +33,7 @@ dependencies:
   intl: ^0.20.2
   json_annotation: ^4.12.0
   logger: ^2.7.0
-  network_info_plus: ^8.2.0
+  network_info_plus: ^8.2.1
   nil: ^1.1.1
   package_info_plus: ^10.2.0
   path: ^1.9.1
