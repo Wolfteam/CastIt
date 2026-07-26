@@ -62,6 +62,8 @@
   "deleteFileConfirm": "Delete file {file} ?",
   "clear": "Clear",
   "invalidName": "Name is not valid",
+  "invalidHost": "Host is not valid",
+  "invalidPort": "Port is not valid",
   "name": "Name",
   "welcome": "Welcome to {appName}",
   "welcomeSummary": "In the next section you will be asked for the desktop app url app, so please install it and keep it at hand",
@@ -99,5 +101,16 @@
   "ffmpegExecutableNotFound": "Ffmpeg executable is not valid or was not found",
   "nothingToShow": "Nothing to show",
   "webVideoQuality": "Web video quality",
-  "lastPlayedDate": "Last played: {date}"
+  "lastPlayedDate": "Last played: {date}",
+  "devices": "Devices",
+  "manageDevices": "Select, add or edit the devices to cast to",
+  "addDevice": "Add device",
+  "editDevice": "Edit device",
+  "deviceName": "Name",
+  "host": "Host",
+  "port": "Port",
+  "connect": "Connect",
+  "disconnect": "Disconnect",
+  "refreshDevices": "Refresh devices",
+  "save": "Save"
 }

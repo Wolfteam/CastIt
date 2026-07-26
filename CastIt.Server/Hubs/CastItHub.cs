@@ -380,6 +380,42 @@ namespace CastIt.Server.Hubs
             }
         }
 
+        public async Task AddCustomEndpoint(string name, string host, int port)
+        {
+            try
+            {
+                await _castService.AddCustomEndpoint(name, host, port);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
+        }
+
+        public async Task UpdateCustomEndpoint(long id, string name, string host, int port)
+        {
+            try
+            {
+                await _castService.UpdateCustomEndpoint(id, name, host, port);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
+        }
+
+        public async Task DeleteCustomEndpoint(long id)
+        {
+            try
+            {
+                await _castService.DeleteCustomEndpoint(id);
+            }
+            catch (Exception e)
+            {
+                e.HandleCastException(_castService, _telemetryService);
+            }
+        }
+
         public Task SortFiles(long playListId, SortModeType sortMode)
         {
             _castService.SortFiles(playListId, sortMode);

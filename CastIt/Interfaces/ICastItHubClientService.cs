@@ -50,6 +50,9 @@ namespace CastIt.Interfaces
         Task ConnectToCastDevice(string id);
         Task RefreshCastDevices(TimeSpan ts);
         Task SetFileSubtitlesFromPath(string path);
+        Task AddCustomEndpoint(string name, string host, int port);
+        Task UpdateCustomEndpoint(long id, string name, string host, int port);
+        Task DeleteCustomEndpoint(long id);
 
         Task<PlayListItemResponseDto> AddNewPlayList();
         Task<PlayListItemResponseDto> GetPlayList(long id);

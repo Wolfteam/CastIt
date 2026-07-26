@@ -168,13 +168,13 @@ namespace CastIt.GoogleCast
         #endregion
 
         #region General Methods
-        public void ListenForDevices()
+        public async Task CheckForDevices()
         {
-            var subscription = DeviceLocator
-                .FindReceiversContinuous()
-                .Subscribe(d => DeviceAdded?.Invoke(this, new DeviceAddedArgs(d)));
-
-            _subscriptions.Add(subscription);
+            var devices = await DeviceLocator.FindReceiversAsync(TimeSpan.FromSeconds(5));
+            foreach (var device in devices)
+            {
+                DeviceAdded?.Invoke(this, new DeviceAddedArgs(device));
+            }
         }
 
         public async Task ConnectAsync()

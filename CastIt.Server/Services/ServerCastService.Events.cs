@@ -91,7 +91,10 @@ namespace CastIt.Server.Services
             _logger.LogInformation(
                 $"{nameof(RendererDiscovererItemAdded)}: New device discovered: " +
                 $"{device.FriendlyName} - Ip = {device.Host}:{device.Port}");
-            if (AvailableDevices.All(d => d.Id != device.Id))
+            bool alreadyKnown = AvailableDevices.Any(d => d.Id == device.Id);
+            bool coveredByCustom = AvailableDevices.Any(
+                d => d.IsCustom && d.Host == device.Host && d.Port == device.Port);
+            if (!alreadyKnown && !coveredByCustom)
             {
                 AvailableDevices.Add(device);
             }

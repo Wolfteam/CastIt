@@ -31,6 +31,7 @@ struct PlayerSheet: View {
                         // Loop Button
                         Button(action: {
                             viewModel.toggleLoop()
+                            viewModel.showMore = false
                         }) {
                             Label(
                                 viewModel.playedFile?.loop ?? false ? "Looping" : "Loop",
@@ -57,6 +58,7 @@ struct PlayerSheet: View {
                     HStack {
                         Button(action: {
                             viewModel.skipSeconds(-viewModel.skipValue)
+                            viewModel.showMore = false
                         }) {
                             Image(systemName: "backward")
                         }
@@ -70,6 +72,7 @@ struct PlayerSheet: View {
                         
                         Button(action: {
                             viewModel.skipSeconds(viewModel.skipValue)
+                            viewModel.showMore = false
                         }) {
                             Image(systemName: "forward")
                         }
@@ -97,7 +100,10 @@ struct PlayerSheet: View {
                         title: "Audio",
                         systemImage: "headphones",
                         options: audios,
-                        onOptionSelected: { viewModel.setFileOptions(option: $0) }
+                        onOptionSelected: {
+                            viewModel.setFileOptions(option: $0)
+                            viewModel.showMore = false
+                        }
                     )
                 }
 
@@ -107,7 +113,10 @@ struct PlayerSheet: View {
                         title: "Quality",
                         systemImage: "video",
                         options: qualities,
-                        onOptionSelected: { viewModel.setFileOptions(option: $0) }
+                        onOptionSelected: {
+                            viewModel.setFileOptions(option: $0)
+                            viewModel.showMore = false
+                        }
                     )
                 }
 
@@ -117,7 +126,10 @@ struct PlayerSheet: View {
                         title: "Subtitles",
                         systemImage: "text.document",
                         options: subtitles,
-                        onOptionSelected: { viewModel.setFileOptions(option: $0) }
+                        onOptionSelected: {
+                            viewModel.setFileOptions(option: $0)
+                            viewModel.showMore = false
+                        }
                     )
                 }
             }

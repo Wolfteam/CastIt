@@ -33,7 +33,7 @@ namespace CastIt.GoogleCast.Interfaces
         bool IsMuted { get; }
         PlayerStatus State { get; }
 
-        void ListenForDevices();
+        Task CheckForDevices();
 
         Task ConnectAsync();
 

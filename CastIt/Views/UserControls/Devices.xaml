@@ -110,32 +110,46 @@
                 ItemsSource="{Binding Devices}"
                 Style="{StaticResource DeviceStyle}" />
         </ScrollViewer>
-        <Button
+        <StackPanel
             Grid.Row="2"
             Margin="30,10"
-            d:Content="Don't see your device?"
-            BorderBrush="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
-            Command="{Binding RefreshDevicesCommand}"
-            Foreground="{DynamicResource FontColorBrush}"
-            Visibility="{Binding ViewModel.ServerIsRunning, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}">
-            <Button.Style>
-                <Style BasedOn="{StaticResource MaterialDesignOutlinedButton}" TargetType="{x:Type Button}">
-                    <Setter Property="Content" Value="{Binding [RefreshDevicesMsg]}" />
-                    <Setter Property="ToolTip" Value="{Binding [RefreshDevicesMsg]}" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsConnecting}" Value="True">
-                            <Setter Property="Content" Value="{Binding [Connecting]}" />
-                            <Setter Property="ToolTip" Value="{Binding [Connecting]}" />
-                            <Setter Property="IsEnabled" Value="False" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding IsRefreshing}" Value="True">
-                            <Setter Property="Content" Value="{Binding [Searching]}" />
-                            <Setter Property="ToolTip" Value="{Binding [Searching]}" />
-                            <Setter Property="IsEnabled" Value="False" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Button.Style>
-        </Button>
+            HorizontalAlignment="Center"
+            Orientation="Horizontal">
+            <Button
+                Margin="0,0,10,0"
+                d:Content="Add device"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
+                Command="{Binding AddEndpointCommand}"
+                Content="{Binding [AddDevice]}"
+                Foreground="{DynamicResource FontColorBrush}"
+                Style="{StaticResource MaterialDesignOutlinedButton}"
+                ToolTip="{Binding [AddDevice]}"
+                Visibility="{Binding ViewModel.ServerIsRunning, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}" />
+            <Button
+                d:Content="Don't see your device?"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.Primary.Dark}"
+                Command="{Binding RefreshDevicesCommand}"
+                Foreground="{DynamicResource FontColorBrush}"
+                Visibility="{Binding ViewModel.ServerIsRunning, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type uv:MainPage}}}">
+                <Button.Style>
+                    <Style BasedOn="{StaticResource MaterialDesignOutlinedButton}" TargetType="{x:Type Button}">
+                        <Setter Property="Content" Value="{Binding [RefreshDevicesMsg]}" />
+                        <Setter Property="ToolTip" Value="{Binding [RefreshDevicesMsg]}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsConnecting}" Value="True">
+                                <Setter Property="Content" Value="{Binding [Connecting]}" />
+                                <Setter Property="ToolTip" Value="{Binding [Connecting]}" />
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsRefreshing}" Value="True">
+                                <Setter Property="Content" Value="{Binding [Searching]}" />
+                                <Setter Property="ToolTip" Value="{Binding [Searching]}" />
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
     </Grid>
 </views:MvxWpfView>

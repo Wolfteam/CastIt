@@ -1,5 +1,6 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.ViewModels.Items;
+using Mapster;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -53,14 +54,14 @@ namespace CastIt.ViewModels
         private void OnPlayListsLoaded(List<GetAllPlayListResponseDto> playLists)
         {
             PlayLists.Clear();
-            var mapped = playLists.ConvertAll(pl => PlayListItemViewModel.From(pl, _mapper));
+            var mapped = playLists.ConvertAll(pl => PlayListItemViewModel.From(pl));
             PlayLists.ReplaceWith(mapped);
             IsBusy = false;
         }
 
         private void OnPlayListAdded(GetAllPlayListResponseDto playList)
         {
-            var vm = _mapper.Map<PlayListItemViewModel>(playList);
+            var vm = PlayListItemViewModel.From(playList);
             PlayLists.Add(vm);
             SelectedPlayListIndex = PlayLists.Count - 1;
         }
@@ -90,7 +91,7 @@ namespace CastIt.ViewModels
                     PlayLists.Move(currentIndex, playList.Position);
             }
             vm.IsBusy = false;
-            _mapper.Map(playList, vm);
+            playList.Adapt(vm);
         }
 
         private void OnPlayListDeleted(long id)
@@ -117,7 +118,7 @@ namespace CastIt.ViewModels
             var playList = PlayLists.FirstOrDefault(pl => pl.Id == file.PlayListId);
             if (playList != null)
             {
-                var vm = _mapper.Map<FileItemViewModel>(file);
+                var vm = FileItemViewModel.From(file);
                 playList.Items.Insert(file.Position - 1, vm);
             }
         }
@@ -141,7 +142,7 @@ namespace CastIt.ViewModels
                 var currentIndex = playList.Items.IndexOf(vm);
                 playList.Items.Move(currentIndex, file.Position - 1);
             }
-            _mapper.Map(file, vm);
+            file.Adapt(vm);
         }
 
         private void OnFileDeleted(long playListId, long id)
@@ -243,7 +244,7 @@ namespace CastIt.ViewModels
             //The playlist hasn't been loaded, so we add the file item in order to have preview thumbnails
             if (CurrentPlayedFile == null)
             {
-                CurrentPlayedFile = _mapper.Map<FileItemViewModel>(playedFile);
+                CurrentPlayedFile = FileItemViewModel.From(playedFile);
                 playlist?.Items.Add(CurrentPlayedFile);
             }
 

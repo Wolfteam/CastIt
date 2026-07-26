@@ -15,14 +15,14 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.2.7+49
+version: 1.2.9+55
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
 
 dependencies:
   cached_network_image: ^3.4.1
-  device_info_plus: ^12.3.0
+  device_info_plus: ^13.2.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
@@ -31,20 +31,20 @@ dependencies:
   freezed_annotation: ^3.1.0
   get_it: ^9.2.1
   intl: ^0.20.2
-  json_annotation: ^4.11.0
-  logger: ^2.6.2
-  network_info_plus: ^7.0.0
+  json_annotation: ^4.12.0
+  logger: ^2.7.0
+  network_info_plus: ^8.2.1
   nil: ^1.1.1
-  package_info_plus: ^9.0.0
+  package_info_plus: ^10.2.1
   path: ^1.9.1
-  path_provider: ^2.1.5
+  path_provider: ^2.1.6
   pull_to_refresh: ^2.0.0
   responsive_builder: ^0.7.1
-  shared_preferences: ^2.5.4
+  shared_preferences: ^2.5.5
   signalr_core:
     git: https://github.com/Wolfteam/signalr_core.git
   sprintf: ^7.0.0
-  synchronized: ^3.4.0
+  synchronized: ^3.4.1+1
   url_launcher: ^6.3.2
   window_size:
     git:
@@ -54,9 +54,9 @@ dependencies:
 dev_dependencies:
   build_runner:
   freezed: ^3.2.5
-  icons_launcher: ^3.0.3
+  icons_launcher: ^3.1.0
   intl_utils: ^2.8.14
-  json_serializable: ^6.13.0
+  json_serializable: ^6.14.0
   lint: ^2.8.0
 
 icons_launcher:

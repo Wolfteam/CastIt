@@ -13,6 +13,10 @@ namespace CastIt.Cli.Interfaces.Api
     public interface ICastItApiService
     {
         Task<AppListResponseDto<Receiver>> GetAllDevices();
+        Task<AppListResponseDto<Receiver>> GetCustomEndpoints();
+        Task<EmptyResponseDto> AddCustomEndpoint(string name, string host, int port);
+        Task<EmptyResponseDto> UpdateCustomEndpoint(long id, string name, string host, int port);
+        Task<EmptyResponseDto> DeleteCustomEndpoint(long id);
         Task<EmptyResponseDto> RefreshDevices(double seconds);
         Task<EmptyResponseDto> Connect(string host, int port);
         Task<EmptyResponseDto> Disconnect();

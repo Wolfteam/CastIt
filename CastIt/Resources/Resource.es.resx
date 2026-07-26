@@ -591,4 +591,22 @@
   <data name="WebVideoQuality" xml:space="preserve">
     <value>Calidad de video web</value>
   </data>
+  <data name="Host" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="Port" xml:space="preserve">
+    <value>Puerto</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="AddDevice" xml:space="preserve">
+    <value>Agregar dispositivo</value>
+  </data>
+  <data name="AddEndpoint" xml:space="preserve">
+    <value>Agregar dispositivo</value>
+  </data>
+  <data name="EditEndpoint" xml:space="preserve">
+    <value>Editar dispositivo</value>
+  </data>
 </root>

@@ -164,6 +164,18 @@ class SignalRService: HubConnectionDelegate {
         invokeWithLogging(method: "RefreshCastDevices")
     }
 
+    func addCustomEndpoint(name: String, host: String, port: Int) {
+        invokeWithLogging(method: "AddCustomEndpoint", name, host, port)
+    }
+
+    func updateCustomEndpoint(id: Int, name: String, host: String, port: Int) {
+        invokeWithLogging(method: "UpdateCustomEndpoint", id, name, host, port)
+    }
+
+    func deleteCustomEndpoint(id: Int) {
+        invokeWithLogging(method: "DeleteCustomEndpoint", id)
+    }
+
     func setFileSubtitlesFromPath(_ path: String) {
         invokeWithLogging(method: "SetFileSubtitlesFromPath", path)
     }

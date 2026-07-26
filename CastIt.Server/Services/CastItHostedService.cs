@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
@@ -31,7 +31,6 @@ namespace CastIt.Server.Services
         private readonly IFileWatcherService _fileWatcherService;
         private readonly IServerService _serverService;
         private readonly ITelemetryService _telemetryService;
-        private readonly IMapper _mapper;
         private readonly IFFmpegService _fFmpegService;
 
         private readonly CancellationTokenSource _setDurationTokenSource = new CancellationTokenSource();
@@ -45,7 +44,6 @@ namespace CastIt.Server.Services
             IFileWatcherService fileWatcherService,
             IServerService serverService,
             ITelemetryService telemetryService,
-            IMapper mapper,
             IFFmpegService fFmpegService)
         {
             _logger = logger;
@@ -56,7 +54,6 @@ namespace CastIt.Server.Services
             _fileWatcherService = fileWatcherService;
             _serverService = serverService;
             _telemetryService = telemetryService;
-            _mapper = mapper;
             _fFmpegService = fFmpegService;
 
             SetCastItEventHandlers();
@@ -445,7 +442,7 @@ namespace CastIt.Server.Services
                 foreach (var file in files)
                 {
                     await _castService.UpdateFileItem(file);
-                    OnFileChanged(_mapper.Map<FileItemResponseDto>(file));
+                    OnFileChanged(file.Adapt<FileItemResponseDto>());
                 }
 
                 await _castItHub.Clients.All.PlayListIsBusy(playList.Id, false);
@@ -482,7 +479,7 @@ namespace CastIt.Server.Services
                     await _castService.RemoveFiles(playlist.Id, file.Id);
                 }
 
-                OnPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playlist));
+                OnPlayListChanged(playlist.Adapt<GetAllPlayListResponseDto>());
             }
         }
 

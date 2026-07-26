@@ -1,6 +1,7 @@
 import 'package:castit/generated/l10n.dart';
 import 'package:castit/presentation/settings/widgets/about_settings_card.dart';
 import 'package:castit/presentation/settings/widgets/accent_color_settings_card.dart';
+import 'package:castit/presentation/settings/widgets/devices_settings_card.dart';
 import 'package:castit/presentation/settings/widgets/language_settings_card.dart';
 import 'package:castit/presentation/settings/widgets/player_settings_card.dart';
 import 'package:castit/presentation/settings/widgets/theme_settings_card.dart';
@@ -43,7 +44,7 @@ class _MobileLayoutState extends State<_MobileLayout> with AutomaticKeepAliveCli
     final i18n = S.of(context);
     return ListView.builder(
       shrinkWrap: true,
-      itemCount: 6,
+      itemCount: 7,
       controller: _scrollController,
       itemBuilder: (ctx, index) {
         switch (index) {
@@ -59,8 +60,10 @@ class _MobileLayoutState extends State<_MobileLayout> with AutomaticKeepAliveCli
           case 3:
             return const LanguageSettingsCard();
           case 4:
-            return const PlayerSettingsCard();
+            return const DevicesSettingsCard();
           case 5:
+            return const PlayerSettingsCard();
+          case 6:
             return const AboutSettingsCard();
           default:
             throw Exception('Invalid index');
@@ -100,6 +103,7 @@ class _DesktopTabletLayout extends StatelessWidget {
             Expanded(
               child: Column(
                 children: [
+                  DevicesSettingsCard(),
                   PlayerSettingsCard(),
                 ],
               ),

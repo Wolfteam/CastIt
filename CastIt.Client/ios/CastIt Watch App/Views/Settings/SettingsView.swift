@@ -2,8 +2,10 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable private var viewModel: SettingsViewModel
-    
+    private let container: DependencyContainer
+
     init(container: DependencyContainer) {
+        self.container = container
         _viewModel = Bindable(container.settingsViewModel)
     }
 
@@ -82,6 +84,12 @@ struct SettingsView: View {
                             .onChange(of: viewModel.enableHardwareAcceleration) {
                                 viewModel.updateSettings()
                             }
+                    }
+
+                    Section(header: Text("Devices")) {
+                        NavigationLink("Manage devices") {
+                            DevicesView(container: container)
+                        }
                     }
                 }
             }

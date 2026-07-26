@@ -1,5 +1,6 @@
 ﻿using CastIt.Domain.Dtos.Responses;
 using CastIt.Domain.Enums;
+using Mapster;
 using CastIt.Server.Common.Comparers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -27,7 +28,7 @@ namespace CastIt.Server.Services
             DisableLoopForAllFiles(file.Id);
 
             if (triggerChange)
-                SendFileChanged(_mapper.Map<FileItemResponseDto>(file));
+                SendFileChanged(file.Adapt<FileItemResponseDto>());
         }
 
         public void DisableLoopForAllFiles(long exceptFileId = -1)
@@ -37,7 +38,7 @@ namespace CastIt.Server.Services
             foreach (var file in files.Where(file => file.Loop))
             {
                 file.Loop = false;
-                SendFileChanged(_mapper.Map<FileItemResponseDto>(file));
+                SendFileChanged(file.Adapt<FileItemResponseDto>());
             }
         }
 
@@ -116,7 +117,7 @@ namespace CastIt.Server.Services
         {
             var playList = GetPlayListInternal(playListId);
             SetFilePositionIfChanged(playListId);
-            SendPlayListChanged(_mapper.Map<GetAllPlayListResponseDto>(playList));
+            SendPlayListChanged(playList.Adapt<GetAllPlayListResponseDto>());
             return Task.CompletedTask;
         }
 
@@ -151,7 +152,7 @@ namespace CastIt.Server.Services
                 item.Position = newIndex;
                 item.PositionChanged = true;
             }
-            SendFilesChanged(_mapper.Map<List<FileItemResponseDto>>(playList.Files));
+            SendFilesChanged(playList.Files.Adapt<List<FileItemResponseDto>>());
         }
     }
 }

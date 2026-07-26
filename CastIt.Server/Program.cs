@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using CastIt.Domain.Utils;
 using CastIt.FFmpeg;
@@ -9,7 +8,6 @@ using CastIt.GoogleCast.LocalFile;
 using CastIt.GoogleCast.Youtube;
 using CastIt.Server.Common;
 using CastIt.Server.Common.Extensions;
-using CastIt.Server.Controllers;
 using CastIt.Server.Hubs;
 using CastIt.Server.Interfaces;
 using CastIt.Server.Middleware;
@@ -17,8 +15,8 @@ using CastIt.Server.Services;
 using CastIt.Server.Shared;
 using CastIt.Shared;
 using CastIt.Shared.Extensions;
-using CastIt.Shared.Models;
 using CastIt.Shared.Server;
+using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -30,10 +28,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Quartz;
 using Serilog;
-using DependencyInjection = CastIt.FFmpeg.DependencyInjection;
 
+const string applicationName = "CastIt.Server";
 string logsPath = AppFileUtils.GetServerLogsPath();
-Log.Logger = LoggingExtensions.CreateBootstrapperLogger(new ToLog(nameof(Program)), logsPath);
+Log.Logger = LoggingExtensions.CreateBootstrapperLogger(applicationName, logsPath);
 try
 {
     Log.Information("Creating builder...");
@@ -48,20 +46,7 @@ try
     }
 
     Log.Information("Configuring logs...");
-    var logs = ToLog.From<BaseController>()
-        .Concat(new List<ToLog>
-        {
-            new ToLog(typeof(ExceptionHandlerMiddleware))
-        })
-        .Concat(ToLog.From(typeof(AppDataService)))
-        .Concat(ToLog.From(typeof(CastItHub)))
-        .Concat(ToLog.From(typeof(DependencyInjection)))
-        .Concat(ToLog.From(typeof(CastIt.GoogleCast.DependencyInjection)))
-        .Concat(ToLog.From(typeof(CastIt.GoogleCast.LocalFile.DependencyInjection)))
-        .Concat(ToLog.From(typeof(CastIt.GoogleCast.Youtube.DependencyInjection)))
-        .Concat(ToLog.From(typeof(CastIt.Youtube.DependencyInjection)))
-        .ToArray();
-    builder.Host.ConfigureAppLogging(logsPath, false, false, logs);
+    builder.Services.AddCastItLogging(builder.Configuration, applicationName, logsPath: logsPath);
 
     Log.Information("Configuring settings...");
     bool useDummyPlayer = builder.Configuration.GetValue<bool>("USE_DUMMY_PLAYER");
@@ -123,7 +108,8 @@ try
         .AddGoogleCast(useDummyPlayer)
         .AddGoogleCastYoutube()
         .AddGoogleCastLocalFiles();
-    services.AddAutoMapper(config => config.AddProfile(typeof(MappingProfile)));
+    // Configure Mapster type mappings (global static, not DI-registered)
+    TypeAdapterConfig.GlobalSettings.RegisterMappings();
 
     services.AddSingleton<IBaseServerService>(provider => provider.GetRequiredService<IServerService>());
     services.AddSingleton<IMediaRequestGeneratorFactory>(provider =>

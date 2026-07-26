@@ -42,8 +42,28 @@ Get the latest release [here](https://github.com/Wolfteam/CastIt/releases).
 ## Build
 
 ### Server
+
+Build the image locally:
+
 ```
 docker build --build-arg TARGETARCH=arm64 -t castit -f CastIt.Server/Dockerfile .
+```
+
+#### Manual export / import (tarball)
+
+Save the built image to a gzipped tarball, copy it to the target host, and load it:
+
+```
 docker save castit | gzip > ~/Development/castit.tar.gz
 docker load < castit.tar.gz
 ```
+
+#### Push to a registry
+
+[`push-image.sh`](push-image.sh) builds for `linux/arm64` and pushes the image tagged with the **last commit's short hash** and `:latest` (defaults: `--image castit`, `--dockerfile CastIt.Server/Dockerfile`):
+
+```
+./push-image.sh --registry <registry-host>
+```
+
+It logs in if needed, warns on a dirty working tree, and pushes both tags. Add `--sha-only` to skip `:latest`; run `./push-image.sh --help` for all options.

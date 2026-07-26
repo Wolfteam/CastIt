@@ -1,7 +1,8 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using CastIt.Domain;
 using CastIt.Domain.Dtos.Requests;
 using CastIt.Domain.Dtos.Responses;
+using CastIt.Domain.Entities;
 using CastIt.Domain.Enums;
 using CastIt.Domain.Exceptions;
 using CastIt.Domain.Extensions;
@@ -42,7 +43,6 @@ namespace CastIt.Server.Services
         private readonly IPlayer _player;
         private readonly IYoutubeUrlDecoder _youtubeUrlDecoder;
         private readonly IAppDataService _appDataService;
-        private readonly IMapper _mapper;
         private readonly IImageProviderService _imageProviderService;
         private readonly IMediaRequestGeneratorFactory _mediaRequestGeneratorFactory;
         private readonly List<ThumbnailRange> _previewThumbnails = new List<ThumbnailRange>();
@@ -79,7 +79,6 @@ namespace CastIt.Server.Services
             IFileService fileService,
             IPlayer player,
             IAppDataService appDataService,
-            IMapper mapper,
             IImageProviderService imageProviderService,
             IMediaRequestGeneratorFactory mediaRequestGeneratorFactory)
         {
@@ -92,7 +91,6 @@ namespace CastIt.Server.Services
             _player = player;
             _youtubeUrlDecoder = youtubeUrlDecoder;
             _appDataService = appDataService;
-            _mapper = mapper;
             _imageProviderService = imageProviderService;
             _mediaRequestGeneratorFactory = mediaRequestGeneratorFactory;
         }
@@ -109,7 +107,7 @@ namespace CastIt.Server.Services
                 var mappedPlayLists = new List<ServerPlayList>();
                 foreach (var pl in playLists)
                 {
-                    var mapped = _mapper.Map<ServerPlayList>(pl);
+                    var mapped = pl.Adapt<ServerPlayList>();
                     mapped.Files = files
                         .Where(f => f.PlayListId == pl.Id)
                         .Select(f => ServerFileItem.From(_fileService, f))
@@ -132,7 +130,10 @@ namespace CastIt.Server.Services
             _player.VolumeLevelChanged += VolumeLevelChanged;
             _player.IsMutedChanged += IsMutedChanged;
             _player.LoadFailed += LoadFailed;
-            _player.ListenForDevices();
+            await _player.CheckForDevices();
+
+            var savedEndpoints = await _appDataService.GetAllCustomEndpoints();
+            MergeCustomEndpoints(savedEndpoints);
 
             await _imageProviderService.Init();
 
@@ -748,12 +749,101 @@ namespace CastIt.Server.Services
             var connectedTo = AvailableDevices.Find(t => t.IsConnected);
             AvailableDevices.Clear();
             AvailableDevices.AddRange(devices.OrderBy(a => a.FriendlyName));
+            var savedEndpoints = await _appDataService.GetAllCustomEndpoints();
+            MergeCustomEndpoints(savedEndpoints);
             if (connectedTo != null && AvailableDevices.Any(d => d.Id == connectedTo.Id))
             {
                 var connectedToDevice = AvailableDevices.First(d => d.Id == connectedTo.Id);
                 connectedToDevice.IsConnected = true;
             }
             SendDevicesChanged();
+        }
+
+        private static IReceiver ToReceiver(CustomEndpoint endpoint) => new Receiver
+        {
+            Id = endpoint.Id.ToString(),
+            FriendlyName = endpoint.Name,
+            Type = "Custom",
+            Host = endpoint.Host,
+            Port = endpoint.Port,
+            IsCustom = true,
+        };
+
+        // Re-materializes all saved custom endpoints into AvailableDevices.
+        // Removes any previously-materialized custom entries first, then adds the current
+        // saved set. If a discovered device shares a custom endpoint's host:port, the custom
+        // entry wins (keeps edit/delete) and inherits the discovered connection state.
+        // Preserves the IsConnected flag of a custom endpoint that is currently connected,
+        // so re-materializing (on refresh or CRUD) does not drop an active connection.
+        // Does NOT push CastDevicesChanged; callers decide when to notify.
+        private void MergeCustomEndpoints(List<CustomEndpoint> saved)
+        {
+            var connectedCustomIds = AvailableDevices
+                .Where(d => d.IsCustom && d.IsConnected)
+                .Select(d => d.Id)
+                .ToHashSet();
+            AvailableDevices.RemoveAll(d => d.IsCustom);
+            foreach (var endpoint in saved)
+            {
+                var receiver = ToReceiver(endpoint);
+                var discovered = AvailableDevices.Find(
+                    d => !d.IsCustom && d.Host == receiver.Host && d.Port == receiver.Port);
+                if (discovered != null)
+                {
+                    receiver.IsConnected = discovered.IsConnected;
+                    AvailableDevices.Remove(discovered);
+                }
+                if (connectedCustomIds.Contains(receiver.Id))
+                {
+                    receiver.IsConnected = true;
+                }
+                AvailableDevices.Add(receiver);
+            }
+        }
+
+        private async Task ReloadCustomEndpoints()
+        {
+            var saved = await _appDataService.GetAllCustomEndpoints();
+            MergeCustomEndpoints(saved);
+            SendDevicesChanged();
+        }
+
+        public async Task<List<IReceiver>> GetCustomEndpoints()
+        {
+            var saved = await _appDataService.GetAllCustomEndpoints();
+            return saved.Select(ToReceiver).ToList();
+        }
+
+        public async Task AddCustomEndpoint(string name, string host, int port)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidRequestException("The endpoint name is required");
+            if (string.IsNullOrWhiteSpace(host))
+                throw new InvalidRequestException("The endpoint host is required");
+            if (port is < 1 or > 65535)
+                throw new InvalidRequestException($"The endpoint port = {port} is invalid");
+
+            await _appDataService.AddCustomEndpoint(name, host, port);
+            await ReloadCustomEndpoints();
+        }
+
+        public async Task UpdateCustomEndpoint(long id, string name, string host, int port)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidRequestException("The endpoint name is required");
+            if (string.IsNullOrWhiteSpace(host))
+                throw new InvalidRequestException("The endpoint host is required");
+            if (port is < 1 or > 65535)
+                throw new InvalidRequestException($"The endpoint port = {port} is invalid");
+
+            await _appDataService.UpdateCustomEndpoint(id, name, host, port);
+            await ReloadCustomEndpoints();
+        }
+
+        public async Task DeleteCustomEndpoint(long id)
+        {
+            await _appDataService.DeleteCustomEndpoint(id);
+            await ReloadCustomEndpoints();
         }
 
         public async Task GoTo(bool nextTrack, bool isAnAutomaticCall = false)
@@ -899,7 +989,7 @@ namespace CastIt.Server.Services
         {
             if (CurrentPlayedFile == null)
                 return null;
-            var file = _mapper.Map<FileItemResponseDto>(CurrentPlayedFile);
+            var file = CurrentPlayedFile.Adapt<FileItemResponseDto>();
             file.ThumbnailUrl = CurrentRequest?.ThumbnailUrl;
             return file;
         }
@@ -908,7 +998,7 @@ namespace CastIt.Server.Services
         public ServerPlayerStatusResponseDto GetPlayerStatus()
         {
             var currentPlayedFile = GetCurrentPlayedFile();
-            var currentPlayList = CurrentPlayList != null ? _mapper.Map<GetAllPlayListResponseDto>(CurrentPlayList) : null;
+            var currentPlayList = CurrentPlayList?.Adapt<GetAllPlayListResponseDto>();
             if (currentPlayList != null && !string.IsNullOrWhiteSpace(currentPlayedFile?.ThumbnailUrl))
             {
                 currentPlayList.ImageUrl = currentPlayedFile.ThumbnailUrl;
@@ -916,7 +1006,7 @@ namespace CastIt.Server.Services
 
             return new ServerPlayerStatusResponseDto
             {
-                Player = _mapper.Map<PlayerStatusResponseDto>(_player.State),
+                Player = _player.State.Adapt<PlayerStatusResponseDto>(),
                 PlayList = currentPlayList,
                 PlayedFile = currentPlayedFile,
                 ThumbnailRanges = _thumbnailRanges
@@ -964,7 +1054,7 @@ namespace CastIt.Server.Services
             {
                 _logger.LogInformation($"{nameof(UpdateFileItem)}: FileId = {file.Id} will be updated...");
                 await _appDataService.UpdateFile(file.Id, file.Filename, file.SubTitle, file.TotalSeconds);
-                SendFileChanged(_mapper.Map<FileItemResponseDto>(file));
+                SendFileChanged(file.Adapt<FileItemResponseDto>());
             }
 
             _logger.LogTrace($"{nameof(UpdateFileItem)}: FileId = {file.Id} was successfully processed");
