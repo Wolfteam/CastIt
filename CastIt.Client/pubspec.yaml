@@ -33,9 +33,9 @@ dependencies:
   intl: ^0.20.2
   json_annotation: ^4.12.0
   logger: ^2.7.0
-  network_info_plus: ^8.2.0
+  network_info_plus: ^8.2.1
   nil: ^1.1.1
-  package_info_plus: ^10.2.0
+  package_info_plus: ^10.2.1
   path: ^1.9.1
   path_provider: ^2.1.6
   pull_to_refresh: ^2.0.0
@@ -44,7 +44,7 @@ dependencies:
   signalr_core:
     git: https://github.com/Wolfteam/signalr_core.git
   sprintf: ^7.0.0
-  synchronized: ^3.4.1
+  synchronized: ^3.4.1+1
   url_launcher: ^6.3.2
   window_size:
     git:
