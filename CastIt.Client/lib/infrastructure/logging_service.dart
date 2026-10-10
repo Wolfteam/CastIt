@@ -52,11 +52,11 @@ class LoggingServiceImpl implements LoggingService {
   }
 
   void _trackError(String tag, String msg, [dynamic ex, StackTrace? trace]) {
-    final map = _buildError(tag, msg, ex, trace);
+    _buildError(tag, msg, ex, trace);
   }
 
   void _trackWarning(String tag, String msg, [dynamic ex, StackTrace? trace]) {
-    final map = _buildError(tag, msg, ex, trace);
+    _buildError(tag, msg, ex, trace);
   }
 
   Map<String, String> _buildError(String tag, String msg, [dynamic ex, StackTrace? trace]) {

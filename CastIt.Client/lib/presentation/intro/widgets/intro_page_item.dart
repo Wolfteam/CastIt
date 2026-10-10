@@ -26,7 +26,7 @@ class IntroPageItem extends StatelessWidget {
           const SizedBox(height: 20),
           Text(content, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 20)),
           const SizedBox(height: 20),
-          if (extraContent != null) extraContent!,
+          ?extraContent,
         ],
       ),
     );
