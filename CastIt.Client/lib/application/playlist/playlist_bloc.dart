@@ -101,7 +101,7 @@ class PlayListBloc extends Bloc<PlayListEvent, PlayListState> {
   @override
   Future<void> close() async {
     await Future.wait(_subscriptions.map((e) => e.cancel()).toList());
-    return super.close();
+    await super.close();
   }
 
   void listenHubEvents() {

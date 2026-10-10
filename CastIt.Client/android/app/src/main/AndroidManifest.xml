@@ -39,6 +39,7 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTop"
             android:exported="true"
+            android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as

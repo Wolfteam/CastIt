@@ -10,6 +10,12 @@ linter:
     avoid_classes_with_only_static_members: false
     depend_on_referenced_packages: false
     avoid_positional_boolean_parameters: false
+    # Dart 3.13 primary-constructor style rules, enabled by lint 2.14.0. Adopting primary
+    # constructors would mean rewriting ~350 constructors across the codebase — a style
+    # migration unrelated to this dependency upgrade, in a project with no test suite.
+    # Revisit as its own piece of work.
+    unnecessary_type_name_in_constructor: false
+    use_primary_constructors: false
 
 analyzer:
   exclude:
@@ -18,5 +24,10 @@ analyzer:
     - lib/**/*.*.dart
     - lib/generated/*.dart
     - lib/generated/**/*.dart
+    - build/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
   errors:
     missing_return: error

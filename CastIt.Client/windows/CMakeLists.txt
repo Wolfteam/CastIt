@@ -7,10 +7,6 @@ set(BINARY_NAME "castitandroid")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
-cmake_policy(SET CMP0063 NEW)
-
-set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
-
 # Configure build options.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)

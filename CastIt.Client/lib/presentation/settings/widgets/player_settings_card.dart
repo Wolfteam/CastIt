@@ -205,7 +205,7 @@ class PlayerSettingsCard extends StatelessWidget {
           currentSubtitleFontScale: getSubtitleFontScaleValue(state.currentSubtitleFontScale),
           currentSubtitleFontStyle: state.currentSubtitleFontStyle.index,
         );
-        return bloc.updateSettings(settings);
+        await bloc.updateSettings(settings);
       default:
         break;
     }

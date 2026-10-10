@@ -143,7 +143,6 @@ class _PlayedSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final s = S.of(context);
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
         trackHeight: 0.5,
